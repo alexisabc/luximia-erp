@@ -1,0 +1,47 @@
+/* app/globals.css */
+
+/* Directiva de importación para Tailwind v4 */
+@import "tailwindcss";
+
+/* Variables de color personalizadas que usará Tailwind */
+:root {
+  --color-luximia-dark: 44 42 41;
+  --color-luximia-gold: 176 138 66;
+  --color-luximia-orange: 243 115 33;
+}
+
+/* La directiva @theme que es parte de la configuración moderna */
+@theme inline {
+  /* Puedes dejar esto como estaba, o simplificarlo si no lo usas directamente */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+
+/* --- CLASES DE COLOR PERSONALIZADAS (MÉTODO DIRECTO) --- */
+
+.bg-luximia-brand-dark {
+  background-color: #2C2A29;
+}
+
+.bg-luximia-brand-gold {
+  background-color: #B08A42;
+}
+
+.text-luximia-brand-dark {
+  color: #2C2A29;
+}
+
+.bg-luximia-brand-orange {
+  background-color: #F37321;
+}
+
+.hover\:bg-luximia-brand-orange-dark:hover {
+  background-color: #D9651B; /* Un naranja un poco más oscuro */
+}
+
+.hover\:bg-luximia-brand-gold:hover {
+  background-color: #9A793A; /* Un dorado un poco más oscuro */
+}

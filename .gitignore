@@ -1,0 +1,25 @@
+# Entorno virtual de Python
+env/
+venv/
+*.pyc
+__pycache__/
+
+# Base de datos de desarrollo de Django
+db.sqlite3
+
+# Archivos de entorno (¡Muy importante!)
+.env
+.env.*
+!/.env.example
+
+# Dependencias de Node.js
+node_modules/
+
+# Archivos de build y temporales de Next.js
+.next/
+out/
+
+# Archivos del sistema operativo y editores
+.DS_Store
+.vscode/
+.idea/
