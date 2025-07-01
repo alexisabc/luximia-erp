@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     # Mis apps
     'rest_framework',
-    'api',
+    'cxc.apps.CxcConfig',
     'corsheaders',
 ]
 
@@ -62,7 +62,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-ROOT_URLCONF = 'crm_luximia.urls'
+ROOT_URLCONF = 'luximia_erp.urls'
 
 TEMPLATES = [
     {
@@ -79,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'crm_luximia.wsgi.application'
+WSGI_APPLICATION = 'luximia_erp.wsgi.application'
 
 
 # Database
@@ -136,7 +136,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'cxc.pagination.CustomPagination',
     # Puedes poner el número de filas que quieras por página (10, 15, 20...)
     'PAGE_SIZE': 10,
 
