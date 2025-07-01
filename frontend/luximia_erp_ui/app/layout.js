@@ -2,7 +2,6 @@
 'use client';
 
 import "./globals.css";
-import { ThemeProvider } from "../context/ThemeContext";
 import { AuthProvider, useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 import { usePathname, useRouter } from 'next/navigation';
@@ -55,9 +54,7 @@ export default function RootLayout({ children }) {
     <html lang="es" suppressHydrationWarning>
       <body className="transition-colors duration-300 bg-white text-gray-900 dark:bg-luximia-dark dark:text-gray-200">
         <AuthProvider>
-          <ThemeProvider>
             <AppContent>{children}</AppContent>
-          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

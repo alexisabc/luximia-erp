@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.humanize.templatetags.humanize import intcomma
+from django.db.models import Count
 
 # --- Librerías Externas ---
 import pandas as pd
@@ -73,7 +74,11 @@ class ProyectoViewSet(viewsets.ModelViewSet):
 
 class ClienteViewSet(viewsets.ModelViewSet):
     """Gestiona las operaciones CRUD para el modelo Cliente."""
-    queryset = Cliente.objects.all().order_by('nombre_completo')
+    # ### CAMBIO ###: Añadimos prefetch_related para optimizar la consulta
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto'
+    ).order_by('nombre_completo')
+
     serializer_class = ClienteSerializer
 
 
@@ -107,17 +112,19 @@ class ContratoViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def pagos(self, request, pk=None):
+        """Devuelve la lista de pagos para un contrato específico."""
         contrato = self.get_object()
+        # ### CAMBIO ###
         pagos_del_contrato = Pago.objects.filter(
-            contrato=contrato).order_by('fecha_pago')
+            contrato=contrato).order_by('fecha_pago_mensualidad')
         serializer = PagoReadSerializer(pagos_del_contrato, many=True)
         return Response(serializer.data)
 
 
-
 class PagoViewSet(viewsets.ModelViewSet):
     """Gestiona las operaciones CRUD para el modelo Pago."""
-    queryset = Pago.objects.all().order_by('-fecha_pago')
+    # ### CAMBIO ###
+    queryset = Pago.objects.all().order_by('-fecha_pago_mensualidad')
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -186,34 +193,54 @@ def dashboard_stats(request):
     """Calcula y devuelve las estadísticas para el dashboard."""
     proyectos_activos = Proyecto.objects.filter(activo=True).count()
     clientes_totales = Cliente.objects.count()
+    upes_totales = UPE.objects.count()  # <-- 1. AÑADE ESTA LÍNEA
+
     ultimo_pago_usd = Pago.objects.filter(
-        moneda_pagada='USD').order_by('-fecha_pago').first()
-    tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
-        '20.0')
+        moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
+
+    tipo_cambio_reciente = ultimo_pago_usd.tipo_de_cambio if ultimo_pago_usd else Decimal(
+        '17.50')
+
     total_contratos_mxn = Contrato.objects.filter(moneda_pactada='MXN').aggregate(
         total=Coalesce(Sum('precio_final_pactado'), Value(0), output_field=DecimalField()))['total']
+
     total_contratos_usd = Contrato.objects.filter(moneda_pactada='USD').aggregate(
         total=Coalesce(Sum('precio_final_pactado'), Value(0), output_field=DecimalField()))['total']
+
     valor_total_aproximado_mxn = total_contratos_mxn + \
         (total_contratos_usd * tipo_cambio_reciente)
-    stats = {'proyectos_activos': proyectos_activos, 'clientes_totales': clientes_totales,
-             'valor_total_contratos_mxn': valor_total_aproximado_mxn}
+
+    stats = {
+        'proyectos_activos': proyectos_activos,
+        'clientes_totales': clientes_totales,
+        'upes_totales': upes_totales,  # <-- 2. AÑADE ESTA LÍNEA
+        'valor_total_contratos_mxn': valor_total_aproximado_mxn
+    }
     return Response(stats)
 
 
 @api_view(['GET'])
 def valor_por_proyecto_chart(request):
     """Calcula y devuelve los datos para la gráfica de valor por proyecto."""
+    # ### CAMBIO ###
     ultimo_pago_usd = Pago.objects.filter(
-        moneda_pagada='USD').order_by('-fecha_pago').first()
+        moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
+
+    # El resto de la función no cambia...
     tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
-        '20.0')
-    chart_data = Contrato.objects.annotate(valor_en_mxn=Case(When(moneda_pactada='USD', then=F('precio_final_pactado') * tipo_cambio_reciente), default=F(
-        'precio_final_pactado'), output_field=DecimalField())).values('upe__proyecto__nombre').annotate(total_contratado=Sum('valor_en_mxn')).order_by('-total_contratado')
+        '17.50')
+    chart_data = Contrato.objects.annotate(
+        valor_en_mxn=Case(
+            When(moneda_pactada='USD', then=F(
+                'precio_final_pactado') * tipo_cambio_reciente),
+            default=F('precio_final_pactado'),
+            output_field=DecimalField()
+        )
+    ).values('upe__proyecto__nombre').annotate(total_contratado=Sum('valor_en_mxn')).order_by('-total_contratado')
+
     formatted_data = [{'label': item['upe__proyecto__nombre'],
                        'value': item['total_contratado']} for item in chart_data]
     return Response(formatted_data)
-
 
 @api_view(['GET'])
 def generar_estado_de_cuenta_pdf(request, pk=None):
@@ -221,28 +248,41 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
     try:
         contrato = get_object_or_404(
             Contrato.objects.select_related('cliente', 'upe__proyecto'), pk=pk)
-        pagos = Pago.objects.filter(contrato=contrato).order_by('fecha_pago')
+        pagos = Pago.objects.filter(contrato=contrato).order_by(
+            'fecha_pago_mensualidad')
+
+        # Lógica para el tipo de cambio reciente
         ultimo_pago_usd = Pago.objects.filter(
-            moneda_pagada='USD').order_by('-fecha_pago').first()
-        tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
-            '20.0')
+            moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
+        tipo_cambio_reciente = ultimo_pago_usd.tipo_de_cambio if ultimo_pago_usd else Decimal(
+            '17.50')
+
         precio_contrato = contrato.precio_final_pactado or Decimal('0.0')
         valor_contrato_en_mxn = precio_contrato
         if contrato.moneda_pactada == 'USD':
             valor_contrato_en_mxn = precio_contrato * tipo_cambio_reciente
-        total_pagado_mxn = sum(p.monto_en_mxn for p in pagos)
+
+        # ### CAMBIO CLAVE ###: Usamos la nueva property 'valor_mxn'
+        total_pagado_mxn = sum(p.valor_mxn for p in pagos)
+
         saldo_pendiente_mxn = valor_contrato_en_mxn - total_pagado_mxn
-        valor_contrato_formateado = f"$ {intcomma(round(precio_contrato, 2))} {contrato.get_moneda_pactada_display()}"
+
+        # ... (el resto de la lógica no cambia)
+        valor_contrato_formateado = f"$ {intcomma(round(precio_contrato, 2))} {contrato.moneda_pactada}"
         context = {'contrato': contrato, 'pagos': pagos, 'total_pagado_mxn': total_pagado_mxn,
                    'saldo_pendiente_mxn': saldo_pendiente_mxn, 'valor_contrato_string': valor_contrato_formateado}
+
+        # Nota: considera actualizar 'api/estado_de_cuenta.html' para mostrar los nuevos campos de pago si lo deseas.
         html_string = render_to_string(
-            'api/estado_de_cuenta.html', context, request=request)
+            'cxc/estado_de_cuenta.html', context, request=request)
         html = HTML(string=html_string)
         pdf = html.write_pdf()
+
         response = HttpResponse(pdf, content_type='application/pdf')
         response[
             'Content-Disposition'] = f'attachment; filename="estado_de_cuenta_contrato_{contrato.id}.pdf"'
         return response
+
     except Exception as e:
         traceback.print_exc()
         return HttpResponse(f"Ocurrió un error al generar el PDF: {e}", status=500)
@@ -502,3 +542,20 @@ def consulta_inteligente(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error al procesar la consulta: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def upe_status_chart(request):
+    """
+    Calcula el número de UPEs por cada estado para la gráfica de dona.
+    """
+    # Agrupamos por 'estado' y contamos cuántas hay en cada grupo
+    query_data = UPE.objects.values('estado').annotate(
+        total=Count('id')).order_by('-total')
+
+    # Formateamos los datos para que Chart.js los entienda fácilmente
+    data = {
+        "labels": [item['estado'] for item in query_data],
+        "values": [item['total'] for item in query_data]
+    }
+    return Response(data)

@@ -2,32 +2,36 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getDashboardStats, getValorPorProyectoChartData } from '../services/api'; // Importamos nuestra función
-import KpiCard from '../components/KpiCard'; // Importamos nuestro nuevo componente
+// ### CAMBIO: Importamos la nueva función y el nuevo componente
+import { getDashboardStats, getValorPorProyectoChartData, getUpeStatusChartData } from '../services/api';
+import KpiCard from '../components/KpiCard';
 import ValorPorProyectoChart from '../components/ValorPorProyectoChart';
-import ChatInteligente from '../components/ChatInteligente'; 
+import UpeStatusChart from '../components/UpeStatusChart'; // <-- NUEVO
+import ChatInteligente from '../components/ChatInteligente';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
-  const [chartData, setChartData] = useState(null); // Nuevo estado para la gráfica
+  const [valorProyectoData, setValorProyectoData] = useState(null);
+  const [upeStatusData, setUpeStatusData] = useState(null); // <-- NUEVO ESTADO
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Pedimos los datos de los KPIs y de la gráfica al mismo tiempo
-        const [statsRes, chartRes] = await Promise.all([
+        // ### CAMBIO: Pedimos los datos de las 3 cosas al mismo tiempo
+        const [statsRes, valorProyectoRes, upeStatusRes] = await Promise.all([
           getDashboardStats(),
-          getValorPorProyectoChartData()
+          getValorPorProyectoChartData(),
+          getUpeStatusChartData() // <-- NUEVA LLAMADA
         ]);
         setStats(statsRes.data);
-        setChartData(chartRes.data);
+        setValorProyectoData(valorProyectoRes.data);
+        setUpeStatusData(upeStatusRes.data); // <-- GUARDAMOS LOS DATOS
       } catch (err) {
         setError('No se pudieron cargar los datos del dashboard.');
         console.error(err);
       }
     };
-
     fetchData();
   }, []);
 
@@ -40,7 +44,7 @@ export default function DashboardPage() {
       {!stats && !error && <p>Cargando estadísticas...</p>}
 
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"> {/* <-- CAMBIADO A 4 COLUMNAS */}
           <KpiCard
             title="Proyectos Activos"
             value={stats.proyectos_activos}
@@ -49,23 +53,31 @@ export default function DashboardPage() {
             title="Clientes Totales"
             value={stats.clientes_totales}
           />
+          {/* ### NUEVA TARJETA ### */}
+          <KpiCard
+            title="UPEs Totales"
+            value={stats.upes_totales}
+          />
           <KpiCard
             title="Valor Total en Contratos (MXN Aprox.)"
             value={stats.valor_total_contratos_mxn}
-            formatAsCurrency={true} // Le decimos a este que formatee el número como moneda
+            formatAsCurrency={true}
           />
         </div>
       )}
 
-      {/* --- AQUÍ RENDERIZAMOS LA GRÁFICA --- */}
-      <div className="mt-12">
-        <div className="bg-white p-6 rounded-xl shadow-lg h-96">
-          {chartData ? <ValorPorProyectoChart chartData={chartData} /> : <p>Cargando gráfica...</p>}
+      {/* ### CAMBIO: Ajustamos la rejilla para mostrar ambas gráficas ### */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 mt-12">
+        {/* Gráfica de Barras (ocupa 3 columnas) */}
+        <div className="xl:col-span-3 bg-white p-6 rounded-xl shadow-lg h-96">
+          {valorProyectoData ? <ValorPorProyectoChart chartData={valorProyectoData} /> : <p>Cargando gráfica...</p>}
+        </div>
+        {/* Gráfica de Dona (ocupa 2 columnas) */}
+        <div className="xl:col-span-2 bg-white p-6 rounded-xl shadow-lg h-96">
+          {upeStatusData ? <UpeStatusChart chartData={upeStatusData} /> : <p>Cargando gráfica...</p>}
         </div>
       </div>
-      {/* El componente del chat ahora es flotante, 
-              así que se posicionará solo en la esquina de la pantalla.
-            */}
+
       <ChatInteligente />
     </div>
   );

@@ -25,10 +25,32 @@ class ProyectoSerializer(serializers.ModelSerializer):
 
 
 class ClienteSerializer(serializers.ModelSerializer):
-    """Serializer para el modelo Cliente. Usado para todas las operaciones CRUD."""
+    # ### NUEVO CAMPO ###
+    # Creamos un campo personalizado que no existe en el modelo directamente.
+    # Usará un método para obtener los datos.
+    proyectos_asociados = serializers.SerializerMethodField()
+
     class Meta:
         model = Cliente
-        fields = '__all__'
+        # Añadimos el nuevo campo a la lista de campos que se enviarán
+        fields = ['id', 'nombre_completo', 'telefono',
+                  'email', 'activo', 'proyectos_asociados']
+
+    # ### NUEVO MÉTODO ###
+    # Este método se encarga de llenar el campo 'proyectos_asociados'.
+    def get_proyectos_asociados(self, obj):
+        """
+        Devuelve una lista de nombres de proyectos únicos en los que el cliente
+        (obj) tiene al menos un contrato.
+        """
+        # obj es la instancia del Cliente que se está serializando.
+        # Buscamos en los contratos de este cliente y obtenemos los nombres de los proyectos.
+        # Usamos .distinct() para evitar nombres repetidos si un cliente tiene varios
+        # contratos en el mismo proyecto.
+        proyectos = obj.contratos.select_related('upe__proyecto').values_list(
+            'upe__proyecto__nombre', flat=True).distinct()
+        return list(proyectos)
+
 
 
 # --- Serializers para UPE (Unidad Privativa Enajenable) ---
@@ -100,7 +122,8 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         todos los montos a MXN para una suma consistente.
         """
         ultimo_pago_usd = Pago.objects.filter(
-            moneda_pagada='USD').order_by('-fecha_pago').first()
+            moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
+
         tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
             '17.50')
 
@@ -110,20 +133,18 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         if obj.moneda_pactada == 'USD':
             valor_contrato_en_mxn = precio_contrato * tipo_cambio_reciente
 
-        # ### CAMBIO CLAVE ###
-        # Replicamos la lógica de la @property a nivel de base de datos.
-        # Esto es lo que se ejecutará en SQL, por lo que es muy eficiente.
         total_pagado_mxn = obj.pagos.aggregate(
             total=Coalesce(
                 Sum(
                     Case(
+                        # ### CAMBIO CLAVE ###: Corregido a 'tipo_cambio' sin guion bajo
                         When(moneda_pagada='USD', then=F(
                             'monto_pagado') * F('tipo_cambio')),
                         default=F('monto_pagado'),
                         output_field=DecimalField()
                     )
                 ),
-                Decimal('0.0')  # Valor por defecto si no hay pagos
+                Decimal('0.0')
             )
         )['total']
 
@@ -134,32 +155,54 @@ class ContratoReadSerializer(serializers.ModelSerializer):
 # --- Serializers para Pago ---
 
 class PagoWriteSerializer(serializers.ModelSerializer):
-    """Serializer para ESCRIBIR (crear/actualizar) datos de Pagos."""
+    """
+    Serializer para ESCRIBIR (crear/actualizar) datos de Pagos.
+    Ahora lista explícitamente todos los campos que se pueden escribir.
+    """
     class Meta:
         model = Pago
-        fields = '__all__'
+        # Listamos todos los campos que se pueden escribir para tener un control claro.
+        fields = [
+            'contrato', 'tipo', 'monto_pagado', 'moneda_pagada', 'tipo_cambio',
+            'fecha_pago_mensualidad', 'fecha_ingreso_cuentas', 'instrumento_pago',
+            'banco_origen', 'num_cuenta_origen', 'titular_cuenta_origen',
+            'banco_destino', 'num_cuenta_destino', 'comentarios'
+        ]
 
 
 class PagoReadSerializer(serializers.ModelSerializer):
     """
     Serializer para LEER datos de Pagos.
-    Incluye el ID del contrato y el monto calculado en MXN.
+    Ahora incluye todos los nuevos campos para mostrarlos en el frontend.
     """
     contrato_id = serializers.IntegerField(
         source='contrato.id', read_only=True)
-    monto_en_mxn = serializers.ReadOnlyField()
+
+    # ### CAMBIO ###: Usamos 'valor_mxn' para que coincida con la @property del modelo.
+    valor_mxn = serializers.ReadOnlyField()
 
     class Meta:
         model = Pago
+        # ### CAMBIO ###: Añadimos todos los nuevos campos a la lista.
         fields = [
             'id',
             'contrato_id',
-            'fecha_pago',
+            'tipo',
             'monto_pagado',
             'moneda_pagada',
             'tipo_cambio',
-            'monto_en_mxn'
+            'fecha_pago_mensualidad',
+            'fecha_ingreso_cuentas',
+            'instrumento_pago',
+            'banco_origen',
+            'num_cuenta_origen',
+            'titular_cuenta_origen',
+            'banco_destino',
+            'num_cuenta_destino',
+            'comentarios',
+            'valor_mxn'  # <-- Añadido
         ]
+
 
 
 # ==============================================================================

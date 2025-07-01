@@ -73,22 +73,77 @@ class Contrato(models.Model):
 
 
 class Pago(models.Model):
+    # Lista de opciones para el campo instrumento_de_pago
+    INSTRUMENTO_PAGO_CHOICES = [
+        ('EFECTIVO', 'EFECTIVO'),
+        ('TARJETA DE CRÉDITO', 'TARJETA DE CRÉDITO'),
+        ('TARJETA DE DÉBITO', 'TARJETA DE DÉBITO'),
+        ('TARJETA DE PREPAGO', 'TARJETA DE PREPAGO'),
+        ('CHEQUE NOMINATIVO', 'CHEQUE NOMINATIVO'),
+        ('CHEQUE DE CAJA', 'CHEQUE DE CAJA'),
+        ('CHEQUE DE VIAJERO', 'CHEQUE DE VIAJERO'),
+        ('TRANSFERENCIA INTERBANCARIA', 'TRANSFERENCIA INTERBANCARIA'),
+        ('TRANSFERENCIA MISMA INSTITUCION', 'TRANSFERENCIA MISMA INSTITUCION'),
+        ('TRANSFERENCIA INTERNACIONAL', 'TRANSFERENCIA INTERNACIONAL'),
+        ('ORDEN DE PAGO', 'ORDEN DE PAGO'),
+        ('GIRO', 'GIRO'),
+        ('ORO O PLATINO AMONEDADOS', 'ORO O PLATINO AMONEDADOS'),
+        ('PLATA AMONEDADA', 'PLATA AMONEDADA'),
+        ('METALES PRECIOSO', 'METALES PRECIOSO'),
+    ]
+
+    TIPO_PAGO_CHOICES = [
+        ('MENSUALIDAD', 'Mensualidad'),
+        ('ENGANCHE', 'Enganche'),
+        ('PAGO FINAL', 'Pago Final'),
+        ('OTRO', 'Otro'),
+    ]
+
+    # --- CAMPOS PRINCIPALES ---
     contrato = models.ForeignKey(
         Contrato, on_delete=models.CASCADE, related_name='pagos')
-    fecha_pago = models.DateField()
+    tipo = models.CharField(max_length=50, choices=TIPO_PAGO_CHOICES,
+                            default='MENSUALIDAD', help_text="Tipo de pago (ej. Mensualidad, Enganche)")
+
+    # Mapea a 'PAGO'
     monto_pagado = models.DecimalField(max_digits=12, decimal_places=2)
+    # Mapea a 'DIVISA'
     moneda_pagada = models.CharField(
         max_length=3, choices=[('MXN', 'MXN'), ('USD', 'USD')])
+    # Mapea a 'TIPO_CAMBIO'
     tipo_cambio = models.DecimalField(
-        max_digits=10,
-        decimal_places=4,
-        help_text="Si el pago es en USD, registrar el tipo de cambio a MXN de ese día. Si es en MXN, poner 1.",
-        default=1.0
-    )
-    notas = models.TextField(blank=True, null=True)
+        max_digits=10, decimal_places=4, default=1.0)
 
+    # --- FECHAS ---
+    # Mapea a 'FECHA_PAGO_MENSUALIDAD'
+    fecha_pago_mensualidad = models.DateField(
+        help_text="Fecha de pago real o programada de la mensualidad")
+    # Mapea a 'FECHA_PAGO_INGRESO_A_CUENTAS'
+    fecha_ingreso_cuentas = models.DateField(
+        null=True, blank=True, help_text="Fecha en que el dinero ingresó a cuentas")
+
+    # --- DETALLES DE LA TRANSACCIÓN ---
+    # Mapea a 'INSTRUMENTO_PAGO'
+    instrumento_pago = models.CharField(
+        max_length=100, choices=INSTRUMENTO_PAGO_CHOICES, null=True, blank=True)
+    banco_origen = models.CharField(
+        max_length=100, blank=True, null=True, db_column='BANCO_ORIGEN')
+    num_cuenta_origen = models.CharField(
+        max_length=50, blank=True, null=True, db_column='NUM_CUENTA_ORIGEN')
+    titular_cuenta_origen = models.CharField(
+        max_length=200, blank=True, null=True, db_column='TITULAR_CUENTA_ORIGEN')
+    banco_destino = models.CharField(
+        max_length=100, blank=True, null=True, db_column='BANCO_DESTINO')
+    num_cuenta_destino = models.CharField(
+        max_length=50, blank=True, null=True, db_column='NUM_CUENTA_DESTINO')
+
+    # Mapea a 'COMENTARIOS'
+    comentarios = models.TextField(blank=True, null=True)
+
+    # --- CAMPO CALCULADO (NO SE GUARDA EN LA BD) ---
+    # Este campo corresponde a 'VALOR_MXN'. No necesita una columna en la BD.
     @property
-    def monto_en_mxn(self):
+    def valor_mxn(self):
         if self.moneda_pagada == 'USD':
             return self.monto_pagado * self.tipo_cambio
         return self.monto_pagado

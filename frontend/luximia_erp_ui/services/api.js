@@ -93,15 +93,23 @@ export const updateGroup = (id, data) => apiClient.put(`/groups/${id}/`, data);
 // Dashboard y Gráficas
 export const getDashboardStats = () => apiClient.get('/dashboard-stats/');
 export const getValorPorProyectoChartData = () => apiClient.get('/charts/valor-por-proyecto/');
+export const getUpeStatusChartData = () => apiClient.get('/charts/upe-status/');
 
 // Importaciones
 export const importarDatosMasivos = (formData) => apiClient.post('/importar-masivo/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const importarClientes = (formData) => apiClient.post('/importar-clientes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const importarUPEs = (formData) => apiClient.post('/importar-upes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const importarContratos = (formData) => apiClient.post('/importar-contratos/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarPagosHistoricos = (formData) => {
+    return apiClient.post('/importar-pagos-historicos/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+};
+
 
 // PDF
 export const descargarEstadoDeCuentaPDF = (contratoId) => apiClient.get(`/contratos/${contratoId}/pdf/`, { responseType: 'blob' });
 
 //OPEN IA
 export const consultaInteligente = (pregunta) => apiClient.post('/consulta-inteligente/', { pregunta });
+

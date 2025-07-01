@@ -13,19 +13,15 @@ export default function ClientesPage() {
     const [pageData, setPageData] = useState({ results: [], count: 0, next: null, previous: null });
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState(null);
-
-    // Usamos el hook para obtener la ref y el tamaño de página dinámico.
-    const { ref, pageSize } = useResponsivePageSize(57); // 57px es una altura de fila estimada
+    const { ref, pageSize } = useResponsivePageSize(57);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ nombre_completo: '', email: '', telefono: '' });
     const [editingCliente, setEditingCliente] = useState(null);
 
-    // Envolvemos fetchData en useCallback para estabilizar la función
     const fetchData = useCallback(async (page, size) => {
-        // Agregamos una guardia extra: no hacer nada si no estamos autenticados.
         if (!authTokens || !size || size <= 0) return;
-
+        setError(null);
         try {
             const res = await getClientes(page, size);
             setPageData(res.data);
@@ -36,18 +32,13 @@ export default function ClientesPage() {
         }
     }, [authTokens]);
 
-    // Este es el efecto principal para cargar y recargar datos.
-    // Ahora depende de 'pageSize' y de la función 'fetchData' estabilizada.
     useEffect(() => {
-        // Solo se ejecuta si pageSize ya tiene un valor válido y mayor que cero.
         if (pageSize > 0) {
-            // Siempre que el tamaño de la página cambie, volvemos a la página 1 con el nuevo tamaño.
             fetchData(1, pageSize);
         }
     }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => {
-        // Aseguramos que 'pageSize' sea un número válido antes de calcular el total de páginas.
         const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
         if (newPage > 0 && newPage <= totalPages) {
             fetchData(newPage, pageSize);
@@ -80,6 +71,7 @@ export default function ClientesPage() {
                 await createCliente(formData);
             }
             setIsModalOpen(false);
+            // Vuelve a la página actual para ver el cambio
             fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al guardar el cliente.');
@@ -90,7 +82,10 @@ export default function ClientesPage() {
         if (window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
             try {
                 await deleteCliente(clienteId);
-                fetchData(currentPage, pageSize);
+                // Si estamos en una página que queda vacía, retrocedemos a la anterior
+                const newTotalPages = Math.ceil((pageData.count - 1) / pageSize);
+                const newCurrentPage = Math.min(currentPage, newTotalPages > 0 ? newTotalPages : 1);
+                fetchData(newCurrentPage, pageSize);
             } catch (err) {
                 setError('Este cliente tiene contratos y no puede ser eliminado.');
             }
@@ -101,6 +96,19 @@ export default function ClientesPage() {
         {
             header: 'Nombre Completo',
             render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre_completo}</span>
+        },
+        // ### NUEVA COLUMNA ###
+        {
+            header: 'Proyectos',
+            render: (row) => (
+                <div className="flex flex-wrap gap-1">
+                    {row.proyectos_asociados?.map((proyecto, index) => (
+                        <span key={index} className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 dark:bg-green-900 dark:text-green-200 rounded-full">
+                            {proyecto}
+                        </span>
+                    ))}
+                </div>
+            )
         },
         {
             header: 'Email',
@@ -114,10 +122,11 @@ export default function ClientesPage() {
             header: 'Acciones',
             render: (row) => (
                 <div className="text-right space-x-4 whitespace-nowrap">
-                    {hasPermission('api.change_cliente') && (
+                    {/* ### CAMBIO: Usamos 'cxc' en los permisos ### */}
+                    {hasPermission('cxc.change_cliente') && (
                         <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800 font-medium">Editar</button>
                     )}
-                    {hasPermission('api.delete_cliente') && (
+                    {hasPermission('cxc.delete_cliente') && (
                         <button onClick={() => handleDeleteClick(row.id)} className="text-red-600 hover:text-red-800 font-medium">Eliminar</button>
                     )}
                 </div>
@@ -130,7 +139,8 @@ export default function ClientesPage() {
             <div className="flex-shrink-0">
                 <div className="flex justify-between items-center mb-10">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Clientes</h1>
-                    {hasPermission('api.add_cliente') && (
+                    {/* ### CAMBIO: Usamos 'cxc' en el permiso ### */}
+                    {hasPermission('cxc.add_cliente') && (
                         <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                             + Nuevo Cliente
                         </button>
@@ -151,7 +161,7 @@ export default function ClientesPage() {
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={!pageData.previous}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                        className="px-4 py-2 text-sm font-medium rounded-md border disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                     >
                         Anterior
                     </button>
@@ -161,7 +171,7 @@ export default function ClientesPage() {
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={!pageData.next}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                        className="px-4 py-2 text-sm font-medium rounded-md border disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                     >
                         Siguiente
                     </button>
@@ -172,15 +182,15 @@ export default function ClientesPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                        <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleInputChange} required className="mt-1 block w-full input-form" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="mt-1 block w-full input-form" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                        <input type="text" name="telefono" value={formData.telefono} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
+                        <input type="text" name="telefono" value={formData.telefono} onChange={handleInputChange} className="mt-1 block w-full input-form" />
                     </div>
                     <div className="pt-4 flex justify-end">
                         <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">

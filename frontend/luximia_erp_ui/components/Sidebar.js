@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import ThemeSwitcher from './ThemeSwitcher';
 
 const ChevronIcon = ({ isOpen }) => (
     <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -16,10 +15,12 @@ export default function Sidebar() {
     const { user, logoutUser, hasPermission } = useAuth();
     const pathname = usePathname();
 
+    // Estados para controlar los menús desplegables
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [isHerramientasOpen, setIsHerramientasOpen] = useState(false);
     const [isImportarOpen, setIsImportarOpen] = useState(false);
 
+    // Efecto para mantener los menús abiertos si estamos en una de sus páginas
     useEffect(() => {
         if (pathname.startsWith('/configuraciones')) setIsConfigOpen(true);
         if (pathname.startsWith('/importar')) {
@@ -28,35 +29,32 @@ export default function Sidebar() {
         }
     }, [pathname]);
 
-    const canViewSettings = hasPermission('api.view_user') || hasPermission('api.view_group');
-    const canImportData = user?.is_superuser || hasPermission('api.add_cliente') || hasPermission('api.add_upe') || hasPermission('api.add_contrato');
+    // ### CAMBIO: Usamos el prefijo 'cxc' para los permisos ###
+    const canViewSettings = hasPermission('cxc.view_user') || hasPermission('cxc.view_group');
+    const canImportData = user?.is_superuser || hasPermission('cxc.add_cliente') || hasPermission('cxc.add_upe') || hasPermission('cxc.add_contrato');
 
     return (
-        // Contenedor principal: Ocupa toda la pantalla y es una columna flexible
-        <div className="w-64 h-screen bg-luximia-brand-dark text-white flex flex-col">
+        <div className="w-64 h-screen bg-gray-900 text-white flex flex-col">
 
-            {/* --- SECCIÓN SUPERIOR (FIJA) --- */}
             <div className="p-4 flex-shrink-0">
-                <h2 className="text-2xl font-bold mb-4">CRM Luximia</h2>
+                <h2 className="text-2xl font-bold mb-4 text-white">Luximia ERP</h2>
                 {user && <span className="text-sm text-gray-400">Bienvenido, {user.username}</span>}
             </div>
 
-            {/* --- SECCIÓN DE NAVEGACIÓN (CON SCROLL) --- */}
-            {/* flex-1 hace que ocupe el espacio sobrante y overflow-y-auto le pone el scroll si es necesario */}
             <nav className="flex-1 px-4 pb-4 overflow-y-auto">
                 <ul className="space-y-1">
                     {/* Enlaces Principales */}
-                    {hasPermission('api.can_view_dashboard') && <li><Link href="/" className="block p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark"><span>Dashboard</span></Link></li>}
-                    {hasPermission('api.view_proyecto') && <li><Link href="/proyectos" className="block p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark"><span>Proyectos</span></Link></li>}
-                    {hasPermission('api.view_cliente') && <li><Link href="/clientes" className="block p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark"><span>Clientes</span></Link></li>}
-                    {hasPermission('api.view_upe') && <li><Link href="/upes" className="block p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark"><span>UPEs</span></Link></li>}
-                    {hasPermission('api.view_contrato') && <li><Link href="/contratos" className="block p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark"><span>Contratos</span></Link></li>}
+                    {hasPermission('cxc.can_view_dashboard') && <li><Link href="/" className="block p-2 rounded-md hover:bg-blue-600"><span>Dashboard</span></Link></li>}
+                    {hasPermission('cxc.view_proyecto') && <li><Link href="/proyectos" className="block p-2 rounded-md hover:bg-blue-600"><span>Proyectos</span></Link></li>}
+                    {hasPermission('cxc.view_cliente') && <li><Link href="/clientes" className="block p-2 rounded-md hover:bg-blue-600"><span>Clientes</span></Link></li>}
+                    {hasPermission('cxc.view_upe') && <li><Link href="/upes" className="block p-2 rounded-md hover:bg-blue-600"><span>UPEs</span></Link></li>}
+                    {hasPermission('cxc.view_contrato') && <li><Link href="/contratos" className="block p-2 rounded-md hover:bg-blue-600"><span>Contratos</span></Link></li>}
 
                     {/* Menú Desplegable de Herramientas */}
                     {canImportData && (
                         <li className="pt-2">
-                            <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark">
-                                <span className="text-sm font-semibold text-gray-400 uppercase">Herramientas</span>
+                            <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-blue-600">
+                                <span className="text-sm font-semibold uppercase">Herramientas</span>
                                 <ChevronIcon isOpen={isHerramientasOpen} />
                             </button>
                             {isHerramientasOpen && (
@@ -68,10 +66,12 @@ export default function Sidebar() {
                                         </button>
                                         {isImportarOpen && (
                                             <ul className="pl-4 mt-1 space-y-1">
-                                                {user?.is_superuser && <li><Link href="/importar" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Masivo</Link></li>}
-                                                {hasPermission('api.add_cliente') && <li><Link href="/importar/clientes" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Clientes</Link></li>}
-                                                {hasPermission('api.add_upe') && <li><Link href="/importar/upes" className="block p-2 rounded-md hover:bg-gray-700 text-sm">UPEs</Link></li>}
-                                                {hasPermission('api.add_contrato') && <li><Link href="/importar/contratos" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Contratos</Link></li>}
+                                                {/* ### CAMBIO: Usamos 'cxc' y añadimos el importador de Pagos ### */}
+                                                {user?.is_superuser && <li><Link href="/importar" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Masivo (General)</Link></li>}
+                                                {hasPermission('cxc.add_cliente') && <li><Link href="/importar/clientes" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Clientes</Link></li>}
+                                                {hasPermission('cxc.add_upe') && <li><Link href="/importar/upes" className="block p-2 rounded-md hover:bg-gray-700 text-sm">UPEs</Link></li>}
+                                                {hasPermission('cxc.add_contrato') && <li><Link href="/importar/contratos" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Contratos</Link></li>}
+                                                {hasPermission('cxc.add_pago') && <li><Link href="/importar/pagos" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Pagos Históricos</Link></li>}
                                             </ul>
                                         )}
                                     </li>
@@ -83,14 +83,27 @@ export default function Sidebar() {
                     {/* Menú Desplegable de Configuraciones */}
                     {canViewSettings && (
                         <li className="pt-2">
-                            <button onClick={() => setIsConfigOpen(!isConfigOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-luximia-brand-gold hover:text-luximia-brand-dark">
-                                <span className="text-sm font-semibold text-gray-400 uppercase">Configuraciones</span>
+                            <button onClick={() => setIsConfigOpen(!isConfigOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-blue-600">
+                                <span className="text-sm font-semibold uppercase">Configuraciones</span>
                                 <ChevronIcon isOpen={isConfigOpen} />
                             </button>
                             {isConfigOpen && (
                                 <ul className="pl-4 mt-1 space-y-1">
-                                    {hasPermission('api.view_user') && <li><Link href="/configuraciones/usuarios" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Usuarios</Link></li>}
-                                    {hasPermission('api.view_group') && <li><Link href="/configuraciones/roles" className="block p-2 rounded-md hover:bg-gray-700 text-sm">Roles</Link></li>}
+                                    {/* ### CAMBIO: Lo separamos de nuevo en dos enlaces distintos ### */}
+                                    {hasPermission('cxc.view_user') && (
+                                        <li>
+                                            <Link href="/configuraciones/usuarios" className="block p-2 rounded-md hover:bg-gray-700 text-sm">
+                                                Usuarios
+                                            </Link>
+                                        </li>
+                                    )}
+                                    {hasPermission('cxc.view_group') && (
+                                        <li>
+                                            <Link href="/configuraciones/roles" className="block p-2 rounded-md hover:bg-gray-700 text-sm">
+                                                Roles
+                                            </Link>
+                                        </li>
+                                    )}
                                 </ul>
                             )}
                         </li>
@@ -98,14 +111,10 @@ export default function Sidebar() {
                 </ul>
             </nav>
 
-            {/* --- SECCIÓN INFERIOR (FIJA) --- */}
             <div className="p-4 flex-shrink-0 border-t border-gray-700">
-                <div className="space-y-2">
-                    <ThemeSwitcher />
-                    <button onClick={logoutUser} className="w-full flex items-center p-2 rounded-md text-red-400 hover:bg-red-700 hover:text-white">
-                        <span>Cerrar Sesión</span>
-                    </button>
-                </div>
+                <button onClick={logoutUser} className="w-full flex items-center justify-center p-2 rounded-md text-red-400 hover:bg-red-500 hover:text-white transition-colors">
+                    <span>Cerrar Sesión</span>
+                </button>
             </div>
         </div>
     );

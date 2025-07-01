@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Estado de Cuenta - Contrato #{{ contrato.id }}</title>
+    <style>
+        /* --- Tus estilos no necesitan cambios --- */
+        @page {
+            size: letter;
+            margin: 1in;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a202c;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #fdfdfd;
+        }
+
+        .info-section h2 {
+            margin-top: 0;
+            font-size: 14pt;
+            color: #2d3748;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-grid p {
+            margin: 0;
+            padding: 5px 0;
+        }
+
+        .info-grid strong {
+            display: block;
+            color: #718096;
+            font-size: 9pt;
+            margin-bottom: 2px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #edf2f7;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 9pt;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .summary-section {
+            margin-top: 30px;
+            float: right;
+            width: 40%;
+        }
+
+        .summary-section td {
+            border: none;
+            padding: 5px 10px;
+        }
+
+        .summary-section .total {
+            font-weight: bold;
+            border-top: 2px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+    {# ### CAMBIO 1: Cargamos la librería humanize ### #}
+    {% load humanize %}
+
+    <h1>Estado de Cuenta</h1>
+
+    <div class="info-section">
+        <h2>Información del Contrato</h2>
+        <div class="info-grid">
+            <p><strong>Cliente:</strong> {{ contrato.cliente.nombre_completo }}</p>
+            <p><strong>Contrato No:</strong> {{ contrato.id }}</p>
+            <p><strong>Proyecto:</strong> {{ contrato.upe.proyecto.nombre }}</p>
+            <p><strong>UPE:</strong> {{ contrato.upe.identificador }}</p>
+            <p><strong>Fecha de Venta:</strong> {{ contrato.fecha_venta|date:"d/m/Y" }}</p>
+            <p><strong>Valor del Contrato:</strong> {{ valor_contrato_string }}</p>
+        </div>
+    </div>
+
+    <h2>Historial de Pagos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha de Pago</th>
+                <th>Tipo</th>
+                <th>Instrumento</th>
+                <th class="text-right">Monto</th>
+                <th class="text-right">T.C.</th>
+                <th class="text-right">Valor (MXN)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos %}
+            <tr>
+                <td>{{ pago.fecha_pago_mensualidad|date:"d/m/Y" }}</td>
+                <td>{{ pago.get_tipo_display }}</td>
+                <td>{{ pago.instrumento_pago|default_if_none:"" }}</td>
+                <td class="text-right">{{ pago.monto_pagado|floatformat:2 }} {{ pago.moneda_pagada }}</td>
+                <td class="text-right">{{ pago.tipo_de_cambio|floatformat:4 }}</td>
+                {# ### CAMBIO 2: Aplicamos el filtro intcomma para el formato ### #}
+                <td class="text-right">${{ pago.valor_mxn|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No hay pagos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="summary-section">
+        <tr>
+            <td>Total Pagado (MXN):</td>
+            {# ### CAMBIO 2: Aplicamos el filtro intcomma también aquí ### #}
+            <td class="text-right">${{ total_pagado_mxn|floatformat:2|intcomma }}</td>
+        </tr>
+        <tr>
+            <td class="total">Saldo Pendiente (MXN):</td>
+            {# ### CAMBIO 2: Y aquí ### #}
+            <td class="text-right total">${{ saldo_pendiente_mxn|floatformat:2|intcomma }}</td>
+        </tr>
+    </table>
+
+</body>
+
+</html>
+
+</html>
