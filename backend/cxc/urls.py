@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .views import consulta_inteligente
 # Importa las nuevas vistas
 from .views import (
     ProyectoViewSet, ClienteViewSet, UPEViewSet,
@@ -33,4 +34,6 @@ urlpatterns = [
     path('importar-upes/', importar_upes, name='importar-upes'),
     path('importar-contratos/', importar_contratos, name='importar-contratos'),
     path('permissions/', get_all_permissions, name='get-all-permissions'),
+    path('consulta-inteligente/', consulta_inteligente,
+         name='consulta-inteligente'),
 ]

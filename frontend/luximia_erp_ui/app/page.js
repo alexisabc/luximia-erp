@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { getDashboardStats, getValorPorProyectoChartData } from '../services/api'; // Importamos nuestra función
 import KpiCard from '../components/KpiCard'; // Importamos nuestro nuevo componente
 import ValorPorProyectoChart from '../components/ValorPorProyectoChart';
+import ChatInteligente from '../components/ChatInteligente'; 
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
@@ -62,6 +63,10 @@ export default function DashboardPage() {
           {chartData ? <ValorPorProyectoChart chartData={chartData} /> : <p>Cargando gráfica...</p>}
         </div>
       </div>
+      {/* El componente del chat ahora es flotante, 
+              así que se posicionará solo en la esquina de la pantalla.
+            */}
+      <ChatInteligente />
     </div>
   );
 }

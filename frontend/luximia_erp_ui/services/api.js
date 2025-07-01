@@ -102,3 +102,6 @@ export const importarContratos = (formData) => apiClient.post('/importar-contrat
 
 // PDF
 export const descargarEstadoDeCuentaPDF = (contratoId) => apiClient.get(`/contratos/${contratoId}/pdf/`, { responseType: 'blob' });
+
+//OPEN IA
+export const consultaInteligente = (pregunta) => apiClient.post('/consulta-inteligente/', { pregunta });

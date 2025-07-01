@@ -1,3 +1,5 @@
+# backend/cxc/views.py
+
 # ==============================================================================
 # --- IMPORTS ---
 # ==============================================================================
@@ -6,10 +8,12 @@
 import traceback
 from decimal import Decimal
 from datetime import datetime
+import os
+import json  # <-- 1. AÑADIDO: Importación necesaria
 from django.db import transaction
-from django.db.models import Sum, F, Case, When, Value, DecimalField, Q
+from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User, Group, Permission
@@ -18,12 +22,13 @@ from django.contrib.humanize.templatetags.humanize import intcomma
 # --- Librerías Externas ---
 import pandas as pd
 from weasyprint import HTML
+from openai import OpenAI
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-# --- Serializers y Modelos Locales (Es crucial que estén aquí) ---
+# --- Serializers y Modelos Locales ---
 from .models import Proyecto, Cliente, UPE, Contrato, Pago
 from .serializers import (
     ProyectoSerializer,
@@ -35,6 +40,7 @@ from .serializers import (
     GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer
 )
+
 
 
 # ==============================================================================
@@ -403,3 +409,96 @@ def importar_contratos(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def consulta_inteligente(request):
+    pregunta_usuario = request.data.get('pregunta')
+    if not pregunta_usuario:
+        return Response({"error": "No se proporcionó ninguna pregunta."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "La clave de API de OpenAI no está configurada en el entorno.")
+
+        client = OpenAI(api_key=api_key)
+
+        # ### CAMBIO ###: Ampliamos el prompt con la información de Proyecto y UPE
+        system_prompt = """
+        Eres un asistente experto en el CRM de Luximia. Tu trabajo es convertir la pregunta de un usuario en un objeto JSON para consultar la base de datos.
+        El JSON debe tener la siguiente estructura: {"modelo": "nombre_del_modelo", "filtros": {}, "agregacion": "tipo_de_agregacion"}.
+        
+        Modelos disponibles: 'Contrato', 'Cliente', 'UPE', 'Proyecto'.
+        Agregaciones disponibles: 'count' (contar resultados) o 'none' (listar resultados).
+        
+        Campos para filtrar en 'Contrato': cliente__nombre_completo__icontains, upe__identificador__iexact, upe__proyecto__nombre__icontains, upe__estado__iexact.
+        Campos para filtrar en 'Cliente': nombre_completo__icontains, email__iexact.
+        Campos para filtrar en 'UPE': identificador__iexact, proyecto__nombre__icontains, estado__iexact (Valores: 'Disponible', 'Vendida', 'Pagada', 'Bloqueada').
+        Campos para filtrar en 'Proyecto': nombre__icontains, activo (Valores: true o false).
+
+        Ejemplo 1: "cuantos contratos tiene el proyecto shark tower" -> {"modelo": "Contrato", "filtros": {"upe__proyecto__nombre__icontains": "shark tower"}, "agregacion": "count"}
+        Ejemplo 2: "lista los clientes con el nombre javier" -> {"modelo": "Cliente", "filtros": {"nombre_completo__icontains": "javier"}, "agregacion": "none"}
+        Ejemplo 3: "mostrar upes disponibles en nido" -> {"modelo": "UPE", "filtros": {"proyecto__nombre__icontains": "nido", "estado__iexact": "Disponible"}, "agregacion": "none"}
+        Ejemplo 4: "cuantos proyectos estan activos" -> {"modelo": "Proyecto", "filtros": {"activo": true}, "agregacion": "count"}
+        
+        Nunca respondas con texto conversacional, solo con el objeto JSON.
+        """
+
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": pregunta_usuario}
+            ],
+            response_format={"type": "json_object"}
+        )
+
+        respuesta_ia_str = completion.choices[0].message.content
+        parametros_consulta = json.loads(respuesta_ia_str)
+
+        modelo = parametros_consulta.get('modelo')
+        filtros = parametros_consulta.get('filtros', {})
+        agregacion = parametros_consulta.get('agregacion', 'none')
+
+        q_objects = Q()
+        for campo, valor in filtros.items():
+            q_objects &= Q(**{campo: valor})
+
+        if modelo == 'Contrato':
+            queryset = Contrato.objects.select_related(
+                'cliente', 'upe__proyecto').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} contratos."})
+            serializer = ContratoReadSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'Cliente':
+            queryset = Cliente.objects.filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} clientes."})
+            serializer = ClienteSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        # ### NUEVO ###: Lógica para manejar consultas de UPE y Proyecto
+        elif modelo == 'UPE':
+            queryset = UPE.objects.select_related('proyecto').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} UPEs."})
+            serializer = UPEReadSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'Proyecto':
+            queryset = Proyecto.objects.filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} proyectos."})
+            serializer = ProyectoSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        else:
+            return Response({"error": "Modelo no reconocido por la IA."}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"error": f"Ocurrió un error al procesar la consulta: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
