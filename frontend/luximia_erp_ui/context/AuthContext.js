@@ -39,11 +39,17 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter();
 
     const loginUser = async (username, password) => {
+        // Leemos la URL de la API desde las variables de entorno
+        const apiURL = process.env.NEXT_PUBLIC_API_URL;
+
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/token/', {
+            // ### CAMBIO CLAVE ###
+            // Usamos la URL dinámica para la petición del token
+            const response = await axios.post(`${apiURL}/token/`, {
                 username,
                 password
             });
+
             if (response.status === 200) {
                 const data = response.data;
                 setAuthTokens(data);
@@ -54,7 +60,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error("Error en el login", error);
-            throw new Error("Usuario o contraseña incorrectos");
+            throw new Error(error.response?.data?.detail || "Usuario o contraseña no válidos.");
         }
     };
 
