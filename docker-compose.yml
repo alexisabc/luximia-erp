@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: luximia-db-local
+    environment:
+      - POSTGRES_DB=luximiadb
+      - POSTGRES_USER=luximiauser
+      - POSTGRES_PASSWORD=luximiapass
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: luximia-backend-local
+    command: bash run.sh
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:10000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://luximiauser:luximiapass@db:5432/luximiadb
+      - SECRET_KEY=una-clave-secreta-para-pruebas-locales-123
+      - DJANGO_SETTINGS_MODULE=luximia_erp.settings_prod
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - DEVELOPMENT_MODE=True

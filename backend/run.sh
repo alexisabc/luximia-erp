@@ -1,5 +1,10 @@
 #!/bin/bash
 set -e
-python manage.py collectstatic --no-input
+
+echo "Aplicando migraciones..."
 python manage.py migrate
-gunicorn luximia_erp.wsgi
+
+# Le decimos a Gunicorn que escuche en todas las interfaces (0.0.0.0)
+# y en el puerto 10000, que es el que Docker está esperando.
+echo "Iniciando Gunicorn..."
+gunicorn luximia_erp.wsgi -b 0.0.0.0:10000

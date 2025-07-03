@@ -7,8 +7,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = False
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
+IS_DEVELOPMENT = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
+
 DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+    'default': dj_database_url.config(
+        conn_max_age=600,
+        # Exigir SSL solo si NO estamos en modo desarrollo
+        ssl_require=(not IS_DEVELOPMENT)
+    )
 }
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')

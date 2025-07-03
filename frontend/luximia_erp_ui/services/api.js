@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const baseURL = 'http://127.0.0.1:8000/api';
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
 const apiClient = axios.create({
     baseURL,
