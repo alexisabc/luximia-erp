@@ -4,6 +4,9 @@ venv/
 *.pyc
 __pycache__/
 
+# Archivos de Log
+*.log
+
 # Base de datos de desarrollo de Django
 db.sqlite3
 
@@ -18,6 +21,10 @@ node_modules/
 # Archivos de build y temporales de Next.js
 .next/
 out/
+
+# Carpeta de archivos estáticos y media de producción de Django
+staticfiles/
+media/
 
 # Archivos del sistema operativo y editores
 .DS_Store
