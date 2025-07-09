@@ -1,4 +1,4 @@
-# cxc/management/commands/crear_superusuario_inicial.py
+# backend/cxc/management/commands/crear_superusuario_inicial.py
 
 import os
 from django.core.management.base import BaseCommand
@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
-    help = 'Crea un superusuario inicial si no existe, usando variables de entorno.'
+    help = 'Crea o actualiza un superusuario inicial usando variables de entorno.'
 
     def handle(self, *args, **options):
         User = get_user_model()
@@ -14,21 +14,28 @@ class Command(BaseCommand):
         email = os.getenv('DJANGO_SUPERUSER_EMAIL')
         password = os.getenv('DJANGO_SUPERUSER_PASSWORD')
 
-        if not all([username, email, password]):
+        if not all([username, password]):
             self.stdout.write(self.style.ERROR(
-                'Faltan variables de entorno para el superusuario.'))
+                'Faltan DJANGO_SUPERUSER_USERNAME o DJANGO_SUPERUSER_PASSWORD.'))
             return
 
-        if not User.objects.filter(username=username).exists():
-            self.stdout.write(self.style.WARNING(
-                f"Creando superusuario '{username}'..."))
-            User.objects.create_superuser(
-                username=username,
-                email=email,
-                password=password
-            )
+        # Busca o crea el usuario
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                'email': email,
+                'is_staff': True,
+                'is_superuser': True,
+            }
+        )
+
+        # Siempre establece la contraseña para asegurar que sea la correcta
+        user.set_password(password)
+        user.save()
+
+        if created:
             self.stdout.write(self.style.SUCCESS(
                 f"Superusuario '{username}' creado con éxito."))
         else:
             self.stdout.write(self.style.SUCCESS(
-                f"Superusuario '{username}' ya existe. No se realizaron cambios."))
+                f"Superusuario '{username}' actualizado con la contraseña del entorno."))

@@ -247,10 +247,15 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class UserWriteSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        write_only=True, required=False, allow_blank=True, style={'input_type': 'password'}
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        style={'input_type': 'password'}
     )
     groups = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(), many=True, required=False
+        queryset=Group.objects.all(),
+        many=True,
+        required=False
     )
 
     class Meta:
@@ -259,21 +264,35 @@ class UserWriteSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name', 'is_active', 'groups']
 
     def create(self, validated_data):
+        # ### CAMBIO: Sacamos los grupos ANTES de crear el usuario ###
         groups_data = validated_data.pop('groups', None)
+
+        # create_user se encarga de hashear la contraseña de forma segura
         user = User.objects.create_user(**validated_data)
-        if groups_data:
+
+        # Si se especificaron grupos, se los asignamos al nuevo usuario
+        if groups_data is not None:
             user.groups.set(groups_data)
+
         return user
 
     def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
+        # ### CAMBIO: Sacamos los grupos y la contraseña ANTES de actualizar ###
         groups_data = validated_data.pop('groups', None)
+        password = validated_data.pop('password', None)
+
+        # Actualizamos el resto de los campos normalmente
         super().update(instance, validated_data)
+
+        # Si se proporcionó una nueva contraseña (y no está en blanco), la actualizamos
         if password:
             instance.set_password(password)
             instance.save()
+
+        # Si se proporcionaron grupos, los actualizamos
         if groups_data is not None:
             instance.groups.set(groups_data)
+
         return instance
 
 

@@ -36,3 +36,28 @@
 .hover\:bg-luximia-brand-gold:hover {
   background-color: #9A793A; /* Un dorado un poco más oscuro */
 }
+
+/* --- Estilos para un scrollbar oscuro y moderno --- */
+/* Funciona en navegadores basados en WebKit (Chrome, Safari, Edge) */
+
+/* El cuerpo completo del scrollbar */
+::-webkit-scrollbar {
+  width: 8px; /* Ancho del scrollbar */
+  height: 8px; /* Alto para scrollbars horizontales */
+}
+
+/* El riel (el fondo sobre el que se mueve la barra) */
+::-webkit-scrollbar-track {
+  background: #1a202c; /* Un gris muy oscuro, casi negro */
+}
+
+/* La barra que se puede arrastrar */
+::-webkit-scrollbar-thumb {
+  background-color: #4a5568; /* Un gris medio */
+  border-radius: 20px; /* Bordes completamente redondeados */
+}
+
+/* La barra cuando pasas el mouse sobre ella */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #718096; /* Se hace más clara al pasar el mouse */
+}

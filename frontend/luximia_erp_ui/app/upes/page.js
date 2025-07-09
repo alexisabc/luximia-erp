@@ -96,6 +96,21 @@ export default function UPEsPage() {
         }
     };
 
+    // Función para obtener el estilo del badge según el nombre del proyecto
+    const getProjectBadgeStyle = (projectName) => {
+        // Puedes añadir más proyectos y colores aquí
+        switch (projectName.toLowerCase()) {
+            case 'shark tower':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'be towers':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'torre medica':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        }
+    };
+
     const columns = [
         {
             header: 'Identificador',
@@ -103,8 +118,12 @@ export default function UPEsPage() {
         },
         {
             header: 'Proyecto',
-            // ### CAMBIO 2 ###: Usamos el campo 'proyecto_nombre' que ahora envía la API.
-            render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.proyecto_nombre}</span>
+            render: (row) => (
+                // Usamos la función para obtener el estilo dinámicamente
+                <span className={`px-2.5 py-1 text-xs font-medium rounded-md ${getProjectBadgeStyle(row.proyecto_nombre)}`}>
+                    {row.proyecto_nombre}
+                </span>
+            )
         },
         {
             header: 'Estado',

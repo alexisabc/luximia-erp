@@ -92,18 +92,36 @@ export default function ClientesPage() {
         }
     };
 
+    // Función para obtener el estilo del badge según el nombre del proyecto
+    const getProjectBadgeStyle = (projectName) => {
+        // Puedes añadir más proyectos y colores aquí
+        switch (projectName.toLowerCase()) {
+            case 'shark tower':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'be towers':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'torre medica':
+                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        }
+    };
+
     const columns = [
         {
             header: 'Nombre Completo',
             render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre_completo}</span>
         },
-        // ### NUEVA COLUMNA ###
         {
             header: 'Proyectos',
             render: (row) => (
                 <div className="flex flex-wrap gap-1">
                     {row.proyectos_asociados?.map((proyecto, index) => (
-                        <span key={index} className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 dark:bg-green-900 dark:text-green-200 rounded-full">
+                        <span
+                            key={index}
+                            // Usamos la función para obtener el estilo dinámicamente
+                            className={`px-2.5 py-1 text-xs font-medium rounded-md ${getProjectBadgeStyle(proyecto)}`}
+                        >
                             {proyecto}
                         </span>
                     ))}
@@ -182,15 +200,18 @@ export default function ClientesPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                        <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleInputChange} required className="mt-1 block w-full input-form" />
+                        {/* Se añade text-gray-900 */}
+                        <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="mt-1 block w-full input-form" />
+                        {/* Se añade text-gray-900 */}
+                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                        <input type="text" name="telefono" value={formData.telefono} onChange={handleInputChange} className="mt-1 block w-full input-form" />
+                        {/* Se añade text-gray-900 */}
+                        <input type="text" name="telefono" value={formData.telefono} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
                     </div>
                     <div className="pt-4 flex justify-end">
                         <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">

@@ -39,17 +39,9 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter();
 
     const loginUser = async (username, password) => {
-        // Leemos la URL de la API desde las variables de entorno
         const apiURL = process.env.NEXT_PUBLIC_API_URL;
-
         try {
-            // ### CAMBIO CLAVE ###
-            // Usamos la URL dinámica para la petición del token
-            const response = await axios.post(`${apiURL}/token/`, {
-                username,
-                password
-            });
-
+            const response = await axios.post(`${apiURL}/token/`, { username, password });
             if (response.status === 200) {
                 const data = response.data;
                 setAuthTokens(data);
@@ -64,6 +56,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ### INICIO DE LA SECCIÓN CORREGIDA ###
+
+    // Envolvemos logoutUser en useCallback para asegurar que su referencia es estable.
     const logoutUser = useCallback(() => {
         setAuthTokens(null);
         setUser(null);
@@ -71,42 +66,57 @@ export const AuthProvider = ({ children }) => {
         router.push('/login');
     }, [router]);
 
-    // --- NUEVA FUNCIÓN PARA VERIFICAR PERMISOS ---
-    const hasPermission = (permissionCodename) => {
-        // Si el usuario existe y su token dice que es superusuario, siempre tiene permiso.
-        if (user && user.is_superuser) {
-            return true;
-        }
-
-        // Si no es superusuario, revisamos la lista de permisos como antes.
-        return user && user.permissions?.includes(permissionCodename);
-    };
-
-    useEffect(() => {
+    // Usamos useCallback para estabilizar también la función que resetea el timer.
+    const resetInactivityTimer = useCallback(() => {
+        // La lógica del timer se mueve adentro de esta función memoizada.
         let inactivityTimer;
-        const resetTimer = () => {
+
+        const reset = () => {
             clearTimeout(inactivityTimer);
             inactivityTimer = setTimeout(() => {
+                // Llama a logoutUser después de 15 minutos de inactividad.
                 logoutUser();
             }, 15 * 60 * 1000);
         };
+
+        // Escuchamos los eventos de actividad del usuario.
+        const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => window.addEventListener(event, reset));
+
+        reset(); // Inicia el timer por primera vez.
+
+        // Esta función de limpieza se ejecutará cuando el componente se desmonte
+        // o cuando las dependencias del useEffect cambien.
+        return () => {
+            clearTimeout(inactivityTimer);
+            events.forEach(event => window.removeEventListener(event, reset));
+        };
+    }, [logoutUser]); // La función solo se recreará si logoutUser cambia.
+
+    useEffect(() => {
+        // Si el usuario está logueado, activamos el timer de inactividad.
         if (authTokens) {
-            const events = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart'];
-            events.forEach(event => window.addEventListener(event, resetTimer));
-            resetTimer();
-            return () => {
-                clearTimeout(inactivityTimer);
-                events.forEach(event => window.removeEventListener(event, resetTimer));
-            };
+            // Llamamos a la función que configura todo.
+            // La función que retorna se encargará de la limpieza.
+            return resetInactivityTimer();
         }
-    }, [authTokens, logoutUser]);
+    }, [authTokens, resetInactivityTimer]);
+
+    // ### FIN DE LA SECCIÓN CORREGIDA ###
+
+    const hasPermission = (permissionCodename) => {
+        if (user && user.is_superuser) {
+            return true;
+        }
+        return user && user.permissions?.includes(permissionCodename);
+    };
 
     const contextData = {
         user,
         authTokens,
         loginUser,
         logoutUser,
-        hasPermission, // <-- Exportamos la nueva función
+        hasPermission,
     };
 
     return (

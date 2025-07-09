@@ -38,6 +38,21 @@ El backend (`luximia_erp`) contiene múltiples "apps" que representan los módul
 
 La interfaz (`luximia_erp_ui`) es una **única** Single-Page Application (SPA) que consume la API del backend.
 
+
+#### 3.1. Funcionalidades Clave Implementadas
+* **CRUDs Completos y Estilizados:** Módulos para gestionar Proyectos, Clientes, UPEs y Contratos con una interfaz consistente y responsiva.
+* **Dashboard Avanzado:**
+    * Tarjetas de KPIs con métricas clave del negocio.
+    * Gráfica de barras de "Valor por Proyecto" y una gráfica de dona para el "Estado de UPEs".
+* **Estado de Cuenta Detallado:** El formulario para agregar pagos fue rediseñado con un layout de múltiples columnas y ahora incluye todos los nuevos campos detallados del modelo `Pago`.
+* **Páginas de Importación Dedicadas:** Interfaces consistentes con "arrastrar y soltar" para la carga de archivos CSV para todos los módulos.
+* **Asistente con IA:** Un widget de chat flotante que consume el endpoint de consulta inteligente, con efecto de tipeo y formato amigable de respuestas.
+* **Interfaz de Usuario Mejorada (UX):**
+    * **Sidebar colapsable** que se adapta al tamaño de la pantalla.
+    * Resaltado dinámico del enlace activo en el menú de navegación.
+    * Uso de **etiquetas de colores (badges)** en las tablas para una rápida identificación de estados y categorías.
+    * **Página de login rediseñada** con un tema oscuro y la funcionalidad de ver/ocultar contraseña.
+
 ***
 
 ### ## 4. Procedimientos Operativos

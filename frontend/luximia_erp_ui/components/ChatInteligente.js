@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { consultaInteligente } from '../services/api';
+import Image from 'next/image'; //
 
 // ### VERSIÓN CORREGIDA Y ROBUSTA ###
 const TypingMessage = ({ text, start }) => {
@@ -117,10 +118,16 @@ export default function ChatInteligente() {
         <>
             <button
                 onClick={toggleChat}
-                className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full p-4 shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-110 focus:outline-none z-50"
+                className="fixed bottom-6 right-6 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border dark:border-gray-700 hover:scale-110 transition-transform focus:outline-none z-50"
                 aria-label="Abrir chat inteligente"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                <Image
+                    src="/icon-luximia-ia.png" // Apunta a tu nuevo ícono en la carpeta public
+                    alt="Asistente IA"
+                    width={40} // Ajusta el tamaño según necesites
+                    height={40}
+                    className="rounded-full"
+                />
             </button>
             <div className={`fixed bottom-24 right-6 w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out z-40 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
                 <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">

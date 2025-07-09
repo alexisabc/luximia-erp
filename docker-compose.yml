@@ -1,5 +1,4 @@
-version: '3.8'
-
+# docker-compose.yml
 services:
   db:
     image: postgres:16
@@ -28,3 +27,8 @@ services:
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - DEVELOPMENT_MODE=True
+      # --- AÑADE ESTAS TRES LÍNEAS ---
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=luximia2025
+      
