@@ -1,24 +1,19 @@
-// frontend/luximia_erp_ui/utils/formatters.js
+//utils/formatters.js
 
 export const formatCurrency = (value, currency = 'USD') => {
-    // 1. Convertimos el valor a un número y manejamos casos nulos o inválidos.
-    const numericValue = typeof value === 'number' ? value : parseFloat(value);
+    // Esta línea convierte el valor a número y si es inválido (NaN), usa 0.
+    const numericValue = Number(value) || 0;
 
-    if (isNaN(numericValue)) {
-        // Si el valor no es un número válido, devolvemos un formato por defecto.
+    try {
         return new Intl.NumberFormat('es-MX', {
             style: 'currency',
             currency: currency,
             minimumFractionDigits: 2,
-        }).format(0);
+            maximumFractionDigits: 2,
+        }).format(numericValue);
+    } catch (error) {
+        // Fallback por si la 'currency' es inválida
+        console.error("Error al formatear moneda:", error);
+        return `$${numericValue.toFixed(2)}`;
     }
-
-    // 2. Usamos Intl.NumberFormat para formatear la moneda.
-    // 'es-MX' se encarga de usar el formato de México (coma para miles, punto para decimales).
-    return new Intl.NumberFormat('es-MX', {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(numericValue);
-  };
+};

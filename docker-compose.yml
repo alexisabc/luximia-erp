@@ -9,6 +9,10 @@ services:
       - POSTGRES_PASSWORD=luximiapass
     ports:
       - "5432:5432"
+    # ### AÑADIDO 1/2 ###
+    # Conecta el contenedor a un volumen persistente.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
 
   backend:
     build: ./backend
@@ -27,8 +31,11 @@ services:
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - DEVELOPMENT_MODE=True
-      # --- AÑADE ESTAS TRES LÍNEAS ---
       - DJANGO_SUPERUSER_USERNAME=admin
       - DJANGO_SUPERUSER_EMAIL=admin@example.com
       - DJANGO_SUPERUSER_PASSWORD=luximia2025
-      
+
+# ### AÑADIDO 2/2 ###
+# Define el volumen que Docker debe crear y gestionar.
+volumes:
+  postgres_data:

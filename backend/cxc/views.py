@@ -3,55 +3,46 @@
 # ==============================================================================
 # --- IMPORTS ---
 # ==============================================================================
-
-# --- Django & Python Core ---
 import traceback
 from decimal import Decimal
 from datetime import datetime
 import os
-import json  # <-- 1. AÑADIDO: Importación necesaria
+import json
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.humanize.templatetags.humanize import intcomma
-from django.db.models import Count
+from django.utils import timezone
+from .pagination import CustomPagination
 
 # --- Librerías Externas ---
-import pandas as pd
-from weasyprint import HTML
 from openai import OpenAI
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view, action, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from weasyprint import HTML
 
 # --- Serializers y Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos
 from .serializers import (
-    ProyectoSerializer,
-    ClienteSerializer,
-    UPESerializer, UPEReadSerializer,
-    ContratoWriteSerializer, ContratoReadSerializer,
-    PagoWriteSerializer, PagoReadSerializer,
-    UserReadSerializer, UserWriteSerializer,
-    GroupReadSerializer, GroupWriteSerializer,
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer
 )
-
-
 
 # ==============================================================================
 # --- VISTAS DE AUTENTICACIÓN ---
 # ==============================================================================
 
+
 class MyTokenObtainPairView(TokenObtainPairView):
-    """
-    Vista de login personalizada que devuelve un token JWT con información extra.
-    """
     serializer_class = MyTokenObtainPairSerializer
 
 
@@ -60,39 +51,33 @@ class MyTokenObtainPairView(TokenObtainPairView):
 # ==============================================================================
 
 class ProyectoViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para el modelo Proyecto."""
     queryset = Proyecto.objects.all().order_by('nombre')
     serializer_class = ProyectoSerializer
+    pagination_class = CustomPagination
 
     @action(detail=False, methods=['get'], pagination_class=None)
     def all(self, request):
-        """Endpoint para obtener TODOS los proyectos sin paginación."""
         proyectos = self.get_queryset()
         serializer = self.get_serializer(proyectos, many=True)
         return Response(serializer.data)
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para el modelo Cliente."""
-    # ### CAMBIO ###: Añadimos prefetch_related para optimizar la consulta
     queryset = Cliente.objects.prefetch_related(
-        'contratos__upe__proyecto'
-    ).order_by('nombre_completo')
-
+        'contratos__upe__proyecto').order_by('nombre_completo')
     serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
 
 
 class UPEViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para el modelo UPE."""
-    # El queryset de UPEViewSet DEBE ser optimizado también
-    queryset = UPE.objects.select_related('proyecto').all()
+    queryset = UPE.objects.select_related(
+        'proyecto').all().order_by('identificador')
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']:
-            return UPEReadSerializer
-        return UPESerializer
+        return UPEReadSerializer if self.action in ['list', 'retrieve'] else UPESerializer
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], pagination_class=None)
     def disponibles(self, request):
         upes_disponibles = UPE.objects.select_related(
             'proyecto').filter(estado='Disponible')
@@ -101,36 +86,65 @@ class UPEViewSet(viewsets.ModelViewSet):
 
 
 class ContratoViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para el modelo Contrato."""
-    queryset = Contrato.objects.select_related(
-        'cliente', 'upe__proyecto').prefetch_related('pagos').all()
+    queryset = Contrato.objects.select_related('cliente', 'upe__proyecto').prefetch_related(
+        'pagos', 'plan_de_pagos').order_by('-fecha_venta')
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return ContratoWriteSerializer
-        return ContratoReadSerializer
+        return ContratoReadSerializer if self.action in ['list', 'retrieve'] else ContratoWriteSerializer
 
     @action(detail=True, methods=['get'])
     def pagos(self, request, pk=None):
-        """Devuelve la lista de pagos para un contrato específico."""
         contrato = self.get_object()
-        # ### CAMBIO ###
         pagos_del_contrato = Pago.objects.filter(
-            contrato=contrato).order_by('fecha_pago_mensualidad')
+            contrato=contrato).order_by('fecha_pago')
         serializer = PagoReadSerializer(pagos_del_contrato, many=True)
         return Response(serializer.data)
 
 
 class PagoViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para el modelo Pago."""
-    # ### CAMBIO ###
-    queryset = Pago.objects.all().order_by('-fecha_pago_mensualidad')
+    queryset = Pago.objects.all().order_by('-fecha_pago')
+    pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return PagoWriteSerializer
-        return PagoReadSerializer
+        return PagoReadSerializer if self.action in ['list', 'retrieve'] else PagoWriteSerializer
 
+    # ### MÉTODO AÑADIDO ###
+    def perform_destroy(self, instance):
+        # Guardamos la referencia al contrato antes de borrar el pago
+        contrato_afectado = instance.contrato
+        # Borramos el pago
+        instance.delete()
+        # Ejecutamos la lógica de actualización en el contrato afectado
+        contrato_afectado.actualizar_plan_de_pagos()
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        return UserReadSerializer if self.action in ['create', 'update', 'partial_update'] else UserReadSerializer
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all().order_by('name')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        return GroupReadSerializer if self.action in ['create', 'update', 'partial_update'] else GroupReadSerializer
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        groups = self.get_queryset()
+        serializer = GroupReadSerializer(groups, many=True)
+        return Response(serializer.data)
 
 # ==============================================================================
 # --- VIEWSETS PARA USUARIOS Y ROLES ---
@@ -190,45 +204,44 @@ def get_all_permissions(request):
 
 @api_view(['GET'])
 def dashboard_stats(request):
-    """Calcula y devuelve las estadísticas para el dashboard."""
+    """Calcula y devuelve las estadísticas para el dashboard con la nueva lógica."""
+    today = timezone.now().date()
+    # KPIs de conteo
     proyectos_activos = Proyecto.objects.filter(activo=True).count()
     clientes_totales = Cliente.objects.count()
-    upes_totales = UPE.objects.count()  # <-- 1. AÑADE ESTA LÍNEA
+    upes_totales = UPE.objects.count()
+    contratos_activos = Contrato.objects.filter(estado='Activo').count()
 
-    ultimo_pago_usd = Pago.objects.filter(
-        moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
+    # KPIs financieros
+    total_pagado_query = Pago.objects.aggregate(total=Sum('monto_pagado'))
+    total_pagado = total_pagado_query['total'] or 0
+    total_contratado_query = Contrato.objects.filter(
+        estado='Activo').aggregate(total=Sum('precio_final_pactado'))
+    total_contratado = total_contratado_query['total'] or 0
+    total_adeudado = total_contratado - total_pagado
 
-    tipo_cambio_reciente = ultimo_pago_usd.tipo_de_cambio if ultimo_pago_usd else Decimal(
-        '17.50')
-
-    total_contratos_mxn = Contrato.objects.filter(moneda_pactada='MXN').aggregate(
-        total=Coalesce(Sum('precio_final_pactado'), Value(0), output_field=DecimalField()))['total']
-
-    total_contratos_usd = Contrato.objects.filter(moneda_pactada='USD').aggregate(
-        total=Coalesce(Sum('precio_final_pactado'), Value(0), output_field=DecimalField()))['total']
-
-    valor_total_aproximado_mxn = total_contratos_mxn + \
-        (total_contratos_usd * tipo_cambio_reciente)
+    # Saldo vencido
+    saldo_vencido_query = PlanDePagos.objects.filter(
+        fecha_vencimiento__lt=today, pagado=False, contrato__estado='Activo').aggregate(total=Sum('monto_programado'))
+    saldo_vencido = saldo_vencido_query['total'] or 0
 
     stats = {
-        'proyectos_activos': proyectos_activos,
-        'clientes_totales': clientes_totales,
-        'upes_totales': upes_totales,  # <-- 2. AÑADE ESTA LÍNEA
-        'valor_total_contratos_mxn': valor_total_aproximado_mxn
+        'proyectos_activos': proyectos_activos, 'clientes_totales': clientes_totales,
+        'upes_totales': upes_totales, 'contratos_activos': contratos_activos,
+        'total_adeudado': total_adeudado, 'saldo_vencido': saldo_vencido,
     }
     return Response(stats)
 
 
 @api_view(['GET'])
 def valor_por_proyecto_chart(request):
-    """Calcula y devuelve los datos para la gráfica de valor por proyecto."""
-    # ### CAMBIO ###
+    """Calcula los datos para la gráfica de valor por proyecto."""
+    # ### CORREGIDO: Se usa el campo 'tipo_cambio' correcto ###
     ultimo_pago_usd = Pago.objects.filter(
-        moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
-
-    # El resto de la función no cambia...
+        moneda_pagada='USD').order_by('-fecha_pago').first()
     tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
         '17.50')
+
     chart_data = Contrato.objects.annotate(
         valor_en_mxn=Case(
             When(moneda_pactada='USD', then=F(
@@ -242,39 +255,60 @@ def valor_por_proyecto_chart(request):
                        'value': item['total_contratado']} for item in chart_data]
     return Response(formatted_data)
 
+
+@api_view(['GET'])
+def upe_status_chart(request):
+    """Calcula el número de UPEs por cada estado."""
+    query_data = UPE.objects.values('estado').annotate(
+        total=Count('id')).order_by('-total')
+    data = {
+        "labels": [item['estado'] for item in query_data],
+        "values": [item['total'] for item in query_data]
+    }
+    return Response(data)
+
+
 @api_view(['GET'])
 def generar_estado_de_cuenta_pdf(request, pk=None):
-    """Genera un PDF del estado de cuenta para un contrato específico."""
+    """
+    Genera un PDF del estado de cuenta para un contrato específico.
+    """
     try:
+        # ### CORRECCIÓN ###
+        # Reemplazamos '...' con la consulta correcta al modelo Contrato.
         contrato = get_object_or_404(
-            Contrato.objects.select_related('cliente', 'upe__proyecto'), pk=pk)
-        pagos = Pago.objects.filter(contrato=contrato).order_by(
-            'fecha_pago_mensualidad')
+            Contrato.objects.select_related(
+                'cliente', 'upe__proyecto').prefetch_related('plan_de_pagos'),
+            pk=pk
+        )
 
-        # Lógica para el tipo de cambio reciente
-        ultimo_pago_usd = Pago.objects.filter(
-            moneda_pagada='USD').order_by('-fecha_pago_mensualidad').first()
-        tipo_cambio_reciente = ultimo_pago_usd.tipo_de_cambio if ultimo_pago_usd else Decimal(
-            '17.50')
+        pagos_qs = Pago.objects.filter(
+            contrato=contrato).order_by('fecha_pago', 'id')
 
-        precio_contrato = contrato.precio_final_pactado or Decimal('0.0')
-        valor_contrato_en_mxn = precio_contrato
-        if contrato.moneda_pactada == 'USD':
-            valor_contrato_en_mxn = precio_contrato * tipo_cambio_reciente
+        saldo_actual = contrato.precio_final_pactado
+        pagos_con_saldo = []
+        for pago in pagos_qs:
+            saldo_actual -= pago.valor_mxn
+            pagos_con_saldo.append({
+                'pago': pago,
+                'saldo_despues_del_pago': saldo_actual
+            })
 
-        # ### CAMBIO CLAVE ###: Usamos la nueva property 'valor_mxn'
-        total_pagado_mxn = sum(p.valor_mxn for p in pagos)
+        serializer = ContratoReadSerializer(instance=contrato)
+        datos_financieros = serializer.data
 
-        saldo_pendiente_mxn = valor_contrato_en_mxn - total_pagado_mxn
+        context = {
+            'contrato': contrato,
+            'pagos_con_saldo': pagos_con_saldo,
+            'plan_de_pagos': contrato.plan_de_pagos.all(),
+            'adeudo': datos_financieros.get('adeudo'),
+            'intereses_generados': datos_financieros.get('intereses_generados'),
+            'adeudo_al_corte': datos_financieros.get('adeudo_al_corte'),
+            'precio_final_pactado': datos_financieros.get('precio_final_pactado'),
+            'moneda_pactada': datos_financieros.get('moneda_pactada'),
+        }
 
-        # ... (el resto de la lógica no cambia)
-        valor_contrato_formateado = f"$ {intcomma(round(precio_contrato, 2))} {contrato.moneda_pactada}"
-        context = {'contrato': contrato, 'pagos': pagos, 'total_pagado_mxn': total_pagado_mxn,
-                   'saldo_pendiente_mxn': saldo_pendiente_mxn, 'valor_contrato_string': valor_contrato_formateado}
-
-        # Nota: considera actualizar 'api/estado_de_cuenta.html' para mostrar los nuevos campos de pago si lo deseas.
-        html_string = render_to_string(
-            'cxc/estado_de_cuenta.html', context, request=request)
+        html_string = render_to_string('cxc/estado_de_cuenta.html', context)
         html = HTML(string=html_string)
         pdf = html.write_pdf()
 
@@ -559,3 +593,70 @@ def upe_status_chart(request):
         "values": [item['total'] for item in query_data]
     }
     return Response(data)
+
+# ### VISTA DE IMPORTACIÓN DE PAGOS ACTUALIZADA ###
+
+
+@api_view(['POST'])
+@transaction.atomic
+def importar_pagos_historicos(request):
+    """
+    Importa un histórico de pagos desde un archivo CSV.
+    """
+    import pandas as pd
+    archivo_csv = request.FILES.get('file')
+    if not archivo_csv:
+        return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
+
+    pagos_creados = 0
+    errores = []
+
+    try:
+        df = pd.read_csv(archivo_csv, encoding='latin-1', sep=',')
+        df = df.where(pd.notna(df), None)
+
+        for index, row in df.iterrows():
+            try:
+                contrato_id = row.get('CONTRATO_ID')
+                if not contrato_id:
+                    errores.append(f"Fila {index + 2}: Falta el CONTRATO_ID.")
+                    continue
+
+                contrato = Contrato.objects.get(id=int(contrato_id))
+
+                Pago.objects.create(
+                    contrato=contrato,
+                    tipo=row.get('TIPO', 'OTRO'),
+                    monto_pagado=Decimal(row.get('PAGO') or 0),
+                    moneda_pagada=row.get('DIVISA'),
+                    tipo_cambio=Decimal(row.get('TIPO_CAMBIO') or '1.0'),
+                    fecha_pago=datetime.strptime(
+                        row['FECHA_PAGO_MENSUALIDAD'], '%d/%m/%Y').date(),
+                    fecha_ingreso_cuentas=datetime.strptime(
+                        row['FECHA_PAGO_INGRESO_A_CUENTAS'], '%d/%m/%Y').date() if row.get('FECHA_PAGO_INGRESO_A_CUENTAS') else None,
+                    instrumento_pago=row.get('INSTRUMENTO_PAGO'),
+                    # Mapeamos TITULAR a ordenante
+                    ordenante=row.get('TITULAR_CUENTA_ORIGEN'),
+                    banco_origen=row.get('BANCO_ORIGEN'),
+                    num_cuenta_origen=row.get('NUM_CUENTA_ORIGEN'),
+                    banco_destino=row.get('BANCO_DESTINO'),
+                    cuenta_beneficiaria=row.get('NUM_CUENTA_DESTINO'),
+                    comentarios=row.get('COMENTARIOS')
+                )
+                pagos_creados += 1
+            except Contrato.DoesNotExist:
+                errores.append(
+                    f"Fila {index + 2}: El contrato con ID {contrato_id} no existe.")
+            except Exception as e:
+                errores.append(f"Fila {index + 2}: Error - {str(e)}")
+
+        if errores:
+            return Response({
+                "mensaje": f"Importación completada con errores. Se crearon {pagos_creados} pagos.",
+                "errores": errores
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"mensaje": f"Importación exitosa. Se crearon {pagos_creados} pagos."}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"error": f"Ocurrió un error crítico: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
