@@ -24,16 +24,10 @@ services:
       - "8000:10000"
     depends_on:
       - db
-    environment:
-      - DATABASE_URL=postgres://luximiauser:luximiapass@db:5432/luximiadb
-      - SECRET_KEY=una-clave-secreta-para-pruebas-locales-123
-      - DJANGO_SETTINGS_MODULE=luximia_erp.settings_prod
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000
-      - DEVELOPMENT_MODE=True
-      - DJANGO_SUPERUSER_USERNAME=admin
-      - DJANGO_SUPERUSER_EMAIL=admin@example.com
-      - DJANGO_SUPERUSER_PASSWORD=luximia2025
+    # ### CAMBIO CLAVE ###
+    # Le decimos a Docker que cargue las variables desde el archivo .env
+    env_file:
+      - ./.env
 
 # ### AÑADIDO 2/2 ###
 # Define el volumen que Docker debe crear y gestionar.
