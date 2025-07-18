@@ -120,11 +120,16 @@ class PagoWriteSerializer(serializers.ModelSerializer):
         
         return data
 
+
 class PagoReadSerializer(serializers.ModelSerializer):
     """
     Serializer para leer los detalles de un Pago.
     """
     valor_mxn = serializers.ReadOnlyField()
+
+    # ### LÍNEA AÑADIDA ###
+    # Forzamos que este campo conserve sus 4 decimales al ser serializado.
+    tipo_cambio = serializers.DecimalField(max_digits=10, decimal_places=4)
 
     class Meta:
         model = Pago

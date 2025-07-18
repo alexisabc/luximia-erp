@@ -85,6 +85,7 @@ export const createContrato = (data) => apiClient.post('/contratos/', data);
 export const createPago = (data) => apiClient.post('/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/pagos/${pagoId}/`, data);
 export const deletePago = (pagoId) => apiClient.delete(`/pagos/${pagoId}/`);
+export const getLatestTipoDeCambio = () => apiClient.get('/tipo-de-cambio/latest/');
 
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/users/', data);

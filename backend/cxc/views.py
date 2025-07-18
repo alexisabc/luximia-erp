@@ -29,7 +29,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
 
 # --- Serializers y Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
@@ -660,3 +660,22 @@ def importar_pagos_historicos(request):
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error crítico: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def get_latest_tipo_de_cambio(request):
+    """
+    Devuelve el tipo de cambio aplicable al día de hoy (o el último día hábil anterior).
+    """
+    try:
+        # ### CAMBIO CLAVE ###
+        # Busca el registro con la fecha más reciente que sea igual o anterior a hoy.
+        today = timezone.now().date()
+        ultimo_tc = TipoDeCambio.objects.filter(
+            fecha__lte=today).latest('fecha')
+
+        return Response({'valor': ultimo_tc.valor})
+    except TipoDeCambio.DoesNotExist:
+        return Response(
+            {'error': 'No hay tipos de cambio registrados en la base de datos.'},
+            status=status.HTTP_404_NOT_FOUND
+        )

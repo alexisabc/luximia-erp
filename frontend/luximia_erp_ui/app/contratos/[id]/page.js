@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF } from '../../../services/api';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
@@ -32,12 +32,15 @@ export default function ContratoDetallePage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [currentPago, setCurrentPago] = useState(null);
 
+    const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
+
+
     // Estado inicial del formulario para un nuevo pago
     const [newPagoData, setNewPagoData] = useState({
         concepto: 'ABONO',
         monto_pagado: '',
         moneda_pagada: 'USD',
-        tipo_cambio: '1.0',
+        tipo_cambio: latestTipoCambio,
         fecha_pago: new Date().toISOString().split('T')[0],
         instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
         ordenante: '',
@@ -53,12 +56,21 @@ export default function ContratoDetallePage() {
         setLoading(true);
         setError(null);
         try {
-            const contratoRes = await getContratoById(contratoId);
+            // Hacemos ambas llamadas al mismo tiempo para eficiencia
+            const [contratoRes, tipoCambioRes] = await Promise.all([
+                getContratoById(contratoId),
+                getLatestTipoDeCambio()
+            ]);
+
             setContrato(contratoRes.data);
-            // Pre-llenar el campo 'ordenante' con el nombre del cliente
-            setNewPagoData(prev => ({ ...prev, ordenante: contratoRes.data.cliente.nombre_completo }));
+            const valorTC = parseFloat(tipoCambioRes.data.valor);
+            setLatestTipoCambio(valorTC); 
+
+            setNewPagoData(prev => ({
+                ...prev, ordenante: contratoRes.data.cliente.nombre_completo, tipo_cambio: valorTC}));
         } catch (err) {
             setError('No se pudo cargar la información del contrato.');
+            setNewPagoData(prev => ({ ...prev, tipo_cambio: 18.0 }));
         } finally {
             setLoading(false);
         }
@@ -289,7 +301,16 @@ export default function ContratoDetallePage() {
                         {newPagoData.moneda_pagada === 'USD' && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Cambio</label>
-                                <input type="number" step="0.0001" name="tipo_cambio" value={newPagoData.tipo_cambio} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                                <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    pattern="[0-9]*[.,]?[0-9]*"
+                                    name="tipo_cambio"
+                                    value={newPagoData.tipo_cambio}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
                             </div>
                         )}
 
@@ -378,7 +399,16 @@ export default function ContratoDetallePage() {
                             {currentPago.moneda_pagada === 'USD' && (
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Cambio</label>
-                                    <input type="number" step="0.0001" name="tipo_cambio" value={currentPago.tipo_cambio} onChange={handleEditFormChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                                    <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        pattern="[0-9]*[.,]?[0-9]*"
+                                        name="tipo_cambio"
+                                        value={currentPago.tipo_cambio}
+                                        onChange={handleEditFormChange}
+                                        required
+                                        className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    />
                                 </div>
                             )}
 

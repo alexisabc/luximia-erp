@@ -7,7 +7,8 @@ from .views import (
     ContratoViewSet, PagoViewSet, dashboard_stats,
     valor_por_proyecto_chart, generar_estado_de_cuenta_pdf,
     importar_datos_masivos, importar_clientes, importar_upes,
-    importar_contratos, UserViewSet, GroupViewSet, get_all_permissions, upe_status_chart
+    importar_contratos, UserViewSet, GroupViewSet, get_all_permissions, 
+    upe_status_chart, get_latest_tipo_de_cambio
 )
 
 # Creamos un router
@@ -37,4 +38,6 @@ urlpatterns = [
     path('consulta-inteligente/', consulta_inteligente,
          name='consulta-inteligente'),
     path('charts/upe-status/', upe_status_chart, name='chart-upe-status'),
+    path('tipo-de-cambio/latest/', get_latest_tipo_de_cambio,
+         name='latest-tipo-de-cambio'),
 ]

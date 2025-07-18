@@ -247,3 +247,14 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+class TipoDeCambio(models.Model):
+    fecha = models.DateField(unique=True, primary_key=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+    def __str__(self):
+        return f"{self.fecha}: {self.valor}"
+
+    class Meta:
+        ordering = ['-fecha']
