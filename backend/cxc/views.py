@@ -5,7 +5,7 @@
 # ==============================================================================
 import traceback
 from decimal import Decimal
-from datetime import datetime
+from datetime import date, datetime
 import os
 import json
 from django.db import transaction
@@ -18,8 +18,6 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.utils import timezone
 from .pagination import CustomPagination
-
-# --- Librerías Externas ---
 from openai import OpenAI
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action, permission_classes
@@ -27,8 +25,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-
-# --- Serializers y Modelos Locales ---
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
@@ -38,17 +34,13 @@ from .serializers import (
 )
 
 # ==============================================================================
-# --- VISTAS DE AUTENTICACIÓN ---
+# --- VISTAS ---
 # ==============================================================================
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
-
-# ==============================================================================
-# --- VIEWSETS PARA MODELOS PRINCIPALES (CRUD) ---
-# ==============================================================================
 
 class ProyectoViewSet(viewsets.ModelViewSet):
     queryset = Proyecto.objects.all().order_by('nombre')
@@ -109,13 +101,9 @@ class PagoViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return PagoReadSerializer if self.action in ['list', 'retrieve'] else PagoWriteSerializer
 
-    # ### MÉTODO AÑADIDO ###
     def perform_destroy(self, instance):
-        # Guardamos la referencia al contrato antes de borrar el pago
         contrato_afectado = instance.contrato
-        # Borramos el pago
         instance.delete()
-        # Ejecutamos la lógica de actualización en el contrato afectado
         contrato_afectado.actualizar_plan_de_pagos()
 
 
@@ -124,7 +112,9 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        return UserReadSerializer if self.action in ['create', 'update', 'partial_update'] else UserReadSerializer
+        if self.action in ['create', 'update', 'partial_update']:
+            return UserWriteSerializer
+        return UserReadSerializer
 
     @action(detail=False, methods=['get'], pagination_class=None)
     def all(self, request):
@@ -138,53 +128,13 @@ class GroupViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        return GroupReadSerializer if self.action in ['create', 'update', 'partial_update'] else GroupReadSerializer
-
-    @action(detail=False, methods=['get'], pagination_class=None)
-    def all(self, request):
-        groups = self.get_queryset()
-        serializer = GroupReadSerializer(groups, many=True)
-        return Response(serializer.data)
-
-# ==============================================================================
-# --- VIEWSETS PARA USUARIOS Y ROLES ---
-# ==============================================================================
-
-class UserViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para los Usuarios del sistema."""
-    queryset = User.objects.all().order_by('-date_joined')
-
-    def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return UserWriteSerializer
-        return UserReadSerializer
-
-    # ### NUEVA ACCIÓN ###
-    # Esto crea el endpoint /api/users/all/ que no tiene paginación.
-    @action(detail=False, methods=['get'], pagination_class=None)
-    def all(self, request):
-        """Devuelve todos los usuarios sin paginación."""
-        users = self.get_queryset()
-        serializer = self.get_serializer(users, many=True)
-        return Response(serializer.data)
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    """Gestiona las operaciones CRUD para los Grupos (Roles)."""
-    queryset = Group.objects.all().order_by('name')
-
-    def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return GroupWriteSerializer
         return GroupReadSerializer
 
-    # ### NUEVA ACCIÓN ###
-    # Esto crea el endpoint /api/groups/all/ que no tiene paginación.
     @action(detail=False, methods=['get'], pagination_class=None)
     def all(self, request):
-        """Devuelve todos los grupos sin paginación."""
         groups = self.get_queryset()
-        # Es importante usar el serializer de LECTURA aquí
         serializer = GroupReadSerializer(groups, many=True)
         return Response(serializer.data)
 
@@ -662,17 +612,15 @@ def importar_pagos_historicos(request):
         return Response({"error": f"Ocurrió un error crítico: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
 def get_latest_tipo_de_cambio(request):
     """
     Devuelve el tipo de cambio aplicable al día de hoy (o el último día hábil anterior).
     """
     try:
-        # ### CAMBIO CLAVE ###
-        # Busca el registro con la fecha más reciente que sea igual o anterior a hoy.
         today = timezone.now().date()
         ultimo_tc = TipoDeCambio.objects.filter(
             fecha__lte=today).latest('fecha')
-
         return Response({'valor': ultimo_tc.valor})
     except TipoDeCambio.DoesNotExist:
         return Response(

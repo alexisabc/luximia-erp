@@ -4,7 +4,10 @@ import dj_database_url
 from .settings import *  # Importa la configuración base
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = False
+
+# ### CAMBIO: Ahora lee la variable DEBUG desde el archivo .env ###
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 IS_DEVELOPMENT = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
@@ -18,7 +21,9 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+# ### MEJORA: Es buena práctica que CSRF_TRUSTED_ORIGINS también use la variable de entorno ###
+if CORS_ALLOWED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 # Configuración de Whitenoise
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')

@@ -1,32 +1,41 @@
-# Entorno virtual de Python
-env/
-venv/
-*.pyc
-__pycache__/
-
-# Archivos de Log
-*.log
-
-# Base de datos de desarrollo de Django
-db.sqlite3
-
-# Archivos de entorno (¡Muy importante!)
+# General y Secretos
+# Ignora todos los archivos de entorno excepto el de ejemplo
 .env
-.env.*
+.env*
 !/.env.example
 
-# Dependencias de Node.js
-node_modules/
-
-# Archivos de build y temporales de Next.js
-.next/
-out/
-
-# Carpeta de archivos estáticos y media de producción de Django
-staticfiles/
-media/
-
-# Archivos del sistema operativo y editores
+# Archivos de Log y del sistema operativo
+*.log
+*.pem
 .DS_Store
 .vscode/
 .idea/
+
+# Backend - Django / Python
+backend/__pycache__/
+backend/venv/
+*.pyc
+db.sqlite3
+staticfiles/
+media/
+
+# Frontend - Next.js / Node
+frontend/luximia_erp_ui/node_modules/
+frontend/luximia_erp_ui/.next/
+frontend/luximia_erp_ui/out/
+frontend/luximia_erp_ui/build/
+frontend/luximia_erp_ui/coverage/
+frontend/luximia_erp_ui/.pnp
+frontend/luximia_erp_ui/.pnp.*
+frontend/luximia_erp_ui/.yarn/*
+!frontend/luximia_erp_ui/.yarn/patches
+!frontend/luximia_erp_ui/.yarn/plugins
+!frontend/luximia_erp_ui/.yarn/releases
+!frontend/luximia_erp_ui/.yarn/versions
+frontend/luximia_erp_ui/npm-debug.log*
+frontend/luximia_erp_ui/yarn-debug.log*
+frontend/luximia_erp_ui/yarn-error.log*
+frontend/luximia_erp_ui/.pnpm-debug.log*
+frontend/luximia_erp_ui/.vercel/
+frontend/luximia_erp_ui/*.tsbuildinfo
+frontend/luximia_erp_ui/next-env.d.ts
