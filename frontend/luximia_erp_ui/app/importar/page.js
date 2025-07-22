@@ -16,7 +16,13 @@ export default function ImportarPage() {
         const headers = [
             'proyecto_nombre', 'upe_identificador', 'upe_valor_total', 'upe_moneda', 'upe_estado',
             'cliente_nombre', 'cliente_email', 'cliente_telefono',
-            'contrato_fecha_venta', 'contrato_precio_pactado', 'contrato_moneda'
+            'contrato_fecha_venta',
+            'contrato_precio_pactado',
+            'contrato_moneda',
+            // ### NUEVOS CAMPOS AÑADIDOS ###
+            'monto_enganche',
+            'numero_mensualidades',
+            'tasa_interes_mensual' // Formato decimal, ej: 0.03 para 3%
         ];
         const csvContent = "data:text/csv;charset=utf-8," + headers.join(',');
         const link = document.createElement('a');

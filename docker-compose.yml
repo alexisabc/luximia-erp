@@ -20,6 +20,7 @@ services:
     command: bash run.sh
     volumes:
       - ./backend:/app
+      - ./assets:/app/static/assets
     ports:
       - "8000:10000"
     depends_on:

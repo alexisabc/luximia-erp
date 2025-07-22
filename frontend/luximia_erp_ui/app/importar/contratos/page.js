@@ -13,7 +13,17 @@ export default function ImportarContratosPage() {
     const fileInputRef = useRef(null);
 
     const handleDownloadTemplate = () => {
-        const headers = ['cliente_email', 'proyecto_nombre', 'upe_identificador', 'fecha_venta', 'contrato_precio_pactado', 'moneda_pactada'];
+        const headers = [
+            'cliente_email',
+            'proyecto_nombre',
+            'upe_identificador',
+            'fecha_venta',
+            'contrato_precio_pactado',
+            'moneda_pactada',
+            'monto_enganche',
+            'numero_mensualidades',
+            'tasa_interes_mensual'
+        ];
         const csvContent = "data:text/csv;charset=utf-8," + headers.join(',');
         const link = document.createElement('a');
         link.setAttribute('href', encodeURI(csvContent));

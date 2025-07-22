@@ -8,7 +8,7 @@ from .views import (
     valor_por_proyecto_chart, generar_estado_de_cuenta_pdf,
     importar_datos_masivos, importar_clientes, importar_upes,
     importar_contratos, UserViewSet, GroupViewSet, get_all_permissions, 
-    upe_status_chart, get_latest_tipo_de_cambio
+    upe_status_chart, get_latest_tipo_de_cambio, generar_estado_de_cuenta_excel
 )
 
 # Creamos un router
@@ -30,6 +30,8 @@ urlpatterns = [
     path('dashboard-stats/', dashboard_stats, name='dashboard-stats'),
     path('charts/valor-por-proyecto/', valor_por_proyecto_chart, name='chart-valor-por-proyecto'),
     path('contratos/<int:pk>/pdf/',generar_estado_de_cuenta_pdf, name='contrato-pdf'),
+    path('contratos/<int:pk>/excel/',
+         generar_estado_de_cuenta_excel, name='contrato-excel'),
     path('importar-masivo/', importar_datos_masivos, name='importar-masivo'),
     path('importar-clientes/', importar_clientes, name='importar-clientes'),
     path('importar-upes/', importar_upes, name='importar-upes'),

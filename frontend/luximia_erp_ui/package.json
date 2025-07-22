@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "npm run copy-assets && next dev",
+    "build": "npm run copy-assets && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "copy-assets": "cp -R ../../assets/* public/"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

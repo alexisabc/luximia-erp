@@ -8,6 +8,9 @@ from decimal import Decimal
 from datetime import date, datetime
 import os
 import json
+import polars as pl
+import io
+import xlsxwriter
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
 from django.db.models.functions import Coalesce
@@ -17,6 +20,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.utils import timezone
+from django.conf import settings
 from .pagination import CustomPagination
 from openai import OpenAI
 from rest_framework import viewsets, status
@@ -272,78 +276,273 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
         return HttpResponse(f"Ocurrió un error al generar el PDF: {e}", status=500)
 
 
+@api_view(['GET'])
+def generar_estado_de_cuenta_excel(request, pk=None):
+    """
+    Genera un archivo Excel (.xlsx) con formatos de celda específicos y columnas autoajustadas.
+    Versión final con escritura manual para control total del formato.
+    """
+    try:
+        contrato = get_object_or_404(Contrato, pk=pk)
+
+        # --- (La lógica para preparar los DataFrames df_plan y df_historial se queda igual) ---
+        plan_cols = request.query_params.getlist('plan_cols')
+        pago_cols = request.query_params.getlist('pago_cols')
+        PLAN_COLUMNAS = {
+            "id": "No.", "fecha_vencimiento": "Fecha de Vencimiento", "tipo": "Tipo",
+            "monto_programado": "Monto Programado", "pagado": "Estado"
+        }
+        PAGO_COLUMNAS = {
+            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "instrumento_pago": "Instrumento",
+            "ordenante": "Ordenante", "monto_pagado": "Monto Pagado", "moneda_pagada": "Moneda",
+            "tipo_cambio": "Tipo de Cambio", "valor_mxn": "Valor (MXN)", "banco_origen": "Banco Origen",
+            "num_cuenta_origen": "Cuenta Origen", "banco_destino": "Banco Destino",
+            "cuenta_beneficiaria": "Cuenta Beneficiaria", "comentarios": "Comentarios"
+        }
+        if not plan_cols:
+            plan_cols = list(PLAN_COLUMNAS.keys())
+        if not pago_cols:
+            pago_cols = list(PAGO_COLUMNAS.keys())
+
+        plan_de_pagos_qs = contrato.plan_de_pagos.order_by('fecha_vencimiento')
+        plan_data = {PLAN_COLUMNAS[col]: [] for col in plan_cols}
+        for i, p in enumerate(plan_de_pagos_qs):
+            if 'id' in plan_cols:
+                plan_data[PLAN_COLUMNAS['id']].append(i + 1)
+            if 'fecha_vencimiento' in plan_cols:
+                plan_data[PLAN_COLUMNAS['fecha_vencimiento']].append(
+                    p.fecha_vencimiento)
+            if 'tipo' in plan_cols:
+                plan_data[PLAN_COLUMNAS['tipo']].append(p.get_tipo_display())
+            if 'monto_programado' in plan_cols:
+                plan_data[PLAN_COLUMNAS['monto_programado']].append(
+                    float(p.monto_programado))
+            if 'pagado' in plan_cols:
+                plan_data[PLAN_COLUMNAS['pagado']].append(
+                    "Pagado" if p.pagado else "Pendiente")
+        df_plan = pl.DataFrame(plan_data)
+
+        pagos_qs = contrato.pagos.order_by('fecha_pago', 'id')
+        historial_data = {PAGO_COLUMNAS[col]: [] for col in pago_cols}
+        for p in pagos_qs:
+            for col_key in pago_cols:
+                col_name = PAGO_COLUMNAS[col_key]
+                value = getattr(p, col_key) if hasattr(p, col_key) else None
+                if isinstance(value, Decimal):
+                    value = float(value)
+                historial_data[col_name].append(value)
+        df_historial = pl.DataFrame(historial_data)
+
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+
+        # 1. Definir los formatos
+        title_format = workbook.add_format(
+            {'bold': True, 'font_size': 18, 'align': 'center'})
+        header_format = workbook.add_format(
+            {'bold': True, 'bg_color': '#F0F0F0', 'border': 1})
+        date_format = workbook.add_format({'num_format': 'dd-mm-yyyy'})
+        money_format = workbook.add_format({'num_format': '$#,##0.00'})
+        four_decimal_format = workbook.add_format({'num_format': '0.0000'})
+
+        # Construimos la ruta al logo
+        logo_path = os.path.join(
+            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+
+        # 2. Escribir la hoja "Plan de Pagos"
+        if not df_plan.is_empty():
+            ws_plan = workbook.add_worksheet('Plan de Pagos')
+
+            # ### CAMBIO: Se establece el logo como fondo ###
+            ws_plan.set_background(logo_path)
+
+
+            # Escribimos las cabeceras en la primera fila
+            ws_plan.write_row(0, 0, df_plan.columns, header_format)
+
+            # Escribimos los datos celda por celda para aplicar formatos
+            for i, row in enumerate(df_plan.iter_rows()):
+                for j, value in enumerate(row):
+                    col_name = df_plan.columns[j]
+                    if 'Fecha' in col_name:
+                        ws_plan.write_datetime(i + 1, j, value, date_format)
+                    elif 'Monto' in col_name:
+                        ws_plan.write_number(i + 1, j, value, money_format)
+                    else:
+                        ws_plan.write(i + 1, j, value)
+            ws_plan.autofit()
+
+        # 3. Escribir la hoja "Historial de Transacciones"
+        if not df_historial.is_empty():
+            ws_historial = workbook.add_worksheet('Historial de Transacciones')
+
+            # ### CAMBIO: Se establece el logo como fondo ###
+            ws_historial.set_background(logo_path)
+
+
+            ws_historial.write_row(0, 0, df_historial.columns, header_format)
+            for i, row in enumerate(df_historial.iter_rows()):
+                for j, value in enumerate(row):
+                    col_name = df_historial.columns[j]
+                    if 'Fecha' in col_name:
+                        ws_historial.write_datetime(
+                            i + 1, j, value, date_format)
+                    elif 'Monto' in col_name or 'Valor' in col_name:
+                        ws_historial.write_number(
+                            i + 1, j, value, money_format)
+                    elif 'Tipo de Cambio' in col_name:
+                        ws_historial.write_number(
+                            i + 1, j, value, four_decimal_format)
+                    else:
+                        ws_historial.write(i + 1, j, value)
+            ws_historial.autofit()
+
+        workbook.close()
+        output.seek(0)
+
+        response = HttpResponse(
+            output,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response[
+            'Content-Disposition'] = f'attachment; filename="estado_de_cuenta_contrato_{contrato.id}.xlsx"'
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+
 # ==============================================================================
 # --- VISTAS PARA IMPORTACIÓN DE DATOS ---
 # ==============================================================================
 
+
 @api_view(['POST'])
 @transaction.atomic
 def importar_datos_masivos(request):
-    """Importa todos los datos desde un único archivo CSV."""
+    """Importa todos los datos desde un único archivo CSV usando Polars."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
         return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        df = pd.read_csv(archivo_csv, encoding='latin-1')
-        df = df.where(pd.notna(df), None)
+        # LÍNEA CORREGIDA: Usamos pl.read_csv para leer el archivo en memoria
+        df = pl.read_csv(archivo_csv.read(),
+                         encoding='latin-1', null_values=[''])
+
         registros_creados = {'proyectos': 0,
                              'clientes': 0, 'upes': 0, 'contratos': 0}
         registros_actualizados = {'proyectos': 0,
                                   'clientes': 0, 'upes': 0, 'contratos': 0}
-        for _, row in df.iterrows():
-            if pd.isna(row.get('proyecto_nombre')):
+
+        # LÍNEA CORREGIDA: Usamos la sintaxis de Polars para iterar
+        for row in df.iter_rows(named=True):
+            # LÍNEA CORREGIDA: Verificamos si es None
+            if row.get('proyecto_nombre') is None:
                 continue
+
+            # 1. Procesar Proyecto
             proyecto, creado = Proyecto.objects.update_or_create(
-                nombre=row['proyecto_nombre'].strip().upper(), defaults={})
+                nombre=row['proyecto_nombre'].strip().upper(),
+                defaults={}
+            )
             if creado:
                 registros_creados['proyectos'] += 1
             else:
                 registros_actualizados['proyectos'] += 1
+
+            # 2. Procesar Cliente
             cliente = None
             if row.get('cliente_email') and str(row.get('cliente_email')).strip():
-                cliente, creado = Cliente.objects.update_or_create(email=str(row.get('cliente_email')).strip().lower(), defaults={
-                                                                   'nombre_completo': str(row.get('cliente_nombre', '')).strip(), 'telefono': str(row.get('cliente_telefono', ''))})
+                cliente, creado = Cliente.objects.update_or_create(
+                    email=str(row.get('cliente_email')).strip().lower(),
+                    defaults={
+                        'nombre_completo': str(row.get('cliente_nombre', '')).strip(),
+                        'telefono': str(row.get('cliente_telefono', ''))
+                    }
+                )
                 if creado:
                     registros_creados['clientes'] += 1
                 else:
                     registros_actualizados['clientes'] += 1
-            upe, creado = UPE.objects.update_or_create(proyecto=proyecto, identificador=str(row['upe_identificador']).strip(), defaults={
-                                                       'valor_total': row['upe_valor_total'], 'moneda': str(row['upe_moneda']).strip(), 'estado': str(row['upe_estado']).strip()})
+
+            # 3. Procesar UPE
+            upe, creado = UPE.objects.update_or_create(
+                proyecto=proyecto,
+                identificador=str(row['upe_identificador']).strip(),
+                defaults={
+                    'valor_total': row['upe_valor_total'],
+                    'moneda': str(row['upe_moneda']).strip(),
+                    'estado': str(row['upe_estado']).strip()
+                }
+            )
             if creado:
                 registros_creados['upes'] += 1
             else:
                 registros_actualizados['upes'] += 1
+
+            # 4. Procesar Contrato (con la nueva lógica)
             if cliente and row.get('contrato_fecha_venta'):
                 fecha_obj = datetime.strptime(
                     str(row['contrato_fecha_venta']), '%d/%m/%Y')
-                fecha_formateada = fecha_obj.strftime('%Y-%m-%d')
-                contrato, creado = Contrato.objects.update_or_create(upe=upe, defaults={
-                                                                     'cliente': cliente, 'fecha_venta': fecha_formateada, 'precio_final_pactado': row['contrato_precio_pactado'], 'moneda_pactada': row['contrato_moneda']})
+
+                # Preparamos los datos del contrato
+                defaults_contrato = {
+                    'cliente': cliente,
+                    'fecha_venta': fecha_obj.strftime('%Y-%m-%d'),
+                    'precio_final_pactado': row['contrato_precio_pactado'],
+                    'moneda_pactada': row['contrato_moneda'],
+                    # ### NUEVOS CAMPOS FINANCIEROS ###
+                    'monto_enganche': row.get('monto_enganche', 0),
+                    'numero_mensualidades': row.get('numero_mensualidades', 0),
+                    'tasa_interes_mensual': row.get('tasa_interes_mensual', 0.0)
+                }
+
+                contrato, creado = Contrato.objects.update_or_create(
+                    upe=upe,
+                    defaults=defaults_contrato
+                )
                 if creado:
                     registros_creados['contratos'] += 1
                 else:
                     registros_actualizados['contratos'] += 1
-        return Response({"mensaje": "Importación completada.", "registros_creados": registros_creados, "registros_actualizados": registros_actualizados}, status=status.HTTP_200_OK)
+
+        return Response({
+            "mensaje": "Importación completada.",
+            "registros_creados": registros_creados,
+            "registros_actualizados": registros_actualizados
+        }, status=status.HTTP_200_OK)
+
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['POST'])
 @transaction.atomic
 def importar_clientes(request):
-    """Importa o actualiza clientes desde un CSV."""
+    """Importa o actualiza clientes desde un CSV usando Polars."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
-        return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(...)
     try:
-        df = pd.read_csv(archivo_csv, encoding='latin-1')
-        df = df.where(pd.notna(df), None)
+        # LÍNEA CORREGIDA
+        df = pl.read_csv(archivo_csv.read(),
+                         encoding='latin-1', null_values=[''])
         registros_creados, registros_actualizados = 0, 0
-        for _, row in df.iterrows():
-            email = str(row.get('email', '')).strip().lower()
+
+        # LÍNEA CORREGIDA
+        for row in df.iter_rows(named=True):
+            email = row.get('email')
             if not email:
                 continue
-            cliente, creado = Cliente.objects.update_or_create(email=email, defaults={'nombre_completo': str(
-                row.get('nombre_completo', '')).strip(), 'telefono': str(row.get('telefono', ''))})
+
+            defaults_cliente = {
+                'nombre_completo': str(row.get('nombre_completo', '')).strip(),
+                'telefono': str(row.get('telefono', ''))
+            }
+            cliente, creado = Cliente.objects.update_or_create(
+                email=email.strip().lower(), defaults=defaults_cliente)
             if creado:
                 registros_creados += 1
             else:
@@ -357,15 +556,18 @@ def importar_clientes(request):
 @api_view(['POST'])
 @transaction.atomic
 def importar_upes(request):
-    """Importa o actualiza UPEs desde un CSV."""
+    """Importa o actualiza UPEs desde un CSV usando Polars."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
-        return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(...)
     try:
-        df = pd.read_csv(archivo_csv, encoding='latin-1')
-        df = df.where(pd.notna(df), None)
+        # LÍNEA CORREGIDA
+        df = pl.read_csv(archivo_csv.read(),
+                         encoding='latin-1', null_values=[''])
         registros_creados, registros_actualizados = 0, 0
-        for index, row in df.iterrows():
+
+        # LÍNEA CORREGIDA
+        for index, row in enumerate(df.iter_rows(named=True)):
             proyecto_nombre_csv = str(
                 row.get('proyecto_nombre', '')).strip().upper()
             if not proyecto_nombre_csv:
@@ -391,45 +593,72 @@ def importar_upes(request):
 @api_view(['POST'])
 @transaction.atomic
 def importar_contratos(request):
-    """Importa o actualiza Contratos desde un CSV."""
+    """Importa o actualiza Contratos desde un CSV usando Polars."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
         return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        df = pd.read_csv(archivo_csv, encoding='latin-1')
-        df = df.where(pd.notna(df), None)
+        # 1. Leemos el CSV con Polars. Usamos .read() para leer el archivo en memoria.
+        df = pl.read_csv(archivo_csv.read(),
+                         encoding='latin-1', null_values=[''])
+
         registros_creados, registros_actualizados = 0, 0
-        for index, row in df.iterrows():
+
+        # 2. Iteramos sobre las filas usando la sintaxis de Polars.
+        for index, row in enumerate(df.iter_rows(named=True)):
             cliente_email = str(row.get('cliente_email', '')).strip().lower()
             if not cliente_email:
                 raise Exception(
                     f"Fila {index + 2}: El campo 'cliente_email' no puede estar vacío.")
+
             try:
                 cliente = Cliente.objects.get(email=cliente_email)
             except Cliente.DoesNotExist:
                 raise Exception(
                     f"Fila {index + 2}: El cliente con email '{cliente_email}' no existe.")
+
             proyecto_nombre = str(
                 row.get('proyecto_nombre', '')).strip().upper()
             upe_identificador = str(row.get('upe_identificador', '')).strip()
             if not proyecto_nombre or not upe_identificador:
                 raise Exception(
                     f"Fila {index + 2}: 'proyecto_nombre' y 'upe_identificador' son obligatorios.")
+
             try:
                 upe = UPE.objects.get(
                     proyecto__nombre=proyecto_nombre, identificador=upe_identificador)
             except UPE.DoesNotExist:
                 raise Exception(
                     f"Fila {index + 2}: La UPE '{upe_identificador}' en el proyecto '{proyecto_nombre}' no existe.")
+
             fecha_obj = datetime.strptime(str(row['fecha_venta']), '%d/%m/%Y')
-            fecha_formateada = fecha_obj.strftime('%Y-%m-%d')
-            contrato, creado = Contrato.objects.update_or_create(upe=upe, defaults={
-                                                                 'cliente': cliente, 'fecha_venta': fecha_formateada, 'precio_final_pactado': row['contrato_precio_pactado'], 'moneda_pactada': str(row['moneda_pactada']).strip()})
+
+            defaults_data = {
+                'cliente': cliente,
+                'fecha_venta': fecha_obj.strftime('%Y-%m-%d'),
+                'precio_final_pactado': row['contrato_precio_pactado'],
+                'moneda_pactada': str(row['moneda_pactada']).strip(),
+                'monto_enganche': row.get('monto_enganche', 0),
+                'numero_mensualidades': row.get('numero_mensualidades', 0),
+                'tasa_interes_mensual': row.get('tasa_interes_mensual', 0.0)
+            }
+
+            contrato, creado = Contrato.objects.update_or_create(
+                upe=upe,
+                defaults=defaults_data
+            )
+
             if creado:
                 registros_creados += 1
             else:
                 registros_actualizados += 1
-        return Response({"mensaje": "Importación de Contratos completada.", "contratos_creados": registros_creados, "contratos_actualizados": registros_actualizados}, status=status.HTTP_200_OK)
+
+        return Response({
+            "mensaje": "Importación de Contratos completada.",
+            "contratos_creados": registros_creados,
+            "contratos_actualizados": registros_actualizados
+        }, status=status.HTTP_200_OK)
+
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -544,28 +773,27 @@ def upe_status_chart(request):
     }
     return Response(data)
 
-# ### VISTA DE IMPORTACIÓN DE PAGOS ACTUALIZADA ###
-
 
 @api_view(['POST'])
 @transaction.atomic
 def importar_pagos_historicos(request):
     """
-    Importa un histórico de pagos desde un archivo CSV.
+    Importa un histórico de pagos desde un archivo CSV usando Polars.
     """
-    import pandas as pd
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
         return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
 
     pagos_creados = 0
     errores = []
-
     try:
-        df = pd.read_csv(archivo_csv, encoding='latin-1', sep=',')
-        df = df.where(pd.notna(df), None)
+        # ### CAMBIO: Leemos el CSV con Polars ###
+        # Polars lee el archivo en memoria, es más eficiente.
+        df = pl.read_csv(archivo_csv.read(), encoding='latin-1',
+                         separator=',', null_values=[''])
 
-        for index, row in df.iterrows():
+        # ### CAMBIO: La forma de iterar es diferente y más limpia ###
+        for index, row in enumerate(df.iter_rows(named=True)):
             try:
                 contrato_id = row.get('CONTRATO_ID')
                 if not contrato_id:
@@ -574,26 +802,30 @@ def importar_pagos_historicos(request):
 
                 contrato = Contrato.objects.get(id=int(contrato_id))
 
-                Pago.objects.create(
-                    contrato=contrato,
-                    tipo=row.get('TIPO', 'OTRO'),
-                    monto_pagado=Decimal(row.get('PAGO') or 0),
-                    moneda_pagada=row.get('DIVISA'),
-                    tipo_cambio=Decimal(row.get('TIPO_CAMBIO') or '1.0'),
-                    fecha_pago=datetime.strptime(
-                        row['FECHA_PAGO_MENSUALIDAD'], '%d/%m/%Y').date(),
-                    fecha_ingreso_cuentas=datetime.strptime(
-                        row['FECHA_PAGO_INGRESO_A_CUENTAS'], '%d/%m/%Y').date() if row.get('FECHA_PAGO_INGRESO_A_CUENTAS') else None,
-                    instrumento_pago=row.get('INSTRUMENTO_PAGO'),
-                    # Mapeamos TITULAR a ordenante
-                    ordenante=row.get('TITULAR_CUENTA_ORIGEN'),
-                    banco_origen=row.get('BANCO_ORIGEN'),
-                    num_cuenta_origen=row.get('NUM_CUENTA_ORIGEN'),
-                    banco_destino=row.get('BANCO_DESTINO'),
-                    cuenta_beneficiaria=row.get('NUM_CUENTA_DESTINO'),
-                    comentarios=row.get('COMENTARIOS')
-                )
+                pago_data = {
+                    'contrato': contrato,
+                    'monto_pagado': Decimal(row.get('monto_pagado', 0)),
+                    'moneda_pagada': row.get('moneda_pagada'),
+                    'tipo_cambio': Decimal(row.get('tipo_cambio', '1.0')),
+                    'fecha_pago': datetime.strptime(row['fecha_pago'], '%d/%m/%Y').date(),
+                    'concepto': row.get('concepto', 'ABONO'),
+                    'instrumento_pago': row.get('instrumento_pago'),
+                    'ordenante': row.get('ordenante'),
+                    'banco_origen': row.get('banco_origen'),
+                    'num_cuenta_origen': row.get('num_cuenta_origen'),
+                    'banco_destino': row.get('banco_destino'),
+                    'cuenta_beneficiaria': row.get('cuenta_beneficiaria'),
+                    'comentarios': row.get('comentarios'),
+                }
+
+                fecha_ingreso_str = row.get('fecha_ingreso_cuentas')
+                if fecha_ingreso_str:
+                    pago_data['fecha_ingreso_cuentas'] = datetime.strptime(
+                        fecha_ingreso_str, '%d/%m/%Y').date()
+
+                Pago.objects.create(**pago_data)
                 pagos_creados += 1
+
             except Contrato.DoesNotExist:
                 errores.append(
                     f"Fila {index + 2}: El contrato con ID {contrato_id} no existe.")
@@ -607,6 +839,7 @@ def importar_pagos_historicos(request):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"mensaje": f"Importación exitosa. Se crearon {pagos_creados} pagos."}, status=status.HTTP_201_CREATED)
+
     except Exception as e:
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error crítico: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

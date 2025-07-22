@@ -9,6 +9,7 @@ import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import Link from 'next/link';
 import { formatCurrency } from '../../utils/formatters';
+import { EyeIcon } from '@heroicons/react/24/solid';
 
 export default function ContratosPage() {
     const { hasPermission } = useAuth();
@@ -93,7 +94,12 @@ export default function ContratosPage() {
         { header: 'Fecha Venta', render: (row) => new Date(row.fecha_venta + 'T06:00:00').toLocaleDateString('es-MX') },
         { header: 'Precio Pactado', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.precio_final_pactado, row.moneda_pactada)}</div> },
         { header: 'Estado', render: (row) => <span className={`px-2.5 py-1 text-xs font-medium rounded-md ${row.estado === 'Activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{row.estado}</span> },
-        { header: 'Acciones', render: (row) => (<div className="text-right"><Link href={`/contratos/${row.id}`} className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">Ver Estado de Cuenta</Link></div>) }
+        {
+            header: 'Acciones', render: (row) => (<div className="flex justify-end">
+                <Link href={`/contratos/${row.id}`} className="text-gray-400 hover:text-blue-500 transition-colors duration-200" title="Ver Estado de Cuenta">
+                    <EyeIcon className="h-6 w-6" />
+                </Link>
+            </div>) }
     ];
 
     return (

@@ -7,8 +7,6 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
-# --- MODELO PROYECTO (Sin cambios) ---
-
 
 class Proyecto(models.Model):
     nombre = models.CharField(
@@ -18,8 +16,6 @@ class Proyecto(models.Model):
 
     def __str__(self):
         return self.nombre
-
-# --- MODELO CLIENTE (Sin cambios) ---
 
 
 class Cliente(models.Model):
@@ -32,8 +28,6 @@ class Cliente(models.Model):
 
     def __str__(self):
         return self.nombre_completo
-
-# --- MODELO UPE (Sin cambios) ---
 
 
 class UPE(models.Model):
@@ -55,10 +49,6 @@ class UPE(models.Model):
 
     def __str__(self):
         return f"{self.proyecto.nombre} - {self.identificador}"
-
-# ==============================================================================
-# ### CAMBIOS IMPORTANTES A CONTINUACIÓN ###
-# ==============================================================================
 
 
 class Contrato(models.Model):
@@ -203,10 +193,29 @@ class Pago(models.Model):
     Registra cada transacción de dinero que entra.
     Actualizado con todos los nuevos campos de detalle.
     """
-    INSTRUMENTO_PAGO_CHOICES = [('EFECTIVO', 'EFECTIVO'), ('TARJETA DE CRÉDITO', 'TARJETA DE CRÉDITO'), ('TARJETA DE DÉBITO', 'TARJETA DE DÉBITO'), ('TARJETA DE PREPAGO', 'TARJETA DE PREPAGO'), ('CHEQUE NOMINATIVO', 'CHEQUE NOMINATIVO'), ('CHEQUE DE CAJA', 'CHEQUE DE CAJA'), ('CHEQUE DE VIAJERO', 'CHEQUE DE VIAJERO'), ('TRANSFERENCIA INTERBANCARIA',
-                                                                                                                                                                                                                                                                                                                                 'TRANSFERENCIA INTERBANCARIA'), ('TRANSFERENCIA MISMA INSTITUCION', 'TRANSFERENCIA MISMA INSTITUCION'), ('TRANSFERENCIA INTERNACIONAL', 'TRANSFERENCIA INTERNACIONAL'), ('ORDEN DE PAGO', 'ORDEN DE PAGO'), ('GIRO', 'GIRO'), ('ORO O PLATINO AMONEDADOS', 'ORO O PLATINO AMONEDADOS'), ('PLATA AMONEDADA', 'PLATA AMONEDADA'), ('METALES PRECIOSO', 'METALES PRECIOSO')]
-    TIPO_PAGO_CHOICES = [('ABONO', 'Abono a Capital'), ('INTERES',
-                                                        'Pago de Intereses'), ('COMPLETO', 'Pago Completo')]
+    INSTRUMENTO_PAGO_CHOICES = [
+        ('EFECTIVO', 'EFECTIVO'),
+        ('TARJETA DE CREDITO', 'TARJETA DE CREDITO'),
+        ('TARJETA DE DEBITO', 'TARJETA DE DEBITO'),
+        ('TARJETA DE PREPAGO', 'TARJETA DE PREPAGO'),
+        ('CHEQUE NOMINATIVO', 'CHEQUE NOMINATIVO'),
+        ('CHEQUE DE CAJA', 'CHEQUE DE CAJA'),
+        ('CHEQUE DE VIAJERO', 'CHEQUE DE VIAJERO'),
+        ('TRANSFERENCIA INTERBANCARIA', 'TRANSFERENCIA INTERBANCARIA'),
+        ('TRANSFERENCIA MISMA INSTITUCION', 'TRANSFERENCIA MISMA INSTITUCION'),
+        ('TRANSFERENCIA INTERNACIONAL', 'TRANSFERENCIA INTERNACIONAL'),
+        ('ORDEN DE PAGO', 'ORDEN DE PAGO'),
+        ('GIRO', 'GIRO'),
+        ('ORO O PLATINO AMONEDADOS', 'ORO O PLATINO AMONEDADOS'),
+        ('PLATA AMONEDADA', 'PLATA AMONEDADA'),
+        ('METALES PRECIOSO', 'METALES PRECIOSO'),
+    ]
+    TIPO_PAGO_CHOICES = [
+        ('APARTADO', 'APARTADO'),
+        ('DEVOLUCIÓN', 'DEVOLUCIÓN'),
+        ('DESCUENTO', 'DESCUENTO'),
+        ('PAGO', 'PAGO'),
+    ]
 
     # --- Relaciones y Datos del Pago ---
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='pagos')

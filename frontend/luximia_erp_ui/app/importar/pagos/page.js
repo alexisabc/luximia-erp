@@ -23,16 +23,25 @@ export default function ImportarPagosPage() {
     // ### CAMBIO: Cabeceras para la plantilla de Pagos Históricos ###
     const handleDownloadTemplate = () => {
         const headers = [
-            'CONTRATO_ID', 'FECHA PAGO', 'MONTO PAGADO', 'MONEDA', 'TIPO DE CAMBIO',
-            'TIPO', 'FECHA_PAGO_MENSUALIDAD', 'FECHA_PAGO_INGRESO_A_CUENTAS',
-            'INSTRUMENTO_PAGO', 'BANCO_ORIGEN', 'NUM_CUENTA_ORIGEN',
-            'TITULAR_CUENTA_ORIGEN', 'BANCO_DESTINO', 'NUM_CUENTA_DESTINO',
-            'COMENTARIOS', 'MONTO CAPITAL', 'INTERESES', 'PENALIZACIÓN', 'COMISION APERTURA'
+            'CONTRATO_ID', // ID del contrato al que pertenece el pago
+            'monto_pagado',
+            'moneda_pagada', // MXN o USD
+            'tipo_cambio', // Requerido si la moneda es USD
+            'fecha_pago', // Formato: DD/MM/YYYY
+            'concepto', // ABONO, INTERES, o COMPLETO
+            'instrumento_pago',
+            'ordenante',
+            'banco_origen',
+            'num_cuenta_origen',
+            'banco_destino',
+            'cuenta_beneficiaria',
+            'comentarios',
+            'fecha_ingreso_cuentas' // Formato: DD/MM/YYYY (opcional)
         ];
         const csvContent = "data:text/csv;charset=utf-8," + headers.join(',');
         const link = document.createElement('a');
         link.setAttribute('href', encodeURI(csvContent));
-        link.setAttribute('download', 'plantilla_pagos_historicos.csv');
+        link.setAttribute('download', 'plantilla_pagos.csv');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

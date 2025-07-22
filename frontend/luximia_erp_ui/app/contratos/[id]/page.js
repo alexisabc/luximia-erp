@@ -3,12 +3,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio } from '../../../services/api';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, TableCellsIcon } from '@heroicons/react/24/solid';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -20,6 +20,23 @@ const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', co
     </div>
 );
 
+const COLUMNAS_EXPORTABLES = {
+    planDePagos: [
+        { id: 'id', label: 'No.' }, { id: 'fecha_vencimiento', label: 'Fecha de Vencimiento' },
+        { id: 'tipo', label: 'Tipo' }, { id: 'monto_programado', label: 'Monto Programado' },
+        { id: 'pagado', label: 'Estado' },
+    ],
+    historialPagos: [
+        { id: 'fecha_pago', label: 'Fecha de Pago' }, { id: 'concepto', label: 'Concepto' },
+        { id: 'instrumento_pago', label: 'Instrumento' }, { id: 'ordenante', label: 'Ordenante' },
+        { id: 'monto_pagado', label: 'Monto Pagado' }, { id: 'moneda_pagada', label: 'Moneda' },
+        { id: 'tipo_cambio', label: 'Tipo de Cambio' }, { id: 'valor_mxn', label: 'Valor (MXN)' },
+        { id: 'banco_origen', label: 'Banco Origen' }, { id: 'num_cuenta_origen', label: 'Cuenta Origen' },
+        { id: 'banco_destino', label: 'Banco Destino' }, { id: 'cuenta_beneficiaria', label: 'Cuenta Beneficiaria' },
+        { id: 'comentarios', label: 'Comentarios' },
+    ]
+};
+
 export default function ContratoDetallePage() {
     const params = useParams();
     const { id: contratoId } = params;
@@ -28,27 +45,26 @@ export default function ContratoDetallePage() {
     const [contrato, setContrato] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [currentPago, setCurrentPago] = useState(null);
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
+    const [currentPago, setCurrentPago] = useState(null);
     const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
 
-
-    // Estado inicial del formulario para un nuevo pago
     const [newPagoData, setNewPagoData] = useState({
-        concepto: 'ABONO',
-        monto_pagado: '',
-        moneda_pagada: 'USD',
-        tipo_cambio: latestTipoCambio,
-        fecha_pago: new Date().toISOString().split('T')[0],
-        instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
-        ordenante: '',
-        banco_origen: '',
-        num_cuenta_origen: '',
-        banco_destino: '',
-        cuenta_beneficiaria: '',
-        comentarios: ''
+        concepto: 'ABONO', monto_pagado: '', moneda_pagada: 'USD', tipo_cambio: '1.0',
+        fecha_pago: new Date().toISOString().split('T')[0], instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
+        ordenante: '', banco_origen: '', num_cuenta_origen: '', banco_destino: '',
+        cuenta_beneficiaria: '', comentarios: ''
+    });
+
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        COLUMNAS_EXPORTABLES.planDePagos.forEach(c => allCols[`plan_${c.id}`] = true);
+        COLUMNAS_EXPORTABLES.historialPagos.forEach(c => allCols[`pago_${c.id}`] = true);
+        return allCols;
     });
 
     const fetchData = useCallback(async () => {
@@ -56,7 +72,6 @@ export default function ContratoDetallePage() {
         setLoading(true);
         setError(null);
         try {
-            // Hacemos ambas llamadas al mismo tiempo para eficiencia
             const [contratoRes, tipoCambioRes] = await Promise.all([
                 getContratoById(contratoId),
                 getLatestTipoDeCambio()
@@ -64,10 +79,13 @@ export default function ContratoDetallePage() {
 
             setContrato(contratoRes.data);
             const valorTC = parseFloat(tipoCambioRes.data.valor);
-            setLatestTipoCambio(valorTC); 
+            setLatestTipoCambio(valorTC);
 
             setNewPagoData(prev => ({
-                ...prev, ordenante: contratoRes.data.cliente.nombre_completo, tipo_cambio: valorTC}));
+                ...prev,
+                ordenante: contratoRes.data.cliente.nombre_completo,
+                tipo_cambio: valorTC
+            }));
         } catch (err) {
             setError('No se pudo cargar la información del contrato.');
             setNewPagoData(prev => ({ ...prev, tipo_cambio: 18.0 }));
@@ -78,6 +96,24 @@ export default function ContratoDetallePage() {
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
+    const handleCreateClick = () => {
+        setNewPagoData({
+            concepto: 'ABONO',
+            monto_pagado: '',
+            moneda_pagada: 'USD',
+            tipo_cambio: latestTipoCambio, // <-- Usa el estado más reciente
+            fecha_pago: new Date().toISOString().split('T')[0],
+            instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
+            ordenante: contrato?.cliente?.nombre_completo || '', // <-- Más seguro
+            banco_origen: '',
+            num_cuenta_origen: '',
+            banco_destino: '',
+            cuenta_beneficiaria: '',
+            comentarios: ''
+        });
+        setIsModalOpen(true);
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewPagoData(prev => ({ ...prev, [name]: value }));
@@ -86,17 +122,11 @@ export default function ContratoDetallePage() {
     const handleSubmitPago = async (e) => {
         e.preventDefault();
         setError(null);
-
         const dataToSend = {
-            ...newPagoData,
-            contrato: contratoId,
+            ...newPagoData, contrato: contratoId,
             monto_pagado: parseFloat(newPagoData.monto_pagado) || 0,
             tipo_cambio: parseFloat(newPagoData.tipo_cambio) || 1.0,
         };
-
-        if (!dataToSend.fecha_ingreso_cuentas) delete dataToSend.fecha_ingreso_cuentas;
-        if (!dataToSend.ordenante) delete dataToSend.ordenante;
-
         try {
             await createPago(dataToSend);
             setIsModalOpen(false);
@@ -109,7 +139,7 @@ export default function ContratoDetallePage() {
     };
 
     const handleEditClick = (pago) => {
-        setCurrentPago({ ...pago }); // Hacemos una copia para editar de forma segura
+        setCurrentPago({ ...pago });
         setIsEditModalOpen(true);
     };
 
@@ -132,10 +162,10 @@ export default function ContratoDetallePage() {
     };
 
     const handleDeletePago = async (pagoId) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este pago? Esta acción no se puede deshacer.')) {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este pago?')) {
             try {
                 await deletePago(pagoId);
-                fetchData(); // Refresca todos los datos del contrato
+                fetchData();
             } catch (err) {
                 setError('No se pudo eliminar el pago.');
             }
@@ -159,87 +189,65 @@ export default function ContratoDetallePage() {
         }
     };
 
+
+    const handleColumnSelectionChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleDownloadExcel = async () => {
+        const planCols = COLUMNAS_EXPORTABLES.planDePagos.filter(c => selectedColumns[`plan_${c.id}`]).map(c => c.id);
+        const pagoCols = COLUMNAS_EXPORTABLES.historialPagos.filter(c => selectedColumns[`pago_${c.id}`]).map(c => c.id);
+        try {
+            const response = await descargarEstadoDeCuentaExcel(contratoId, planCols, pagoCols);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `estado_de_cuenta_contrato_${contratoId}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExcelModalOpen(false);
+        } catch (error) {
+            setError('No se pudo generar el archivo Excel.');
+        }
+    };
+
     const planPagosColumns = [
         { header: 'No.', render: (item, index) => <span className="text-gray-500">{index + 1}</span> },
-        { header: 'Vencimiento', render: (item) => new Date(item.fecha_vencimiento + 'T06:00:00').toLocaleDateString('es-MX') },
+        { header: 'Vencimiento', render: (item) => new Date(item.fecha_vencimiento + 'T00:00:00-06:00').toLocaleDateString('es-MX') },
         { header: 'Tipo', render: (item) => <span className="font-semibold">{item.tipo}</span> },
         { header: 'Monto Programado', render: (item) => <span className="font-semibold">{formatCurrency(item.monto_programado, contrato?.moneda_pactada)}</span> },
         { header: 'Estado', render: (item) => item.pagado ? <span className="text-green-500 font-bold">Pagado</span> : <span className="text-yellow-500 font-bold">Pendiente</span> },
     ];
 
-    // En tu archivo: app/contratos/[id]/page.js
-
     const historialPagosColumns = [
+        { header: 'Fecha Pago', render: (pago) => new Date(pago.fecha_pago + 'T00:00:00-06:00').toLocaleDateString('es-MX') },
+        { header: 'Concepto', render: (pago) => pago.concepto },
+        { header: 'Instrumento', render: (pago) => pago.instrumento_pago || '---' },
+        { header: 'Monto Pagado', render: (pago) => <span className="font-semibold">{formatCurrency(pago.monto_pagado, pago.moneda_pagada)}</span> },
+        { header: 'Tipo Cambio', render: (pago) => (pago.moneda_pagada === 'USD' ? parseFloat(pago.tipo_cambio).toFixed(4) : '1.00') },
+        { header: 'Valor (MXN)', render: (pago) => formatCurrency(pago.valor_mxn, 'MXN') },
+        { header: 'Saldo Restante', render: (pago) => <span className="font-bold text-blue-400">{formatCurrency(pago.saldo_despues_del_pago, 'MXN')}</span> },
+        { header: 'Ordenante', render: (pago) => pago.ordenante || '---' },
+        { header: 'Comentarios', render: (pago) => pago.comentarios || '---' },
         {
-            header: 'Fecha Pago',
-            render: (pago) => new Date(pago.fecha_pago + 'T06:00:00').toLocaleDateString('es-MX')
-        },
-        {
-            header: 'Concepto',
-            render: (pago) => pago.concepto
-        },
-        {
-            header: 'Instrumento',
-            render: (pago) => pago.instrumento_pago || '---'
-        },
-        {
-            header: 'Monto Pagado',
-            render: (pago) => <span className="font-semibold">{formatCurrency(pago.monto_pagado, pago.moneda_pagada)}</span>
-        },
-        {
-            header: 'Tipo Cambio',
-            render: (pago) => (pago.moneda_pagada === 'USD' ? parseFloat(pago.tipo_cambio).toFixed(4) : '1.00')
-        },
-        {
-            header: 'Valor (MXN)',
-            render: (pago) => formatCurrency(pago.valor_mxn, 'MXN')
-        },
-        {
-            header: 'Saldo Restante',
-            render: (pago) => (
-                <span className="font-bold text-blue-500">
-                    {formatCurrency(pago.saldo_despues_del_pago, 'MXN')}
-                </span>
-            )
-        },
-        {
-            header: 'Ordenante',
-            render: (pago) => pago.ordenante || '---'
-        },
-        // ### CAMPOS AÑADIDOS ###
-        {
-            header: 'Banco Origen',
-            render: (pago) => pago.banco_origen || '---'
-        },
-        {
-            header: 'Cuenta Origen',
-            render: (pago) => pago.num_cuenta_origen || '---'
-        },
-        {
-            header: 'Comentarios',
-            render: (pago) => pago.comentarios || '---'
-        },
-        // ### FIN DE CAMPOS AÑADIDOS ###
-        {
-            header: 'Acciones',
-            render: (pago) => (
-                <div className="flex items-center space-x-4">
+            header: 'Acciones', render: (pago) => (
+                <div className="flex items-center justify-end space-x-4">
                     {hasPermission('cxc.change_pago') && (
-                        <button onClick={() => handleEditClick(pago)} className="group">
-                            <PencilSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                        </button>
+                        <button onClick={() => handleEditClick(pago)} className="group"><PencilSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" /></button>
                     )}
                     {hasPermission('cxc.delete_pago') && (
-                        <button onClick={() => handleDeletePago(pago.id)} className="group">
-                            <TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" />
-                        </button>
+                        <button onClick={() => handleDeletePago(pago.id)} className="group"><TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" /></button>
                     )}
                 </div>
             )
         }
     ];
 
-    if (loading) return <div className="p-8">Cargando estado de cuenta...</div>;
+    if (loading) return <div className="p-8">Cargando...</div>;
     if (error && !contrato) return <div className="p-8 text-red-500 bg-red-100 p-4 rounded-md">{error}</div>;
     if (!contrato) return <div className="p-8">No se encontró el contrato.</div>;
 
@@ -255,7 +263,13 @@ export default function ContratoDetallePage() {
                 </div>
                 <div className="flex items-center space-x-3">
                     {hasPermission('cxc.add_pago') && <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Registrar Pago</button>}
-                    <button onClick={handleDownloadPDF} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Descargar PDF</button>
+                    <button
+                        onClick={handleDownloadPDF}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
+                        title="Descargar Estado de Cuenta en PDF">
+                        <DocumentArrowDownIcon className="h-6 w-6" />
+                    </button>
+                    <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><TableCellsIcon className="h-6 w-6" /></button>
                 </div>
             </div>
 
@@ -426,17 +440,30 @@ export default function ContratoDetallePage() {
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Concepto del Pago</label>
                                 <select name="concepto" value={currentPago.concepto} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="ABONO">Abono a Capital</option>
-                                    <option value="INTERES">Pago de Intereses</option>
-                                    <option value="COMPLETO">Pago Completo</option>
+                                    <option value="APARTADO">APARTADO</option>
+                                    <option value="DEVOLUCIÓN">DEVOLUCIÓN</option>
+                                    <option value="DESCUENTO">DESCUENTO</option>
+                                    <option value="PAGO">PAGO</option>
                                 </select>
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Instrumento de Pago</label>
                                 <select name="instrumento_pago" value={currentPago.instrumento_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="TRANSFERENCIA INTERBANCARIA">TRANSFERENCIA INTERBANCARIA</option>
                                     <option value="EFECTIVO">EFECTIVO</option>
-                                    <option value="TARJETA DE CRÉDITO">TARJETA DE CRÉDITO</option>
+                                    <option value="TARJETA DE CREDITO">TARJETA DE CREDITO</option>
+                                    <option value="TARJETA DE DEBITO">TARJETA DE DEBITO</option>
+                                    <option value="TARJETA DE PREPAGO">TARJETA DE PREPAGO</option>
+                                    <option value="CHEQUE NOMINATIVO">CHEQUE NOMINATIVO</option>
+                                    <option value="CHEQUE DE CAJA">CHEQUE DE CAJA</option>
+                                    <option value="CHEQUE DE VIAJERO">CHEQUE DE VIAJERO</option>
+                                    <option value="TRANSFERENCIA INTERBANCARIA">TRANSFERENCIA INTERBANCARIA</option>
+                                    <option value="TRANSFERENCIA MISMA INSTITUCION">TRANSFERENCIA MISMA INSTITUCION</option>
+                                    <option value="TRANSFERENCIA INTERNACIONAL">TRANSFERENCIA INTERNACIONAL</option>
+                                    <option value="ORDEN DE PAGO">ORDEN DE PAGO</option>
+                                    <option value="GIRO">GIRO</option>
+                                    <option value="ORO O PLATINO AMONEDADOS">ORO O PLATINO AMONEDADOS</option>
+                                    <option value="PLATA AMONEDADA">PLATA AMONEDADA</option>
+                                    <option value="METALES PRECIOSO">METALES PRECIOSO</option>
                                 </select>
                             </div>
 
@@ -479,6 +506,53 @@ export default function ContratoDetallePage() {
                     </form>
                 </Modal>
             )}
+            <Modal title="Seleccionar Columnas para Exportar a Excel" isOpen={isExcelModalOpen} onClose={() => setIsExcelModalOpen(false)}>
+                <div className="space-y-6 max-h-[70vh] overflow-y-auto p-2">
+                    <div>
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Columnas del Plan de Pagos</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {COLUMNAS_EXPORTABLES.planDePagos.map(col => (
+                                <label key={`plan_${col.id}`} className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name={`plan_${col.id}`}
+                                        checked={selectedColumns[`plan_${col.id}`]}
+                                        onChange={handleColumnSelectionChange}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-gray-700 dark:text-gray-300">{col.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    <hr className="dark:border-gray-700" />
+                    <div>
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Columnas del Historial de Transacciones</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {COLUMNAS_EXPORTABLES.historialPagos.map(col => (
+                                <label key={`pago_${col.id}`} className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        name={`pago_${col.id}`}
+                                        checked={selectedColumns[`pago_${col.id}`]}
+                                        onChange={handleColumnSelectionChange}
+                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-gray-700 dark:text-gray-300">{col.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <div className="pt-5 mt-4 flex justify-end bg-gray-50 dark:bg-gray-900/50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+                    <button type="button" onClick={() => setIsExcelModalOpen(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-2 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">
+                        Cancelar
+                    </button>
+                    <button onClick={handleDownloadExcel} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                        Descargar Excel
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }

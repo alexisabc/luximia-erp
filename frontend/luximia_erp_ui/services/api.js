@@ -112,7 +112,14 @@ export const importarPagosHistoricos = (formData) => {
 
 // PDF
 export const descargarEstadoDeCuentaPDF = (contratoId) => apiClient.get(`/contratos/${contratoId}/pdf/`, { responseType: 'blob' });
+// XLSX
+export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) => {
+    const params = new URLSearchParams();
+    planCols.forEach(col => params.append('plan_cols', col));
+    pagoCols.forEach(col => params.append('pago_cols', col));
 
+    return apiClient.get(`/contratos/${contratoId}/excel/?${params.toString()}`, { responseType: 'blob' });
+};
 //OPEN IA
 export const consultaInteligente = (pregunta) => apiClient.post('/consulta-inteligente/', { pregunta });
 
