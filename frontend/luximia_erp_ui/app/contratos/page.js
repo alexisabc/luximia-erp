@@ -2,14 +2,34 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getContratos, createContrato, getClientes, getUPEsDisponibles } from '../../services/api';
+import { getContratos, createContrato, getClientes, getUPEsDisponibles, exportContratosExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import Link from 'next/link';
 import { formatCurrency } from '../../utils/formatters';
-import { EyeIcon } from '@heroicons/react/24/solid';
+import ExportModal from '../../components/ExportModal';
+import { TableCellsIcon } from '@heroicons/react/24/solid';
+
+// ### 2. Define las columnas para la tabla y la exportación ###
+const CONTRATO_COLUMNAS_DISPLAY = [
+    { header: 'Cliente', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.cliente.nombre_completo}</span> },
+    { header: 'UPE Vendida', render: (row) => <span className="text-gray-600 dark:text-gray-400">{`${row.upe.proyecto_nombre} - ${row.upe.identificador}`}</span> },
+    { header: 'Fecha Venta', render: (row) => new Date(row.fecha_venta + 'T06:00:00').toLocaleDateString('es-MX') },
+    { header: 'Precio Pactado', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.precio_final_pactado, row.moneda_pactada)}</div> },
+    { header: 'Estado', render: (row) => <span className={`px-2.5 py-1 text-xs font-medium rounded-md ${row.estado === 'Activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{row.estado}</span> },
+];
+
+const CONTRATO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID Contrato' },
+    { id: 'cliente__nombre_completo', label: 'Cliente' },
+    { id: 'upe__proyecto__nombre', label: 'Proyecto' },
+    { id: 'upe__identificador', label: 'UPE' },
+    { id: 'fecha_venta', label: 'Fecha de Venta' },
+    { id: 'precio_final_pactado', label: 'Precio Pactado' },
+    { id: 'moneda_pactada', label: 'Moneda' },
+    { id: 'estado', label: 'Estado' },
+];
 
 export default function ContratosPage() {
     const { hasPermission } = useAuth();
@@ -31,6 +51,42 @@ export default function ContratosPage() {
         numero_mensualidades: '',
         tasa_interes_mensual: '0.03'
     });
+
+    // ### 3. Añade los estados y manejadores para la exportación ###
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        CONTRATO_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
+        return allCols;
+    });
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = CONTRATO_COLUMNAS_EXPORT
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+
+        try {
+            const response = await exportContratosExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_contratos.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
 
     const fetchData = useCallback(async (page, size) => {
         if (!size || size <= 0) return;
@@ -88,31 +144,31 @@ export default function ContratosPage() {
         }
     };
 
-    const columns = [
-        { header: 'Cliente', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.cliente.nombre_completo}</span> },
-        { header: 'UPE Vendida', render: (row) => <span className="text-gray-600 dark:text-gray-400">{`${row.upe.proyecto_nombre} - ${row.upe.identificador}`}</span> },
-        { header: 'Fecha Venta', render: (row) => new Date(row.fecha_venta + 'T06:00:00').toLocaleDateString('es-MX') },
-        { header: 'Precio Pactado', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.precio_final_pactado, row.moneda_pactada)}</div> },
-        { header: 'Estado', render: (row) => <span className={`px-2.5 py-1 text-xs font-medium rounded-md ${row.estado === 'Activo' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{row.estado}</span> },
-        {
-            header: 'Acciones', render: (row) => (<div className="flex justify-end">
-                <Link href={`/contratos/${row.id}`} className="text-gray-400 hover:text-blue-500 transition-colors duration-200" title="Ver Estado de Cuenta">
-                    <EyeIcon className="h-6 w-6" />
-                </Link>
-            </div>) }
-    ];
 
     return (
         <div className="p-8 h-full flex flex-col">
-            <div className="flex-shrink-0">
-                <div className="flex justify-between items-center mb-10">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Contratos</h1>
+            <div className="flex justify-between items-center mb-10">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Contratos</h1>
+                <div className="flex items-center space-x-3">
                     {hasPermission('cxc.add_contrato') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nuevo Contrato</button>}
+                    {/* Botón de Exportar */}
+                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><TableCellsIcon className="h-6 w-6" /></button>
                 </div>
-                {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             </div>
 
-            <div ref={ref} className="flex-grow min-h-0"><ReusableTable data={pageData.results} columns={columns} /></div>
+            {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
+
+            <div ref={ref} className="flex-grow min-h-0">
+                {/* ### 4. Usa ReusableTable con la prop 'actions' ### */}
+                <ReusableTable
+                    data={pageData.results}
+                    columns={CONTRATO_COLUMNAS_DISPLAY}
+                    actions={{
+                        onView: true,
+                        viewPath: '/contratos'
+                    }}
+                />
+            </div>
 
             <div className="flex-shrink-0 flex justify-between items-center mt-4">
                 <span className="text-sm text-gray-700 dark:text-gray-400">Total: {pageData.count} registros</span>
@@ -182,6 +238,14 @@ export default function ContratosPage() {
                     </div>
                 </form>
             </Modal>
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={CONTRATO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+            />
         </div>
     );
 }

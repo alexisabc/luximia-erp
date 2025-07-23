@@ -2,22 +2,81 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClientes, createCliente, updateCliente, deleteCliente } from '../../services/api';
+import { getClientes, createCliente, updateCliente, deleteCliente, exportClientesExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
+import FormModal from '../../components/FormModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
+import ExportModal from '../../components/ExportModal';
+import { TableCellsIcon } from '@heroicons/react/24/solid';
+
+
+const CLIENTE_COLUMNAS_DISPLAY = [
+    { header: 'Nombre Completo', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre_completo}</span> },
+    { header: 'Email', render: (row) => row.email },
+    { header: 'Teléfono', render: (row) => row.telefono },
+];
+
+const CLIENTE_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' }, { id: 'nombre_completo', label: 'Nombre Completo' },
+    { id: 'email', label: 'Email' }, { id: 'telefono', label: 'Teléfono' }, { id: 'activo', label: 'Estado' }
+];
+
+const CLIENTE_FORM_FIELDS = [
+    { name: 'nombre_completo', label: 'Nombre Completo', required: true },
+    { name: 'email', label: 'Email', type: 'email', required: true },
+    { name: 'telefono', label: 'Teléfono', type: 'tel' }
+];
 
 export default function ClientesPage() {
     const { hasPermission, authTokens } = useAuth();
     const [pageData, setPageData] = useState({ results: [], count: 0, next: null, previous: null });
     const [currentPage, setCurrentPage] = useState(1);
-    const [error, setError] = useState(null);
     const { ref, pageSize } = useResponsivePageSize(57);
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [error, setError] = useState(null);
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [formData, setFormData] = useState({ nombre_completo: '', email: '', telefono: '' });
     const [editingCliente, setEditingCliente] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        CLIENTE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
+        return allCols;
+    });
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = CLIENTE_COLUMNAS_EXPORT
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+
+        try {
+            const response = await exportClientesExcel(columnsToExport);
+            // ### LÓGICA PARA CREAR Y DESCARGAR EL BLOB ###
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_clientes.xlsx'; // Puedes hacer este nombre dinámico si quieres
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            // ### FIN DE LA LÓGICA ###
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
@@ -50,18 +109,6 @@ export default function ClientesPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleCreateClick = () => {
-        setEditingCliente(null);
-        setFormData({ nombre_completo: '', email: '', telefono: '' });
-        setIsModalOpen(true);
-    };
-
-    const handleEditClick = (cliente) => {
-        setEditingCliente(cliente);
-        setFormData({ nombre_completo: cliente.nombre_completo, email: cliente.email || '', telefono: cliente.telefono || '' });
-        setIsModalOpen(true);
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -78,17 +125,36 @@ export default function ClientesPage() {
         }
     };
 
-    const handleDeleteClick = async (clienteId) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-            try {
-                await deleteCliente(clienteId);
-                // Si estamos en una página que queda vacía, retrocedemos a la anterior
-                const newTotalPages = Math.ceil((pageData.count - 1) / pageSize);
-                const newCurrentPage = Math.min(currentPage, newTotalPages > 0 ? newTotalPages : 1);
-                fetchData(newCurrentPage, pageSize);
-            } catch (err) {
-                setError('Este cliente tiene contratos y no puede ser eliminado.');
-            }
+    const handleCreateClick = () => {
+        setEditingCliente(null);
+        setFormData({ nombre_completo: '', email: '', telefono: '' });
+        setIsFormModalOpen(true);
+    };
+
+    const handleEditClick = (cliente) => {
+        setEditingCliente(cliente);
+        setFormData({ nombre_completo: cliente.nombre_completo, email: cliente.email || '', telefono: cliente.telefono || '' });
+        setIsFormModalOpen(true);
+    };
+
+    const handleDeleteClick = (clienteId) => {
+        setItemToDelete(clienteId);
+        setIsConfirmModalOpen(true);
+    };
+
+    // Esta función es la que realmente EJECUTA la eliminación
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+
+        try {
+            await deleteCliente(itemToDelete);
+            fetchData(currentPage, pageSize); // Refresca los datos
+        } catch (err) {
+            setError('Este cliente tiene contratos y no puede ser eliminado.');
+        } finally {
+            // Cierra el modal y resetea el estado
+            setIsConfirmModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -107,68 +173,29 @@ export default function ClientesPage() {
         }
     };
 
-    const columns = [
-        {
-            header: 'Nombre Completo',
-            render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre_completo}</span>
-        },
-        {
-            header: 'Proyectos',
-            render: (row) => (
-                <div className="flex flex-wrap gap-1">
-                    {row.proyectos_asociados?.map((proyecto, index) => (
-                        <span
-                            key={index}
-                            // Usamos la función para obtener el estilo dinámicamente
-                            className={`px-2.5 py-1 text-xs font-medium rounded-md ${getProjectBadgeStyle(proyecto)}`}
-                        >
-                            {proyecto}
-                        </span>
-                    ))}
-                </div>
-            )
-        },
-        {
-            header: 'Email',
-            render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.email}</span>
-        },
-        {
-            header: 'Teléfono',
-            render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.telefono}</span>
-        },
-        {
-            header: 'Acciones',
-            render: (row) => (
-                <div className="text-right space-x-4 whitespace-nowrap">
-                    {/* ### CAMBIO: Usamos 'cxc' en los permisos ### */}
-                    {hasPermission('cxc.change_cliente') && (
-                        <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800 font-medium">Editar</button>
-                    )}
-                    {hasPermission('cxc.delete_cliente') && (
-                        <button onClick={() => handleDeleteClick(row.id)} className="text-red-600 hover:text-red-800 font-medium">Eliminar</button>
-                    )}
-                </div>
-            )
-        }
-    ];
 
     return (
         <div className="p-8 h-full flex flex-col">
-            <div className="flex-shrink-0">
-                <div className="flex justify-between items-center mb-10">
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Clientes</h1>
-                    {/* ### CAMBIO: Usamos 'cxc' en el permiso ### */}
-                    {hasPermission('cxc.add_cliente') && (
-                        <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            + Nuevo Cliente
-                        </button>
-                    )}
+            <div className="flex justify-between items-center mb-10">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Clientes</h1>
+                <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.add_cliente') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nuevo Cliente</button>}
+                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><TableCellsIcon className="h-6 w-6" /></button>
                 </div>
-                {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             </div>
 
+            {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
+
             <div ref={ref} className="flex-grow min-h-0">
-                <ReusableTable data={pageData.results} columns={columns} />
+                {/* ### 4. Usa ReusableTable con la prop 'actions' ### */}
+                <ReusableTable
+                    data={pageData.results}
+                    columns={CLIENTE_COLUMNAS_DISPLAY}
+                    actions={{
+                        onEdit: hasPermission('cxc.change_cliente') ? handleEditClick : null,
+                        onDelete: hasPermission('cxc.delete_cliente') ? handleDeleteClick : null
+                    }}
+                />
             </div>
 
             <div className="flex-shrink-0 flex justify-between items-center mt-4">
@@ -196,30 +223,33 @@ export default function ClientesPage() {
                 </div>
             </div>
 
-            <Modal title={editingCliente ? 'Editar Cliente' : 'Crear Nuevo Cliente'} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                        {/* Se añade text-gray-900 */}
-                        <input type="text" name="nombre_completo" value={formData.nombre_completo} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        {/* Se añade text-gray-900 */}
-                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                        {/* Se añade text-gray-900 */}
-                        <input type="text" name="telefono" value={formData.telefono} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900" />
-                    </div>
-                    <div className="pt-4 flex justify-end">
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            Guardar Cliente
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+            <FormModal
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                title={editingCliente ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
+                formData={formData}
+                onFormChange={handleInputChange}
+                onSubmit={handleSubmit}
+                fields={CLIENTE_FORM_FIELDS}
+                submitText="Guardar Cliente"
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={CLIENTE_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+            />
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Eliminación de Cliente"
+                message="¿Estás seguro? Si el cliente tiene contratos asociados, no podrá ser eliminado."
+            />
         </div>
     );
 }

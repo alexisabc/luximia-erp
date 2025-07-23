@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -56,10 +56,9 @@ class UPEReadSerializer(serializers.ModelSerializer):
 
 
 # ==============================================================================
-# ### CAMBIOS IMPORTANTES A CONTINUACIÓN ###
+# --- SERIALIZERS DE ESCRITURA Y LECTURA DE MODELOS ---
 # ==============================================================================
 
-# --- Serializer para el nuevo modelo PlanDePagos ---
 class PlanDePagosSerializer(serializers.ModelSerializer):
     """
     Serializer para mostrar las cuotas del plan de pagos.
@@ -70,7 +69,6 @@ class PlanDePagosSerializer(serializers.ModelSerializer):
                   'monto_programado', 'tipo', 'pagado']
 
 
-# --- Serializers para Pago ---
 class PagoWriteSerializer(serializers.ModelSerializer):
     """
     Serializer para crear y actualizar Pagos.
@@ -136,7 +134,6 @@ class PagoReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# --- Serializers para Contrato ---
 class ContratoWriteSerializer(serializers.ModelSerializer):
     """
     Serializer para crear/actualizar Contratos.
@@ -280,7 +277,7 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         )['total'] or 0
         return total
 # ==============================================================================
-# --- SERIALIZERS DE AUTENTICACIÓN Y USUARIOS (Sin cambios) ---
+# --- SERIALIZERS DE AUTENTICACIÓN Y USUARIOS  ---
 # ==============================================================================
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -352,3 +349,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['permissions'] = list(user.get_all_permissions())
         token['is_superuser'] = user.is_superuser
         return token
+
+# ==============================================================================
+# --- SERIALIZERS DE UTILIDADES  ---
+# ==============================================================================
+
+class TipoDeCambioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoDeCambio
+        fields = '__all__'

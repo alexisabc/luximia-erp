@@ -3,6 +3,8 @@
 # ==============================================================================
 # --- IMPORTS ---
 # ==============================================================================
+from django.conf import settings # Y este también
+import base64 # Asegúrate de tener este import
 import traceback
 from decimal import Decimal
 from datetime import date, datetime
@@ -11,6 +13,9 @@ import json
 import polars as pl
 import io
 import xlsxwriter
+import base64
+from .utils import obtener_y_guardar_tipo_de_cambio
+from django.apps import apps
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
 from django.db.models.functions import Coalesce
@@ -34,11 +39,34 @@ from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
-    MyTokenObtainPairSerializer
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer
 )
 
 # ==============================================================================
-# --- VISTAS ---
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def _autoajustar_columnas_excel(worksheet, dataframe):
+    """
+    Ajusta el ancho de las columnas de una hoja de Excel basándose en el
+    contenido más largo de cada una, usando la sintaxis correcta de Polars.
+    """
+    for idx, col_name in enumerate(dataframe.columns):
+        # 1. Convertimos toda la columna a texto (Utf8) para poder medirla.
+        # 2. Usamos .str.len_chars() que es el método correcto en Polars.
+        # 3. Obtenemos el máximo y manejamos el caso de que la columna esté vacía.
+        max_len = dataframe[col_name].cast(pl.Utf8).str.len_chars().max()
+
+        # Si la columna está vacía, max_len puede ser None
+        if max_len is None:
+            max_len = 0
+
+        header_len = len(col_name)
+        column_width = max(max_len, header_len) + 2
+        worksheet.set_column(idx, idx, column_width)
+
+# ==============================================================================
+# --- VIEWSETS (CRUD BÁSICO) ---
 # ==============================================================================
 
 
@@ -144,17 +172,8 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 # ==============================================================================
-# --- VISTAS PERSONALIZADAS (Endpoints Únicos) ---
+# --- VISTAS PERSONALIZADAS Y ENDPOINTS DE API ---
 # ==============================================================================
-
-@api_view(['GET'])
-def get_all_permissions(request):
-    """Devuelve una lista de todos los permisos relevantes."""
-    apps_a_excluir = ['admin', 'auth', 'contenttypes', 'sessions']
-    permissions = Permission.objects.exclude(content_type__app_label__in=apps_a_excluir).order_by(
-        'content_type__model').values('id', 'name', 'codename')
-    return Response(permissions)
-
 
 @api_view(['GET'])
 def dashboard_stats(request):
@@ -188,6 +207,17 @@ def dashboard_stats(request):
 
 
 @api_view(['GET'])
+def upe_status_chart(request):
+    """Calcula el número de UPEs por cada estado."""
+    query_data = UPE.objects.values('estado').annotate(
+        total=Count('id')).order_by('-total')
+    data = {
+        "labels": [item['estado'] for item in query_data],
+        "values": [item['total'] for item in query_data]
+    }
+    return Response(data)
+
+@api_view(['GET'])
 def valor_por_proyecto_chart(request):
     """Calcula los datos para la gráfica de valor por proyecto."""
     # ### CORREGIDO: Se usa el campo 'tipo_cambio' correcto ###
@@ -210,51 +240,81 @@ def valor_por_proyecto_chart(request):
     return Response(formatted_data)
 
 
-@api_view(['GET'])
-def upe_status_chart(request):
-    """Calcula el número de UPEs por cada estado."""
-    query_data = UPE.objects.values('estado').annotate(
-        total=Count('id')).order_by('-total')
-    data = {
-        "labels": [item['estado'] for item in query_data],
-        "values": [item['total'] for item in query_data]
-    }
-    return Response(data)
-
+# ==============================================================================
+# --- VISTAS DE REPORTES ---
+# ==============================================================================
 
 @api_view(['GET'])
 def generar_estado_de_cuenta_pdf(request, pk=None):
     """
-    Genera un PDF del estado de cuenta para un contrato específico.
+    Genera un PDF del estado de cuenta para un contrato específico,
+    con columnas seleccionables y marca de agua.
     """
     try:
-        # ### CORRECCIÓN ###
-        # Reemplazamos '...' con la consulta correcta al modelo Contrato.
         contrato = get_object_or_404(
-            Contrato.objects.select_related(
-                'cliente', 'upe__proyecto').prefetch_related('plan_de_pagos'),
-            pk=pk
+            Contrato.objects.select_related('cliente', 'upe__proyecto'), pk=pk
         )
 
-        pagos_qs = Pago.objects.filter(
-            contrato=contrato).order_by('fecha_pago', 'id')
+        # --- Lógica para Columnas Dinámicas ---
+        pago_cols_keys = request.query_params.getlist(
+            'pago_cols', ['fecha_pago', 'concepto', 'monto_pagado', 'valor_mxn'])
+        PAGO_COLUMNAS = {
+            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "instrumento_pago": "Instrumento",
+            "ordenante": "Ordenante", "monto_pagado": "Monto Pagado", "valor_mxn": "Valor (MXN)"
+        }
+        table_headers = [PAGO_COLUMNAS[key]
+                         for key in pago_cols_keys if key in PAGO_COLUMNAS]
+        table_headers.append("Saldo Restante")
 
+        # --- Lógica de preparación de datos mejorada ---
+        pagos_qs = contrato.pagos.order_by('fecha_pago', 'id')
+        table_rows = []
         saldo_actual = contrato.precio_final_pactado
-        pagos_con_saldo = []
         for pago in pagos_qs:
             saldo_actual -= pago.valor_mxn
-            pagos_con_saldo.append({
-                'pago': pago,
-                'saldo_despues_del_pago': saldo_actual
-            })
 
+            # Usamos un diccionario para que la plantilla sea más clara
+            row_data = {}
+            if 'fecha_pago' in pago_cols_keys:
+                row_data['fecha_pago'] = pago.fecha_pago
+            if 'concepto' in pago_cols_keys:
+                row_data['concepto'] = pago.get_concepto_display()
+            if 'instrumento_pago' in pago_cols_keys:
+                row_data['instrumento_pago'] = pago.instrumento_pago or ""
+            if 'ordenante' in pago_cols_keys:
+                row_data['ordenante'] = pago.ordenante or ""
+            if 'monto_pagado' in pago_cols_keys:
+                row_data['monto_pagado'] = f"${intcomma(round(pago.monto_pagado, 2))} {pago.moneda_pagada}"
+            if 'valor_mxn' in pago_cols_keys:
+                row_data['valor_mxn'] = f"${intcomma(round(pago.valor_mxn, 2))}"
+
+            row_data['saldo_restante'] = f"${intcomma(round(saldo_actual, 2))}"
+            table_rows.append(row_data)
+
+        # --- Lógica para Marca de Agua ---
+        logo_base64 = ""
+        try:
+            logo_path = os.path.join(
+                settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+            with open(logo_path, "rb") as image_file:
+                encoded_string = base64.b64encode(
+                    image_file.read()).decode('utf-8')
+            logo_base64 = f"data:image/png;base64,{encoded_string}"
+        except FileNotFoundError:
+            print(
+                f"ADVERTENCIA: No se encontró el archivo del logo en {logo_path}")
+
+        # Usamos el serializer para los datos del resumen
         serializer = ContratoReadSerializer(instance=contrato)
         datos_financieros = serializer.data
 
         context = {
             'contrato': contrato,
-            'pagos_con_saldo': pagos_con_saldo,
             'plan_de_pagos': contrato.plan_de_pagos.all(),
+            'table_headers': table_headers,
+            'table_rows': table_rows,  # <-- Ahora contiene los datos pre-formateados
+            'pago_cols_keys': pago_cols_keys,
+            'logo_base64': logo_base64,
             'adeudo': datos_financieros.get('adeudo'),
             'intereses_generados': datos_financieros.get('intereses_generados'),
             'adeudo_al_corte': datos_financieros.get('adeudo_al_corte'),
@@ -274,7 +334,6 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
     except Exception as e:
         traceback.print_exc()
         return HttpResponse(f"Ocurrió un error al generar el PDF: {e}", status=500)
-
 
 @api_view(['GET'])
 def generar_estado_de_cuenta_excel(request, pk=None):
@@ -370,7 +429,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
                         ws_plan.write_number(i + 1, j, value, money_format)
                     else:
                         ws_plan.write(i + 1, j, value)
-            ws_plan.autofit()
+            _autoajustar_columnas_excel(ws_plan, df_plan)
 
         # 3. Escribir la hoja "Historial de Transacciones"
         if not df_historial.is_empty():
@@ -395,7 +454,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
                             i + 1, j, value, four_decimal_format)
                     else:
                         ws_historial.write(i + 1, j, value)
-            ws_historial.autofit()
+            _autoajustar_columnas_excel(ws_historial, df_historial)
 
         workbook.close()
         output.seek(0)
@@ -411,6 +470,149 @@ def generar_estado_de_cuenta_excel(request, pk=None):
     except Exception as e:
         traceback.print_exc()
         return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+# ==============================================================================
+# --- VISTAS DE UTILIDADES ---
+# ==============================================================================
+
+@api_view(['POST'])
+def consulta_inteligente(request):
+    pregunta_usuario = request.data.get('pregunta')
+    if not pregunta_usuario:
+        return Response({"error": "No se proporcionó ninguna pregunta."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "La clave de API de OpenAI no está configurada en el entorno.")
+
+        client = OpenAI(api_key=api_key)
+
+        # ### CAMBIO ###: Ampliamos el prompt con la información de Proyecto y UPE
+        system_prompt = """
+        Eres un asistente experto en el CRM de Luximia. Tu trabajo es convertir la pregunta de un usuario en un objeto JSON para consultar la base de datos.
+        El JSON debe tener la siguiente estructura: {"modelo": "nombre_del_modelo", "filtros": {}, "agregacion": "tipo_de_agregacion"}.
+        
+        Modelos disponibles: 'Contrato', 'Cliente', 'UPE', 'Proyecto'.
+        Agregaciones disponibles: 'count' (contar resultados) o 'none' (listar resultados).
+        
+        Campos para filtrar en 'Contrato': cliente__nombre_completo__icontains, upe__identificador__iexact, upe__proyecto__nombre__icontains, upe__estado__iexact.
+        Campos para filtrar en 'Cliente': nombre_completo__icontains, email__iexact.
+        Campos para filtrar en 'UPE': identificador__iexact, proyecto__nombre__icontains, estado__iexact (Valores: 'Disponible', 'Vendida', 'Pagada', 'Bloqueada').
+        Campos para filtrar en 'Proyecto': nombre__icontains, activo (Valores: true o false).
+
+        Ejemplo 1: "cuantos contratos tiene el proyecto shark tower" -> {"modelo": "Contrato", "filtros": {"upe__proyecto__nombre__icontains": "shark tower"}, "agregacion": "count"}
+        Ejemplo 2: "lista los clientes con el nombre javier" -> {"modelo": "Cliente", "filtros": {"nombre_completo__icontains": "javier"}, "agregacion": "none"}
+        Ejemplo 3: "mostrar upes disponibles en nido" -> {"modelo": "UPE", "filtros": {"proyecto__nombre__icontains": "nido", "estado__iexact": "Disponible"}, "agregacion": "none"}
+        Ejemplo 4: "cuantos proyectos estan activos" -> {"modelo": "Proyecto", "filtros": {"activo": true}, "agregacion": "count"}
+        
+        Nunca respondas con texto conversacional, solo con el objeto JSON.
+        """
+
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": pregunta_usuario}
+            ],
+            response_format={"type": "json_object"}
+        )
+
+        respuesta_ia_str = completion.choices[0].message.content
+        parametros_consulta = json.loads(respuesta_ia_str)
+
+        modelo = parametros_consulta.get('modelo')
+        filtros = parametros_consulta.get('filtros', {})
+        agregacion = parametros_consulta.get('agregacion', 'none')
+
+        q_objects = Q()
+        for campo, valor in filtros.items():
+            q_objects &= Q(**{campo: valor})
+
+        if modelo == 'Contrato':
+            queryset = Contrato.objects.select_related(
+                'cliente', 'upe__proyecto').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} contratos."})
+            serializer = ContratoReadSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'Cliente':
+            queryset = Cliente.objects.filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} clientes."})
+            serializer = ClienteSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        # ### NUEVO ###: Lógica para manejar consultas de UPE y Proyecto
+        elif modelo == 'UPE':
+            queryset = UPE.objects.select_related('proyecto').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} UPEs."})
+            serializer = UPEReadSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'Proyecto':
+            queryset = Proyecto.objects.filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} proyectos."})
+            serializer = ProyectoSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        else:
+            return Response({"error": "Modelo no reconocido por la IA."}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response({"error": f"Ocurrió un error al procesar la consulta: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def get_latest_tipo_de_cambio(request):
+    """
+    Devuelve el tipo de cambio aplicable al día de hoy (o el último día hábil anterior).
+    """
+    try:
+        today = timezone.now().date()
+        ultimo_tc = TipoDeCambio.objects.filter(
+            fecha__lte=today).latest('fecha')
+        return Response({'valor': ultimo_tc.valor})
+    except TipoDeCambio.DoesNotExist:
+        return Response(
+            {'error': 'No hay tipos de cambio registrados en la base de datos.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TipoDeCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoDeCambioSerializer
+    pagination_class = CustomPagination
+
+# Añade esta nueva vista
+
+
+@api_view(['POST'])
+def actualizar_tipo_de_cambio_hoy(request):
+    today = timezone.now().date()
+    if TipoDeCambio.objects.filter(fecha=today).exists():
+        return Response({"mensaje": "El tipo de cambio para hoy ya está actualizado."})
+
+    mensaje = obtener_y_guardar_tipo_de_cambio(today)
+
+    if "Error" in mensaje:
+        return Response({"error": mensaje}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"mensaje": mensaje})
+
+@api_view(['GET'])
+def get_all_permissions(request):
+    """Devuelve una lista de todos los permisos relevantes."""
+    apps_a_excluir = ['admin', 'auth', 'contenttypes', 'sessions']
+    permissions = Permission.objects.exclude(content_type__app_label__in=apps_a_excluir).order_by(
+        'content_type__model').values('id', 'name', 'codename')
+    return Response(permissions)
 
 
 # ==============================================================================
@@ -665,116 +867,6 @@ def importar_contratos(request):
 
 
 @api_view(['POST'])
-def consulta_inteligente(request):
-    pregunta_usuario = request.data.get('pregunta')
-    if not pregunta_usuario:
-        return Response({"error": "No se proporcionó ninguna pregunta."}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "La clave de API de OpenAI no está configurada en el entorno.")
-
-        client = OpenAI(api_key=api_key)
-
-        # ### CAMBIO ###: Ampliamos el prompt con la información de Proyecto y UPE
-        system_prompt = """
-        Eres un asistente experto en el CRM de Luximia. Tu trabajo es convertir la pregunta de un usuario en un objeto JSON para consultar la base de datos.
-        El JSON debe tener la siguiente estructura: {"modelo": "nombre_del_modelo", "filtros": {}, "agregacion": "tipo_de_agregacion"}.
-        
-        Modelos disponibles: 'Contrato', 'Cliente', 'UPE', 'Proyecto'.
-        Agregaciones disponibles: 'count' (contar resultados) o 'none' (listar resultados).
-        
-        Campos para filtrar en 'Contrato': cliente__nombre_completo__icontains, upe__identificador__iexact, upe__proyecto__nombre__icontains, upe__estado__iexact.
-        Campos para filtrar en 'Cliente': nombre_completo__icontains, email__iexact.
-        Campos para filtrar en 'UPE': identificador__iexact, proyecto__nombre__icontains, estado__iexact (Valores: 'Disponible', 'Vendida', 'Pagada', 'Bloqueada').
-        Campos para filtrar en 'Proyecto': nombre__icontains, activo (Valores: true o false).
-
-        Ejemplo 1: "cuantos contratos tiene el proyecto shark tower" -> {"modelo": "Contrato", "filtros": {"upe__proyecto__nombre__icontains": "shark tower"}, "agregacion": "count"}
-        Ejemplo 2: "lista los clientes con el nombre javier" -> {"modelo": "Cliente", "filtros": {"nombre_completo__icontains": "javier"}, "agregacion": "none"}
-        Ejemplo 3: "mostrar upes disponibles en nido" -> {"modelo": "UPE", "filtros": {"proyecto__nombre__icontains": "nido", "estado__iexact": "Disponible"}, "agregacion": "none"}
-        Ejemplo 4: "cuantos proyectos estan activos" -> {"modelo": "Proyecto", "filtros": {"activo": true}, "agregacion": "count"}
-        
-        Nunca respondas con texto conversacional, solo con el objeto JSON.
-        """
-
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": pregunta_usuario}
-            ],
-            response_format={"type": "json_object"}
-        )
-
-        respuesta_ia_str = completion.choices[0].message.content
-        parametros_consulta = json.loads(respuesta_ia_str)
-
-        modelo = parametros_consulta.get('modelo')
-        filtros = parametros_consulta.get('filtros', {})
-        agregacion = parametros_consulta.get('agregacion', 'none')
-
-        q_objects = Q()
-        for campo, valor in filtros.items():
-            q_objects &= Q(**{campo: valor})
-
-        if modelo == 'Contrato':
-            queryset = Contrato.objects.select_related(
-                'cliente', 'upe__proyecto').filter(q_objects)
-            if agregacion == 'count':
-                return Response({'respuesta': f"Se encontraron {queryset.count()} contratos."})
-            serializer = ContratoReadSerializer(queryset, many=True)
-            return Response(serializer.data)
-
-        elif modelo == 'Cliente':
-            queryset = Cliente.objects.filter(q_objects)
-            if agregacion == 'count':
-                return Response({'respuesta': f"Se encontraron {queryset.count()} clientes."})
-            serializer = ClienteSerializer(queryset, many=True)
-            return Response(serializer.data)
-
-        # ### NUEVO ###: Lógica para manejar consultas de UPE y Proyecto
-        elif modelo == 'UPE':
-            queryset = UPE.objects.select_related('proyecto').filter(q_objects)
-            if agregacion == 'count':
-                return Response({'respuesta': f"Se encontraron {queryset.count()} UPEs."})
-            serializer = UPEReadSerializer(queryset, many=True)
-            return Response(serializer.data)
-
-        elif modelo == 'Proyecto':
-            queryset = Proyecto.objects.filter(q_objects)
-            if agregacion == 'count':
-                return Response({'respuesta': f"Se encontraron {queryset.count()} proyectos."})
-            serializer = ProyectoSerializer(queryset, many=True)
-            return Response(serializer.data)
-
-        else:
-            return Response({"error": "Modelo no reconocido por la IA."}, status=status.HTTP_400_BAD_REQUEST)
-
-    except Exception as e:
-        traceback.print_exc()
-        return Response({"error": f"Ocurrió un error al procesar la consulta: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-def upe_status_chart(request):
-    """
-    Calcula el número de UPEs por cada estado para la gráfica de dona.
-    """
-    # Agrupamos por 'estado' y contamos cuántas hay en cada grupo
-    query_data = UPE.objects.values('estado').annotate(
-        total=Count('id')).order_by('-total')
-
-    # Formateamos los datos para que Chart.js los entienda fácilmente
-    data = {
-        "labels": [item['estado'] for item in query_data],
-        "values": [item['total'] for item in query_data]
-    }
-    return Response(data)
-
-
-@api_view(['POST'])
 @transaction.atomic
 def importar_pagos_historicos(request):
     """
@@ -845,18 +937,313 @@ def importar_pagos_historicos(request):
         return Response({"error": f"Ocurrió un error crítico: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+# ==============================================================================
+# --- VISTAS PARA EXPORTACIÓN DE DATOS ---
+# ==============================================================================
+
+
 @api_view(['GET'])
-def get_latest_tipo_de_cambio(request):
+def export_proyectos_excel(request):
     """
-    Devuelve el tipo de cambio aplicable al día de hoy (o el último día hábil anterior).
+    Exporta un reporte de Proyectos a Excel con formato personalizado.
     """
     try:
-        today = timezone.now().date()
-        ultimo_tc = TipoDeCambio.objects.filter(
-            fecha__lte=today).latest('fecha')
-        return Response({'valor': ultimo_tc.valor})
-    except TipoDeCambio.DoesNotExist:
-        return Response(
-            {'error': 'No hay tipos de cambio registrados en la base de datos.'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+        PROYECTO_COLUMNAS = {
+            "id": "ID", "nombre": "Nombre",
+            "descripcion": "Descripción", "activo": "Estado"
+        }
+        selected_cols = request.query_params.getlist(
+            'cols', list(PROYECTO_COLUMNAS.keys()))
+
+        # 1. Preparar los datos
+        proyectos_qs = Proyecto.objects.all()
+
+        proyectos_data = {PROYECTO_COLUMNAS[col]: [] for col in selected_cols}
+        for p in proyectos_qs:
+            if 'id' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['id']].append(p.id)
+            if 'nombre' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['nombre']].append(p.nombre)
+            if 'descripcion' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['descripcion']].append(
+                    p.descripcion)
+            if 'activo' in selected_cols:
+                # Lógica para cambiar Verdadero/Falso a texto
+                proyectos_data[PROYECTO_COLUMNAS['activo']].append(
+                    "Activo" if p.activo else "Inactivo")
+
+        df_proyectos = pl.DataFrame(proyectos_data)
+
+        # 2. Generar el archivo Excel
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Proyectos')
+
+        logo_path = os.path.join(
+            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        try:
+            worksheet.set_background(logo_path)
+        except FileNotFoundError:
+            print(f"ADVERTENCIA: No se encontró el logo en {logo_path}.")
+
+        header_format = workbook.add_format(
+            {'bold': True, 'bg_color': '#F0F0F0', 'border': 1})
+        worksheet.write_row(0, 0, df_proyectos.columns, header_format)
+        for i, row in enumerate(df_proyectos.iter_rows()):
+            worksheet.write_row(i + 1, 0, row)
+
+        _autoajustar_columnas_excel(worksheet, df_proyectos)
+        workbook.close()
+        output.seek(0)
+
+        response = HttpResponse(
+            output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_proyectos.xlsx"'
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+
+@api_view(['GET'])
+def export_clientes_excel(request):
+    """Exporta un reporte de Clientes a Excel."""
+    try:
+        CLIENTE_COLUMNAS = {
+            "id": "ID", "nombre_completo": "Nombre Completo", "email": "Email",
+            "telefono": "Teléfono", "activo": "Estado"
+        }
+        selected_cols = request.query_params.getlist(
+            'cols', list(CLIENTE_COLUMNAS.keys()))
+
+        clientes_qs = Cliente.objects.all()
+        # ### CORRECCIÓN: El nombre de la variable era incorrecto ###
+        clientes_data = {CLIENTE_COLUMNAS[col]: [] for col in selected_cols}
+        for c in clientes_qs:
+            if 'id' in selected_cols:
+                clientes_data[CLIENTE_COLUMNAS['id']].append(c.id)
+            if 'nombre_completo' in selected_cols:
+                clientes_data[CLIENTE_COLUMNAS['nombre_completo']].append(
+                    c.nombre_completo)
+            if 'email' in selected_cols:
+                clientes_data[CLIENTE_COLUMNAS['email']].append(c.email)
+            if 'telefono' in selected_cols:
+                clientes_data[CLIENTE_COLUMNAS['telefono']].append(c.telefono)
+            if 'activo' in selected_cols:
+                clientes_data[CLIENTE_COLUMNAS['activo']].append(
+                    "Activo" if c.activo else "Inactivo")
+
+        df_clientes = pl.DataFrame(clientes_data)
+
+        # 2. Generar el archivo Excel
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Clientes')
+
+        logo_path = os.path.join(
+            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        try:
+            worksheet.set_background(logo_path)
+        except FileNotFoundError:
+            print(f"ADVERTENCIA: No se encontró el logo en {logo_path}.")
+
+        header_format = workbook.add_format(
+            {'bold': True, 'bg_color': '#F0F0F0', 'border': 1})
+        worksheet.write_row(0, 0, df_clientes.columns, header_format)
+
+        for i, row in enumerate(df_clientes.iter_rows()):
+            worksheet.write_row(i + 1, 0, row)
+
+        _autoajustar_columnas_excel(worksheet, df_clientes)
+        workbook.close()
+        output.seek(0)
+
+        # 3. Devolver la respuesta
+        response = HttpResponse(
+            output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_clientes.xlsx"'
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+
+@api_view(['GET'])
+def export_upes_excel(request):
+    """
+    Exporta un reporte de UPEs a Excel con formato personalizado.
+    """
+    try:
+        UPE_COLUMNAS = {
+            "id": "ID",
+            "proyecto__nombre": "Proyecto",  # Campo relacionado
+            "identificador": "Identificador",
+            "valor_total": "Valor Total",
+            "moneda": "Moneda",
+            "estado": "Estado"
+        }
+        selected_cols = request.query_params.getlist(
+            'cols', list(UPE_COLUMNAS.keys()))
+
+        # 1. Obtenemos los objetos con 'select_related' para optimizar la consulta
+        upes_qs = UPE.objects.select_related('proyecto').all()
+
+        # 2. Construimos la lista de datos dinámicamente
+        upes_data = {UPE_COLUMNAS[col]: [] for col in selected_cols}
+        for upe in upes_qs:
+            # ### LÓGICA COMPLETADA ###
+            if 'id' in selected_cols:
+                upes_data[UPE_COLUMNAS['id']].append(upe.id)
+            if 'proyecto__nombre' in selected_cols:
+                upes_data[UPE_COLUMNAS['proyecto__nombre']].append(
+                    upe.proyecto.nombre)
+            if 'identificador' in selected_cols:
+                upes_data[UPE_COLUMNAS['identificador']].append(
+                    upe.identificador)
+            if 'valor_total' in selected_cols:
+                upes_data[UPE_COLUMNAS['valor_total']].append(
+                    float(upe.valor_total))
+            if 'moneda' in selected_cols:
+                upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda)
+            if 'estado' in selected_cols:
+                upes_data[UPE_COLUMNAS['estado']].append(upe.estado)
+
+        df_upes = pl.DataFrame(upes_data)
+
+        # 3. Generar el archivo Excel (esta parte se queda igual)
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('UPEs')
+
+        logo_path = os.path.join(
+            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        try:
+            worksheet.set_background(logo_path)
+        except FileNotFoundError:
+            print(f"ADVERTENCIA: No se encontró el logo en {logo_path}.")
+
+        header_format = workbook.add_format(
+            {'bold': True, 'bg_color': '#F0F0F0', 'border': 1})
+        money_format = workbook.add_format({'num_format': '$#,##0.00'})
+
+        worksheet.write_row(0, 0, df_upes.columns, header_format)
+
+        for i, row in enumerate(df_upes.iter_rows()):
+            for j, value in enumerate(row):
+                col_name = df_upes.columns[j]
+                if 'Valor Total' in col_name:
+                    worksheet.write_number(i + 1, j, value, money_format)
+                else:
+                    worksheet.write(i + 1, j, value)
+
+        _autoajustar_columnas_excel(worksheet, df_upes)
+        workbook.close()
+        output.seek(0)
+
+        # 4. Devolver la respuesta
+        response = HttpResponse(
+            output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_upes.xlsx"'
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+
+@api_view(['GET'])
+def export_contratos_excel(request):
+    """
+    Exporta un reporte de Contratos a Excel con formato personalizado.
+    """
+    try:
+        CONTRATO_COLUMNAS = {
+            "id": "ID Contrato",
+            "cliente__nombre_completo": "Cliente",
+            "upe__proyecto__nombre": "Proyecto",
+            "upe__identificador": "UPE",
+            "fecha_venta": "Fecha de Venta",
+            "precio_final_pactado": "Precio Pactado",
+            "moneda_pactada": "Moneda",
+            "estado": "Estado"
+        }
+        selected_cols = request.query_params.getlist(
+            'cols', list(CONTRATO_COLUMNAS.keys()))
+
+        # 1. Obtenemos los objetos con 'select_related' para optimizar la consulta
+        contratos_qs = Contrato.objects.select_related(
+            'cliente', 'upe__proyecto').all()
+
+        # 2. Construimos la lista de datos dinámicamente
+        contratos_data = {CONTRATO_COLUMNAS[col]: [] for col in selected_cols}
+        for c in contratos_qs:
+            # ### LÓGICA COMPLETADA ###
+            if 'id' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['id']].append(c.id)
+            if 'cliente__nombre_completo' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['cliente__nombre_completo']].append(
+                    c.cliente.nombre_completo)
+            if 'upe__proyecto__nombre' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['upe__proyecto__nombre']].append(
+                    c.upe.proyecto.nombre)
+            if 'upe__identificador' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['upe__identificador']].append(
+                    c.upe.identificador)
+            if 'fecha_venta' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['fecha_venta']].append(
+                    c.fecha_venta)
+            if 'precio_final_pactado' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['precio_final_pactado']].append(
+                    float(c.precio_final_pactado))
+            if 'moneda_pactada' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['moneda_pactada']].append(
+                    c.moneda_pactada)
+            if 'estado' in selected_cols:
+                contratos_data[CONTRATO_COLUMNAS['estado']].append(c.estado)
+
+        df_contratos = pl.DataFrame(contratos_data)
+
+        # 3. Generar el archivo Excel (esta parte se queda igual)
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Contratos')
+
+        logo_path = os.path.join(
+            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        try:
+            worksheet.set_background(logo_path)
+        except FileNotFoundError:
+            print(f"ADVERTENCIA: No se encontró el logo en {logo_path}.")
+
+        header_format = workbook.add_format(
+            {'bold': True, 'bg_color': '#F0F0F0', 'border': 1})
+        date_format = workbook.add_format({'num_format': 'dd-mm-yyyy'})
+        money_format = workbook.add_format({'num_format': '$#,##0.00'})
+
+        worksheet.write_row(0, 0, df_contratos.columns, header_format)
+
+        for i, row in enumerate(df_contratos.iter_rows()):
+            for j, value in enumerate(row):
+                col_name = df_contratos.columns[j]
+                if 'Fecha' in col_name:
+                    worksheet.write_datetime(i + 1, j, value, date_format)
+                elif 'Precio' in col_name:
+                    worksheet.write_number(i + 1, j, value, money_format)
+                else:
+                    worksheet.write(i + 1, j, value)
+
+        _autoajustar_columnas_excel(worksheet, df_contratos)
+        workbook.close()
+        output.seek(0)
+
+        # 4. Devolver la respuesta
+        response = HttpResponse(
+            output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_contratos.xlsx"'
+        return response
+
+    except Exception as e:
+        traceback.print_exc()
+        return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)

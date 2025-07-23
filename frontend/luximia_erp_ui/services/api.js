@@ -85,7 +85,11 @@ export const createContrato = (data) => apiClient.post('/contratos/', data);
 export const createPago = (data) => apiClient.post('/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/pagos/${pagoId}/`, data);
 export const deletePago = (pagoId) => apiClient.delete(`/pagos/${pagoId}/`);
+
+// CRUD - Tipo de Cambio
 export const getLatestTipoDeCambio = () => apiClient.get('/tipo-de-cambio/latest/');
+export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
+export const actualizarTipoDeCambioHoy = () => apiClient.post('/tipo-de-cambio/actualizar-hoy/');
 
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/users/', data);
@@ -111,7 +115,11 @@ export const importarPagosHistoricos = (formData) => {
 
 
 // PDF
-export const descargarEstadoDeCuentaPDF = (contratoId) => apiClient.get(`/contratos/${contratoId}/pdf/`, { responseType: 'blob' });
+export const descargarEstadoDeCuentaPDF = (contratoId, pagoCols) => {
+    const params = new URLSearchParams();
+    pagoCols.forEach(col => params.append('pago_cols', col));
+    return apiClient.get(`/contratos/${contratoId}/pdf/?${params.toString()}`, { responseType: 'blob' });
+};
 // XLSX
 export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) => {
     const params = new URLSearchParams();
@@ -123,3 +131,27 @@ export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) => 
 //OPEN IA
 export const consultaInteligente = (pregunta) => apiClient.post('/consulta-inteligente/', { pregunta });
 
+//EXPORTADORES
+export const exportProyectosExcel = (columns) => {
+    const params = new URLSearchParams();
+    columns.forEach(col => params.append('cols', col));
+    return apiClient.get(`/proyectos/export/?${params.toString()}`, { responseType: 'blob' });
+};
+
+export const exportClientesExcel = (columns) => {
+    const params = new URLSearchParams();
+    columns.forEach(col => params.append('cols', col));
+    return apiClient.get(`/clientes/export/?${params.toString()}`, { responseType: 'blob' });
+};
+
+export const exportUpesExcel = (columns) => {
+    const params = new URLSearchParams();
+    columns.forEach(col => params.append('cols', col));
+    return apiClient.get(`/upes/export/?${params.toString()}`, { responseType: 'blob' });
+};
+
+export const exportContratosExcel = (columns) => {
+    const params = new URLSearchParams();
+    columns.forEach(col => params.append('cols', col));
+    return apiClient.get(`/contratos/export/?${params.toString()}`, { responseType: 'blob' });
+};

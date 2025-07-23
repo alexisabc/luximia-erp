@@ -8,6 +8,12 @@
         @page {
             size: letter;
             margin: 0.8in;
+             /* Define el contenido en el centro del pie de página */
+            @bottom-right {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 9pt;
+                color: #777;
+            }
         }
 
         body {
@@ -15,6 +21,21 @@
             font-size: 10pt;
             color: #333;
         }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 25%;
+            left: 10%;
+            width: 80%;
+            height: 50%;
+            background-image: url("{{ logo_base64 }}");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
 
         h1,
         h2 {
@@ -157,39 +178,27 @@
     <table>
         <thead>
             <tr>
-                <th>Fecha Pago</th>
-                <th>Concepto</th>
-                <th>Instrumento</th>
-                <th>Ordenante</th>
-                <th class="text-right">Monto Pagado</th>
-                <th class="text-right">T.C.</th>
-                <th class="text-right">Valor (MXN)</th>
-                <th class="text-right">Saldo Restante</th>
+                {% for header in table_headers %}
+                <th
+                    class="{% if header != 'Concepto' and header != 'Instrumento' and header != 'Ordenante' %}text-align: center"{% endif %}">
+                    {{ header }}</th>
+                {% endfor %}
             </tr>
         </thead>
         <tbody>
-            {% for item in pagos_con_saldo %}
+            {% for row in table_rows %}
             <tr>
-                <td>{{ item.pago.fecha_pago|date:"d/m/Y" }}</td>
-                <td>{{ item.pago.get_concepto_display }}</td>
-                <td>{{ item.pago.instrumento_pago|default_if_none:"" }}</td>
-                <td>{{ item.pago.ordenante|default_if_none:"" }}</td>
-                <td class="text-right">${{ item.pago.monto_pagado|floatformat:2|intcomma }} {{ item.pago.moneda_pagada }}
-                </td>
-                <td class="text-right">
-                    {% if item.pago.moneda_pagada == 'USD' %}
-                    {{ item.pago.tipo_cambio|floatformat:4 }}
-                    {% else %}
-                    1.00
-                    {% endif %}
-                </td>
-                <td class="text-right">${{ item.pago.valor_mxn|floatformat:2|intcomma }}</td>
-                <td class="text-right" style="font-weight: bold;">${{ item.saldo_despues_del_pago|floatformat:2|intcomma }}
-                </td>
+                {% if 'fecha_pago' in pago_cols_keys %}<td>{{ row.fecha_pago|date:"d/m/Y" }}</td>{% endif %}
+                {% if 'concepto' in pago_cols_keys %}<td>{{ row.concepto }}</td>{% endif %}
+                {% if 'instrumento_pago' in pago_cols_keys %}<td>{{ row.instrumento_pago }}</td>{% endif %}
+                {% if 'ordenante' in pago_cols_keys %}<td>{{ row.ordenante }}</td>{% endif %}
+                {% if 'monto_pagado' in pago_cols_keys %}<td class="text-right">{{ row.monto_pagado }}</td>{% endif %}
+                {% if 'valor_mxn' in pago_cols_keys %}<td class="text-right">{{ row.valor_mxn }}</td>{% endif %}
+                <td class="text-right" style="font-weight: bold;">{{ row.saldo_restante }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" style="text-align: center;">No hay transacciones registradas.</td>
+                <td colspan="{{ table_headers|length }}" style="text-align: center;">No hay transacciones registradas.</td>
             </tr>
             {% endfor %}
         </tbody>

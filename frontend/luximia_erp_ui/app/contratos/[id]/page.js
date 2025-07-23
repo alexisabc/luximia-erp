@@ -37,6 +37,14 @@ const COLUMNAS_EXPORTABLES = {
     ]
 };
 
+const COLUMNAS_PDF = [
+    { id: 'fecha_pago', label: 'Fecha de Pago' },
+    { id: 'concepto', label: 'Concepto' },
+    { id: 'instrumento_pago', label: 'Instrumento' },
+    { id: 'monto_pagado', label: 'Monto Pagado' },
+    { id: 'valor_mxn', label: 'Valor (MXN)' },
+];
+
 export default function ContratoDetallePage() {
     const params = useParams();
     const { id: contratoId } = params;
@@ -48,7 +56,15 @@ export default function ContratoDetallePage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
     const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+
+    const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+    const [selectedPdfColumns, setSelectedPdfColumns] = useState(() => {
+        const allCols = {};
+        COLUMNAS_PDF.forEach(c => allCols[c.id] = true);
+        return allCols;
+    });
 
     const [currentPago, setCurrentPago] = useState(null);
     const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
@@ -172,9 +188,22 @@ export default function ContratoDetallePage() {
         }
     };
 
+    const handlePdfColumnSelectionChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedPdfColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
     const handleDownloadPDF = async () => {
+        // 1. Filtra las columnas seleccionadas del estado 'selectedPdfColumns'
+        const pagoCols = COLUMNAS_PDF
+            .filter(c => selectedPdfColumns[c.id])
+            .map(c => c.id);
+
         try {
-            const response = await descargarEstadoDeCuentaPDF(contratoId);
+            // 2. Pasa las columnas seleccionadas a la función del API
+            const response = await descargarEstadoDeCuentaPDF(contratoId, pagoCols);
+
+            // 3. El resto de la lógica para crear y descargar el archivo es la misma
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -184,6 +213,10 @@ export default function ContratoDetallePage() {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
+
+            // 4. (Opcional) Cierra el modal después de la descarga
+            setIsPdfModalOpen(false);
+
         } catch (error) {
             setError('No se pudo generar el PDF.');
         }
@@ -251,8 +284,7 @@ export default function ContratoDetallePage() {
     if (error && !contrato) return <div className="p-8 text-red-500 bg-red-100 p-4 rounded-md">{error}</div>;
     if (!contrato) return <div className="p-8">No se encontró el contrato.</div>;
 
-    // ### PASO DE DEPURACIÓN 1: AÑADE ESTA LÍNEA ###
-    //console.log("Datos completos del contrato que se van a renderizar:", contrato);
+
 
     return (
         <div className="p-8 h-full flex flex-col space-y-8">
@@ -264,9 +296,10 @@ export default function ContratoDetallePage() {
                 <div className="flex items-center space-x-3">
                     {hasPermission('cxc.add_pago') && <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Registrar Pago</button>}
                     <button
-                        onClick={handleDownloadPDF}
+                        onClick={() => setIsPdfModalOpen(true)}
                         className="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
-                        title="Descargar Estado de Cuenta en PDF">
+                        title="Descargar Estado de Cuenta en PDF"
+                    >
                         <DocumentArrowDownIcon className="h-6 w-6" />
                     </button>
                     <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><TableCellsIcon className="h-6 w-6" /></button>
@@ -506,6 +539,33 @@ export default function ContratoDetallePage() {
                     </form>
                 </Modal>
             )}
+            <Modal title="Seleccionar Columnas para PDF" isOpen={isPdfModalOpen} onClose={() => setIsPdfModalOpen(false)}>
+                <div className="space-y-4 p-2">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Columnas del Historial de Transacciones</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {COLUMNAS_PDF.map(col => (
+                            <label key={col.id} className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    name={col.id}
+                                    checked={selectedPdfColumns[col.id]}
+                                    onChange={handlePdfColumnSelectionChange}
+                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-gray-700 dark:text-gray-300">{col.label}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+                <div className="pt-5 mt-4 flex justify-end bg-gray-50 dark:bg-gray-900/50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+                    <button type="button" onClick={() => setIsPdfModalOpen(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-2 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500">
+                        Cancelar
+                    </button>
+                    <button onClick={handleDownloadPDF} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">
+                        Descargar PDF
+                    </button>
+                </div>
+            </Modal>
             <Modal title="Seleccionar Columnas para Exportar a Excel" isOpen={isExcelModalOpen} onClose={() => setIsExcelModalOpen(false)}>
                 <div className="space-y-6 max-h-[70vh] overflow-y-auto p-2">
                     <div>

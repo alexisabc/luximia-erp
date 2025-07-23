@@ -128,6 +128,7 @@ export default function Sidebar() {
                                     <ul className="pl-4 mt-1 space-y-1">
                                         {hasPermission('cxc.view_user') && <li><Link href="/configuraciones/usuarios" className={getLinkClass('/configuraciones/usuarios', true)}>Usuarios</Link></li>}
                                         {hasPermission('cxc.view_group') && <li><Link href="/configuraciones/roles" className={getLinkClass('/configuraciones/roles', true)}>Roles</Link></li>}
+                                        {hasPermission('cxc.view_tipodecambio') && <li><Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>Tipos de Cambio</Link></li>}
                                     </ul>
                                 )}
                             </li>

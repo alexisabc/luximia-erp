@@ -2,26 +2,56 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getProyectos, createProyecto, updateProyecto, deleteProyecto } from '../../services/api';
+import { getProyectos, createProyecto, updateProyecto, deleteProyecto, exportProyectosExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import Modal from '../../components/Modal';
 import ReusableTable from '../../components/ReusableTable';
+import FormModal from '../../components/FormModal'; // <-- Usa el FormModal
+import ExportModal from '../../components/ExportModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import { TableCellsIcon } from '@heroicons/react/24/solid';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
+
+
+const PROYECTO_COLUMNAS_DISPLAY = [
+    { header: 'Nombre del Proyecto', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre}</span> },
+    { header: 'Descripción', render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.descripcion}</span> },
+];
+
+const PROYECTO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' }, { id: 'nombre', label: 'Nombre' },
+    { id: 'descripcion', label: 'Descripción' }, { id: 'activo', label: 'Estado' }
+];
+
+
+const PROYECTO_FORM_FIELDS = [
+    { name: 'nombre', label: 'Nombre del Proyecto', required: true },
+    { name: 'descripcion', label: 'Descripción', type: 'textarea' }
+];
 
 export default function ProyectosPage() {
     const { hasPermission, authTokens } = useAuth();
 
-    // Usamos el mismo estado que en Clientes para manejar la paginación
-    const [pageData, setPageData] = useState({ results: [], count: 0, next: null, previous: null });
+    const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [currentPage, setCurrentPage] = useState(1);
+    const { ref, pageSize } = useResponsivePageSize(57);
     const [error, setError] = useState(null);
 
-    // Aplicamos el hook de tamaño de página responsivo
-    const { ref, pageSize } = useResponsivePageSize(57);
+    // Estados para los modales
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // Estados para la gestión de datos
     const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
     const [editingProject, setEditingProject] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState(null);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        PROYECTO_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
+        return allCols;
+    });
+
+    
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
@@ -42,6 +72,7 @@ export default function ProyectosPage() {
             fetchData(1, pageSize);
         }
     }, [pageSize, fetchData]);
+    
 
     const handlePageChange = (newPage) => {
         const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
@@ -55,16 +86,34 @@ export default function ProyectosPage() {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleEditClick = (proyecto) => {
-        setEditingProject(proyecto);
-        setFormData({ nombre: proyecto.nombre, descripcion: proyecto.descripcion || '' });
-        setIsModalOpen(true);
-    };
-
     const handleCreateClick = () => {
         setEditingProject(null);
         setFormData({ nombre: '', descripcion: '' });
-        setIsModalOpen(true);
+        setIsFormModalOpen(true);
+    };
+
+    const handleEditClick = (proyecto) => {
+        setEditingProject(proyecto);
+        setFormData({ nombre: proyecto.nombre, descripcion: proyecto.descripcion || '' });
+        setIsFormModalOpen(true);
+    };
+
+    const handleDeleteClick = (proyectoId) => {
+        setItemToDelete(proyectoId);
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+        try {
+            await deleteProyecto(itemToDelete);
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            setError('Error al eliminar el proyecto.');
+        } finally {
+            setIsConfirmModalOpen(false);
+            setItemToDelete(null);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -76,7 +125,7 @@ export default function ProyectosPage() {
             } else {
                 await createProyecto(formData);
             }
-            setIsModalOpen(false);
+            setIsFormModalOpen(false); 
             fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al guardar el proyecto.');
@@ -84,59 +133,66 @@ export default function ProyectosPage() {
         }
     };
 
-    const handleDeleteClick = async (proyectoId) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer.')) {
-            try {
-                await deleteProyecto(proyectoId);
-                // En lugar de filtrar, recargamos los datos de la página actual
-                fetchData(currentPage, pageSize);
-            } catch (err) {
-                setError('Error al eliminar el proyecto.');
-                console.error(err);
-            }
+    const handleExport = async () => {
+        const columnsToExport = PROYECTO_COLUMNAS
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+
+        try {
+            const response = await exportProyectosExcel(columnsToExport);
+
+            // ### LÓGICA PARA CREAR Y DESCARGAR EL BLOB ###
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_proyectos.xlsx'; // Puedes hacer este nombre dinámico si quieres
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            // ### FIN DE LA LÓGICA ###
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
         }
     };
 
-    const columns = [
-        {
-            header: 'Nombre del Proyecto',
-            render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre}</span>
-        },
-        {
-            header: 'Descripción',
-            render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.descripcion}</span>
-        },
-        {
-            header: 'Acciones',
-            render: (row) => (
-                <div className="text-right space-x-4">
-                    {hasPermission('api.change_proyecto') && (
-                        <button onClick={() => handleEditClick(row)} className="text-blue-600 hover:text-blue-800 font-medium">Editar</button>
-                    )}
-                    {hasPermission('api.delete_proyecto') && (
-                        <button onClick={() => handleDeleteClick(row.id)} className="text-red-600 hover:text-red-800 font-medium">Eliminar</button>
-                    )}
-                </div>
-            )
-        }
-    ];
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
 
     return (
         <div className="p-8 h-full flex flex-col">
             <div className="flex-shrink-0">
                 <div className="flex justify-between items-center mb-10">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Proyectos</h1>
-                    {hasPermission('api.add_proyecto') && (
-                        <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            + Nuevo Proyecto
+                    <div className="flex items-center space-x-3">
+                        {hasPermission('cxc.add_proyecto') && (
+                            <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                + Nuevo Proyecto
+                            </button>
+                        )}
+                        <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
+                            <TableCellsIcon className="h-6 w-6" />
                         </button>
-                    )}
+                    </div>
                 </div>
                 {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             </div>
 
             <div ref={ref} className="flex-grow min-h-0">
-                <ReusableTable data={pageData.results} columns={columns} />
+                {/* ### CAMBIO 4: Se añade la prop 'actions' a la tabla ### */}
+                <ReusableTable
+                    data={pageData.results}
+                    columns={PROYECTO_COLUMNAS_DISPLAY}
+                    actions={{
+                        onEdit: hasPermission('cxc.change_proyecto') ? handleEditClick : null,
+                        onDelete: hasPermission('cxc.delete_proyecto') ? handleDeleteClick : null
+                    }}
+                />
             </div>
 
             <div className="flex-shrink-0 flex justify-between items-center mt-4">
@@ -164,23 +220,33 @@ export default function ProyectosPage() {
                 </div>
             </div>
 
-            <Modal title={editingProject ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label htmlFor="nombre" className="block text-gray-700 text-sm font-bold mb-2">Nombre del Proyecto</label>
-                        <input type="text" name="nombre" id="nombre" value={formData.nombre} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900" required />
-                    </div>
-                    <div className="mb-6">
-                        <label htmlFor="descripcion" className="block text-gray-700 text-sm font-bold mb-2">Descripción</label>
-                        <textarea name="descripcion" id="descripcion" value={formData.descripcion} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900" />
-                    </div>
-                    <div className="flex items-center justify-end">
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            Guardar Cambios
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+            <FormModal
+                isOpen={isFormModalOpen}
+                onClose={() => setIsFormModalOpen(false)}
+                title={editingProject ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}
+                formData={formData}
+                onFormChange={handleInputChange}
+                onSubmit={handleSubmit}
+                fields={PROYECTO_FORM_FIELDS}
+                submitText="Guardar Proyecto"
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={PROYECTO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+            />
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Eliminación de Proyecto"
+                message="¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer."
+            />
         </div>
     );
 }
