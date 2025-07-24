@@ -9,7 +9,7 @@ colorama==0.4.6
 cssselect2==0.8.0
 distro==1.9.0
 dj-database-url==3.0.1
-Django==5.2.3
+Django==5.2.4
 django-cors-headers==4.7.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
@@ -22,7 +22,7 @@ httpx==0.28.1
 idna==3.10
 jiter==0.10.0
 numpy==2.3.0
-openai==1.93.0
+openai==1.97.1
 packaging==25.0
 pillow==11.2.1
 polars==1.31.0
@@ -47,7 +47,7 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 tzdata==2025.2
 urllib3==2.5.0
-weasyprint==65.1
+weasyprint==66.0
 webencodings==0.5.1
 whitenoise==6.9.0
 xlsxwriter==3.2.5
