@@ -1,25 +1,24 @@
 # Luximia ERP - Documentación del Proyecto
 
-* **Versión:** 2.2
-* **Fecha de última actualización:** 22 de julio de 2025
-* **Resumen:** Este documento detalla la arquitectura, funcionalidades y procedimientos del sistema Luximia ERP. El sistema cuenta con un módulo de Cuentas por Cobrar (CXC) robusto, completo y desplegado en producción.
+* **Versión:** 2.3
+* **Fecha de última actualización:** 24 de julio de 2025
+* **Resumen:** Este documento detalla la arquitectura, funcionalidades y procedimientos del sistema Luximia ERP. El sistema cuenta con un módulo de Cuentas por Cobrar (CXC) robusto y una arquitectura de frontend modular y reutilizable.
 
 ---
 
 ## 1. Visión General del Proyecto
 
 ### 1.1. Objetivo Principal
-Desarrollar un sistema web interno para **Grupo Luximia** que centralice y automatice la gestión de Cuentas por Cobrar (CXC), incluyendo la generación de planes de pago, cálculo de intereses y un estado de cuenta detallado para cada contrato.
+Desarrollar un sistema web interno para **Grupo Luximia** que centralice y automatice la gestión de Cuentas por Cobrar (CXC), con reportes financieros avanzados y una alta capacidad de personalización.
 
 ### 1.2. Características Principales
-* **CRUD Completo de Pagos:** Funcionalidad completa para registrar, ver, editar y eliminar pagos.
-* **Lógica Financiera Automática:** El estado del plan de pagos y los resúmenes financieros se recalculan tras cada transacción.
+* **Gestión Segura:** La eliminación de registros clave (Proyectos, Clientes, UPEs, Contratos) se ha reemplazado por un sistema de **desactivación (soft delete)** para prevenir la pérdida de datos.
+* **Dashboard Estratégico:** Una nueva interfaz de Business Intelligence que muestra proyecciones de **Ventas, Cobranza, Programado y Morosidad**. Los datos se pueden **filtrar por proyecto y por periodo** (semanal, mensual, anual).
 * **Reportes Personalizados:**
-    * **PDF:** Generación de un estado de cuenta profesional para el cliente.
-    * **Excel:** Exportación de un reporte con **columnas seleccionables**, formatos de celda (fecha, contabilidad) y el **logo de la empresa** en el encabezado.
-* **Automatización de Tipo de Cambio:** El tipo de cambio oficial de Banxico se obtiene y almacena diariamente de forma automática.
-* **Importadores de Datos:** Módulos para la carga masiva de datos desde archivos CSV, con plantillas de Excel que incluyen instrucciones para el usuario.
-* **Asistente con IA:** Interfaz de chat para realizar consultas a la base de datos en lenguaje natural.
+    * **PDF:** Generación de un estado de cuenta profesional para el cliente, con **columnas seleccionables** y el **logo de la empresa como marca de agua**.
+    * **Excel:** Exportación de reportes para cada módulo (Proyectos, Clientes, etc.) con **columnas seleccionables**, formatos de celda y el logo de la empresa.
+* **Lógica Financiera Automática:** El estado del plan de pagos se recalcula tras cada transacción (creación, edición o eliminación de pagos).
+* **Automatización de Tipo de Cambio:** El tipo de cambio oficial de Banxico se obtiene y almacena diariamente de forma automática a través de un Cron Job.
 
 ### 1.3. Stack Tecnológico
 * **Backend:** Python con **Django Rest Framework**.
@@ -31,11 +30,11 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 
 ---
 
-## 2. Automatización y Tareas Programadas
-El sistema cuenta con un proceso automatizado para la actualización del tipo de cambio:
-* **Comando:** `python manage.py obtener_tipo_cambio`.
-* **Fuente:** API del Sistema de Información Económica (SIE) de Banxico.
-* **Ejecución en Producción:** Se ejecuta diariamente a través de un **Cron Job** configurado en **Render**.
+## 2. Arquitectura del Frontend (Refactorización Mayor)
+La interfaz ha sido refactorizada a una arquitectura basada en componentes reutilizables para mejorar la mantenibilidad y escalabilidad del proyecto:
+* **`ReusableTable`:** Componente de tabla inteligente que renderiza datos y genera automáticamente los botones de acción (Ver, Editar, Eliminar) según las funciones que recibe.
+* **`FormModal`:** Modal genérico que construye formularios de creación y edición de forma dinámica.
+* **`ConfirmationModal` y `ExportModal`:** Componentes reutilizables para las ventanas de confirmación y selección de columnas de exportación.
 
 ---
 
@@ -44,7 +43,7 @@ El sistema cuenta con un proceso automatizado para la actualización del tipo de
 ### 3.1. Configuración del Entorno de Desarrollo
 1.  **Requisitos:** Tener **Docker Desktop** instalado y corriendo.
 2.  **Clonar:** Clonar el repositorio de GitHub.
-3.  **Archivo `.env`**: Crear un archivo `.env` en la raíz del proyecto (usar `.env.example` como plantilla) y llenarlo con las credenciales locales y el token de Banxico.
+3.  **Archivo `.env`**: Crear un archivo `.env` en la raíz (usar `.env.example` como plantilla) y llenarlo con las credenciales locales y el token de Banxico.
 4.  **Iniciar Servicios:** En la raíz del proyecto, ejecutar `docker-compose up -d --build`.
 5.  **Iniciar Frontend:** En una terminal separada, navegar a `frontend/luximia_erp_ui` y ejecutar `npm run dev`.
 6.  **Acceso:** Backend en `http://localhost:8000/api/` y Frontend en `http://localhost:3000`.

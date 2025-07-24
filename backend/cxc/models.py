@@ -8,29 +8,38 @@ from dateutil.relativedelta import relativedelta
 from django.db import transaction
 
 
-class Proyecto(models.Model):
+# --- MODELO BASE REUTILIZABLE ---
+class ModeloBaseActivo(models.Model):
+    """
+    Un modelo base abstracto que incluye un campo 'activo' para soft deletes.
+    """
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True  # Esto le dice a Django que no cree una tabla para este modelo
+
+
+class Proyecto(ModeloBaseActivo):
     nombre = models.CharField(
         max_length=100, unique=True, help_text="Ej: Shark Tower")
     descripcion = models.TextField(blank=True, null=True)
-    activo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
 
 
-class Cliente(models.Model):
+class Cliente(ModeloBaseActivo):
     nombre_completo = models.CharField(max_length=200)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     # Hacemos el email único
     email = models.EmailField(
         max_length=254, blank=True, null=True, unique=True)
-    activo = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre_completo
 
 
-class UPE(models.Model):
+class UPE(ModeloBaseActivo):
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
     proyecto = models.ForeignKey(
@@ -51,7 +60,7 @@ class UPE(models.Model):
         return f"{self.proyecto.nombre} - {self.identificador}"
 
 
-class Contrato(models.Model):
+class Contrato(ModeloBaseActivo):
     """
     Define los términos de la venta y el financiamiento.
     Ahora incluye los datos para generar el plan de pagos.
@@ -166,7 +175,7 @@ class Contrato(models.Model):
                     cuota.save()
 
 
-class PlanDePagos(models.Model):
+class PlanDePagos(ModeloBaseActivo):
     """
     Nuevo modelo que representa el calendario de amortización.
     Cada fila es un pago esperado (PLAN_DE_PAGO).
@@ -188,7 +197,7 @@ class PlanDePagos(models.Model):
         return f"Vencimiento {self.fecha_vencimiento} - {self.monto_programado} ({self.get_tipo_display()})"
 
 
-class Pago(models.Model):
+class Pago(ModeloBaseActivo):
     """
     Registra cada transacción de dinero que entra.
     Actualizado con todos los nuevos campos de detalle.
@@ -258,7 +267,7 @@ class Pago(models.Model):
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
 
 
-class TipoDeCambio(models.Model):
+class TipoDeCambio(ModeloBaseActivo):
     fecha = models.DateField(unique=True, primary_key=True)
     valor = models.DecimalField(max_digits=10, decimal_places=4)
 

@@ -66,6 +66,17 @@ def _autoajustar_columnas_excel(worksheet, dataframe):
         column_width = max(max_len, header_len) + 2
         worksheet.set_column(idx, idx, column_width)
 
+# --- MIXIN REUTILIZABLE PARA SOFT DELETE ---
+class SoftDeleteViewSetMixin:
+    """
+    Un mixin que reemplaza el método de eliminación (destroy)
+    por una lógica de soft delete (cambia activo a False).
+    """
+
+    def perform_destroy(self, instance):
+        instance.activo = False
+        instance.save()
+
 # ==============================================================================
 # --- VIEWSETS (CRUD BÁSICO) ---
 # ==============================================================================
@@ -75,7 +86,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 
-class ProyectoViewSet(viewsets.ModelViewSet):
+class ProyectoViewSet(SoftDeleteViewSetMixin,  viewsets.ModelViewSet):
     queryset = Proyecto.objects.all().order_by('nombre')
     serializer_class = ProyectoSerializer
     pagination_class = CustomPagination
@@ -87,14 +98,14 @@ class ProyectoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ClienteViewSet(viewsets.ModelViewSet):
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Cliente.objects.prefetch_related(
         'contratos__upe__proyecto').order_by('nombre_completo')
     serializer_class = ClienteSerializer
     pagination_class = CustomPagination
 
 
-class UPEViewSet(viewsets.ModelViewSet):
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = UPE.objects.select_related(
         'proyecto').all().order_by('identificador')
     pagination_class = CustomPagination
@@ -110,7 +121,7 @@ class UPEViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class ContratoViewSet(viewsets.ModelViewSet):
+class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Contrato.objects.select_related('cliente', 'upe__proyecto').prefetch_related(
         'pagos', 'plan_de_pagos').order_by('-fecha_venta')
     pagination_class = CustomPagination
