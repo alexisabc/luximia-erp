@@ -258,8 +258,9 @@ export default function UPEsPage() {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                title="Confirmar Eliminación de UPE"
-                message="¿Estás seguro? Si esta UPE tiene un contrato, la operación fallará."
+                title="Desactivar UPE"
+                message="¿Estás seguro de que deseas desactivar este upe? Ya no aparecerá en las listas principales."
+                confirmText="Desactivar"
             />
         </div>
     );

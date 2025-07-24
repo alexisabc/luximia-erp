@@ -8,7 +8,8 @@ export default function ConfirmationModal({
     onClose,
     onConfirm,
     title = "Confirmar Acción",
-    message = "¿Estás seguro de que deseas continuar? Esta acción no se puede deshacer."
+    message = "¿Estás seguro de que deseas realizar esta acción?",
+    confirmText = "Confirmar" // Añade un texto para el botón
 }) {
     if (!isOpen) return null;
 
@@ -28,7 +29,7 @@ export default function ConfirmationModal({
                         onClick={onConfirm}
                         className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
                     >
-                        Eliminar
+                        {confirmText}
                     </button>
                 </div>
             </div>

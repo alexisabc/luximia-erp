@@ -247,8 +247,9 @@ export default function ClientesPage() {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                title="Confirmar Eliminación de Cliente"
-                message="¿Estás seguro? Si el cliente tiene contratos asociados, no podrá ser eliminado."
+                title="Desactivar Cliente"
+                message="¿Estás seguro de que deseas desactivar este Cliente? Ya no aparecerá en las listas principales."
+                confirmText="Desactivar"
             />
         </div>
     );

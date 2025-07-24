@@ -94,8 +94,10 @@ export const actualizarTipoDeCambioHoy = () => apiClient.post('/tipo-de-cambio/a
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/users/', data);
 export const updateUser = (id, data) => apiClient.put(`/users/${id}/`, data);
+export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
 export const createGroup = (data) => apiClient.post('/groups/', data);
 export const updateGroup = (id, data) => apiClient.put(`/groups/${id}/`, data);
+export const deleteGroup = (id) => apiClient.delete(`/groups/${id}/`);
 
 // --- Dashboard Estratégico ---
 export const getUpeStatusChartData = () => apiClient.get('/charts/upe-status/');

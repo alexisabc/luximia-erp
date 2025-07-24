@@ -134,7 +134,7 @@ export default function ProyectosPage() {
     };
 
     const handleExport = async () => {
-        const columnsToExport = PROYECTO_COLUMNAS
+        const columnsToExport = PROYECTO_COLUMNAS_EXPORT
             .filter(c => selectedColumns[c.id])
             .map(c => c.id);
 
@@ -244,8 +244,9 @@ export default function ProyectosPage() {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                title="Confirmar Eliminación de Proyecto"
-                message="¿Estás seguro de que deseas eliminar este proyecto? Esta acción no se puede deshacer."
+                title="Desactivar Proyecto"
+                message="¿Estás seguro de que deseas desactivar este Proyecto? Ya no aparecerá en las listas principales."
+                confirmText="Desactivar"
             />
         </div>
     );
