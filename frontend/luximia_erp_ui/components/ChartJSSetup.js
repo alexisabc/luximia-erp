@@ -1,23 +1,12 @@
 // components/ChartJSSetup.js
 'use client';
 
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+// ### CAMBIO CLAVE: Importamos desde 'chart.js/auto' ###
+// Esto registra automáticamente todos los componentes de Chart.js
+import { Chart as ChartJS } from 'chart.js/auto';
 import { useEffect } from 'react';
 
-// Registramos todos los componentes que usaremos en la aplicación
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
-);
-
-// Este componente no renderiza nada, solo se asegura de que el registro se ejecute.
+// Este componente no renderiza nada, solo se asegura de que la importación se ejecute.
 export default function ChartJSSetup() {
     useEffect(() => { }, []);
     return null;
