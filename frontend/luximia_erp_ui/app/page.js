@@ -8,7 +8,18 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import ChatInteligente from '../components/ChatInteligente';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement);
+// Añadimos LineElement y PointElement para las gráficas de línea
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement, // <-- Elemento que faltaba
+  PointElement, // <-- Elemento que faltaba
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const KpiCard = ({ title, value }) => (
   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
