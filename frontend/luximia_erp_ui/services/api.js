@@ -97,10 +97,18 @@ export const updateUser = (id, data) => apiClient.put(`/users/${id}/`, data);
 export const createGroup = (data) => apiClient.post('/groups/', data);
 export const updateGroup = (id, data) => apiClient.put(`/groups/${id}/`, data);
 
-// Dashboard y Gráficas
-export const getDashboardStats = () => apiClient.get('/dashboard-stats/');
-export const getValorPorProyectoChartData = () => apiClient.get('/charts/valor-por-proyecto/');
+// --- Dashboard Estratégico ---
 export const getUpeStatusChartData = () => apiClient.get('/charts/upe-status/');
+
+export const getStrategicDashboardData = (timeframe, projectId) => {
+    const params = new URLSearchParams();
+    if (timeframe) params.append('timeframe', timeframe);
+    if (projectId && projectId !== 'all') {
+        params.append('project_id', projectId);
+    }
+    return apiClient.get(`/dashboard/strategic/?${params.toString()}`);
+};
+
 
 // Importaciones
 export const importarDatosMasivos = (formData) => apiClient.post('/importar-masivo/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });

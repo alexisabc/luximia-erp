@@ -3,6 +3,7 @@
 # ==============================================================================
 # --- IMPORTS ---
 # ==============================================================================
+from datetime import date # Asegúrate de tener este import
 from django.conf import settings # Y este también
 import base64 # Asegúrate de tener este import
 import traceback
@@ -18,7 +19,7 @@ from .utils import obtener_y_guardar_tipo_de_cambio
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncWeek, TruncMonth, TruncYear
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -169,75 +170,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         groups = self.get_queryset()
         serializer = GroupReadSerializer(groups, many=True)
         return Response(serializer.data)
-
-
-# ==============================================================================
-# --- VISTAS PERSONALIZADAS Y ENDPOINTS DE API ---
-# ==============================================================================
-
-@api_view(['GET'])
-def dashboard_stats(request):
-    """Calcula y devuelve las estadísticas para el dashboard con la nueva lógica."""
-    today = timezone.now().date()
-    # KPIs de conteo
-    proyectos_activos = Proyecto.objects.filter(activo=True).count()
-    clientes_totales = Cliente.objects.count()
-    upes_totales = UPE.objects.count()
-    contratos_activos = Contrato.objects.filter(estado='Activo').count()
-
-    # KPIs financieros
-    total_pagado_query = Pago.objects.aggregate(total=Sum('monto_pagado'))
-    total_pagado = total_pagado_query['total'] or 0
-    total_contratado_query = Contrato.objects.filter(
-        estado='Activo').aggregate(total=Sum('precio_final_pactado'))
-    total_contratado = total_contratado_query['total'] or 0
-    total_adeudado = total_contratado - total_pagado
-
-    # Saldo vencido
-    saldo_vencido_query = PlanDePagos.objects.filter(
-        fecha_vencimiento__lt=today, pagado=False, contrato__estado='Activo').aggregate(total=Sum('monto_programado'))
-    saldo_vencido = saldo_vencido_query['total'] or 0
-
-    stats = {
-        'proyectos_activos': proyectos_activos, 'clientes_totales': clientes_totales,
-        'upes_totales': upes_totales, 'contratos_activos': contratos_activos,
-        'total_adeudado': total_adeudado, 'saldo_vencido': saldo_vencido,
-    }
-    return Response(stats)
-
-
-@api_view(['GET'])
-def upe_status_chart(request):
-    """Calcula el número de UPEs por cada estado."""
-    query_data = UPE.objects.values('estado').annotate(
-        total=Count('id')).order_by('-total')
-    data = {
-        "labels": [item['estado'] for item in query_data],
-        "values": [item['total'] for item in query_data]
-    }
-    return Response(data)
-
-@api_view(['GET'])
-def valor_por_proyecto_chart(request):
-    """Calcula los datos para la gráfica de valor por proyecto."""
-    # ### CORREGIDO: Se usa el campo 'tipo_cambio' correcto ###
-    ultimo_pago_usd = Pago.objects.filter(
-        moneda_pagada='USD').order_by('-fecha_pago').first()
-    tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
-        '17.50')
-
-    chart_data = Contrato.objects.annotate(
-        valor_en_mxn=Case(
-            When(moneda_pactada='USD', then=F(
-                'precio_final_pactado') * tipo_cambio_reciente),
-            default=F('precio_final_pactado'),
-            output_field=DecimalField()
-        )
-    ).values('upe__proyecto__nombre').annotate(total_contratado=Sum('valor_en_mxn')).order_by('-total_contratado')
-
-    formatted_data = [{'label': item['upe__proyecto__nombre'],
-                       'value': item['total_contratado']} for item in chart_data]
-    return Response(formatted_data)
 
 
 # ==============================================================================
@@ -1247,3 +1179,125 @@ def export_contratos_excel(request):
     except Exception as e:
         traceback.print_exc()
         return HttpResponse(f"Ocurrió un error al generar el Excel: {e}", status=500)
+
+# ==============================================================================
+# --- VISTAS PARA GRÁFICAS ---
+# ==============================================================================
+
+
+@api_view(['GET'])
+def strategic_dashboard_data(request):
+    """
+    Calcula y devuelve todos los datos para el dashboard estratégico.
+    """
+    project_id = request.query_params.get('project_id')
+    timeframe = request.query_params.get('timeframe', 'month')
+
+    # 1. Filtrar querysets base
+    pagos = Pago.objects.all()
+    contratos = Contrato.objects.all()
+    plan_pagos = PlanDePagos.objects.filter(
+        pagado=False, contrato__estado='Activo')
+    upe_queryset = UPE.objects.all()
+
+    if project_id and project_id != 'all':
+        pagos = pagos.filter(contrato__upe__proyecto_id=project_id)
+        contratos = contratos.filter(upe__proyecto_id=project_id)
+        plan_pagos = plan_pagos.filter(contrato__upe__proyecto_id=project_id)
+        upe_queryset = upe_queryset.filter(proyecto_id=project_id)
+
+    # ### CORRECCIÓN: Definimos la expresión para calcular valor_mxn en la DB ###
+    valor_mxn_expression = Case(
+        When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')),
+        default=F('monto_pagado'),
+        output_field=DecimalField()
+    )
+
+    # 2. Calcular KPIs agregados usando la expresión
+    total_recuperado = pagos.aggregate(
+        total=Sum(valor_mxn_expression))['total'] or 0
+    total_ventas = contratos.aggregate(
+        total=Sum('precio_final_pactado'))['total'] or 0
+    total_programado = plan_pagos.aggregate(
+        total=Sum('monto_programado'))['total'] or 0
+    total_vencido = plan_pagos.filter(fecha_vencimiento__lt=date.today()).aggregate(
+        total=Sum('monto_programado'))['total'] or 0
+
+    # 3. Calcular datos para la gráfica principal usando la expresión
+    if timeframe == 'week':
+        trunc_pago = TruncWeek('fecha_pago')
+        trunc_venta = TruncWeek('fecha_venta')
+        trunc_plan = TruncWeek('fecha_vencimiento')
+        date_format = '%Y-%U'
+    elif timeframe == 'year':
+        trunc_pago = TruncYear('fecha_pago')
+        trunc_venta = TruncYear('fecha_venta')
+        trunc_plan = TruncYear('fecha_vencimiento')
+        date_format = '%Y'
+    else:  # Default to month
+        trunc_pago = TruncMonth('fecha_pago')
+        trunc_venta = TruncMonth('fecha_venta')
+        trunc_plan = TruncMonth('fecha_vencimiento')
+        date_format = '%b %Y'
+
+    recuperado_por_periodo = pagos.annotate(period=trunc_pago).values(
+        'period').annotate(total=Sum(valor_mxn_expression)).order_by('period')
+    ventas_por_periodo = contratos.annotate(period=trunc_venta).values(
+        'period').annotate(total=Sum('precio_final_pactado')).order_by('period')
+    programado_por_periodo = plan_pagos.annotate(period=trunc_plan).values(
+        'period').annotate(total=Sum('monto_programado')).order_by('period')
+
+    # Unir todos los datos en un solo diccionario para el gráfico (sin cambios)
+    chart_data = {}
+    all_labels = set()
+
+    for item in recuperado_por_periodo:
+        label = item['period'].strftime(date_format)
+        all_labels.add(label)
+        if label not in chart_data:
+            chart_data[label] = {}
+        chart_data[label]['recuperado'] = item['total']
+
+    for item in ventas_por_periodo:
+        label = item['period'].strftime(date_format)
+        all_labels.add(label)
+        if label not in chart_data:
+            chart_data[label] = {}
+        chart_data[label]['ventas'] = item['total']
+
+    for item in programado_por_periodo:
+        label = item['period'].strftime(date_format)
+        all_labels.add(label)
+        if label not in chart_data:
+            chart_data[label] = {}
+        chart_data[label]['programado'] = item['total']
+
+    sorted_labels = sorted(list(all_labels))
+
+    final_chart_data = {
+        'labels': sorted_labels,
+        'recuperado': [chart_data.get(label, {}).get('recuperado', 0) for label in sorted_labels],
+        'ventas': [chart_data.get(label, {}).get('ventas', 0) for label in sorted_labels],
+        'programado': [chart_data.get(label, {}).get('programado', 0) for label in sorted_labels],
+        'vencido': [total_vencido] * len(sorted_labels)
+    }
+
+    # 4. Calcular datos para la gráfica de UPEs
+    upe_status_data = upe_queryset.values('estado').annotate(
+        total=Count('id')).order_by('-total')
+
+    # 5. Construir la respuesta final
+    return Response({
+        'kpis': {
+            'recuperado': total_recuperado,
+            'ventas': total_ventas,
+            'programado': total_programado,
+            'vencido': total_vencido,
+        },
+        'chart': final_chart_data,  # Asumiendo que final_chart_data se construye correctamente
+        'upeStatus': {
+            "labels": [item['estado'] for item in upe_status_data],
+            "values": [item['total'] for item in upe_status_data]
+        }
+    })
+
