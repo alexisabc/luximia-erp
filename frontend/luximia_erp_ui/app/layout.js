@@ -7,6 +7,7 @@ import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import Sidebar from "../components/Sidebar";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ChartJSSetup from '../components/ChartJSSetup';
 
 // --- Iconos para los Botones ---
 const MenuIcon = () => (
@@ -99,7 +100,10 @@ export default function RootLayout({ children }) {
       <body className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-200">
         <AuthProvider>
           <SidebarProvider>
-            <AppContent>{children}</AppContent>
+            <AppContent>
+              <ChartJSSetup />
+              {children}
+            </AppContent>
           </SidebarProvider>
         </AuthProvider>
       </body>
