@@ -701,39 +701,67 @@ def importar_clientes(request):
 @api_view(['POST'])
 @transaction.atomic
 def importar_upes(request):
-    """Importa o actualiza UPEs desde un CSV usando Polars."""
+    """Importa o actualiza UPEs desde un CSV, recolectando todos los errores."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
-        return Response(...)
-    try:
-        # LÍNEA CORREGIDA
-        df = pl.read_csv(archivo_csv.read(),
-                         encoding='latin-1', null_values=[''])
-        registros_creados, registros_actualizados = 0, 0
+        return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # LÍNEA CORREGIDA
+    # ### LÓGICA DE ERRORES MEJORADA ###
+    registros_creados, registros_actualizados = 0, 0
+    errores = []
+
+    try:
+        df = pl.read_csv(archivo_csv.read(), encoding='latin-1', null_values=[''])
+        
         for index, row in enumerate(df.iter_rows(named=True)):
-            proyecto_nombre_csv = str(
-                row.get('proyecto_nombre', '')).strip().upper()
-            if not proyecto_nombre_csv:
-                raise Exception(
-                    f"Fila {index + 2}: El campo 'proyecto_nombre' no puede estar vacío.")
             try:
-                proyecto = Proyecto.objects.get(nombre=proyecto_nombre_csv)
-            except Proyecto.DoesNotExist:
-                raise Exception(
-                    f"Fila {index + 2}: El proyecto '{proyecto_nombre_csv}' no existe en la base de datos.")
-            upe, creado = UPE.objects.update_or_create(proyecto=proyecto, identificador=str(row['identificador']).strip(), defaults={
-                                                       'valor_total': row['valor_total'], 'moneda': str(row['moneda']).strip(), 'estado': str(row['estado']).strip()})
-            if creado:
-                registros_creados += 1
-            else:
-                registros_actualizados += 1
-        return Response({"mensaje": "Importación de UPEs completada.", "upes_creadas": registros_creados, "upes_actualizadas": registros_actualizados}, status=status.HTTP_200_OK)
+                proyecto_nombre_csv = str(row.get('proyecto_nombre', '')).strip().upper()
+                if not proyecto_nombre_csv:
+                    # Añade el error a la lista y continúa con la siguiente fila
+                    errores.append(f"Fila {index + 2}: El campo 'proyecto_nombre' no puede estar vacío.")
+                    continue 
+
+                try:
+                    proyecto = Proyecto.objects.get(nombre=proyecto_nombre_csv)
+                except Proyecto.DoesNotExist:
+                    errores.append(f"Fila {index + 2}: El proyecto '{proyecto_nombre_csv}' no existe.")
+                    continue
+
+                defaults = {
+                    'valor_total': row['valor_total'], 
+                    'moneda': str(row['moneda']).strip(), 
+                    'estado': str(row['estado']).strip()
+                }
+                upe, creado = UPE.objects.update_or_create(
+                    proyecto=proyecto, 
+                    identificador=str(row['identificador']).strip(), 
+                    defaults=defaults
+                )
+                
+                if creado:
+                    registros_creados += 1
+                else:
+                    registros_actualizados += 1
+            
+            except Exception as e:
+                errores.append(f"Fila {index + 2}: Error inesperado - {str(e)}")
+
+        # Después del bucle, si hay errores, los devolvemos todos juntos
+        if errores:
+            return Response({
+                "mensaje": f"Importación completada con errores. Se procesaron {registros_creados + registros_actualizados} registros.",
+                "errores": errores
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "mensaje": "Importación de UPEs completada.",
+            "upes_creadas": registros_creados,
+            "upes_actualizadas": registros_actualizados
+        }, status=status.HTTP_200_OK)
+    
     except Exception as e:
         traceback.print_exc()
-        return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({"error": f"Ocurrió un error crítico al leer el archivo: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @transaction.atomic
