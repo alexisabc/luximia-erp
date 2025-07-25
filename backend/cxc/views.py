@@ -8,7 +8,7 @@ from django.conf import settings # Y este también
 import base64 # Asegúrate de tener este import
 import traceback
 from decimal import Decimal
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import os
 import json
 import polars as pl
@@ -77,6 +77,18 @@ class SoftDeleteViewSetMixin:
         instance.activo = False
         instance.save()
 
+def convertir_fecha_excel(valor_fecha):
+    """
+    Convierte un valor a fecha, manejando tanto el formato de texto 'DD/MM/YYYY'
+    como el formato de número de serie de Excel.
+    """
+    if isinstance(valor_fecha, str):
+        return datetime.strptime(valor_fecha, '%d/%m/%Y').date()
+    elif isinstance(valor_fecha, (int, float)):
+        # Fórmula para convertir el número de serie de Excel a una fecha
+        # (El -2 es para ajustar por el año bisiesto de 1900 que Excel calcula mal)
+        return (datetime(1899, 12, 30) + timedelta(days=int(valor_fecha))).date()
+    return None
 # ==============================================================================
 # --- VIEWSETS (CRUD BÁSICO) ---
 # ==============================================================================
@@ -628,13 +640,15 @@ def importar_datos_masivos(request):
 
             # 4. Procesar Contrato (con la nueva lógica)
             if cliente and row.get('contrato_fecha_venta'):
-                fecha_obj = datetime.strptime(
-                    str(row['contrato_fecha_venta']), '%d/%m/%Y')
+                fecha_obj = convertir_fecha_excel(row.get('contrato_fecha_venta'))
+            if not fecha_obj:
+                raise Exception(f"Fila {index + 2}: Formato de fecha inválido.")
+
 
                 # Preparamos los datos del contrato
                 defaults_contrato = {
                     'cliente': cliente,
-                    'fecha_venta': fecha_obj.strftime('%Y-%m-%d'),
+                    'fecha_venta': fecha_obj,
                     'precio_final_pactado': row['contrato_precio_pactado'],
                     'moneda_pactada': row['contrato_moneda'],
                     # ### NUEVOS CAMPOS FINANCIEROS ###
@@ -662,8 +676,6 @@ def importar_datos_masivos(request):
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-# En tu archivo: backend/cxc/views.py
 
 @api_view(['POST'])
 @transaction.atomic
@@ -826,11 +838,13 @@ def importar_contratos(request):
                 raise Exception(
                     f"Fila {index + 2}: La UPE '{upe_identificador}' en el proyecto '{proyecto_nombre}' no existe.")
 
-            fecha_obj = datetime.strptime(str(row['fecha_venta']), '%d/%m/%Y')
+            fecha_obj = convertir_fecha_excel(row.get('fecha_venta'))
+        if not fecha_obj:
+            raise Exception(f"Fila {index + 2}: Formato de fecha inválido.")
 
             defaults_data = {
                 'cliente': cliente,
-                'fecha_venta': fecha_obj.strftime('%Y-%m-%d'),
+                'fecha_venta': fecha_obj,
                 'precio_final_pactado': row['contrato_precio_pactado'],
                 'moneda_pactada': str(row['moneda_pactada']).strip(),
                 'monto_enganche': row.get('monto_enganche', 0),
