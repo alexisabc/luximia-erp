@@ -797,6 +797,7 @@ def importar_upes(request):
         traceback.print_exc()
         return Response({"error": f"Ocurrió un error crítico al leer el archivo: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 @transaction.atomic
 def importar_contratos(request):
@@ -804,63 +805,72 @@ def importar_contratos(request):
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
         return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    registros_creados, registros_actualizados = 0, 0
+    errores = []
+
     try:
-        # 1. Leemos el CSV con Polars. Usamos .read() para leer el archivo en memoria.
-        df = pl.read_csv(archivo_csv.read(),
-                          encoding='utf-8', null_values=[''])
+        df = pl.read_csv(archivo_csv.read(), encoding='utf-8', null_values=[''])
 
-        registros_creados, registros_actualizados = 0, 0
-
-        # 2. Iteramos sobre las filas usando la sintaxis de Polars.
         for index, row in enumerate(df.iter_rows(named=True)):
-            cliente_email = str(row.get('cliente_email', '')).strip().lower()
-            if not cliente_email:
-                raise Exception(
-                    f"Fila {index + 2}: El campo 'cliente_email' no puede estar vacío.")
-
             try:
-                cliente = Cliente.objects.get(email=cliente_email)
-            except Cliente.DoesNotExist:
-                raise Exception(
-                    f"Fila {index + 2}: El cliente con email '{cliente_email}' no existe.")
+                cliente_email = str(row.get('cliente_email', '')).strip().lower()
+                if not cliente_email:
+                    errores.append(f"Fila {index + 2}: El campo 'cliente_email' no puede estar vacío.")
+                    continue
 
-            proyecto_nombre = str(
-                row.get('proyecto_nombre', '')).strip().upper()
-            upe_identificador = str(row.get('upe_identificador', '')).strip()
-            if not proyecto_nombre or not upe_identificador:
-                raise Exception(
-                    f"Fila {index + 2}: 'proyecto_nombre' y 'upe_identificador' son obligatorios.")
+                try:
+                    cliente = Cliente.objects.get(email=cliente_email)
+                except Cliente.DoesNotExist:
+                    errores.append(f"Fila {index + 2}: El cliente con email '{cliente_email}' no existe.")
+                    continue
 
-            try:
-                upe = UPE.objects.get(
-                    proyecto__nombre=proyecto_nombre, identificador=upe_identificador)
-            except UPE.DoesNotExist:
-                raise Exception(
-                    f"Fila {index + 2}: La UPE '{upe_identificador}' en el proyecto '{proyecto_nombre}' no existe.")
+                proyecto_nombre = str(row.get('proyecto_nombre', '')).strip().upper()
+                upe_identificador = str(row.get('upe_identificador', '')).strip()
+                if not proyecto_nombre or not upe_identificador:
+                    errores.append(f"Fila {index + 2}: 'proyecto_nombre' y 'upe_identificador' son obligatorios.")
+                    continue
 
-            fecha_obj = convertir_fecha_excel(row.get('fecha_venta'))
-        if not fecha_obj:
-            raise Exception(f"Fila {index + 2}: Formato de fecha inválido.")
+                try:
+                    upe = UPE.objects.get(proyecto__nombre=proyecto_nombre, identificador=upe_identificador)
+                except UPE.DoesNotExist:
+                    errores.append(f"Fila {index + 2}: La UPE '{upe_identificador}' en el proyecto '{proyecto_nombre}' no existe.")
+                    continue
 
-            defaults_data = {
-                'cliente': cliente,
-                'fecha_venta': fecha_obj,
-                'precio_final_pactado': row['contrato_precio_pactado'],
-                'moneda_pactada': str(row['moneda_pactada']).strip(),
-                'monto_enganche': row.get('monto_enganche', 0),
-                'numero_mensualidades': row.get('numero_mensualidades', 0),
-                'tasa_interes_mensual': row.get('tasa_interes_mensual', 0.0)
-            }
+                # ### LÓGICA CORREGIDA (AHORA DENTRO DEL BUCLE) ###
+                fecha_obj = convertir_fecha_excel(row.get('fecha_venta'))
+                if not fecha_obj:
+                    errores.append(f"Fila {index + 2}: Formato de fecha inválido para '{row.get('fecha_venta')}'.")
+                    continue
 
-            contrato, creado = Contrato.objects.update_or_create(
-                upe=upe,
-                defaults=defaults_data
-            )
+                defaults_data = {
+                    'cliente': cliente,
+                    'fecha_venta': fecha_obj,
+                    'precio_final_pactado': row['contrato_precio_pactado'],
+                    'moneda_pactada': str(row['moneda_pactada']).strip(),
+                    'monto_enganche': row.get('monto_enganche', 0),
+                    'numero_mensualidades': row.get('numero_mensualidades', 0),
+                    'tasa_interes_mensual': row.get('tasa_interes_mensual', 0.0)
+                }
 
-            if creado:
-                registros_creados += 1
-            else:
-                registros_actualizados += 1
+                contrato, creado = Contrato.objects.update_or_create(
+                    upe=upe,
+                    defaults=defaults_data
+                )
+
+                if creado:
+                    registros_creados += 1
+                else:
+                    registros_actualizados += 1
+            
+            except Exception as e:
+                errores.append(f"Fila {index + 2}: Error inesperado - {str(e)}")
+
+        if errores:
+            return Response({
+                "mensaje": f"Importación completada con errores. Se procesaron {registros_creados + registros_actualizados} registros.",
+                "errores": errores
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             "mensaje": "Importación de Contratos completada.",
@@ -870,7 +880,7 @@ def importar_contratos(request):
 
     except Exception as e:
         traceback.print_exc()
-        return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": f"Ocurrió un error crítico al leer el archivo: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
