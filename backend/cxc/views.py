@@ -15,6 +15,7 @@ import polars as pl
 import io
 import xlsxwriter
 import base64
+import locale
 from .utils import obtener_y_guardar_tipo_de_cambio
 from django.apps import apps
 from django.db import transaction
@@ -1276,6 +1277,11 @@ def strategic_dashboard_data(request):
     Calcula y devuelve todos los datos para el dashboard estratégico,
     con lógica de fechas inteligente para agrupar por periodo.
     """
+    try:
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+    except locale.Error:
+        print("ADVERTENCIA: El locale 'es_ES.UTF-8' no está instalado. Se usarán fechas en inglés.")
+        
     project_id = request.query_params.get('project_id')
     timeframe = request.query_params.get('timeframe', 'month')
     today = date.today()
