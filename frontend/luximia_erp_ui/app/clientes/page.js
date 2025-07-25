@@ -34,7 +34,7 @@ export default function ClientesPage() {
     const { hasPermission, authTokens } = useAuth();
     const [pageData, setPageData] = useState({ results: [], count: 0, next: null, previous: null });
     const [currentPage, setCurrentPage] = useState(1);
-    const { ref, pageSize } = useResponsivePageSize(57);
+    const pageSize = 5;
     const [error, setError] = useState(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -195,7 +195,7 @@ export default function ClientesPage() {
 
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
 
-            <div ref={ref} className="flex-grow min-h-0">
+            <div className="flex-grow min-h-0">
                 {/* ### 4. Usa ReusableTable con la prop 'actions' ### */}
                 <ReusableTable
                     data={pageData.results}

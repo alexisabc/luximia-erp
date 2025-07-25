@@ -49,7 +49,7 @@ export default function UPEsPage() {
     const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [proyectos, setProyectos] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const { ref, pageSize } = useResponsivePageSize(57);
+    const pageSize = 5;
     const [error, setError] = useState(null);
 
     // Estados para los modales
@@ -208,7 +208,7 @@ export default function UPEsPage() {
 
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
 
-            <div ref={ref} className="flex-grow min-h-0">
+            <div className="flex-grow min-h-0">
                 <ReusableTable
                     data={pageData.results}
                     columns={UPE_COLUMNAS_DISPLAY}

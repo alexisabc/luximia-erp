@@ -33,7 +33,7 @@ export default function ProyectosPage() {
 
     const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [currentPage, setCurrentPage] = useState(1);
-    const { ref, pageSize } = useResponsivePageSize(57);
+    const pageSize = 5;
     const [error, setError] = useState(null);
 
     // Estados para los modales
@@ -176,7 +176,7 @@ export default function ProyectosPage() {
                 {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             </div>
 
-            <div ref={ref} className="flex-grow min-h-0">
+            <div className="flex-grow min-h-0">
                 {/* ### CAMBIO 4: Se añade la prop 'actions' a la tabla ### */}
                 <ReusableTable
                     data={pageData.results}
