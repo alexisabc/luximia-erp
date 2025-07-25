@@ -100,14 +100,14 @@ export default function ClientesPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [authTokens, pageData.results.length, pageSize]); // <-- CORRECCIÓN: Se vuelve a añadir authTokens
+    }, [authTokens, pageData.results.length]); // <-- CORRECCIÓN: Se vuelve a añadir authTokens
 
     // El useEffect se queda como estaba, dependiendo solo de pageSize
     useEffect(() => {
         if (pageSize > 0) {
             fetchData(1, pageSize);
         }
-    }, [pageSize]);
+    }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => {
         fetchData(newPage, pageSize);

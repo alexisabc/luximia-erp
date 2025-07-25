@@ -67,9 +67,9 @@ export default function ProyectosPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [authTokens, pageData.results.length, pageSize]);
+    }, [authTokens, pageData.results.length]);
 
-    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize]);
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize,fetchData]);
     
 
     const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
