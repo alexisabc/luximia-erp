@@ -573,7 +573,7 @@ def importar_datos_masivos(request):
     try:
         # LÍNEA CORREGIDA: Usamos pl.read_csv para leer el archivo en memoria
         df = pl.read_csv(archivo_csv.read(),
-                         encoding='latin-1', null_values=[''])
+                          encoding='utf-8', null_values=[''])
 
         registros_creados = {'proyectos': 0,
                              'clientes': 0, 'upes': 0, 'contratos': 0}
@@ -733,7 +733,7 @@ def importar_upes(request):
     errores = []
 
     try:
-        df = pl.read_csv(archivo_csv.read(), encoding='latin-1', null_values=[''])
+        df = pl.read_csv(archivo_csv.read(),  encoding='utf-8', null_values=[''])
         
         for index, row in enumerate(df.iter_rows(named=True)):
             try:
@@ -795,7 +795,7 @@ def importar_contratos(request):
     try:
         # 1. Leemos el CSV con Polars. Usamos .read() para leer el archivo en memoria.
         df = pl.read_csv(archivo_csv.read(),
-                         encoding='latin-1', null_values=[''])
+                          encoding='utf-8', null_values=[''])
 
         registros_creados, registros_actualizados = 0, 0
 
@@ -874,7 +874,7 @@ def importar_pagos_historicos(request):
     try:
         # ### CAMBIO: Leemos el CSV con Polars ###
         # Polars lee el archivo en memoria, es más eficiente.
-        df = pl.read_csv(archivo_csv.read(), encoding='latin-1',
+        df = pl.read_csv(archivo_csv.read(),  encoding='utf-8',
                          separator=',', null_values=[''])
 
         # ### CAMBIO: La forma de iterar es diferente y más limpia ###
