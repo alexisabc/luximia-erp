@@ -1280,23 +1280,26 @@ def strategic_dashboard_data(request):
     timeframe = request.query_params.get('timeframe', 'month')
     today = date.today()
 
-    # ### 1. Lógica para definir el rango de fechas y el formato ###
+    # ### 1. Lógica mejorada para rangos de fecha y formatos ###
     if timeframe == 'week':
-        start_date = today - timedelta(days=today.weekday()) # Lunes de esta semana
-        end_date = start_date + timedelta(days=6) # Domingo de esta semana
+        start_date = today - timedelta(days=today.weekday())  # Lunes de esta semana
+        end_date = start_date + timedelta(days=6)  # Domingo de esta semana
         trunc_func = TruncDay
         date_format = '%a %d'  # Formato: "Lun 21"
+        labels = [(start_date + timedelta(days=i)).strftime(date_format) for i in range(7)]
     elif timeframe == 'year':
         start_date = today.replace(month=1, day=1)
         end_date = today.replace(month=12, day=31)
         trunc_func = TruncMonth
         date_format = '%b'  # Formato: "Jul"
+        labels = [date(today.year, m, 1).strftime(date_format) for m in range(1, 13)]
     else:  # Default to month
         start_date = today.replace(day=1)
         next_month = (start_date.replace(day=28) + timedelta(days=4))
         end_date = next_month - timedelta(days=next_month.day)
         trunc_func = TruncDay
         date_format = '%d'  # Formato: "21"
+        labels = [str(i) for i in range(1, end_date.day + 1)]
 
     # 2. Filtrar querysets base por proyecto
     pagos_base = Pago.objects.all()
@@ -1321,28 +1324,25 @@ def strategic_dashboard_data(request):
     total_vencido = plan_pagos_base.filter(fecha_vencimiento__lt=today).aggregate(total=Sum('monto_programado'))['total'] or 0
 
     # 4. Calcular datos para la gráfica (filtrando por el rango de fechas)
-    recuperado_por_periodo = pagos_base.filter(fecha_pago__range=(start_date, end_date)).annotate(period=trunc_func('fecha_pago')).values('period').annotate(total=Sum(valor_mxn_expression)).order_by('period')
-    ventas_por_periodo = contratos_base.filter(fecha_venta__range=(start_date, end_date)).annotate(period=trunc_func('fecha_venta')).values('period').annotate(total=Sum('precio_final_pactado')).order_by('period')
-    programado_por_periodo = plan_pagos_base.filter(fecha_vencimiento__range=(start_date, end_date)).annotate(period=trunc_func('fecha_vencimiento')).values('period').annotate(total=Sum('monto_programado')).order_by('period')
+    valor_mxn_expression = Case(...) # (sin cambios)
+    recuperado_por_periodo = pagos_base.filter(fecha_pago__range=(start_date, end_date)).annotate(period=trunc_func('fecha_pago')).values('period').annotate(total=Sum(valor_mxn_expression))
+    ventas_por_periodo = contratos_base.filter(fecha_venta__range=(start_date, end_date)).annotate(period=trunc_func('fecha_venta')).values('period').annotate(total=Sum('precio_final_pactado'))
+    programado_por_periodo = plan_pagos_base.filter(fecha_vencimiento__range=(start_date, end_date)).annotate(period=trunc_func('fecha_vencimiento')).values('period').annotate(total=Sum('monto_programado'))
 
-    # 5. Unir y formatear los datos de la gráfica
-    chart_data = {}
+    # 5. Mapeo de los datos a las etiquetas
+    chart_data = {label: {} for label in labels}
     
-    # Generar todas las etiquetas del periodo para que no falten días/meses
-    if timeframe == 'year':
-        labels = [date(start_date.year, m, 1).strftime(date_format) for m in range(1, 13)]
-    else:
-        labels = [(start_date + timedelta(days=i)).strftime(date_format) for i in range((end_date - start_date).days + 1)]
-    
-    for label in labels:
-        chart_data[label] = {}
-
     for item in recuperado_por_periodo:
-        chart_data[item['period'].strftime(date_format)]['recuperado'] = item['total']
+        label = item['period'].strftime(date_format) if hasattr(item['period'], 'strftime') else str(item['period'])
+        if label in chart_data: chart_data[label]['recuperado'] = item['total']
+    
     for item in ventas_por_periodo:
-        chart_data[item['period'].strftime(date_format)]['ventas'] = item['total']
+        label = item['period'].strftime(date_format) if hasattr(item['period'], 'strftime') else str(item['period'])
+        if label in chart_data: chart_data[label]['ventas'] = item['total']
+        
     for item in programado_por_periodo:
-        chart_data[item['period'].strftime(date_format)]['programado'] = item['total']
+        label = item['period'].strftime(date_format) if hasattr(item['period'], 'strftime') else str(item['period'])
+        if label in chart_data: chart_data[label]['programado'] = item['total']
 
     final_chart_data = {
         'labels': labels,
