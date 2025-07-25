@@ -32,7 +32,7 @@ const CONTRATO_COLUMNAS_EXPORT = [
 ];
 
 export default function ContratosPage() {
-    const { hasPermission } = useAuth();
+    const { hasPermission, authTokens } = useAuth();
     const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [currentPage, setCurrentPage] = useState(1);
     const [clientes, setClientes] = useState([]);
