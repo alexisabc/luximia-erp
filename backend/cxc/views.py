@@ -19,7 +19,7 @@ from .utils import obtener_y_guardar_tipo_de_cambio
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
-from django.db.models.functions import Coalesce, TruncWeek, TruncMonth, TruncYear
+from django.db.models.functions import Coalesce, TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
