@@ -59,6 +59,8 @@ export default function ContratosPage() {
         CONTRATO_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
         return allCols;
     });
+    const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
 
     const handleColumnChange = (e) => {
         const { name, checked } = e.target;
@@ -89,13 +91,11 @@ export default function ContratosPage() {
 
 
     const fetchData = useCallback(async (page, size) => {
-        if (!size || size <= 0) return;
-        setError(null);
+        if (!authTokens || !size || size <= 0) return;
+        pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
             const [contratosRes, clientesRes, upesRes] = await Promise.all([
-                getContratos(page, size),
-                getClientes(1, 1000),
-                getUPEsDisponibles()
+                getContratos(page, size), getClientes(1, 1000), getUPEsDisponibles()
             ]);
             setPageData(contratosRes.data);
             setClientes(clientesRes.data.results);
@@ -103,21 +103,15 @@ export default function ContratosPage() {
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los datos.');
+        } finally {
+            setLoading(false);
+            setIsPaginating(false);
         }
-    }, []);
+    }, [authTokens, pageData.results.length, pageSize]);
 
-    useEffect(() => {
-        if (pageSize > 0) {
-            fetchData(1, pageSize);
-        }
-    }, [pageSize, fetchData]);
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize]);
 
-    const handlePageChange = (newPage) => {
-        const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
-        if (newPage > 0 && newPage <= totalPages) {
-            fetchData(newPage, pageSize);
-        }
-    };
+    const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

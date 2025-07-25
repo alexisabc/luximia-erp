@@ -47,6 +47,8 @@ export default function ClientesPage() {
         CLIENTE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
         return allCols;
     });
+    const [loading, setLoading] = useState(true); // Para la carga inicial
+    const [isPaginating, setIsPaginating] = useState(false); // <-- NUEVO ESTADO
 
     const handleColumnChange = (e) => {
         const { name, checked } = e.target;
@@ -79,29 +81,36 @@ export default function ClientesPage() {
 
 
     const fetchData = useCallback(async (page, size) => {
+        // La variable 'authTokens' se usa aquí adentro, por lo que debe ser una dependencia.
         if (!authTokens || !size || size <= 0) return;
-        setError(null);
+
+        if (pageData.results.length > 0) {
+            setIsPaginating(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
-            const res = await getClientes(page, size);
+            const res = await getClientes(page, size); // O getProyectos, getUPEs, etc.
             setPageData(res.data);
             setCurrentPage(page);
         } catch (err) {
-            setError('No se pudieron cargar los clientes.');
-            console.error("Error en fetchData:", err);
+            setError('No se pudieron cargar los datos.');
+        } finally {
+            setLoading(false);
+            setIsPaginating(false);
         }
-    }, [authTokens]);
+    }, [authTokens, pageData.results.length, pageSize]); // <-- CORRECCIÓN: Se vuelve a añadir authTokens
 
+    // El useEffect se queda como estaba, dependiendo solo de pageSize
     useEffect(() => {
         if (pageSize > 0) {
             fetchData(1, pageSize);
         }
-    }, [pageSize, fetchData]);
+    }, [pageSize]);
 
     const handlePageChange = (newPage) => {
-        const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
-        if (newPage > 0 && newPage <= totalPages) {
-            fetchData(newPage, pageSize);
-        }
+        fetchData(newPage, pageSize);
     };
 
     const handleInputChange = (e) => {
@@ -117,7 +126,7 @@ export default function ClientesPage() {
             } else {
                 await createCliente(formData);
             }
-            setIsModalOpen(false);
+            setIsFormModalOpen(false);
             // Vuelve a la página actual para ver el cambio
             fetchData(currentPage, pageSize);
         } catch (err) {

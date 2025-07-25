@@ -50,36 +50,29 @@ export default function ProyectosPage() {
         PROYECTO_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
         return allCols;
     });
-
+    const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
     
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
-
+        pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
-            // Ahora getProyectos también acepta 'page' y 'size'
             const res = await getProyectos(page, size);
             setPageData(res.data);
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los proyectos.');
-            console.error(err);
+        } finally {
+            setLoading(false);
+            setIsPaginating(false);
         }
-    }, [authTokens]);
+    }, [authTokens, pageData.results.length, pageSize]);
 
-    useEffect(() => {
-        if (pageSize > 0) {
-            fetchData(1, pageSize);
-        }
-    }, [pageSize, fetchData]);
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize]);
     
 
-    const handlePageChange = (newPage) => {
-        const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
-        if (newPage > 0 && newPage <= totalPages) {
-            fetchData(newPage, pageSize);
-        }
-    };
+    const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

@@ -66,6 +66,8 @@ export default function UPEsPage() {
         UPE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
         return allCols;
     });
+    const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
 
     const upeFormFields = UPE_FORM_FIELDS.map(field => {
         if (field.name === 'proyecto') {
@@ -136,33 +138,25 @@ export default function UPEsPage() {
     
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
-        setError(null);
+        pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
             const [upesRes, proyectosRes] = await Promise.all([
-                getUPEs(page, size),
-                getAllProyectos()
+                getUPEs(page, size), getAllProyectos()
             ]);
             setPageData(upesRes.data);
             setProyectos(proyectosRes.data);
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los datos.');
-            console.error(err);
+        } finally {
+            setLoading(false);
+            setIsPaginating(false);
         }
-    }, [authTokens]);
+    }, [authTokens, pageData.results.length, pageSize]);
 
-    useEffect(() => {
-        if (pageSize > 0) {
-            fetchData(1, pageSize);
-        }
-    }, [pageSize, fetchData]);
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize]);
 
-    const handlePageChange = (newPage) => {
-        const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
-        if (newPage > 0 && newPage <= totalPages) {
-            fetchData(newPage, pageSize);
-        }
-    };
+    const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
