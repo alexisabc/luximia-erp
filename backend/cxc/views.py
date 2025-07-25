@@ -1273,77 +1273,76 @@ def export_contratos_excel(request):
 @api_view(['GET'])
 def strategic_dashboard_data(request):
     """
-    Calcula y devuelve todos los datos para el dashboard estratégico.
-    Versión simplificada y corregida.
+    Calcula y devuelve todos los datos para el dashboard estratégico,
+    con lógica de fechas inteligente para agrupar por periodo.
     """
     project_id = request.query_params.get('project_id')
     timeframe = request.query_params.get('timeframe', 'month')
     today = date.today()
 
-    # 1. Definir la función de truncamiento y el formato de fecha
+    # 1. Define el rango de fechas, el agrupador y las etiquetas según el timeframe
     if timeframe == 'week':
-        trunc_func = TruncWeek
-        date_format = '%Y-%U' # Semana del año
+        start_date = today - timedelta(days=today.weekday())  # Lunes de esta semana
+        end_date = start_date + timedelta(days=6)  # Domingo de esta semana
+        trunc_func = TruncDay
+        date_format = '%a %d'  # Formato: "Lun 21"
+        labels = [(start_date + timedelta(days=i)).strftime(date_format) for i in range(7)]
     elif timeframe == 'year':
-        trunc_func = TruncYear
-        date_format = '%Y'
-    else: # Default to month
+        start_date = today.replace(month=1, day=1)
+        end_date = today.replace(month=12, day=31)
         trunc_func = TruncMonth
-        date_format = '%b %Y'
+        date_format = '%b'  # Formato: "Jul"
+        labels = [date(today.year, m, 1).strftime(date_format) for m in range(1, 13)]
+    else:  # 'month'
+        start_date = today.replace(day=1)
+        next_month = (start_date.replace(day=28) + timedelta(days=4))
+        end_date = next_month - timedelta(days=next_month.day)
+        trunc_func = TruncDay
+        date_format = '%d'  # Formato: "21"
+        labels = [str(i) for i in range(1, end_date.day + 1)]
 
-    # 2. Filtrar querysets base
-    pagos = Pago.objects.all()
-    contratos = Contrato.objects.all()
-    plan_pagos = PlanDePagos.objects.filter(pagado=False, contrato__estado='Activo')
+    # 2. Filtra los querysets base por proyecto
+    pagos_base = Pago.objects.all()
+    contratos_base = Contrato.objects.all()
+    plan_pagos_base = PlanDePagos.objects.filter(pagado=False, contrato__estado='Activo')
     upe_queryset = UPE.objects.all()
 
     if project_id and project_id != 'all':
-        pagos = pagos.filter(contrato__upe__proyecto_id=project_id)
-        contratos = contratos.filter(upe__proyecto_id=project_id)
-        plan_pagos = plan_pagos.filter(contrato__upe__proyecto_id=project_id)
+        pagos_base = pagos_base.filter(contrato__upe__proyecto_id=project_id)
+        contratos_base = contratos_base.filter(upe__proyecto_id=project_id)
+        plan_pagos_base = plan_pagos_base.filter(contrato__upe__proyecto_id=project_id)
         upe_queryset = upe_queryset.filter(proyecto_id=project_id)
 
-    # 3. Calcular KPIs (sin cambios)
-    valor_mxn_expression = Case(
-        When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')),
-        default=F('monto_pagado'), output_field=DecimalField()
-    )
-    total_recuperado = pagos.aggregate(total=Sum(valor_mxn_expression))['total'] or 0
-    total_ventas = contratos.aggregate(total=Sum('precio_final_pactado'))['total'] or 0
-    total_programado = plan_pagos.aggregate(total=Sum('monto_programado'))['total'] or 0
-    total_vencido = plan_pagos.filter(fecha_vencimiento__lt=today).aggregate(total=Sum('monto_programado'))['total'] or 0
+    # 3. Calcula KPIs usando los querysets ya filtrados por proyecto
+    valor_mxn_expression = Case(When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')), default=F('monto_pagado'), output_field=DecimalField())
+    total_recuperado = pagos_base.aggregate(total=Sum(valor_mxn_expression))['total'] or 0
+    total_ventas = contratos_base.aggregate(total=Sum('precio_final_pactado'))['total'] or 0
+    total_programado = plan_pagos_base.aggregate(total=Sum('monto_programado'))['total'] or 0
+    total_vencido = plan_pagos_base.filter(fecha_vencimiento__lt=today).aggregate(total=Sum('monto_programado'))['total'] or 0
 
-    # 4. Calcular datos para la gráfica
-    recuperado_por_periodo = pagos.annotate(period=trunc_func('fecha_pago')).values('period').annotate(total=Sum(valor_mxn_expression)).order_by('period')
-    ventas_por_periodo = contratos.annotate(period=trunc_func('fecha_venta')).values('period').annotate(total=Sum('precio_final_pactado')).order_by('period')
-    programado_por_periodo = plan_pagos.annotate(period=trunc_func('fecha_vencimiento')).values('period').annotate(total=Sum('monto_programado')).order_by('period')
-
-    # 5. Unir y formatear los datos de la gráfica
-    chart_data = {}
-    all_labels = set()
+    # 4. Calcula datos para la gráfica, ahora filtrando por el rango de fechas
+    recuperado_q = pagos_base.filter(fecha_pago__range=(start_date, end_date)).annotate(period=trunc_func('fecha_pago')).values('period').annotate(total=Sum(valor_mxn_expression))
+    ventas_q = contratos_base.filter(fecha_venta__range=(start_date, end_date)).annotate(period=trunc_func('fecha_venta')).values('period').annotate(total=Sum('precio_final_pactado'))
+    programado_q = plan_pagos_base.filter(fecha_vencimiento__range=(start_date, end_date)).annotate(period=trunc_func('fecha_vencimiento')).values('period').annotate(total=Sum('monto_programado'))
     
-    for item in recuperado_por_periodo:
-        if item['period']:
-            label = item['period'].strftime(date_format)
-            all_labels.add(label)
-            if label not in chart_data: chart_data[label] = {}
-            chart_data[label]['recuperado'] = item['total']
-    
-    # (Repetir para ventas y programado)
+    # 5. Mapea los resultados a un diccionario para un acceso rápido
+    recuperado_map = {item['period'].strftime(date_format): item['total'] for item in recuperado_q if item['period']}
+    ventas_map = {item['period'].strftime(date_format): item['total'] for item in ventas_q if item['period']}
+    programado_map = {item['period'].strftime(date_format): item['total'] for item in programado_q if item['period']}
 
-    sorted_labels = sorted(list(all_labels))
+    # 6. Construye los datasets finales usando la lista completa de etiquetas
     final_chart_data = {
-        'labels': sorted_labels,
-        'recuperado': [chart_data.get(label, {}).get('recuperado', 0) for label in sorted_labels],
-        'ventas': [chart_data.get(label, {}).get('ventas', 0) for label in sorted_labels],
-        'programado': [chart_data.get(label, {}).get('programado', 0) for label in sorted_labels],
-        'vencido': [total_vencido] * len(sorted_labels)
+        'labels': labels,
+        'recuperado': [recuperado_map.get(label, 0) for label in labels],
+        'ventas': [ventas_map.get(label, 0) for label in labels],
+        'programado': [programado_map.get(label, 0) for label in labels],
+        'vencido': [total_vencido] * len(labels)
     }
 
-    # 6. Calcular datos de UPEs
+    # 7. Calcular datos de UPEs
     upe_status_data = upe_queryset.values('estado').annotate(total=Count('id')).order_by('-total')
 
-    # 7. Construir la respuesta final
+    # 8. Construir la respuesta final
     return Response({
         'kpis': {
             'recuperado': total_recuperado,
