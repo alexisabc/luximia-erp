@@ -663,40 +663,62 @@ def importar_datos_masivos(request):
         return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# En tu archivo: backend/cxc/views.py
+
 @api_view(['POST'])
 @transaction.atomic
 def importar_clientes(request):
     """Importa o actualiza clientes desde un CSV usando Polars."""
     archivo_csv = request.FILES.get('file')
     if not archivo_csv:
-        return Response(...)
+        return Response({"error": "No se proporcionó ningún archivo."}, status=status.HTTP_400_BAD_REQUEST)
+
+    registros_creados, registros_actualizados = 0, 0
+    errores = []
+
     try:
-        # LÍNEA CORREGIDA
-        df = pl.read_csv(archivo_csv.read(),
-                         encoding='latin-1', null_values=[''])
-        registros_creados, registros_actualizados = 0, 0
+        # ### CAMBIO CLAVE: Se usa encoding='utf-8' ###
+        df = pl.read_csv(archivo_csv.read(), encoding='utf-8', null_values=[''])
+        
+        for index, row in enumerate(df.iter_rows(named=True)):
+            try:
+                email = row.get('email')
+                if not email or not str(email).strip():
+                    errores.append(f"Fila {index + 2}: El campo 'email' no puede estar vacío.")
+                    continue
 
-        # LÍNEA CORREGIDA
-        for row in df.iter_rows(named=True):
-            email = row.get('email')
-            if not email:
-                continue
+                defaults_cliente = {
+                    'nombre_completo': str(row.get('nombre_completo', '')).strip(),
+                    'telefono': str(row.get('telefono', ''))
+                }
+                cliente, creado = Cliente.objects.update_or_create(
+                    email=str(email).strip().lower(), 
+                    defaults=defaults_cliente
+                )
+                
+                if creado:
+                    registros_creados += 1
+                else:
+                    registros_actualizados += 1
+            
+            except Exception as e:
+                errores.append(f"Fila {index + 2}: Error inesperado - {str(e)}")
 
-            defaults_cliente = {
-                'nombre_completo': str(row.get('nombre_completo', '')).strip(),
-                'telefono': str(row.get('telefono', ''))
-            }
-            cliente, creado = Cliente.objects.update_or_create(
-                email=email.strip().lower(), defaults=defaults_cliente)
-            if creado:
-                registros_creados += 1
-            else:
-                registros_actualizados += 1
-        return Response({"mensaje": "Importación de clientes completada.", "clientes_creados": registros_creados, "clientes_actualizados": registros_actualizados}, status=status.HTTP_200_OK)
+        if errores:
+            return Response({
+                "mensaje": f"Importación completada con errores. Se procesaron {registros_creados + registros_actualizados} registros.",
+                "errores": errores
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "mensaje": "Importación de clientes completada.",
+            "clientes_creados": registros_creados,
+            "clientes_actualizados": registros_actualizados
+        }, status=status.HTTP_200_OK)
+    
     except Exception as e:
         traceback.print_exc()
-        return Response({"error": f"Ocurrió un error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response({"error": f"Ocurrió un error crítico al leer el archivo: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @transaction.atomic
