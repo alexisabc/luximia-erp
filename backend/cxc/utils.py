@@ -4,6 +4,8 @@ import os
 from datetime import date, datetime
 from decimal import Decimal
 from .models import TipoDeCambio
+from django.conf import settings
+
 
 
 def obtener_y_guardar_tipo_de_cambio(fecha_a_consultar):
@@ -32,3 +34,16 @@ def obtener_y_guardar_tipo_de_cambio(fecha_a_consultar):
         return f"Éxito: Se guardó el tipo de cambio {valor_str} para la fecha {fecha_str}."
     except Exception as e:
         return f"Error al procesar la solicitud a Banxico: {str(e)}"
+
+
+def get_logo_path():
+    """
+    Determina y devuelve la ruta correcta del logo dependiendo del entorno.
+    """
+    if settings.DEBUG:
+        # En desarrollo, la ruta apunta a la carpeta 'assets' original
+        return os.path.join(settings.BASE_DIR, '..', 'assets', 'logo-luximia.png')
+    else:
+        # En producción, la ruta apunta a la carpeta 'staticfiles'
+        # donde collectstatic copia el archivo.
+        return os.path.join(settings.STATIC_ROOT, 'assets', 'logo-luximia.png')
