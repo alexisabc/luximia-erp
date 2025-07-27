@@ -250,8 +250,7 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
         # --- Lógica para Marca de Agua ---
         logo_base64 = ""
         try:
-            logo_path = os.path.join(
-                settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+            logo_path = os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')
             with open(logo_path, "rb") as image_file:
                 encoded_string = base64.b64encode(
                     image_file.read()).decode('utf-8')
@@ -361,8 +360,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
         four_decimal_format = workbook.add_format({'num_format': '0.0000'})
 
         # Construimos la ruta al logo
-        logo_path = os.path.join(
-            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        logo_path = os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')
 
         # 2. Escribir la hoja "Plan de Pagos"
         if not df_plan.is_empty():
