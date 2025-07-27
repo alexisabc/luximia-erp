@@ -44,6 +44,6 @@ def get_logo_path():
         # En desarrollo, la ruta apunta a la carpeta 'assets' original
         return os.path.join(settings.BASE_DIR, '..', 'assets', 'logo-luximia.png')
     else:
-        # En producción, la ruta apunta a la carpeta 'staticfiles'
-        # donde collectstatic copia el archivo.
-        return os.path.join(settings.STATIC_ROOT, 'assets', 'logo-luximia.png')
+        # ### CORRECCIÓN: Se elimina 'assets' de la ruta de producción ###
+        # En producción, la ruta apunta directamente al archivo dentro de 'staticfiles'
+        return os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')

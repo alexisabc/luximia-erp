@@ -19,7 +19,7 @@ export default function ThemeSwitcher() {
         <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
             <button
                 onClick={() => setTheme('light')}
-                className={`p-1.5 rounded-md ${theme === 'light' ? 'bg-white shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                className={`p-1.5 rounded-md ${theme === 'light' ? 'bg-white shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-900'}`}
                 title="Tema Claro"
             >
                 <SunIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
