@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ### 1. Se elimina 'getUpeStatusChartData' ###
 import { getStrategicDashboardData, getAllProyectos } from '../services/api';
 import { Bar, Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import ChartJSSetup from '../components/ChartJSSetup';
 import ChatInteligente from '../components/ChatInteligente';
 
 

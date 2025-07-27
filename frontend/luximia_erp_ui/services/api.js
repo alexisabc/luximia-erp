@@ -38,6 +38,7 @@ apiClient.interceptors.request.use(async req => {
     }
     return req;
 });
+export default apiClient;
 
 
 // --- FUNCIONES DE API (CON PAGINACIÓN) ---

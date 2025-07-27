@@ -3,10 +3,10 @@
 
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
-import { useSidebar } from '../context/SidebarContext'; // <-- Se importa el hook del sidebar
+import { useSidebar } from '../context/SidebarContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image'; // Se importa para el logo
+import ThemeSwitcher from './ThemeSwitcher';
 
 const ChevronIcon = ({ isOpen }) => (
     <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -16,7 +16,7 @@ const ChevronIcon = ({ isOpen }) => (
 
 export default function Sidebar() {
     const { user, logoutUser, hasPermission } = useAuth();
-    const { isOpen, toggleSidebar } = useSidebar();// <-- Se usa el hook para controlar el estado
+    const { isOpen, toggleSidebar } = useSidebar();
     const pathname = usePathname();
 
     const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -24,38 +24,33 @@ export default function Sidebar() {
     const [isImportarOpen, setIsImportarOpen] = useState(false);
 
     useEffect(() => {
-        if (pathname.startsWith('/configuraciones')) setIsConfigOpen(true);
-        if (pathname.startsWith('/importar')) {
+        const isConfigPath = pathname.startsWith('/configuraciones') || pathname.startsWith('/tipos-de-cambio');
+        setIsConfigOpen(isConfigPath);
+
+        const isImportarPath = pathname.startsWith('/importar');
+        setIsImportarOpen(isImportarPath);
+
+        if (isImportarPath) {
             setIsHerramientasOpen(true);
-            setIsImportarOpen(true);
         }
     }, [pathname]);
 
-    // Función para resaltar el enlace activo
     const getLinkClass = (path, isSubmenu = false) => {
         const baseClass = isSubmenu
-            ? "block p-2 rounded-md hover:bg-gray-700 text-sm"
-            : "block p-2 rounded-md hover:bg-blue-600";
+            ? "block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-sm"
+            : "block p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white";
 
         const activeClass = isSubmenu
-            ? "bg-gray-700 font-semibold"
-            : "bg-blue-700 font-semibold";
+            ? "bg-gray-200 dark:bg-gray-700 font-semibold"
+            : "bg-blue-600 text-white dark:bg-blue-700 font-semibold";
 
-        let isActive = false;
-
-        // ### CAMBIO ###: Lógica para rutas exactas
-        if (path === '/' || path === '/importar') {
-            // Para Dashboard y Masivo, solo se activa si la ruta es EXACTAMENTE la misma
-            isActive = pathname === path;
-        } else {
-            // Para las demás, se activa si la ruta actual EMPIEZA con el path del enlace
-            isActive = pathname.startsWith(path);
-        }
+        let isActive = pathname.startsWith(path) && path !== '/';
+        if (path === '/') isActive = pathname === path;
 
         return `${baseClass} ${isActive ? activeClass : ''}`;
     };
 
-    const canViewSettings = hasPermission('cxc.view_user') || hasPermission('cxc.view_group');
+    const canViewSettings = hasPermission('cxc.view_user') || hasPermission('cxc.view_group') || hasPermission('cxc.view_tipodecambio');
     const canImportData = user?.is_superuser || hasPermission('cxc.add_pago');
 
     return (
@@ -65,40 +60,34 @@ export default function Sidebar() {
                 onClick={toggleSidebar}
             ></div>
 
-            {/* ### CAMBIO: Se quita 'lg:translate-x-0' para que obedezca al estado 'isOpen' ### */}
             <div
-                className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 text-white flex flex-col transition-transform duration-300 ease-in-out 
+                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out 
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
-
-                {/* --- SECCIÓN SUPERIOR CON LOGO --- */}
-                <div className="p-4 flex-shrink-0 text-center">
-                    
-                    <h2 className="text-2xl font-bold mb-4 text-white">Luximia ERP</h2>
-                    {user && <span className="text-sm block text-gray-400">Bienvenido, {user.username}</span>}
+                <div className="p-4 flex-shrink-0 text-center border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Luximia ERP</h2>
+                    {user && <span className="text-sm block text-gray-500 dark:text-gray-400">Bienvenido, {user.username}</span>}
                 </div>
 
-                {/* --- SECCIÓN DE NAVEGACIÓN (CON SCROLL) --- */}
-                <nav className="flex-1 px-4 pb-4 overflow-y-auto">
+                <nav className="flex-1 px-4 py-4 overflow-y-auto">
                     <ul className="space-y-1">
-                        {/* ### CAMBIO: Se aplica getLinkClass a todos los enlaces principales ### */}
-                        {hasPermission('cxc.can_view_dashboard') && <li><Link href="/" className={getLinkClass('/')}><span>Dashboard</span></Link></li>}
-                        {hasPermission('cxc.view_proyecto') && <li><Link href="/proyectos" className={getLinkClass('/proyectos')}><span>Proyectos</span></Link></li>}
-                        {hasPermission('cxc.view_cliente') && <li><Link href="/clientes" className={getLinkClass('/clientes')}><span>Clientes</span></Link></li>}
-                        {hasPermission('cxc.view_upe') && <li><Link href="/upes" className={getLinkClass('/upes')}><span>UPEs</span></Link></li>}
-                        {hasPermission('cxc.view_contrato') && <li><Link href="/contratos" className={getLinkClass('/contratos')}><span>Contratos</span></Link></li>}
+                        {hasPermission('cxc.can_view_dashboard') && <li><Link href="/" className={getLinkClass('/')}>Dashboard</Link></li>}
+                        {hasPermission('cxc.view_proyecto') && <li><Link href="/proyectos" className={getLinkClass('/proyectos')}>Proyectos</Link></li>}
+                        {hasPermission('cxc.view_cliente') && <li><Link href="/clientes" className={getLinkClass('/clientes')}>Clientes</Link></li>}
+                        {hasPermission('cxc.view_upe') && <li><Link href="/upes" className={getLinkClass('/upes')}>UPEs</Link></li>}
+                        {hasPermission('cxc.view_contrato') && <li><Link href="/contratos" className={getLinkClass('/contratos')}>Contratos</Link></li>}
 
-                        {/* Menú Desplegable de Herramientas */}
+                        {/* Menús Desplegables con Estilos Corregidos */}
                         {canImportData && (
                             <li className="pt-2">
-                                <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-blue-600">
+                                <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <span className="text-sm font-semibold uppercase">Herramientas</span>
                                     <ChevronIcon isOpen={isHerramientasOpen} />
                                 </button>
                                 {isHerramientasOpen && (
                                     <ul className="pl-4 mt-1 space-y-1">
                                         <li>
-                                            <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-700">
+                                            <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                 <span>Importar</span>
                                                 <ChevronIcon isOpen={isImportarOpen} />
                                             </button>
@@ -117,10 +106,9 @@ export default function Sidebar() {
                             </li>
                         )}
 
-                        {/* Menú Desplegable de Configuraciones */}
                         {canViewSettings && (
                             <li className="pt-2">
-                                <button onClick={() => setIsConfigOpen(!isConfigOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-blue-600">
+                                <button onClick={() => setIsConfigOpen(!isConfigOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <span className="text-sm font-semibold uppercase">Configuraciones</span>
                                     <ChevronIcon isOpen={isConfigOpen} />
                                 </button>
@@ -136,9 +124,9 @@ export default function Sidebar() {
                     </ul>
                 </nav>
 
-                {/* --- SECCIÓN INFERIOR (FIJA) --- */}
-                <div className="p-4 flex-shrink-0 border-t border-gray-700">
-                    <button onClick={logoutUser} className="w-full flex items-center justify-center p-2 rounded-md text-red-400 hover:bg-red-500 hover:text-white transition-colors">
+                <div className="p-4 flex-shrink-0 border-t border-gray-200 dark:border-gray-700 space-y-4">
+                    <ThemeSwitcher />
+                    <button onClick={logoutUser} className="w-full flex items-center justify-center p-2 rounded-md text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white transition-colors">
                         <span>Cerrar Sesión</span>
                     </button>
                 </div>
