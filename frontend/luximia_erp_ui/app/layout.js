@@ -21,6 +21,7 @@ export default function RootLayout({ children }) {
           attribute="class"
           defaultTheme="system"
           enableSystem
+          storageKey="luximia-erp-theme" // <-- LÍNEA AÑADIDA
         >
           <AuthProvider>
             <SidebarProvider>
