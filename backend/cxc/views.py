@@ -16,7 +16,7 @@ import io
 import xlsxwriter
 import base64
 import locale
-from .utils import obtener_y_guardar_tipo_de_cambio
+from .utils import obtener_y_guardar_tipo_de_cambio, get_logo_path
 from django.apps import apps
 from django.db import transaction
 from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
@@ -90,6 +90,7 @@ def convertir_fecha_excel(valor_fecha):
         # (El -2 es para ajustar por el año bisiesto de 1900 que Excel calcula mal)
         return (datetime(1899, 12, 30) + timedelta(days=int(valor_fecha))).date()
     return None
+
 # ==============================================================================
 # --- VIEWSETS (CRUD BÁSICO) ---
 # ==============================================================================
@@ -250,7 +251,7 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
         # --- Lógica para Marca de Agua ---
         logo_base64 = ""
         try:
-            logo_path = os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')
+            logo_path = get_logo_path()
             with open(logo_path, "rb") as image_file:
                 encoded_string = base64.b64encode(
                     image_file.read()).decode('utf-8')
@@ -360,7 +361,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
         four_decimal_format = workbook.add_format({'num_format': '0.0000'})
 
         # Construimos la ruta al logo
-        logo_path = os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')
+        logo_path = get_logo_path()
 
         # 2. Escribir la hoja "Plan de Pagos"
         if not df_plan.is_empty():
@@ -995,8 +996,8 @@ def export_proyectos_excel(request):
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet('Proyectos')
 
-        logo_path = os.path.join(
-            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        logo_path = get_logo_path()
+
         try:
             worksheet.set_background(logo_path)
         except FileNotFoundError:
@@ -1057,8 +1058,8 @@ def export_clientes_excel(request):
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet('Clientes')
 
-        logo_path = os.path.join(
-            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        logo_path = get_logo_path()
+
         try:
             worksheet.set_background(logo_path)
         except FileNotFoundError:
@@ -1133,8 +1134,8 @@ def export_upes_excel(request):
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet('UPEs')
 
-        logo_path = os.path.join(
-            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        logo_path = get_logo_path()
+
         try:
             worksheet.set_background(logo_path)
         except FileNotFoundError:
@@ -1226,8 +1227,8 @@ def export_contratos_excel(request):
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet('Contratos')
 
-        logo_path = os.path.join(
-            settings.BASE_DIR, 'static', 'assets', 'logo-luximia.png')
+        logo_path = get_logo_path()
+
         try:
             worksheet.set_background(logo_path)
         except FileNotFoundError:
