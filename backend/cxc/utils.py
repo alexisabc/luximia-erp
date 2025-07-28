@@ -37,13 +37,5 @@ def obtener_y_guardar_tipo_de_cambio(fecha_a_consultar):
 
 
 def get_logo_path():
-    """
-    Determina y devuelve la ruta correcta del logo dependiendo del entorno.
-    """
-    if settings.DEBUG:
-        # En desarrollo, la ruta apunta a la carpeta 'assets' original
-        return os.path.join(settings.BASE_DIR, '..', 'assets', 'logo-luximia.png')
-    else:
-        # ### CORRECCIÓN: Se elimina 'assets' de la ruta de producción ###
-        # En producción, la ruta apunta directamente al archivo dentro de 'staticfiles'
-        return os.path.join(settings.STATIC_ROOT, 'logo-luximia.png')
+    """Devuelve la ruta absoluta al logo corporativo."""
+    return os.path.join(settings.ASSETS_PATH, 'logo-luximia.png')
