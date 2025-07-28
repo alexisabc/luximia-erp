@@ -40,8 +40,9 @@ export default function RolesPage() {
             name: 'permissions',
             label: 'Permisos',
             type: 'checkbox-group',
-            options: permissions.map(p => ({ value: p.id, label: translatePermission(p) }))
-        }
+            withSelectAll: true,
+            options: permissions.map(p => ({ value: p.id, label: translatePermission(p) })),
+        },
     ];
 
     const fetchData = useCallback(async () => {
@@ -70,6 +71,11 @@ export default function RolesPage() {
             ? currentSelection.filter(id => id !== selectedId)
             : [...currentSelection, selectedId];
         setFormData(prev => ({ ...prev, [fieldName]: newSelection }));
+    };
+
+    const handleSelectAll = (fieldName, isChecked, options) => {
+        const values = isChecked ? options.map(o => o.value) : [];
+        setFormData(prev => ({ ...prev, [fieldName]: values }));
     };
 
     const openModalForCreate = () => {
@@ -151,6 +157,7 @@ export default function RolesPage() {
                 formData={formData}
                 onFormChange={handleInputChange}
                 handleMultiSelectChange={handleMultiSelectChange}
+                handleSelectAll={handleSelectAll}
                 onSubmit={handleSubmit}
                 fields={ROL_FORM_FIELDS}
                 submitText="Guardar Rol"
