@@ -8,7 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
-import { translatePermission } from '../../../utils/permissions';
+import { translatePermission, translateModel } from '../../../utils/permissions';
 
 // --- Constantes de Configuración ---
 
@@ -21,6 +21,7 @@ export default function RolesPage() {
     const { hasPermission } = useAuth();
     const [groups, setGroups] = useState([]);
     const [permissions, setPermissions] = useState([]);
+    const [permissionGroups, setPermissionGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -33,15 +34,28 @@ export default function RolesPage() {
     const [editingGroup, setEditingGroup] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
 
+    const groupPermissions = (perms) => {
+        const byModel = {};
+        perms.forEach(p => {
+            const model = p['content_type__model'];
+            if (!byModel[model]) byModel[model] = [];
+            byModel[model].push({ value: p.id, label: translatePermission(p) });
+        });
+        return Object.entries(byModel).map(([model, options]) => ({
+            label: translateModel(model),
+            options,
+        }));
+    };
+
     // Define los campos del formulario dinámicamente
     const ROL_FORM_FIELDS = [
         { name: 'name', label: 'Nombre del Rol', required: true },
         {
             name: 'permissions',
             label: 'Permisos',
-            type: 'checkbox-group',
+            type: 'grouped-checkbox',
             withSelectAll: true,
-            options: permissions.map(p => ({ value: p.id, label: translatePermission(p) })),
+            groups: permissionGroups,
         },
     ];
 
@@ -51,6 +65,7 @@ export default function RolesPage() {
             const [groupsRes, permissionsRes] = await Promise.all([getGroups(), getPermissions()]);
             setGroups(groupsRes.data);
             setPermissions(permissionsRes.data);
+            setPermissionGroups(groupPermissions(permissionsRes.data));
         } catch (err) {
             setError('No se pudieron cargar los datos.');
         } finally {
@@ -76,6 +91,17 @@ export default function RolesPage() {
     const handleSelectAll = (fieldName, isChecked, options) => {
         const values = isChecked ? options.map(o => o.value) : [];
         setFormData(prev => ({ ...prev, [fieldName]: values }));
+    };
+
+    const handleGroupSelect = (fieldName, isChecked, options) => {
+        const values = options.map(o => o.value);
+        setFormData(prev => {
+            const current = prev[fieldName] || [];
+            const newValues = isChecked
+                ? Array.from(new Set([...current, ...values]))
+                : current.filter(id => !values.includes(id));
+            return { ...prev, [fieldName]: newValues };
+        });
     };
 
     const openModalForCreate = () => {
@@ -158,6 +184,7 @@ export default function RolesPage() {
                 onFormChange={handleInputChange}
                 handleMultiSelectChange={handleMultiSelectChange}
                 handleSelectAll={handleSelectAll}
+                handleGroupSelect={handleGroupSelect}
                 onSubmit={handleSubmit}
                 fields={ROL_FORM_FIELDS}
                 submitText="Guardar Rol"

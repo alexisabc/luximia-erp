@@ -596,8 +596,14 @@ def actualizar_tipo_de_cambio_hoy(request):
 def get_all_permissions(request):
     """Devuelve una lista de todos los permisos relevantes."""
     apps_a_excluir = ['admin', 'auth', 'contenttypes', 'sessions']
-    permissions = Permission.objects.exclude(content_type__app_label__in=apps_a_excluir).order_by(
-        'content_type__model').values('id', 'name', 'codename')
+    permissions = Permission.objects.exclude(
+        content_type__app_label__in=apps_a_excluir
+    ).order_by('content_type__model').values(
+        'id',
+        'name',
+        'codename',
+        'content_type__model',
+    )
     return Response(permissions)
 
 
