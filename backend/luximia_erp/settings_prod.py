@@ -29,3 +29,6 @@ if CORS_ALLOWED_ORIGINS:
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Ruta base de los activos en despliegue. Se puede ajustar con ``ASSETS_PATH``.
+ASSETS_PATH = os.getenv('ASSETS_PATH', STATIC_ROOT)

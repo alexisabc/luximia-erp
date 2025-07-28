@@ -136,6 +136,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '../assets'),
 ]
 
+# Ruta base para los recursos estáticos del proyecto. Puede sobreescribirse
+# con la variable de entorno ``ASSETS_PATH``. Por defecto apunta a la carpeta
+# ``assets`` en desarrollo.
+ASSETS_PATH = os.getenv(
+    'ASSETS_PATH',
+    os.path.join(BASE_DIR, '../assets')
+)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
