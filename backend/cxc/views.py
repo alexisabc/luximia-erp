@@ -32,7 +32,7 @@ from .pagination import CustomPagination
 from openai import OpenAI
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
@@ -44,6 +44,23 @@ from .serializers import (
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer
 )
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
 
 # ==============================================================================
 # --- FUNCIONES AUXILIARES REUTILIZABLES ---
@@ -434,7 +451,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
 # ==============================================================================
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanUseAI])
 def consulta_inteligente(request):
     pregunta_usuario = request.data.get('pregunta')
     if not pregunta_usuario:
@@ -1317,7 +1334,7 @@ def export_contratos_excel(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, CanViewDashboard])
 def strategic_dashboard_data(request):
     """
     Calcula y devuelve todos los datos para el dashboard estratégico,
