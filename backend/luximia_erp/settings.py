@@ -136,6 +136,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, '../assets'),
 ]
 
+# Algoritmos de hash para las contraseñas
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+]
+
 # Ruta base para los recursos estáticos del proyecto. Puede sobreescribirse
 # con la variable de entorno ``ASSETS_PATH``. Por defecto apunta a la carpeta
 # ``assets`` en desarrollo.
