@@ -14,6 +14,7 @@ export default function FormModal({
     fields,
     handleMultiSelectChange, // Maneja selecciones múltiples
     handleSelectAll, // Opcional: manejar selección global
+    handleGroupSelect, // Opcional: selección por grupo
     submitText = "Guardar Cambios",
 }) {
     if (!isOpen) return null;
@@ -50,6 +51,46 @@ export default function FormModal({
                                             />
                                             <span className="text-sm text-gray-700 dark:text-gray-300">{option.label}</span>
                                         </label>
+                                    ))}
+                                </div>
+                            ) : field.type === 'grouped-checkbox' ? (
+                                <div className="mt-2 space-y-2 p-2 border rounded-md max-h-60 overflow-y-auto">
+                                    {field.withSelectAll && (
+                                        <label className="flex items-center space-x-2 cursor-pointer font-semibold">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData[field.name]?.length === field.groups.reduce((a,g) => a + g.options.length, 0) && field.groups.length > 0}
+                                                onChange={(e) => handleSelectAll && handleSelectAll(field.name, e.target.checked, field.groups.flatMap(g => g.options))}
+                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">Seleccionar Todos</span>
+                                        </label>
+                                    )}
+                                    {field.groups.map(group => (
+                                        <div key={group.label} className="mt-2">
+                                            <label className="flex items-center space-x-2 cursor-pointer font-semibold">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={group.options.every(o => formData[field.name]?.includes(o.value))}
+                                                    onChange={(e) => handleGroupSelect && handleGroupSelect(field.name, e.target.checked, group.options)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">{group.label}</span>
+                                            </label>
+                                            <div className="ml-4 mt-1 space-y-1">
+                                                {group.options.map(option => (
+                                                    <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData[field.name]?.includes(option.value) || false}
+                                                            onChange={() => handleMultiSelectChange(field.name, option.value)}
+                                                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300">{option.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             ) : field.type === 'checkbox' ? (

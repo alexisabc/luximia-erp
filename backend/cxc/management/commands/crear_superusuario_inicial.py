@@ -3,6 +3,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 
 
 class Command(BaseCommand):
@@ -39,3 +40,16 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(
                 f"Superusuario '{username}' actualizado con la contraseña del entorno."))
+
+        # Crear o actualizar el grupo Administradores con todos los permisos
+        admin_group, _ = Group.objects.get_or_create(name="Administradores")
+        all_permissions = Permission.objects.all()
+        admin_group.permissions.set(all_permissions)
+        admin_group.save()
+
+        # Asignar el grupo al superusuario
+        user.groups.add(admin_group)
+        user.save()
+
+        self.stdout.write(self.style.SUCCESS(
+            "Grupo 'Administradores' asegurado y asignado al superusuario."))

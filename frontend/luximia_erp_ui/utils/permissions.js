@@ -60,3 +60,17 @@ export const translatePermission = (permission) => {
   // Si no, devuelve el 'name' original en inglés para no mostrar nada vacío.
   return permissionTranslations[permission.codename] || permission.name;
 };
+
+const modelTranslations = {
+  proyecto: 'Proyectos',
+  cliente: 'Clientes',
+  upe: 'UPEs',
+  contrato: 'Contratos',
+  pago: 'Pagos',
+  plandepagos: 'Plan de Pagos',
+  tipodecambio: 'Tipos de Cambio',
+  user: 'Usuarios',
+  group: 'Roles',
+};
+
+export const translateModel = (model) => modelTranslations[model] || model;

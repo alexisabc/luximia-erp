@@ -32,7 +32,7 @@ from .pagination import CustomPagination
 from openai import OpenAI
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
@@ -203,6 +203,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 # ==============================================================================
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def generar_estado_de_cuenta_pdf(request, pk=None):
     """
     Genera un PDF del estado de cuenta para un contrato específico,
@@ -293,6 +294,7 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
         return HttpResponse(f"Ocurrió un error al generar el PDF: {e}", status=500)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def generar_estado_de_cuenta_excel(request, pk=None):
     """
     Genera un archivo Excel (.xlsx) con formatos de celda específicos y columnas autoajustadas.
@@ -432,6 +434,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
 # ==============================================================================
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def consulta_inteligente(request):
     pregunta_usuario = request.data.get('pregunta')
     if not pregunta_usuario:
@@ -549,6 +552,7 @@ def consulta_inteligente(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_latest_tipo_de_cambio(request):
     """
     Devuelve el tipo de cambio aplicable al día de hoy (o el último día hábil anterior).
@@ -574,6 +578,7 @@ class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def actualizar_tipo_de_cambio_hoy(request):
     today = timezone.now().date()
     if TipoDeCambio.objects.filter(fecha=today).exists():
@@ -587,11 +592,18 @@ def actualizar_tipo_de_cambio_hoy(request):
     return Response({"mensaje": mensaje})
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_all_permissions(request):
     """Devuelve una lista de todos los permisos relevantes."""
     apps_a_excluir = ['admin', 'auth', 'contenttypes', 'sessions']
-    permissions = Permission.objects.exclude(content_type__app_label__in=apps_a_excluir).order_by(
-        'content_type__model').values('id', 'name', 'codename')
+    permissions = Permission.objects.exclude(
+        content_type__app_label__in=apps_a_excluir
+    ).order_by('content_type__model').values(
+        'id',
+        'name',
+        'codename',
+        'content_type__model',
+    )
     return Response(permissions)
 
 
@@ -601,6 +613,7 @@ def get_all_permissions(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def importar_datos_masivos(request):
     """Importa todos los datos desde un único archivo CSV usando Polars."""
@@ -703,6 +716,7 @@ def importar_datos_masivos(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def importar_clientes(request):
     """Importa o actualiza clientes desde un CSV usando Polars."""
@@ -758,6 +772,7 @@ def importar_clientes(request):
         return Response({"error": f"Ocurrió un error crítico al leer el archivo: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def importar_upes(request):
     """Importa o actualiza UPEs desde un CSV, recolectando todos los errores."""
@@ -824,6 +839,7 @@ def importar_upes(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def importar_contratos(request):
     """Importa o actualiza Contratos desde un CSV usando Polars."""
@@ -909,6 +925,7 @@ def importar_contratos(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @transaction.atomic
 def importar_pagos_historicos(request):
     """
@@ -985,6 +1002,7 @@ def importar_pagos_historicos(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def export_proyectos_excel(request):
     """
     Exporta un reporte de Proyectos a Excel con formato personalizado.
@@ -1049,6 +1067,7 @@ def export_proyectos_excel(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def export_clientes_excel(request):
     """Exporta un reporte de Clientes a Excel."""
     try:
@@ -1113,6 +1132,7 @@ def export_clientes_excel(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def export_upes_excel(request):
     """
     Exporta un reporte de UPEs a Excel con formato personalizado.
@@ -1196,6 +1216,7 @@ def export_upes_excel(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def export_contratos_excel(request):
     """
     Exporta un reporte de Contratos a Excel con formato personalizado.
@@ -1296,6 +1317,7 @@ def export_contratos_excel(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def strategic_dashboard_data(request):
     """
     Calcula y devuelve todos los datos para el dashboard estratégico,
