@@ -55,8 +55,8 @@ const permissionTranslations = {
   // Permisos Extras
   can_view_dashboard: "Ver dashboard",
   can_use_ai: "Usar IA",
-  can_view_inactive_users: "Ver usuarios inactivos",
-  can_delete_user_permanently: "Eliminar usuario permanentemente",
+  can_view_inactive_records: "Ver registros inactivos",
+  can_delete_permanently: "Eliminar permanentemente",
   can_view_auditlog: "Ver auditoría",
 };
 

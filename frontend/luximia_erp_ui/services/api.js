@@ -85,19 +85,27 @@ export const getPagosPorContrato = (contratoId) => apiClient.get(`/contratos/${c
 export const createProyecto = (data) => apiClient.post('/proyectos/', data);
 export const updateProyecto = (id, data) => apiClient.put(`/proyectos/${id}/`, data);
 export const deleteProyecto = (id) => apiClient.delete(`/proyectos/${id}/`);
+export const getInactiveProyectos = () => apiClient.get('/proyectos/inactive/');
+export const hardDeleteProyecto = (id) => apiClient.delete(`/proyectos/${id}/hard_delete/`);
 
 // CRUD - Clientes
 export const createCliente = (data) => apiClient.post('/clientes/', data);
 export const updateCliente = (id, data) => apiClient.put(`/clientes/${id}/`, data);
 export const deleteCliente = (id) => apiClient.delete(`/clientes/${id}/`);
+export const getInactiveClientes = () => apiClient.get('/clientes/inactive/');
+export const hardDeleteCliente = (id) => apiClient.delete(`/clientes/${id}/hard_delete/`);
 
 // CRUD - UPEs
 export const createUPE = (data) => apiClient.post('/upes/', data);
 export const updateUPE = (id, data) => apiClient.put(`/upes/${id}/`, data);
 export const deleteUPE = (id) => apiClient.delete(`/upes/${id}/`);
+export const getInactiveUpes = () => apiClient.get('/upes/inactive/');
+export const hardDeleteUpe = (id) => apiClient.delete(`/upes/${id}/hard_delete/`);
 
 // CRUD - Contratos
 export const createContrato = (data) => apiClient.post('/contratos/', data);
+export const getInactiveContratos = () => apiClient.get('/contratos/inactive/');
+export const hardDeleteContrato = (id) => apiClient.delete(`/contratos/${id}/hard_delete/`);
 
 // CRUD - Pagos
 export const createPago = (data) => apiClient.post('/pagos/', data);

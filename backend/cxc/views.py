@@ -63,14 +63,14 @@ class CanUseAI(BasePermission):
         return request.user.has_perm('cxc.can_use_ai')
 
 
-class CanViewInactiveUsers(BasePermission):
+class CanViewInactiveRecords(BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('cxc.can_view_inactive_users')
+        return request.user.has_perm('cxc.can_view_inactive_records')
 
 
-class CanDeleteUserPermanently(BasePermission):
+class CanDeletePermanently(BasePermission):
     def has_permission(self, request, view):
-        return request.user.has_perm('cxc.can_delete_user_permanently')
+        return request.user.has_perm('cxc.can_delete_permanently')
 
 
 class CanViewAuditLog(BasePermission):
@@ -128,6 +128,25 @@ class SoftDeleteViewSetMixin:
         instance.activo = False
         instance.save()
         log_action(self.request.user, 'soft_delete', instance)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if getattr(self, 'action', None) == 'list':
+            return qs.filter(activo=True)
+        return qs
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveRecords], pagination_class=None)
+    def inactive(self, request):
+        queryset = self.get_queryset().filter(activo=False)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeletePermanently])
+    def hard_delete(self, request, pk=None):
+        instance = self.get_object()
+        log_action(request.user, 'hard_delete', instance)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 def convertir_fecha_excel(valor_fecha):
     """
@@ -234,6 +253,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserWriteSerializer
         return UserReadSerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if getattr(self, 'action', None) == 'list':
+            return qs.filter(is_active=True)
+        return qs
+
     def perform_create(self, serializer):
         instance = serializer.save()
         log_action(self.request.user, 'create', instance)
@@ -253,15 +278,17 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveUsers], pagination_class=None)
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveRecords], pagination_class=None)
     def inactive(self, request):
         users = User.objects.filter(is_active=False)
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeleteUserPermanently])
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeletePermanently])
     def hard_delete(self, request, pk=None):
         user = self.get_object()
+        if user.pk == 1:
+            return Response({'detail': 'No se puede eliminar el superusuario inicial.'}, status=status.HTTP_400_BAD_REQUEST)
         log_action(request.user, 'hard_delete', user)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

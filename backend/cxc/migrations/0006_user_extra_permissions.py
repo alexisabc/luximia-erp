@@ -6,18 +6,18 @@ from django.contrib.contenttypes.models import ContentType
 def create_permissions(apps, schema_editor):
     content_type, _ = ContentType.objects.get_or_create(app_label='cxc', model='extrapermission')
     Permission.objects.get_or_create(
-        codename='can_view_inactive_users',
-        name='Can view inactive users',
+        codename='can_view_inactive_records',
+        name='Puede ver registros inactivos',
         content_type=content_type,
     )
     Permission.objects.get_or_create(
-        codename='can_delete_user_permanently',
-        name='Can delete user permanently',
+        codename='can_delete_permanently',
+        name='Puede eliminar permanentemente',
         content_type=content_type,
     )
     Permission.objects.get_or_create(
         codename='can_view_auditlog',
-        name='Can view auditlog',
+        name='Puede ver auditoría',
         content_type=content_type,
     )
 

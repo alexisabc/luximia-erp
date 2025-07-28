@@ -150,7 +150,7 @@ export default function UsuariosPage() {
             <div className="flex flex-wrap justify-between items-center mb-10 gap-4">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Usuarios</h1>
                 <div className="flex gap-2">
-                    {hasPermission('cxc.can_view_inactive_users') && (
+                    {hasPermission('cxc.can_view_inactive_records') && (
                         <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
                             {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
                         </button>
@@ -171,7 +171,7 @@ export default function UsuariosPage() {
                 actions={{
                     onEdit: hasPermission('cxc.change_user') ? openModalForEdit : null,
                     onDelete: hasPermission('cxc.delete_user') ? handleDeleteClick : null,
-                    onHardDelete: hasPermission('cxc.can_delete_user_permanently') ? handleHardDelete : null,
+                    onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
                 }}
             />
 
