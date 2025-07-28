@@ -36,8 +36,25 @@ apiClient.interceptors.request.use(async req => {
             req.headers.Authorization = `Bearer ${authTokens.access}`;
         }
     }
-    return req;
+  return req;
 });
+
+// Interceptor para redireccionar según el código de error HTTP
+apiClient.interceptors.response.use(
+    response => response,
+    error => {
+        const status = error.response?.status;
+        if (typeof window !== 'undefined' && status) {
+            if (status === 401) {
+                localStorage.removeItem('authTokens');
+                window.location.href = '/login';
+            } else if (status === 403) {
+                window.location.href = '/unauthorized';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 export default apiClient;
 
 
