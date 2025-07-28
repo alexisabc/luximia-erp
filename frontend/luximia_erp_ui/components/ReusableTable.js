@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { EyeIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { EyeIcon, PencilSquareIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
 export default function ReusableTable({ data, columns, actions = {} }) {
     if (!data) {
@@ -29,6 +29,11 @@ export default function ReusableTable({ data, columns, actions = {} }) {
                     {actions.onDelete && (
                         <button onClick={() => actions.onDelete(row.id)} className="group" title="Eliminar">
                             <TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
+                        </button>
+                    )}
+                    {actions.onHardDelete && (
+                        <button onClick={() => actions.onHardDelete(row.id)} className="group" title="Eliminar Definitivamente">
+                            <XCircleIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
                         </button>
                     )}
                 </div>

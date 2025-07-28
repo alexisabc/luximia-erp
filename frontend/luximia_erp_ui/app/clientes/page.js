@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClientes, createCliente, updateCliente, deleteCliente, exportClientesExcel } from '../../services/api';
+import { getClientes, createCliente, updateCliente, deleteCliente, getInactiveClientes, hardDeleteCliente, exportClientesExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 import FormModal from '../../components/FormModal';
@@ -42,6 +42,7 @@ export default function ClientesPage() {
     const [formData, setFormData] = useState({ nombre_completo: '', email: '', telefono: '' });
     const [editingCliente, setEditingCliente] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [showInactive, setShowInactive] = useState(false);
     const [selectedColumns, setSelectedColumns] = useState(() => {
         const allCols = {};
         CLIENTE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
@@ -91,7 +92,7 @@ export default function ClientesPage() {
         }
 
         try {
-            const res = await getClientes(page, size); // O getProyectos, getUPEs, etc.
+            const res = showInactive ? await getInactiveClientes() : await getClientes(page, size); // O getProyectos, getUPEs, etc.
             setPageData(res.data);
             setCurrentPage(page);
         } catch (err) {
@@ -100,7 +101,7 @@ export default function ClientesPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [authTokens, pageData.results.length]); // <-- CORRECCIÓN: Se vuelve a añadir authTokens
+    }, [authTokens, pageData.results.length, showInactive]);
 
     // El useEffect se queda como estaba, dependiendo solo de pageSize
     useEffect(() => {
@@ -167,6 +168,15 @@ export default function ClientesPage() {
         }
     };
 
+    const handleHardDelete = async (id) => {
+        try {
+            await hardDeleteCliente(id);
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            setError('Error al eliminar definitivamente.');
+        }
+    };
+
     // Función para obtener el estilo del badge según el nombre del proyecto
     const getProjectBadgeStyle = (projectName) => {
         // Puedes añadir más proyectos y colores aquí
@@ -188,6 +198,11 @@ export default function ClientesPage() {
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Clientes</h1>
                 <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.can_view_inactive_records') && (
+                        <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                        </button>
+                    )}
                     {hasPermission('cxc.add_cliente') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nuevo Cliente</button>}
                     <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><TableCellsIcon className="h-6 w-6" /></button>
                 </div>
@@ -202,7 +217,8 @@ export default function ClientesPage() {
                     columns={CLIENTE_COLUMNAS_DISPLAY}
                     actions={{
                         onEdit: hasPermission('cxc.change_cliente') ? handleEditClick : null,
-                        onDelete: hasPermission('cxc.delete_cliente') ? handleDeleteClick : null
+                        onDelete: hasPermission('cxc.delete_cliente') ? handleDeleteClick : null,
+                        onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null
                     }}
                 />
             </div>

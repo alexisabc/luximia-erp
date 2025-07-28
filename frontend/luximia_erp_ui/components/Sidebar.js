@@ -110,6 +110,12 @@ export default function Sidebar() {
                             </li>
                         )}
 
+                        {hasPermission('cxc.can_view_auditlog') && (
+                            <li>
+                                <Link href="/auditoria" className={getLinkClass('/auditoria')}>Auditoría</Link>
+                            </li>
+                        )}
+
                         {canViewSettings && (
                             <li className="pt-2">
                                 <button onClick={() => setIsConfigOpen(!isConfigOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">

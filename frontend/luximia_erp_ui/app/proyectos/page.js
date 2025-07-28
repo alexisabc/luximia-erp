@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getProyectos, createProyecto, updateProyecto, deleteProyecto, exportProyectosExcel } from '../../services/api';
+import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal'; // <-- Usa el FormModal
@@ -52,13 +52,14 @@ export default function ProyectosPage() {
     });
     const [loading, setLoading] = useState(true);
     const [isPaginating, setIsPaginating] = useState(false);
+    const [showInactive, setShowInactive] = useState(false);
     
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
         pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
-            const res = await getProyectos(page, size);
+            const res = showInactive ? await getInactiveProyectos() : await getProyectos(page, size);
             setPageData(res.data);
             setCurrentPage(page);
         } catch (err) {
@@ -67,7 +68,7 @@ export default function ProyectosPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [authTokens, pageData.results.length]);
+    }, [authTokens, pageData.results.length, showInactive]);
 
     useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize,fetchData]);
     
@@ -106,6 +107,15 @@ export default function ProyectosPage() {
         } finally {
             setIsConfirmModalOpen(false);
             setItemToDelete(null);
+        }
+    };
+
+    const handleHardDelete = async (id) => {
+        try {
+            await hardDeleteProyecto(id);
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            setError('Error al eliminar definitivamente.');
         }
     };
 
@@ -163,6 +173,11 @@ export default function ProyectosPage() {
                 <div className="flex justify-between items-center mb-10">
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Proyectos</h1>
                     <div className="flex items-center space-x-3">
+                        {hasPermission('cxc.can_view_inactive_records') && (
+                            <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                                {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                            </button>
+                        )}
                         {hasPermission('cxc.add_proyecto') && (
                             <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                                 + Nuevo Proyecto
@@ -183,7 +198,8 @@ export default function ProyectosPage() {
                     columns={PROYECTO_COLUMNAS_DISPLAY}
                     actions={{
                         onEdit: hasPermission('cxc.change_proyecto') ? handleEditClick : null,
-                        onDelete: hasPermission('cxc.delete_proyecto') ? handleDeleteClick : null
+                        onDelete: hasPermission('cxc.delete_proyecto') ? handleDeleteClick : null,
+                        onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
                     }}
                 />
             </div>

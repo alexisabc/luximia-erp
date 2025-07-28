@@ -52,6 +52,12 @@ const permissionTranslations = {
   change_group: "Cambiar rol",
   delete_group: "Eliminar rol",
   view_group: "Ver rol",
+  // Permisos Extras
+  can_view_dashboard: "Ver dashboard",
+  can_use_ai: "Usar IA",
+  can_view_inactive_records: "Ver registros inactivos",
+  can_delete_permanently: "Eliminar permanentemente",
+  can_view_auditlog: "Ver auditoría",
 };
 
 export const translatePermission = (permission) => {

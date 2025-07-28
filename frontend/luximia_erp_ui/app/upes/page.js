@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, exportUpesExcel } from '../../services/api';
+import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 import FormModal from '../../components/FormModal';
@@ -61,6 +61,7 @@ export default function UPEsPage() {
     const [formData, setFormData] = useState({ identificador: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
     const [editingUPE, setEditingUPE] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [showInactive, setShowInactive] = useState(false);
     const [selectedColumns, setSelectedColumns] = useState(() => {
         const allCols = {};
         UPE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
@@ -107,6 +108,15 @@ export default function UPEsPage() {
         }
     };
 
+    const handleHardDelete = async (id) => {
+        try {
+            await hardDeleteUpe(id);
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            setError('Error al eliminar definitivamente.');
+        }
+    };
+
     const handleExport = async () => {
         const columnsToExport = UPE_COLUMNAS_EXPORT
             .filter(c => selectedColumns[c.id])
@@ -141,7 +151,8 @@ export default function UPEsPage() {
         pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
             const [upesRes, proyectosRes] = await Promise.all([
-                getUPEs(page, size), getAllProyectos()
+                showInactive ? getInactiveUpes() : getUPEs(page, size),
+                getAllProyectos()
             ]);
             setPageData(upesRes.data);
             setProyectos(proyectosRes.data);
@@ -152,7 +163,7 @@ export default function UPEsPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [authTokens, pageData.results.length]);
+    }, [authTokens, pageData.results.length, showInactive]);
 
     useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize,fetchData]);
 
@@ -201,6 +212,11 @@ export default function UPEsPage() {
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de UPEs</h1>
                 <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.can_view_inactive_records') && (
+                        <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                        </button>
+                    )}
                     {hasPermission('cxc.add_upe') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nueva UPE</button>}
                     <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><TableCellsIcon className="h-6 w-6" /></button>
                 </div>
@@ -214,7 +230,8 @@ export default function UPEsPage() {
                     columns={UPE_COLUMNAS_DISPLAY}
                     actions={{
                         onEdit: hasPermission('cxc.change_upe') ? handleEditClick : null,
-                        onDelete: hasPermission('cxc.delete_upe') ? handleDeleteClick : null
+                        onDelete: hasPermission('cxc.delete_upe') ? handleDeleteClick : null,
+                        onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null
                     }}
                 />
             </div>

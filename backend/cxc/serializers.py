@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -358,3 +358,11 @@ class TipoDeCambioSerializer(serializers.ModelSerializer):
     class Meta:
         model = TipoDeCambio
         fields = '__all__'
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'user', 'action', 'model_name', 'object_id', 'timestamp', 'changes']
