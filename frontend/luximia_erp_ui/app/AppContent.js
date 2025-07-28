@@ -3,13 +3,14 @@
 
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
+import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Bars3Icon, ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 export default function AppContent({ children }) {
-    const { authTokens } = useAuth();
+    const { authTokens, hasPermission } = useAuth();
     const { isOpen, toggleSidebar } = useSidebar();
     const pathname = usePathname();
     const router = useRouter();
@@ -58,6 +59,7 @@ export default function AppContent({ children }) {
                 <div>
                     {children}
                 </div>
+                {hasPermission('cxc.can_use_ai') && <ChatInteligente />}
             </main>
         </div>
     );

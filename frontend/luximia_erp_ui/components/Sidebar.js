@@ -71,7 +71,11 @@ export default function Sidebar() {
 
                 <nav className="flex-1 px-4 py-4 overflow-y-auto">
                     <ul className="space-y-1">
-                        {hasPermission('cxc.can_view_dashboard') && <li><Link href="/" className={getLinkClass('/')}>Dashboard</Link></li>}
+                        {hasPermission('cxc.can_view_dashboard') ? (
+                            <li><Link href="/" className={getLinkClass('/')}>Dashboard</Link></li>
+                        ) : (
+                            <li><Link href="/" className={getLinkClass('/')}>Inicio</Link></li>
+                        )}
                         {hasPermission('cxc.view_proyecto') && <li><Link href="/proyectos" className={getLinkClass('/proyectos')}>Proyectos</Link></li>}
                         {hasPermission('cxc.view_cliente') && <li><Link href="/clientes" className={getLinkClass('/clientes')}>Clientes</Link></li>}
                         {hasPermission('cxc.view_upe') && <li><Link href="/upes" className={getLinkClass('/upes')}>UPEs</Link></li>}
