@@ -40,6 +40,7 @@ from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeC
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer
 )
@@ -444,24 +445,27 @@ def consulta_inteligente(request):
 
         client = OpenAI(api_key=api_key)
 
-        # ### CAMBIO ###: Ampliamos el prompt con la información de Proyecto y UPE
+        # ### CAMBIO ###: Ampliamos el prompt con todos los modelos disponibles
         system_prompt = """
         Eres un asistente experto en el CRM de Luximia. Tu trabajo es convertir la pregunta de un usuario en un objeto JSON para consultar la base de datos.
         El JSON debe tener la siguiente estructura: {"modelo": "nombre_del_modelo", "filtros": {}, "agregacion": "tipo_de_agregacion"}.
-        
-        Modelos disponibles: 'Contrato', 'Cliente', 'UPE', 'Proyecto'.
+
+        Modelos disponibles: 'Contrato', 'Cliente', 'UPE', 'Proyecto', 'PlanDePagos', 'Pago', 'TipoDeCambio'.
         Agregaciones disponibles: 'count' (contar resultados) o 'none' (listar resultados).
-        
-        Campos para filtrar en 'Contrato': cliente__nombre_completo__icontains, upe__identificador__iexact, upe__proyecto__nombre__icontains, upe__estado__iexact.
+
+        Campos para filtrar en 'Contrato': cliente__nombre_completo__icontains, upe__identificador__iexact, upe__proyecto__nombre__icontains, estado__iexact.
         Campos para filtrar en 'Cliente': nombre_completo__icontains, email__iexact.
         Campos para filtrar en 'UPE': identificador__iexact, proyecto__nombre__icontains, estado__iexact (Valores: 'Disponible', 'Vendida', 'Pagada', 'Bloqueada').
         Campos para filtrar en 'Proyecto': nombre__icontains, activo (Valores: true o false).
+        Campos para filtrar en 'PlanDePagos': contrato__cliente__nombre_completo__icontains, fecha_vencimiento, tipo (Valores: 'ENGANCHE', 'MENSUALIDAD'), pagado.
+        Campos para filtrar en 'Pago': contrato__cliente__nombre_completo__icontains, fecha_pago, concepto (Valores: 'APARTADO', 'DEVOLUCIÓN', 'DESCUENTO', 'PAGO'), moneda_pagada.
+        Campos para filtrar en 'TipoDeCambio': fecha, valor.
 
         Ejemplo 1: "cuantos contratos tiene el proyecto shark tower" -> {"modelo": "Contrato", "filtros": {"upe__proyecto__nombre__icontains": "shark tower"}, "agregacion": "count"}
-        Ejemplo 2: "lista los clientes con el nombre javier" -> {"modelo": "Cliente", "filtros": {"nombre_completo__icontains": "javier"}, "agregacion": "none"}
-        Ejemplo 3: "mostrar upes disponibles en nido" -> {"modelo": "UPE", "filtros": {"proyecto__nombre__icontains": "nido", "estado__iexact": "Disponible"}, "agregacion": "none"}
+        Ejemplo 2: "lista los pagos de marzo" -> {"modelo": "Pago", "filtros": {"fecha_pago__month": 3}, "agregacion": "none"}
+        Ejemplo 3: "mostrar upes disponibles en be towers" -> {"modelo": "UPE", "filtros": {"proyecto__nombre__icontains": "be towers", "estado__iexact": "Disponible"}, "agregacion": "none"}
         Ejemplo 4: "cuantos proyectos estan activos" -> {"modelo": "Proyecto", "filtros": {"activo": true}, "agregacion": "count"}
-        
+
         Nunca respondas con texto conversacional, solo con el objeto JSON.
         """
 
@@ -513,6 +517,27 @@ def consulta_inteligente(request):
             if agregacion == 'count':
                 return Response({'respuesta': f"Se encontraron {queryset.count()} proyectos."})
             serializer = ProyectoSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'PlanDePagos':
+            queryset = PlanDePagos.objects.select_related('contrato__cliente').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} planes de pago."})
+            serializer = PlanDePagosSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'Pago':
+            queryset = Pago.objects.select_related('contrato__cliente').filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} pagos."})
+            serializer = PagoReadSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+        elif modelo == 'TipoDeCambio':
+            queryset = TipoDeCambio.objects.filter(q_objects)
+            if agregacion == 'count':
+                return Response({'respuesta': f"Se encontraron {queryset.count()} tipos de cambio."})
+            serializer = TipoDeCambioSerializer(queryset, many=True)
             return Response(serializer.data)
 
         else:
