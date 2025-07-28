@@ -36,13 +36,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
     PlanDePagosSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
-    MyTokenObtainPairSerializer, TipoDeCambioSerializer
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
 
 # ==============================================================================
@@ -62,9 +62,33 @@ class CanUseAI(BasePermission):
     def has_permission(self, request, view):
         return request.user.has_perm('cxc.can_use_ai')
 
+
+class CanViewInactiveUsers(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_users')
+
+
+class CanDeleteUserPermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_user_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
 # ==============================================================================
 # --- FUNCIONES AUXILIARES REUTILIZABLES ---
 # ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
 
 def _autoajustar_columnas_excel(worksheet, dataframe):
     """
@@ -92,9 +116,18 @@ class SoftDeleteViewSetMixin:
     por una lógica de soft delete (cambia activo a False).
     """
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
     def perform_destroy(self, instance):
         instance.activo = False
         instance.save()
+        log_action(self.request.user, 'soft_delete', instance)
 
 def convertir_fecha_excel(valor_fecha):
     """
@@ -177,8 +210,17 @@ class PagoViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return PagoReadSerializer if self.action in ['list', 'retrieve'] else PagoWriteSerializer
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
     def perform_destroy(self, instance):
         contrato_afectado = instance.contrato
+        log_action(self.request.user, 'delete', instance)
         instance.delete()
         contrato_afectado.actualizar_plan_de_pagos()
 
@@ -192,11 +234,37 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserWriteSerializer
         return UserReadSerializer
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+        log_action(self.request.user, 'soft_delete', instance)
+
     @action(detail=False, methods=['get'], pagination_class=None)
     def all(self, request):
         users = self.get_queryset()
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveUsers], pagination_class=None)
+    def inactive(self, request):
+        users = User.objects.filter(is_active=False)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeleteUserPermanently])
+    def hard_delete(self, request, pk=None):
+        user = self.get_object()
+        log_action(request.user, 'hard_delete', user)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -207,6 +275,18 @@ class GroupViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return GroupWriteSerializer
         return GroupReadSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        log_action(self.request.user, 'delete', instance)
+        instance.delete()
 
     @action(detail=False, methods=['get'], pagination_class=None)
     def all(self, request):
@@ -594,6 +674,38 @@ class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
 # Añade esta nueva vista
 
 
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AuditLog.objects.select_related('user').all()
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAuthenticated, CanViewAuditLog]
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'])
+    def excel(self, request):
+        logs_qs = self.get_queryset()
+        data = {
+            'Usuario': [log.user.username if log.user else '' for log in logs_qs],
+            'Acción': [log.action for log in logs_qs],
+            'Modelo': [log.model_name for log in logs_qs],
+            'ID': [log.object_id for log in logs_qs],
+            'Fecha': [log.timestamp.strftime('%Y-%m-%d %H:%M:%S') for log in logs_qs],
+            'Cambios': [log.changes for log in logs_qs],
+        }
+        df = pl.DataFrame(data)
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Auditoria')
+        worksheet.write_row(0, 0, df.columns)
+        for i, row in enumerate(df.iter_rows()):
+            worksheet.write_row(i + 1, 0, row)
+        _autoajustar_columnas_excel(worksheet, df)
+        workbook.close()
+        output.seek(0)
+        response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="auditlog.xlsx"'
+        return response
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def actualizar_tipo_de_cambio_hoy(request):
@@ -612,7 +724,7 @@ def actualizar_tipo_de_cambio_hoy(request):
 @permission_classes([IsAuthenticated])
 def get_all_permissions(request):
     """Devuelve una lista de todos los permisos relevantes."""
-    apps_a_excluir = ['admin', 'auth', 'contenttypes', 'sessions']
+    apps_a_excluir = ['admin', 'contenttypes', 'sessions']
     permissions = Permission.objects.exclude(
         content_type__app_label__in=apps_a_excluir
     ).order_by('content_type__model').values(

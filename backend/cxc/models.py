@@ -276,3 +276,18 @@ class TipoDeCambio(ModeloBaseActivo):
 
     class Meta:
         ordering = ['-fecha']
+
+
+class AuditLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=50)
+    model_name = models.CharField(max_length=50)
+    object_id = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    changes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.user} - {self.action} {self.model_name} {self.object_id}"

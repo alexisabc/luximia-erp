@@ -113,6 +113,8 @@ export const actualizarTipoDeCambioHoy = () => apiClient.post('/tipo-de-cambio/a
 export const createUser = (data) => apiClient.post('/users/', data);
 export const updateUser = (id, data) => apiClient.put(`/users/${id}/`, data);
 export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
+export const getInactiveUsers = () => apiClient.get('/users/inactive/');
+export const hardDeleteUser = (id) => apiClient.delete(`/users/${id}/hard_delete/`);
 export const createGroup = (data) => apiClient.post('/groups/', data);
 export const updateGroup = (id, data) => apiClient.put(`/groups/${id}/`, data);
 export const deleteGroup = (id) => apiClient.delete(`/groups/${id}/`);
@@ -183,3 +185,6 @@ export const exportContratosExcel = (columns) => {
     columns.forEach(col => params.append('cols', col));
     return apiClient.get(`/contratos/export/?${params.toString()}`, { responseType: 'blob' });
 };
+
+export const getAuditLogs = () => apiClient.get('/auditlog/');
+export const downloadAuditLogExcel = () => apiClient.get('/auditlog/excel/', { responseType: 'blob' });

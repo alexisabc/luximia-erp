@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUsers, getGroups, createUser, updateUser, deleteUser } from '../../../services/api';
+import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
@@ -28,6 +28,7 @@ export default function UsuariosPage() {
 
     const [editingUser, setEditingUser] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [showInactive, setShowInactive] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -43,7 +44,8 @@ export default function UsuariosPage() {
         setLoading(true);
         setError(null);
         try {
-            const [usersRes, groupsRes] = await Promise.all([getUsers(), getGroups()]);
+            const usersPromise = showInactive ? getInactiveUsers() : getUsers();
+            const [usersRes, groupsRes] = await Promise.all([usersPromise, getGroups()]);
             setUsers(usersRes.data);
             setGroups(groupsRes.data);
         } catch (err) {
@@ -52,7 +54,7 @@ export default function UsuariosPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showInactive]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -110,6 +112,15 @@ export default function UsuariosPage() {
         }
     };
 
+    const handleHardDelete = async (userId) => {
+        try {
+            await hardDeleteUser(userId);
+            fetchData();
+        } catch (err) {
+            setError('Error al eliminar definitivamente.');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const dataToSubmit = { ...formData };
@@ -136,13 +147,20 @@ export default function UsuariosPage() {
 
     return (
         <div className="p-8">
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-wrap justify-between items-center mb-10 gap-4">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Usuarios</h1>
-                {hasPermission('cxc.add_user') && (
-                    <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                        + Nuevo Usuario
-                    </button>
-                )}
+                <div className="flex gap-2">
+                    {hasPermission('cxc.can_view_inactive_users') && (
+                        <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                        </button>
+                    )}
+                    {hasPermission('cxc.add_user') && (
+                        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                            + Nuevo Usuario
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
@@ -153,6 +171,7 @@ export default function UsuariosPage() {
                 actions={{
                     onEdit: hasPermission('cxc.change_user') ? openModalForEdit : null,
                     onDelete: hasPermission('cxc.delete_user') ? handleDeleteClick : null,
+                    onHardDelete: hasPermission('cxc.can_delete_user_permanently') ? handleHardDelete : null,
                 }}
             />
 
