@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [proyectos, setProyectos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   // Estados de los filtros
   const [timeframe, setTimeframe] = useState('month');
@@ -57,7 +58,7 @@ export default function DashboardPage() {
   }, [timeframe, selectedProject]);
 
   useEffect(() => {
-    fetchData();
+    fetchData().then(() => setInitialLoad(false));
   }, [fetchData]);
 
   const chartData = {
@@ -70,10 +71,15 @@ export default function DashboardPage() {
     ]
   };
 
-  if (loading) return <div className="p-8">Cargando dashboard...</div>;
+  if (loading && initialLoad) return <div className="p-8">Cargando dashboard...</div>;
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="relative p-8 space-y-8">
+      {loading && !initialLoad && (
+        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-20">
+          <span className="text-gray-700 dark:text-gray-200 animate-pulse">Actualizando...</span>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Dashboard Estratégico</h1>
         {/* --- Filtros --- */}
