@@ -5,9 +5,16 @@ import Modal from './Modal';
 
 // El FormModal ahora es capaz de renderizar grupos de checkboxes
 export default function FormModal({
-    isOpen, onClose, title, formData, onFormChange, onSubmit, fields,
-    handleMultiSelectChange, // Nueva prop para manejar checkboxes/multi-select
-    submitText = "Guardar Cambios"
+    isOpen,
+    onClose,
+    title,
+    formData,
+    onFormChange,
+    onSubmit,
+    fields,
+    handleMultiSelectChange, // Maneja selecciones múltiples
+    handleSelectAll, // Opcional: manejar selección global
+    submitText = "Guardar Cambios",
 }) {
     if (!isOpen) return null;
 
@@ -22,6 +29,17 @@ export default function FormModal({
                         {
                             field.type === 'checkbox-group' ? (
                                 <div className="mt-2 space-y-2 p-2 border rounded-md max-h-40 overflow-y-auto">
+                                    {field.withSelectAll && (
+                                        <label className="flex items-center space-x-2 cursor-pointer font-semibold">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData[field.name]?.length === field.options.length && field.options.length > 0}
+                                                onChange={(e) => handleSelectAll && handleSelectAll(field.name, e.target.checked, field.options)}
+                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">Seleccionar Todos</span>
+                                        </label>
+                                    )}
                                     {field.options.map(option => (
                                         <label key={option.value} className="flex items-center space-x-2 cursor-pointer">
                                             <input
