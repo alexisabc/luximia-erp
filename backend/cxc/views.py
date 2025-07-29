@@ -3,18 +3,16 @@
 # ==============================================================================
 # --- IMPORTS ---
 # ==============================================================================
-from datetime import date # Asegúrate de tener este import
-from django.conf import settings # Y este también
-import base64 # Asegúrate de tener este import
+from datetime import date, datetime, timedelta
+from django.conf import settings
+import base64
 import traceback
 from decimal import Decimal
-from datetime import date, datetime, timedelta
 import os
 import json
 import polars as pl
 import io
 import xlsxwriter
-import base64
 import locale
 from .utils import obtener_y_guardar_tipo_de_cambio, get_logo_path
 from django.apps import apps
@@ -27,7 +25,6 @@ from django.template.loader import render_to_string
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.utils import timezone
-from django.conf import settings
 from .pagination import CustomPagination
 from openai import OpenAI
 from rest_framework import viewsets, status
