@@ -133,9 +133,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# Ruta base para los recursos estáticos del proyecto. Puede sobreescribirse
+# con la variable de entorno ``ASSETS_PATH``. Por defecto apunta a la carpeta
+# ``assets`` en desarrollo.
+ASSETS_PATH = os.getenv('ASSETS_PATH', os.path.join(BASE_DIR, '../assets'))
+
 STATIC_URL = 'static/'
+# Usa ``ASSETS_PATH`` para evitar advertencias cuando la estructura de
+# carpetas varía (por ejemplo en contenedores Docker).
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '../assets'),
+    ASSETS_PATH,
 ]
 
 # Algoritmos de hash para las contraseñas
@@ -145,13 +152,6 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
 ]
 
-# Ruta base para los recursos estáticos del proyecto. Puede sobreescribirse
-# con la variable de entorno ``ASSETS_PATH``. Por defecto apunta a la carpeta
-# ``assets`` en desarrollo.
-ASSETS_PATH = os.getenv(
-    'ASSETS_PATH',
-    os.path.join(BASE_DIR, '../assets')
-)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
