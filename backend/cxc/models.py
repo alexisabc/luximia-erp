@@ -285,6 +285,7 @@ class AuditLog(models.Model):
     object_id = models.CharField(max_length=100)
     timestamp = models.DateTimeField(auto_now_add=True)
     changes = models.TextField(blank=True)
+    help_text='Texto de ayuda para forzar la migración.'
 
     class Meta:
         ordering = ['-timestamp']
