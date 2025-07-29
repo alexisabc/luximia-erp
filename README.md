@@ -48,6 +48,7 @@ La interfaz ha sido refactorizada a una arquitectura basada en componentes reuti
 4.  **Iniciar Servicios:** En la raíz del proyecto, ejecutar `docker-compose up -d --build`.
 5.  **Iniciar Frontend:** En una terminal separada, navegar a `frontend/luximia_erp_ui` y ejecutar `npm run dev`.
 6.  **Acceso:** Backend en `http://localhost:8000/api/` y Frontend en `http://localhost:3000`.
+7.  **Fechas en Español:** El contenedor genera automáticamente el locale `es_ES.UTF-8`, por lo que las fechas se mostrarán en español tanto en desarrollo como en producción.
 
 ### 3.2. Flujo de Trabajo con Git (Recomendado)
 Se recomienda el uso de ramas para cada nueva funcionalidad.
