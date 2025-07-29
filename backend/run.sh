@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "Recolectando archivos estáticos..."
+# Añade esta línea para que Whitenoise funcione correctamente
+python manage.py collectstatic --noinput
+
 echo "Aplicando migraciones..."
 python manage.py migrate
 

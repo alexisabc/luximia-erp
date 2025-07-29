@@ -1,4 +1,4 @@
-# backend/Dockerfile
+[⚠️ Suspicious Content] # backend/Dockerfile
 
 FROM python:3.12-slim-bookworm
 
@@ -29,7 +29,13 @@ ENV LC_ALL es_ES.UTF-8
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+# Copia los requerimientos del backend y los instala
+# (Asume que el contexto del build es la raíz del monorepo)
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/
+# Copia la carpeta global de assets a la ubicación que Django espera
+COPY assets /app/static/assets
+
+# Copia el código del backend
+COPY backend /.
