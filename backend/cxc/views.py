@@ -19,7 +19,7 @@ import locale
 from .utils import obtener_y_guardar_tipo_de_cambio, get_logo_path
 from django.apps import apps
 from django.db import transaction
-from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count
+from django.db.models import Sum, F, Case, When, Value, DecimalField, Q, Count, Min, Max
 from django.db.models.functions import Coalesce, TruncDay, TruncWeek, TruncMonth, TruncYear
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -1484,49 +1484,91 @@ def strategic_dashboard_data(request):
     except locale.Error:
         print("ADVERTENCIA: El locale 'es_ES.UTF-8' no está instalado. Se usarán fechas en inglés.")
         
-    project_id = request.query_params.get('project_id')
+    project_ids_param = request.query_params.get('project_ids')
     timeframe = request.query_params.get('timeframe', 'month')
+    morosidad_range = request.query_params.get('morosidad_range', '30')
+    por_cobrar_range = request.query_params.get('por_cobrar_range', '30')
     today = date.today()
 
-    # 1. Define el rango de fechas, el agrupador y las etiquetas según el timeframe
-    if timeframe == 'week':
-        start_date = today - timedelta(days=today.weekday())  # Lunes de esta semana
-        end_date = start_date + timedelta(days=6)  # Domingo de esta semana
-        trunc_func = TruncDay
-        date_format = '%a %d'  # Formato: "Lun 21"
-        labels = [(start_date + timedelta(days=i)).strftime(date_format) for i in range(7)]
-    elif timeframe == 'year':
-        start_date = today.replace(month=1, day=1)
-        end_date = today.replace(month=12, day=31)
-        trunc_func = TruncMonth
-        date_format = '%b'  # Formato: "Jul"
-        labels = [date(today.year, m, 1).strftime(date_format) for m in range(1, 13)]
-    else:  # 'month'
-        start_date = today.replace(day=1)
-        next_month = (start_date.replace(day=28) + timedelta(days=4))
-        end_date = next_month - timedelta(days=next_month.day)
-        trunc_func = TruncDay
-        date_format = '%d'  # Formato: "21"
-        labels = [str(i) for i in range(1, end_date.day + 1)]
+    if project_ids_param and project_ids_param != 'all':
+        project_ids = [int(p) for p in project_ids_param.split(',') if p]
+    else:
+        project_ids = None
 
-    # 2. Filtra los querysets base por proyecto
+    # 1. Filtra los querysets base por proyecto
     pagos_base = Pago.objects.all()
     contratos_base = Contrato.objects.all()
     plan_pagos_base = PlanDePagos.objects.filter(pagado=False, contrato__estado='Activo')
     upe_queryset = UPE.objects.all()
 
-    if project_id and project_id != 'all':
-        pagos_base = pagos_base.filter(contrato__upe__proyecto_id=project_id)
-        contratos_base = contratos_base.filter(upe__proyecto_id=project_id)
-        plan_pagos_base = plan_pagos_base.filter(contrato__upe__proyecto_id=project_id)
-        upe_queryset = upe_queryset.filter(proyecto_id=project_id)
+    if project_ids:
+        pagos_base = pagos_base.filter(contrato__upe__proyecto_id__in=project_ids)
+        contratos_base = contratos_base.filter(upe__proyecto_id__in=project_ids)
+        plan_pagos_base = plan_pagos_base.filter(contrato__upe__proyecto_id__in=project_ids)
+        upe_queryset = upe_queryset.filter(proyecto_id__in=project_ids)
+
+    # 2. Determina el rango de fechas global del dataset
+    fechas_min = [
+        pagos_base.aggregate(d=Min('fecha_pago'))['d'],
+        contratos_base.aggregate(d=Min('fecha_venta'))['d'],
+        plan_pagos_base.aggregate(d=Min('fecha_vencimiento'))['d'],
+    ]
+    fechas_max = [
+        pagos_base.aggregate(d=Max('fecha_pago'))['d'],
+        contratos_base.aggregate(d=Max('fecha_venta'))['d'],
+        plan_pagos_base.aggregate(d=Max('fecha_vencimiento'))['d'],
+    ]
+
+    earliest_date = min([d for d in fechas_min if d] or [today])
+    latest_date = max([d for d in fechas_max if d] or [today])
+
+    if timeframe == 'year':
+        trunc_func = TruncYear
+        start_date = date(earliest_date.year, 1, 1)
+        end_date = date(latest_date.year, 12, 31)
+        labels = [str(y) for y in range(start_date.year, end_date.year + 1)]
+        date_format = '%Y'
+    elif timeframe == 'week':
+        trunc_func = TruncWeek
+        start_date = earliest_date - timedelta(days=earliest_date.weekday())
+        end_date = latest_date + timedelta(days=6 - latest_date.weekday())
+        labels = []
+        current = start_date
+        while current <= end_date:
+            labels.append(f"{current.isocalendar().year}-W{current.isocalendar().week:02d}")
+            current += timedelta(weeks=1)
+        date_format = '%G-W%V'
+    else:  # month
+        trunc_func = TruncMonth
+        start_date = date(earliest_date.year, earliest_date.month, 1)
+        end_date = date(latest_date.year, latest_date.month, 1)
+        labels = []
+        current = start_date
+        while current <= end_date:
+            labels.append(current.strftime('%b %Y'))
+            next_month = (current.replace(day=28) + timedelta(days=4)).replace(day=1)
+            current = next_month
+        date_format = '%b %Y'
 
     # 3. Calcula KPIs usando los querysets ya filtrados por proyecto
     valor_mxn_expression = Case(When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')), default=F('monto_pagado'), output_field=DecimalField())
     total_recuperado = pagos_base.aggregate(total=Sum(valor_mxn_expression))['total'] or 0
     total_ventas = contratos_base.aggregate(total=Sum('precio_final_pactado'))['total'] or 0
     total_programado = plan_pagos_base.aggregate(total=Sum('monto_programado'))['total'] or 0
-    total_vencido = plan_pagos_base.filter(fecha_vencimiento__lt=today).aggregate(total=Sum('monto_programado'))['total'] or 0
+
+    if morosidad_range == 'mas':
+        vencido_filter = Q(fecha_vencimiento__lt=today - timedelta(days=90))
+    else:
+        dias = int(morosidad_range)
+        vencido_filter = Q(fecha_vencimiento__lt=today - timedelta(days=dias))
+    total_vencido = plan_pagos_base.filter(vencido_filter).aggregate(total=Sum('monto_programado'))['total'] or 0
+
+    if por_cobrar_range == 'mas':
+        cobrar_filter = Q(fecha_vencimiento__gt=today + timedelta(days=90))
+    else:
+        dias_pc = int(por_cobrar_range)
+        cobrar_filter = Q(fecha_vencimiento__gt=today, fecha_vencimiento__lte=today + timedelta(days=dias_pc))
+    total_por_cobrar = plan_pagos_base.filter(cobrar_filter).aggregate(total=Sum('monto_programado'))['total'] or 0
 
     # 4. Calcula datos para la gráfica, ahora filtrando por el rango de fechas
     recuperado_q = pagos_base.filter(fecha_pago__range=(start_date, end_date)).annotate(period=trunc_func('fecha_pago')).values('period').annotate(total=Sum(valor_mxn_expression))
@@ -1555,8 +1597,10 @@ def strategic_dashboard_data(request):
         'kpis': {
             'recuperado': total_recuperado,
             'ventas': total_ventas,
-            'programado': total_programado,
+            'por_cobrar': total_por_cobrar,
             'vencido': total_vencido,
+            'upes_total': upe_queryset.count(),
+            'programado_total': total_programado,
         },
         'chart': final_chart_data,
         'upeStatus': {

@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 // ### 1. Se elimina 'getUpeStatusChartData' ###
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
-import { Bar, Doughnut } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 
 
@@ -34,15 +34,16 @@ export default function DashboardPage() {
 
   // Estados de los filtros
   const [timeframe, setTimeframe] = useState('month');
-  const [selectedProject, setSelectedProject] = useState('all');
+  const [selectedProjects, setSelectedProjects] = useState('all');
+  const [morosidadRange, setMorosidadRange] = useState('30');
+  const [porCobrarRange, setPorCobrarRange] = useState('30');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // ### 2. La llamada al API ahora es más simple ###
       const [dashboardRes, proyectosRes] = await Promise.all([
-        getStrategicDashboardData(timeframe, selectedProject),
-        getAllProyectos() // Para el dropdown de filtro
+        getStrategicDashboardData(timeframe, selectedProjects, morosidadRange, porCobrarRange),
+        getAllProyectos()
       ]);
 
       setData(dashboardRes.data);
@@ -53,19 +54,24 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [timeframe, selectedProject]);
+  }, [timeframe, selectedProjects, morosidadRange, porCobrarRange]);
 
   useEffect(() => {
     fetchData().then(() => setInitialLoad(false));
   }, [fetchData]);
 
-  const chartData = {
+  const ventasChartData = {
     labels: data?.chart?.labels || [],
     datasets: [
-      { type: 'bar', label: 'Recuperado (Cobrado)', data: data?.chart?.recuperado || [], backgroundColor: '#36A2EB' },
-      { type: 'bar', label: 'Ventas', data: data?.chart?.ventas || [], backgroundColor: '#4BC0C0' },
-      { type: 'bar', label: 'Programado a Cobrar', data: data?.chart?.programado || [], backgroundColor: '#FFCD56' },
-      { type: 'line', label: 'Morosidad (Total Atrasado)', data: data?.chart?.vencido || [], borderColor: '#FF6384', tension: 0.1, fill: false },
+      { type: 'bar', label: 'Ventas', data: data?.chart?.ventas || [], backgroundColor: '#4BC0C0' }
+    ]
+  };
+
+  const cobranzaChartData = {
+    labels: data?.chart?.labels || [],
+    datasets: [
+      { type: 'bar', label: 'Cobrado', data: data?.chart?.recuperado || [], backgroundColor: '#36A2EB' },
+      { type: 'bar', label: 'Por Cobrar', data: data?.chart?.programado || [], backgroundColor: '#FFCD56' }
     ]
   };
 
@@ -82,7 +88,14 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Dashboard Estratégico</h1>
         {/* --- Filtros --- */}
         <div className="flex items-center gap-4">
-          <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2">
+          <select multiple value={selectedProjects === 'all' ? [] : selectedProjects} onChange={(e) => {
+            const values = Array.from(e.target.selectedOptions).map(o => o.value);
+            if (values.includes('all')) {
+              setSelectedProjects('all');
+            } else {
+              setSelectedProjects(values);
+            }
+          }} className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2">
             <option value="all">Todos los Proyectos</option>
             {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
@@ -91,31 +104,42 @@ export default function DashboardPage() {
             <button onClick={() => setTimeframe('month')} className={`px-3 py-1 rounded-md ${timeframe === 'month' ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>Mensual</button>
             <button onClick={() => setTimeframe('year')} className={`px-3 py-1 rounded-md ${timeframe === 'year' ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>Anual</button>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm">Morosidad:</span>
+            <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
+              {['30','60','90','mas'].map(val => (
+                <button key={val} onClick={() => setMorosidadRange(val)} className={`px-2 py-1 rounded-md ${morosidadRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
+              ))}
+            </div>
+            <span className="text-sm ml-2">Por Cobrar:</span>
+            <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
+              {['30','60','90','mas'].map(val => (
+                <button key={val} onClick={() => setPorCobrarRange(val)} className={`px-2 py-1 rounded-md ${porCobrarRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* --- KPIs --- */}
       {data && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KpiCard title="Total Recuperado (Cobrado)" value={data.kpis.recuperado} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <KpiCard title="Total UPEs" value={data.kpis.upes_total} />
           <KpiCard title="Total en Ventas" value={data.kpis.ventas} />
-          <KpiCard title="Total Programado a Cobrar" value={data.kpis.programado} />
-          <KpiCard title="Total en Morosidad" value={data.kpis.vencido} />
+          <KpiCard title="Total Recuperado (Cobrado)" value={data.kpis.recuperado} />
+          <KpiCard title="Monto por Cobrar" value={data.kpis.por_cobrar} />
+          <KpiCard title="Monto en Morosidad" value={data.kpis.vencido} />
         </div>
       )}
 
       {/* --- Gráficas --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow h-full">
-          <Bar data={chartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Proyección Financiera' } } }} />
-        </div>
-
-        {data?.upeStatus && (
-          <ChartCard title="Estado de UPEs (Inventario)">
-            {/* ### 3. La gráfica de dona ahora lee de data.upeStatus ### */}
-            <Doughnut data={{ labels: data.upeStatus.labels, datasets: [{ data: data.upeStatus.values, backgroundColor: ['#4CAF50', '#FFC107', '#F44336', '#9E9E9E'] }] }} options={{ responsive: true, maintainAspectRatio: false }} />
-          </ChartCard>
-        )}
+        <ChartCard title="Ventas">
+          <Bar data={ventasChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+        </ChartCard>
+        <ChartCard title="Cobrado vs Por Cobrar">
+          <Bar data={cobranzaChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+        </ChartCard>
       </div>
 
     </div>
