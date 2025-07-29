@@ -130,12 +130,18 @@ export const deleteGroup = (id) => apiClient.delete(`/groups/${id}/`);
 // --- Dashboard Estratégico ---
 export const getUpeStatusChartData = () => apiClient.get('/charts/upe-status/');
 
-export const getStrategicDashboardData = (timeframe, projectId) => {
+export const getStrategicDashboardData = (timeframe, projectIds, morosidadRange, porCobrarRange) => {
     const params = new URLSearchParams();
     if (timeframe) params.append('timeframe', timeframe);
-    if (projectId && projectId !== 'all') {
-        params.append('project_id', projectId);
+    if (projectIds && projectIds !== 'all') {
+        if (Array.isArray(projectIds)) {
+            params.append('project_ids', projectIds.join(','));
+        } else {
+            params.append('project_ids', projectIds);
+        }
     }
+    if (morosidadRange) params.append('morosidad_range', morosidadRange);
+    if (porCobrarRange) params.append('por_cobrar_range', porCobrarRange);
     return apiClient.get(`/dashboard/strategic/?${params.toString()}`);
 };
 
