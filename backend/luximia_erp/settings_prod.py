@@ -1,50 +1,54 @@
 # backend/luximia_erp/settings_prod.py
 import os
 import dj_database_url
-from .settings import *  # Importa la configuración base
+from .settings import * # Importa la configuración base
+
+# --- Configuración de Producción ---
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-
-# ### CAMBIO: Ahora lee la variable DEBUG desde el archivo .env ###
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
-IS_DEVELOPMENT = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
-
+# --- Base de Datos ---
 DATABASES = {
     'default': dj_database_url.config(
         conn_max_age=600,
-        # Exigir SSL solo si NO estamos en modo desarrollo
-        ssl_require=(not IS_DEVELOPMENT)
+        ssl_require=True  # Siempre requerir SSL en producción
     )
 }
 
+# --- CORS: La Solución Definitiva ---
+
+# 1. Lista de orígenes exactos (leída desde variables de entorno)
+#    Útil para desarrollo local y el dominio principal de producción.
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-# ### MEJORA: Es buena práctica que CSRF_TRUSTED_ORIGINS también use la variable de entorno ###
-if CORS_ALLOWED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
-# Permitir sobreescribir las listas de CSRF directamente
-extra_csrf = os.getenv('CSRF_TRUSTED_ORIGINS', '')
-if extra_csrf:
-    CSRF_TRUSTED_ORIGINS = extra_csrf.split(',')
+# 2. Lista de patrones de orígenes (expresiones regulares)
+#    Esto autoriza todas las URLs de preview de Vercel para tu proyecto.
+#    Asegúrate de que el nombre de tu repo y usuario de GitHub sean correctos.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://luximia-erp-git-.*-alexisabc\.vercel\.app$",
+]
 
-# Configuración de Whitenoise
+# 3. Lista de dominios de confianza para CSRF
+#    Es buena práctica que también confíe en tu dominio de Vercel.
+CSRF_TRUSTED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+
+
+# --- Archivos Estáticos con Whitenoise ---
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'assets'),
+]
 
-# Ruta base de los activos en despliegue. Se puede ajustar con ``ASSETS_PATH``.
-ASSETS_PATH = os.getenv('ASSETS_PATH', STATIC_ROOT)
-
-# Opciones de seguridad para producción
-SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True') == 'True'
-SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+# --- Opciones de Seguridad para Producción ---
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = 'DENY'
