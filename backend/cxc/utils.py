@@ -1,7 +1,7 @@
 # backend/cxc/utils.py
 import requests
 import os
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from .models import TipoDeCambio
 from django.conf import settings

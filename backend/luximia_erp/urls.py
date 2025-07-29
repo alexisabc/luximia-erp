@@ -2,8 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from cxc.views import MyTokenObtainPairView
+from . import views
 
 urlpatterns = [
+    path('', views.home, name='home'),
     path('admin/', admin.site.urls),
 
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
