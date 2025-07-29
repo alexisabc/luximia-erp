@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'cxc.apps.CxcConfig',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
