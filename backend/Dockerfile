@@ -26,6 +26,9 @@ ENV LC_ALL es_ES.UTF-8
 
 WORKDIR /app
 
+# Asegura que la carpeta de assets exista antes de cualquier otra cosa
+RUN mkdir -p /app/assets
+
 # Copia los requerimientos del backend
 COPY backend/requirements.txt .
 

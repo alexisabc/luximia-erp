@@ -59,76 +59,76 @@ export default apiClient;
 
 
 // --- FUNCIONES DE API (CON PAGINACIÓN) ---
-export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/proyectos/?page=${page}&page_size=${pageSize}`);
-export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/clientes/?page=${page}&page_size=${pageSize}`);
-export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/upes/?page=${page}&page_size=${pageSize}`);
-export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/contratos/?page=${page}&page_size=${pageSize}`);
+export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
+export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
+export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
 
 
 // --- FUNCIONES SIN PAGINACIÓN O POR ID ---
 
 // ### CAMBIO ###: Apuntamos a los nuevos endpoints '/all/'
-export const getUsers = () => apiClient.get('/users/all/');
-export const getGroups = () => apiClient.get('/groups/all/');
-export const getPermissions = () => apiClient.get('/permissions/');
+export const getUsers = () => apiClient.get('/cxc/users/all/');
+export const getGroups = () => apiClient.get('/cxc/groups/all/');
+export const getPermissions = () => apiClient.get('/cxc/permissions/');
 
 // Para Dropdowns
-export const getAllProyectos = () => apiClient.get('/proyectos/all/');
-export const getUPEsDisponibles = () => apiClient.get('/upes/disponibles/');
+export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
+export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
 
 // Por ID
-export const getProyecto = (id) => apiClient.get(`/proyectos/${id}/`);
-export const getContratoById = (id) => apiClient.get(`/contratos/${id}/`);
-export const getPagosPorContrato = (contratoId) => apiClient.get(`/contratos/${contratoId}/pagos/`);
+export const getProyecto = (id) => apiClient.get(`/cxc/proyectos/${id}/`);
+export const getContratoById = (id) => apiClient.get(`/cxc/contratos/${id}/`);
+export const getPagosPorContrato = (contratoId) => apiClient.get(`/cxc/contratos/${contratoId}/pagos/`);
 
 // CRUD - Proyectos
-export const createProyecto = (data) => apiClient.post('/proyectos/', data);
-export const updateProyecto = (id, data) => apiClient.put(`/proyectos/${id}/`, data);
-export const deleteProyecto = (id) => apiClient.delete(`/proyectos/${id}/`);
-export const getInactiveProyectos = () => apiClient.get('/proyectos/inactive/');
-export const hardDeleteProyecto = (id) => apiClient.delete(`/proyectos/${id}/hard_delete/`);
+export const createProyecto = (data) => apiClient.post('/cxc/proyectos/', data);
+export const updateProyecto = (id, data) => apiClient.put(`/cxc/proyectos/${id}/`, data);
+export const deleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/`);
+export const getInactiveProyectos = () => apiClient.get('/cxc/proyectos/inactive/');
+export const hardDeleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/hard_delete/`);
 
 // CRUD - Clientes
-export const createCliente = (data) => apiClient.post('/clientes/', data);
-export const updateCliente = (id, data) => apiClient.put(`/clientes/${id}/`, data);
-export const deleteCliente = (id) => apiClient.delete(`/clientes/${id}/`);
-export const getInactiveClientes = () => apiClient.get('/clientes/inactive/');
-export const hardDeleteCliente = (id) => apiClient.delete(`/clientes/${id}/hard_delete/`);
+export const createCliente = (data) => apiClient.post('/cxc/clientes/', data);
+export const updateCliente = (id, data) => apiClient.put(`/cxc/clientes/${id}/`, data);
+export const deleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/`);
+export const getInactiveClientes = () => apiClient.get('/cxc/clientes/inactive/');
+export const hardDeleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/hard_delete/`);
 
 // CRUD - UPEs
-export const createUPE = (data) => apiClient.post('/upes/', data);
-export const updateUPE = (id, data) => apiClient.put(`/upes/${id}/`, data);
-export const deleteUPE = (id) => apiClient.delete(`/upes/${id}/`);
-export const getInactiveUpes = () => apiClient.get('/upes/inactive/');
-export const hardDeleteUpe = (id) => apiClient.delete(`/upes/${id}/hard_delete/`);
+export const createUPE = (data) => apiClient.post('/cxc/upes/', data);
+export const updateUPE = (id, data) => apiClient.put(`/cxc/upes/${id}/`, data);
+export const deleteUPE = (id) => apiClient.delete(`/cxc/upes/${id}/`);
+export const getInactiveUpes = () => apiClient.get('/cxc/upes/inactive/');
+export const hardDeleteUpe = (id) => apiClient.delete(`/cxc/upes/${id}/hard_delete/`);
 
 // CRUD - Contratos
-export const createContrato = (data) => apiClient.post('/contratos/', data);
-export const getInactiveContratos = () => apiClient.get('/contratos/inactive/');
-export const hardDeleteContrato = (id) => apiClient.delete(`/contratos/${id}/hard_delete/`);
+export const createContrato = (data) => apiClient.post('/cxc/contratos/', data);
+export const getInactiveContratos = () => apiClient.get('/cxc/contratos/inactive/');
+export const hardDeleteContrato = (id) => apiClient.delete(`/cxc/contratos/${id}/hard_delete/`);
 
 // CRUD - Pagos
-export const createPago = (data) => apiClient.post('/pagos/', data);
-export const updatePago = (pagoId, data) => apiClient.put(`/pagos/${pagoId}/`, data);
-export const deletePago = (pagoId) => apiClient.delete(`/pagos/${pagoId}/`);
+export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
+export const updatePago = (pagoId, data) => apiClient.put(`/cxc/pagos/${pagoId}/`, data);
+export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
 
 // CRUD - Tipo de Cambio
-export const getLatestTipoDeCambio = () => apiClient.get('/tipo-de-cambio/latest/');
-export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
-export const actualizarTipoDeCambioHoy = () => apiClient.post('/tipo-de-cambio/actualizar-hoy/');
+export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');
+export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
+export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-cambio/actualizar-hoy/');
 
 // CRUD - Usuarios y Roles
-export const createUser = (data) => apiClient.post('/users/', data);
-export const updateUser = (id, data) => apiClient.put(`/users/${id}/`, data);
-export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
-export const getInactiveUsers = () => apiClient.get('/users/inactive/');
-export const hardDeleteUser = (id) => apiClient.delete(`/users/${id}/hard_delete/`);
-export const createGroup = (data) => apiClient.post('/groups/', data);
-export const updateGroup = (id, data) => apiClient.put(`/groups/${id}/`, data);
-export const deleteGroup = (id) => apiClient.delete(`/groups/${id}/`);
+export const createUser = (data) => apiClient.post('/cxc/users/', data);
+export const updateUser = (id, data) => apiClient.put(`/cxc/users/${id}/`, data);
+export const deleteUser = (id) => apiClient.delete(`/cxc/users/${id}/`);
+export const getInactiveUsers = () => apiClient.get('/cxc/users/inactive/');
+export const hardDeleteUser = (id) => apiClient.delete(`/cxc/users/${id}/hard_delete/`);
+export const createGroup = (data) => apiClient.post('/cxc/groups/', data);
+export const updateGroup = (id, data) => apiClient.put(`/cxc/groups/${id}/`, data);
+export const deleteGroup = (id) => apiClient.delete(`/cxc/groups/${id}/`);
 
 // --- Dashboard Estratégico ---
-export const getUpeStatusChartData = () => apiClient.get('/charts/upe-status/');
+export const getUpeStatusChartData = () => apiClient.get('/cxc/charts/upe-status/');
 
 export const getStrategicDashboardData = (timeframe, projectIds, morosidadRange, porCobrarRange) => {
     const params = new URLSearchParams();
@@ -147,12 +147,12 @@ export const getStrategicDashboardData = (timeframe, projectIds, morosidadRange,
 
 
 // Importaciones
-export const importarDatosMasivos = (formData) => apiClient.post('/importar-masivo/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const importarClientes = (formData) => apiClient.post('/importar-clientes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const importarUPEs = (formData) => apiClient.post('/importar-upes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const importarContratos = (formData) => apiClient.post('/importar-contratos/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarDatosMasivos = (formData) => apiClient.post('/cxc/importar-masivo/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarClientes = (formData) => apiClient.post('/cxc/importar-clientes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarUPEs = (formData) => apiClient.post('/cxc/importar-upes/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarContratos = (formData) => apiClient.post('/cxc/importar-contratos/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const importarPagosHistoricos = (formData) => {
-    return apiClient.post('/importar-pagos-historicos/', formData, {
+    return apiClient.post('/cxc/importar-pagos-historicos/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
 };
@@ -162,7 +162,7 @@ export const importarPagosHistoricos = (formData) => {
 export const descargarEstadoDeCuentaPDF = (contratoId, pagoCols) => {
     const params = new URLSearchParams();
     pagoCols.forEach(col => params.append('pago_cols', col));
-    return apiClient.get(`/contratos/${contratoId}/pdf/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/contratos/${contratoId}/pdf/?${params.toString()}`, { responseType: 'blob' });
 };
 // XLSX
 export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) => {
@@ -170,35 +170,35 @@ export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) => 
     planCols.forEach(col => params.append('plan_cols', col));
     pagoCols.forEach(col => params.append('pago_cols', col));
 
-    return apiClient.get(`/contratos/${contratoId}/excel/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/contratos/${contratoId}/excel/?${params.toString()}`, { responseType: 'blob' });
 };
 //OPEN IA
-export const consultaInteligente = (pregunta) => apiClient.post('/consulta-inteligente/', { pregunta });
+export const consultaInteligente = (pregunta) => apiClient.post('/cxc/consulta-inteligente/', { pregunta });
 
 //EXPORTADORES
 export const exportProyectosExcel = (columns) => {
     const params = new URLSearchParams();
     columns.forEach(col => params.append('cols', col));
-    return apiClient.get(`/proyectos/export/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/proyectos/export/?${params.toString()}`, { responseType: 'blob' });
 };
 
 export const exportClientesExcel = (columns) => {
     const params = new URLSearchParams();
     columns.forEach(col => params.append('cols', col));
-    return apiClient.get(`/clientes/export/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/clientes/export/?${params.toString()}`, { responseType: 'blob' });
 };
 
 export const exportUpesExcel = (columns) => {
     const params = new URLSearchParams();
     columns.forEach(col => params.append('cols', col));
-    return apiClient.get(`/upes/export/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/upes/export/?${params.toString()}`, { responseType: 'blob' });
 };
 
 export const exportContratosExcel = (columns) => {
     const params = new URLSearchParams();
     columns.forEach(col => params.append('cols', col));
-    return apiClient.get(`/contratos/export/?${params.toString()}`, { responseType: 'blob' });
+    return apiClient.get(`/cxc/contratos/export/?${params.toString()}`, { responseType: 'blob' });
 };
 
-export const getAuditLogs = () => apiClient.get('/auditlog/');
-export const downloadAuditLogExcel = () => apiClient.get('/auditlog/excel/', { responseType: 'blob' });
+export const getAuditLogs = () => apiClient.get('/cxc/auditlog/');
+export const downloadAuditLogExcel = () => apiClient.get('/cxc/auditlog/excel/', { responseType: 'blob' });
