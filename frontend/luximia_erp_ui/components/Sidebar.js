@@ -7,6 +7,21 @@ import { useSidebar } from '../context/SidebarContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from './ThemeSwitcher';
+import {
+    HomeIcon,
+    UserGroupIcon,
+    ClipboardDocumentListIcon,
+    DocumentTextIcon,
+    BanknotesIcon,
+    ChartBarIcon,
+    Cog6ToothIcon,
+    UserIcon,
+    KeyIcon,
+    ArrowUpTrayIcon,
+    CurrencyDollarIcon,
+    ShieldCheckIcon,
+    DocumentMagnifyingGlassIcon
+} from '@heroicons/react/24/outline';
 
 const ChevronIcon = ({ isOpen }) => (
     <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -17,6 +32,7 @@ const ChevronIcon = ({ isOpen }) => (
 export default function Sidebar() {
     const { user, logoutUser, hasPermission } = useAuth();
     const { isOpen, toggleSidebar } = useSidebar();
+    const isCollapsed = !isOpen;
     const pathname = usePathname();
 
     const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -42,12 +58,12 @@ export default function Sidebar() {
 
     const getLinkClass = (path, isSubmenu = false) => {
         const baseClass = isSubmenu
-            ? "block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-sm"
-            : "block p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white";
+            ? `flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-sm ${isCollapsed ? 'justify-center' : ''}`
+            : `flex items-center p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''}`;
 
         const activeClass = isSubmenu
-            ? "bg-gray-200 dark:bg-gray-700 font-semibold"
-            : "bg-blue-600 text-white dark:bg-blue-700 font-semibold";
+            ? 'bg-gray-200 dark:bg-gray-700 font-semibold'
+            : 'bg-blue-600 text-white dark:bg-blue-700 font-semibold';
 
         let isActive = pathname.startsWith(path) && path !== '/';
         if (path === '/') isActive = pathname === path;
@@ -66,8 +82,7 @@ export default function Sidebar() {
             ></div>
 
             <div
-                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-transform duration-300 ease-in-out 
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isOpen ? 'lg:w-64' : 'lg:w-20'}`}
             >
                 <div className="p-4 flex-shrink-0 text-center border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Luximia ERP</h2>
@@ -77,23 +92,107 @@ export default function Sidebar() {
                 <nav className="flex-1 px-4 py-4 overflow-y-auto">
                     <ul className="space-y-1">
                         {hasPermission('cxc.can_view_dashboard') ? (
-                            <li><Link href="/" className={getLinkClass('/')}>Dashboard</Link></li>
+                            <li>
+                                <Link href="/" className={getLinkClass('/')}> 
+                                    <HomeIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Dashboard</span>}
+                                </Link>
+                            </li>
                         ) : (
-                            <li><Link href="/" className={getLinkClass('/')}>Inicio</Link></li>
+                            <li>
+                                <Link href="/" className={getLinkClass('/')}> 
+                                    <HomeIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Inicio</span>}
+                                </Link>
+                            </li>
                         )}
-                        {hasPermission('cxc.view_cliente') && <li><Link href="/clientes" className={getLinkClass('/clientes')}>Clientes</Link></li>}
-                        {hasPermission('cxc.view_proyecto') && <li><Link href="/proyectos" className={getLinkClass('/proyectos')}>Proyectos</Link></li>}
-                        {hasPermission('cxc.view_contrato') && <li><Link href="/contratos" className={getLinkClass('/contratos')}>Contratos</Link></li>}
-                        {hasPermission('cxc.view_pago') && <li><Link href="/pagos" className={getLinkClass('/pagos')}>Pagos</Link></li>}
-                        {hasPermission('cxc.can_export') && <li><Link href="/reportes" className={getLinkClass('/reportes')}>Reportes</Link></li>}
+                        {hasPermission('cxc.view_cliente') && (
+                            <li>
+                                <Link href="/clientes" className={getLinkClass('/clientes')}>
+                                    <UserGroupIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Clientes</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_proyecto') && (
+                            <li>
+                                <Link href="/proyectos" className={getLinkClass('/proyectos')}>
+                                    <ClipboardDocumentListIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Proyectos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_contrato') && (
+                            <li>
+                                <Link href="/contratos" className={getLinkClass('/contratos')}>
+                                    <DocumentTextIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Contratos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_pago') && (
+                            <li>
+                                <Link href="/pagos" className={getLinkClass('/pagos')}>
+                                    <BanknotesIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Pagos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.can_export') && (
+                            <li>
+                                <Link href="/reportes" className={getLinkClass('/reportes')}>
+                                    <ChartBarIcon className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Reportes</span>}
+                                </Link>
+                            </li>
+                        )}
 
                         {canViewSettings && (
-                            <li className="pt-2">
-                                <button onClick={() => setIsAdminOpen(!isAdminOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                    <span className="text-sm font-semibold uppercase">Administración</span>
-                                    <ChevronIcon isOpen={isAdminOpen} />
+                            <li className="pt-2 relative">
+                                <button onClick={() => setIsAdminOpen(!isAdminOpen)} className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}> 
+                                        <Cog6ToothIcon className="h-5 w-5" />
+                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Administración</span>}
+                                    </div>
+                                    {isOpen && <ChevronIcon isOpen={isAdminOpen} />}
                                 </button>
                                 {isAdminOpen && (
+                                    isCollapsed ? (
+                                        <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1">
+                                            {hasPermission('cxc.view_user') && (
+                                                <Link href="/configuraciones/usuarios" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                    <UserIcon className="h-5 w-5" />
+                                                    <span className="ml-2">Usuarios</span>
+                                                </Link>
+                                            )}
+                                            {hasPermission('cxc.view_group') && (
+                                                <Link href="/configuraciones/roles" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                    <KeyIcon className="h-5 w-5" />
+                                                    <span className="ml-2">Roles</span>
+                                                </Link>
+                                            )}
+                                            {canImportData && (
+                                                <>
+                                                    <Link href="/importar" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                        <ArrowUpTrayIcon className="h-5 w-5" />
+                                                        <span className="ml-2">Importar</span>
+                                                    </Link>
+                                                    {hasPermission('cxc.view_tipodecambio') && (
+                                                        <Link href="/tipos-de-cambio" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                            <CurrencyDollarIcon className="h-5 w-5" />
+                                                            <span className="ml-2">Tipo Cambio</span>
+                                                        </Link>
+                                                    )}
+                                                </>
+                                            )}
+                                            {hasPermission('cxc.can_view_auditlog') && (
+                                                <Link href="/auditoria" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                    <DocumentMagnifyingGlassIcon className="h-5 w-5" />
+                                                    <span className="ml-2">Auditoría</span>
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ) : (
                                     <ul className="pl-4 mt-1 space-y-1">
                                         <li>
                                             <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
