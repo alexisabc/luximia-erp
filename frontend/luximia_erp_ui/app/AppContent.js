@@ -2,12 +2,12 @@
 'use client';
 
 import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Bars3Icon } from '@heroicons/react/24/solid';
 
 export default function AppContent({ children }) {
     const { authTokens, hasPermission } = useAuth();
@@ -33,27 +33,8 @@ export default function AppContent({ children }) {
         <div className="min-h-screen">
             <Sidebar />
             {/* ### Los estilos de fondo AHORA se aplican aquí ### */}
-            <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-
-                {/* Botón para pantallas grandes (flecha) */}
-                <div className="hidden lg:block">
-                    <button
-                        onClick={toggleSidebar}
-                        className="fixed top-5 left-0 z-50 p-1.5 bg-gray-700 text-white rounded-r-lg shadow-md transition-all duration-300 ease-in-out hover:bg-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
-                        style={{ transform: isOpen ? 'translateX(16rem)' : 'translateX(5rem)' }}
-                        aria-label="Toggle menú"
-                    >
-                        <Bars3Icon className="h-6 w-6" />
-                    </button>
-                </div>
-
-                {/* Encabezado para pantallas pequeñas (hamburguesa) */}
-                <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 shadow-md p-4 lg:hidden">
-                    <button onClick={toggleSidebar} className="text-gray-800 dark:text-gray-200">
-                        <Bars3Icon className="h-6 w-6" />
-                    </button>
-                </header>
-
+            <main className={`pt-16 transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+                <Navbar />
                 <div>
                     {children}
                 </div>
