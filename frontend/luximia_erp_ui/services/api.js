@@ -80,6 +80,8 @@ export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
 export const getProyecto = (id) => apiClient.get(`/cxc/proyectos/${id}/`);
 export const getContratoById = (id) => apiClient.get(`/cxc/contratos/${id}/`);
 export const getPagosPorContrato = (contratoId) => apiClient.get(`/cxc/contratos/${contratoId}/pagos/`);
+export const getPagos = (page = 1, pageSize = 15) =>
+    apiClient.get(`/cxc/pagos/?page=${page}&page_size=${pageSize}`);
 
 // CRUD - Proyectos
 export const createProyecto = (data) => apiClient.post('/cxc/proyectos/', data);

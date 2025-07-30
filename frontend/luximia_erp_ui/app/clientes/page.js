@@ -10,7 +10,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import ExportModal from '../../components/ExportModal';
-import { TableCellsIcon } from '@heroicons/react/24/solid';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
 
 
 const CLIENTE_COLUMNAS_DISPLAY = [
@@ -204,7 +204,7 @@ export default function ClientesPage() {
                         </button>
                     )}
                     {hasPermission('cxc.add_cliente') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nuevo Cliente</button>}
-                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><TableCellsIcon className="h-6 w-6" /></button>
+                        <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><ArrowDownTrayIcon className="h-6 w-6" /></button>
                 </div>
             </div>
 
