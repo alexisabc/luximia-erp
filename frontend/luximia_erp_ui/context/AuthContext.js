@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
             setAuthTokens(data);
             setUser(jwtDecode(data.access));
             localStorage.setItem('authTokens', JSON.stringify(data));
-            router.push('/');
+            return data;
         } catch (error) {
             console.error("Error en el login", error);
             throw new Error(error.response?.data?.detail || "Usuario o contraseña no válidos.");
