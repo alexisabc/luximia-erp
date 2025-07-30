@@ -154,37 +154,64 @@ export default function Sidebar() {
                                 {isAdminOpen && (
                                     isCollapsed ? (
                                         <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1">
-                                            {hasPermission('cxc.view_user') && (
-                                                <Link href="/configuraciones/usuarios" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                    <UserIcon className="h-5 w-5" />
-                                                    <span className="ml-2">Usuarios</span>
-                                                </Link>
-                                            )}
-                                            {hasPermission('cxc.view_group') && (
-                                                <Link href="/configuraciones/roles" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                    <KeyIcon className="h-5 w-5" />
-                                                    <span className="ml-2">Roles</span>
-                                                </Link>
-                                            )}
+                                            <div className="relative">
+                                                <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                    <span>Gestión de Usuarios</span>
+                                                    <ChevronIcon isOpen={isGestionOpen} />
+                                                </button>
+                                                {isGestionOpen && (
+                                                    <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
+                                                        {hasPermission('cxc.view_user') && (
+                                                            <Link href="/configuraciones/usuarios" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Usuarios</Link>
+                                                        )}
+                                                        {hasPermission('cxc.view_group') && (
+                                                            <Link href="/configuraciones/roles" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Roles y Permisos</Link>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                             {canImportData && (
-                                                <>
-                                                    <Link href="/importar" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                        <ArrowUpTrayIcon className="h-5 w-5" />
-                                                        <span className="ml-2">Importar</span>
-                                                    </Link>
-                                                    {hasPermission('cxc.view_tipodecambio') && (
-                                                        <Link href="/tipos-de-cambio" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                            <CurrencyDollarIcon className="h-5 w-5" />
-                                                            <span className="ml-2">Tipo Cambio</span>
-                                                        </Link>
+                                                <div className="relative">
+                                                    <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                        <span>Herramientas</span>
+                                                        <ChevronIcon isOpen={isHerramientasOpen} />
+                                                    </button>
+                                                    {isHerramientasOpen && (
+                                                        <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
+                                                            <div className="relative">
+                                                                <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                                    <span>Importadores de Datos</span>
+                                                                    <ChevronIcon isOpen={isImportarOpen} />
+                                                                </button>
+                                                                {isImportarOpen && (
+                                                                    <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
+                                                                        {user?.is_superuser && <Link href="/importar" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Masivo (General)</Link>}
+                                                                        {hasPermission('cxc.add_cliente') && <Link href="/importar/clientes" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Clientes</Link>}
+                                                                        {hasPermission('cxc.add_upe') && <Link href="/importar/upes" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">UPEs</Link>}
+                                                                        {hasPermission('cxc.add_contrato') && <Link href="/importar/contratos" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Contratos</Link>}
+                                                                        {hasPermission('cxc.add_pago') && <Link href="/importar/pagos" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Pagos Históricos</Link>}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {hasPermission('cxc.view_tipodecambio') && (
+                                                                <Link href="/tipos-de-cambio" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Tipo de Cambio</Link>
+                                                            )}
+                                                        </div>
                                                     )}
-                                                </>
+                                                </div>
                                             )}
                                             {hasPermission('cxc.can_view_auditlog') && (
-                                                <Link href="/auditoria" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                    <DocumentMagnifyingGlassIcon className="h-5 w-5" />
-                                                    <span className="ml-2">Auditoría</span>
-                                                </Link>
+                                                <div className="relative">
+                                                    <button onClick={() => setIsSeguridadOpen(!isSeguridadOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                        <span>Seguridad</span>
+                                                        <ChevronIcon isOpen={isSeguridadOpen} />
+                                                    </button>
+                                                    {isSeguridadOpen && (
+                                                        <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
+                                                            <Link href="/auditoria" className="block p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">Registro de Auditoría</Link>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     ) : (
