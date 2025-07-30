@@ -17,12 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="text-gray-800 dark:text-gray-200">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          storageKey="luximia-erp-theme" // <-- LÍNEA AÑADIDA
-        >
+        <ThemeProvider storageKey="luximia-erp-theme">
           <AuthProvider>
             <SidebarProvider>
               <AppContent>
