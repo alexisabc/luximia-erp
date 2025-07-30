@@ -84,11 +84,6 @@ export default function Sidebar() {
             <div
                 className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isOpen ? 'lg:w-64' : 'lg:w-20'}`}
             >
-                <div className="p-4 flex-shrink-0 text-center border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Luximia ERP</h2>
-                    {user && <span className="text-sm block text-gray-500 dark:text-gray-400">Bienvenido, {user.username}</span>}
-                </div>
-
                 <nav className="flex-1 px-4 py-4 overflow-y-auto">
                     <ul className="space-y-1">
                         {hasPermission('cxc.can_view_dashboard') ? (
@@ -254,13 +249,7 @@ export default function Sidebar() {
                     </ul>
                 </nav>
 
-                <div className="p-4 flex-shrink-0 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                    <ThemeSwitcher />
-                    <button onClick={logoutUser} className="w-full flex items-center justify-center p-2 rounded-md text-red-500 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white transition-colors">
-                        <span>Cerrar Sesión</span>
-                    </button>
                 </div>
-            </div>
         </>
     );
 }
