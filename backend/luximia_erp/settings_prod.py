@@ -23,9 +23,7 @@ DATABASES = {
 
 # --- CORS: La Solución Definitiva ---
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://luximia-erp-git-.*-alexisabc\.vercel\.app$",
-]
+#CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://luximia-erp-git-.*-alexisabc\.vercel\.app$",]
 CSRF_TRUSTED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 

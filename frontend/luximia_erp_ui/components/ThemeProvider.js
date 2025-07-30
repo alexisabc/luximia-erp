@@ -49,6 +49,7 @@ export function ThemeProvider({ children, storageKey = 'luximia-erp-theme' }) {
     return () => media.removeEventListener('change', handleChange);
   }, [theme]);
 
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
