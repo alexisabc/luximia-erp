@@ -49,6 +49,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('authTokens');
         localStorage.removeItem('luximia-erp-theme');
         window.location.href = '/login';
+        localStorage.removeItem('authTokens');
+        localStorage.removeItem('luximia-erp-theme');
+        window.location.href = '/login';
     };
 
     const hasPermission = (permissionCodename) => {
