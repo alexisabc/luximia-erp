@@ -32,6 +32,23 @@ export function ThemeProvider({ children, storageKey = 'luximia-erp-theme' }) {
     localStorage.setItem(storageKey, theme);
   }, [theme, storageKey]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const root = document.documentElement;
+    const handleChange = () => {
+      if (theme === 'system') {
+        if (media.matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+      }
+    };
+    media.addEventListener('change', handleChange);
+    return () => media.removeEventListener('change', handleChange);
+  }, [theme]);
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
