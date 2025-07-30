@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
         setAuthTokens(null);
         setUser(null);
         localStorage.removeItem('authTokens');
-        localStorage.removeItem('theme');
+        localStorage.removeItem('luximia-erp-theme');
         window.location.href = '/login';
     };
 
