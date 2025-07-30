@@ -4,16 +4,21 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
+import Script from 'next/script';
+import { useRouter } from 'next/navigation';
 // ### 1. Se importan los íconos de Heroicons ###
 import { EyeIcon, EyeSlashIcon, UserIcon, KeyIcon } from '@heroicons/react/24/solid';
 
 export default function LoginPage() {
     const { loginUser } = useAuth();
+    const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isInputFocused, setIsInputFocused] = useState(false);
+    const [loginStatus, setLoginStatus] = useState(null); // 'success' | 'error'
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,8 +26,13 @@ export default function LoginPage() {
         setError(null);
         try {
             await loginUser(username, password);
+            setLoginStatus('success');
+            setTimeout(() => {
+                router.push('/');
+            }, 1500);
         } catch (err) {
             setError(err.message || "El usuario o la contraseña no son válidos.");
+            setLoginStatus('error');
         } finally {
             setIsLoading(false);
         }
@@ -33,21 +43,34 @@ export default function LoginPage() {
             className="flex items-center justify-center min-h-screen bg-cover bg-center bg-gray-200 dark:bg-gray-900"
             style={{ backgroundImage: 'url(/login-bg.png)' }}
         >
+            <Script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" strategy="beforeInteractive" />
             <div className="absolute inset-0 bg-black opacity-60"></div>
 
             <div className="relative z-10 p-8 max-w-sm w-full bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
                 <div className="flex justify-center mb-6">
-                    <Image
-                        src="/login.jpg"
-                        alt="Logo Luximia ERP"
-                        width={128}
-                        height={128}
-                        className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
-                        priority
-                    />
+                    {loginStatus === 'success' && (
+                        <lottie-player src="https://lottie.host/6297110d-74fd-4dfe-8075-eebcac7fbd43/RTKGmqA8wp.lottie" background="transparent" speed="1" style={{ width: 128, height: 128 }} autoplay></lottie-player>
+                    )}
+                    {loginStatus === 'error' && (
+                        <lottie-player src="https://lottie.host/202b1fa9-fdab-4330-a924-0c443d0d225b/jxwreJMzoC.lottie" background="transparent" speed="1" style={{ width: 128, height: 128 }} autoplay></lottie-player>
+                    )}
+                    {!loginStatus && (
+                        isInputFocused ? (
+                            <lottie-player src="https://lottie.host/343e2d45-d5f8-4a5f-9162-3173cd11fee5/cbTKtp4veN.lottie" background="transparent" speed="1" loop autoplay style={{ width: 128, height: 128 }}></lottie-player>
+                        ) : (
+                            <Image
+                                src="/login.jpg"
+                                alt="Logo Luximia ERP"
+                                width={128}
+                                height={128}
+                                className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
+                                priority
+                            />
+                        )
+                    )}
                 </div>
 
-                <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Luximia ERP</h2>
+                <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Iniciar Sesión</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
@@ -60,6 +83,8 @@ export default function LoginPage() {
                             <input
                                 id="username" type="text" value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                onFocus={() => setIsInputFocused(true)}
+                                onBlur={() => setIsInputFocused(false)}
                                 required
                                 className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 placeholder="tu-usuario"
@@ -79,6 +104,8 @@ export default function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                onFocus={() => setIsInputFocused(true)}
+                                onBlur={() => setIsInputFocused(false)}
                                 required
                                 className="block w-full pl-10 pr-10 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 placeholder="••••••••"
