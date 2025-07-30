@@ -1,7 +1,7 @@
 // app/login/page.js
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 import { useRouter } from 'next/navigation';
 import { EyeIcon, EyeSlashIcon, UserIcon, KeyIcon } from '@heroicons/react/24/solid';
@@ -40,12 +40,12 @@ function LoginAnimation({ state, eyeTranslation }) {
                     transform: scaleY(0.1);
                 }
 
-                /* Animación de espiar (alternar ojos) */
+                /* Animación de espiar (alternar ojos) - Más suave y lenta */
                 .peeking-pass .eye-left {
-                    animation: peek-a-boo-left 2s infinite;
+                    animation: peek-a-boo-left 3s infinite ease-in-out;
                 }
                 .peeking-pass .eye-right {
-                    animation: peek-a-boo-right 2s infinite;
+                    animation: peek-a-boo-right 3s infinite ease-in-out;
                 }
                 
                 /* Estado de éxito */
@@ -61,17 +61,26 @@ function LoginAnimation({ state, eyeTranslation }) {
                     d: path('M 40 75 Q 50 65 60 75');
                 }
                 
-                /* --- Animación IDLE Compleja (Ciclo de 60 segundos) --- */
-                .idle .eyes {
+                /* --- Animación IDLE Simple --- */
+                .idle .eye {
+                    animation: simple-blink 5s infinite;
+                }
+                @keyframes simple-blink {
+                    0%, 95%, 100% { transform: scaleY(1); }
+                    97.5% { transform: scaleY(0.1); }
+                }
+
+                /* --- Animación BORED Compleja (Ciclo de 60 segundos) --- */
+                .bored .eyes {
                     animation: look-around 60s infinite;
                 }
-                .idle .eye {
+                .bored .eye {
                     animation: sleepy-eyes 60s infinite;
                 }
-                .idle .drool-bubble {
+                .bored .drool-bubble {
                     animation: drool-anim 60s infinite;
                 }
-                .idle .zzz {
+                .bored .zzz {
                     animation: zzz-anim 60s infinite;
                     animation-delay: calc(var(--i) * 0.2s); /* Delay para cada Z */
                 }
@@ -115,14 +124,14 @@ function LoginAnimation({ state, eyeTranslation }) {
                     40%, 60% { transform: translateX(6px) rotate(3deg); }
                 }
 
-                /* Animación de espiar */
+                /* Animación de espiar más suave */
                 @keyframes peek-a-boo-left {
-                    0%, 40%, 100% { transform: scaleY(1); }
-                    50%, 90% { transform: scaleY(0.1); }
+                    0%, 20%, 90%, 100% { transform: scaleY(1); }
+                    30%, 80% { transform: scaleY(0.1); }
                 }
                 @keyframes peek-a-boo-right {
-                    0%, 40%, 100% { transform: scaleY(0.1); }
-                    50%, 90% { transform: scaleY(1); }
+                    0%, 20%, 90%, 100% { transform: scaleY(0.1); }
+                    30%, 80% { transform: scaleY(1); }
                 }
             `}</style>
             <svg viewBox="0 0 100 100" className={state}>
@@ -167,9 +176,29 @@ export default function LoginPage() {
     // Estado para controlar la animación SVG
     const [animationState, setAnimationState] = useState('idle');
     const [eyeTranslation, setEyeTranslation] = useState(0);
+    const inactivityTimerRef = useRef(null);
+
+    // Función para reiniciar el temporizador de inactividad
+    const resetInactivityTimer = () => {
+        clearTimeout(inactivityTimerRef.current);
+    };
+
+    // Función para iniciar el temporizador de inactividad
+    const startInactivityTimer = () => {
+        resetInactivityTimer(); // Limpia cualquier temporizador anterior
+        inactivityTimerRef.current = setTimeout(() => {
+            setAnimationState('bored');
+        }, 5000); // 5 segundos de inactividad
+    };
+
+    // Efecto de limpieza para cuando el componente se desmonte
+    useEffect(() => {
+        return () => clearTimeout(inactivityTimerRef.current);
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        resetInactivityTimer(); // Reinicia el temporizador al enviar
         setIsLoading(true);
         setError(null);
         try {
@@ -183,6 +212,7 @@ export default function LoginPage() {
             setAnimationState('error');
             setTimeout(() => {
                 setAnimationState('idle');
+                startInactivityTimer(); // Inicia el temporizador de nuevo después del error
             }, 2000);
         } finally {
             setIsLoading(false);
@@ -190,6 +220,7 @@ export default function LoginPage() {
     };
 
     const handleFocus = (field) => {
+        resetInactivityTimer(); // Reinicia el temporizador al enfocar
         if (field === 'username') {
             setAnimationState('typing-user');
         } else if (field === 'password') {
@@ -200,9 +231,11 @@ export default function LoginPage() {
     const handleBlur = () => {
         setAnimationState('idle');
         setEyeTranslation(0); // Centrar los ojos cuando no hay foco
+        startInactivityTimer(); // Inicia el temporizador al desenfocar
     };
 
     const handleUsernameChange = (e) => {
+        resetInactivityTimer(); // Reinicia el temporizador al escribir
         setUsername(e.target.value);
 
         const input = e.target;
@@ -217,6 +250,7 @@ export default function LoginPage() {
     };
 
     const toggleShowPassword = () => {
+        resetInactivityTimer(); // Reinicia el temporizador al cambiar visibilidad
         const nextShowPassword = !showPassword;
         setShowPassword(nextShowPassword);
 
