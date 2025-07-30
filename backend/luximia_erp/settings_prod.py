@@ -1,4 +1,4 @@
-# backend/luximia_erp/settings_prod.py
+# settings_prod.py
 import os
 import dj_database_url
 from .settings import * # Importa la configuración base
@@ -9,29 +9,23 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
-# --- Base de Datos ---
+# --- Variable para diferenciar entre desarrollo y producción ---
+IS_DEVELOPMENT = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
+
+# --- Base de Datos con Lógica Condicional para SSL ---
 DATABASES = {
     'default': dj_database_url.config(
         conn_max_age=600,
-        ssl_require=True  # Siempre requerir SSL en producción
+        # Exigir SSL solo si NO estamos en modo desarrollo
+        ssl_require=(not IS_DEVELOPMENT)
     )
 }
 
 # --- CORS: La Solución Definitiva ---
-
-# 1. Lista de orígenes exactos (leída desde variables de entorno)
-#    Útil para desarrollo local y el dominio principal de producción.
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-
-# 2. Lista de patrones de orígenes (expresiones regulares)
-#    Esto autoriza todas las URLs de preview de Vercel para tu proyecto.
-#    Asegúrate de que el nombre de tu repo y usuario de GitHub sean correctos.
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://luximia-erp-git-.*-alexisabc\.vercel\.app$",
 ]
-
-# 3. Lista de dominios de confianza para CSRF
-#    Es buena práctica que también confíe en tu dominio de Vercel.
 CSRF_TRUSTED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 
@@ -44,13 +38,14 @@ STATICFILES_DIRS = [
 ]
 
 # --- Opciones de Seguridad para Producción ---
-SECURE_SSL_REDIRECT = True
+# (Se recomienda que SECURE_SSL_REDIRECT sea False en desarrollo local si no tienes un proxy reverso)
+SECURE_SSL_REDIRECT = (not IS_DEVELOPMENT)
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = (not IS_DEVELOPMENT)
+CSRF_COOKIE_SECURE = (not IS_DEVELOPMENT)
 X_FRAME_OPTIONS = 'DENY'
 
 # Encabezados adicionales

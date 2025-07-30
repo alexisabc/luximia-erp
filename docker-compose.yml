@@ -15,12 +15,14 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   backend:
-    build: ./backend
+    build:
+      context: .  # El contexto es la raíz del proyecto
+      dockerfile: ./backend/Dockerfile # La ruta al Dockerfile desde la raíz
     container_name: luximia-backend-local
     command: bash run.sh
     volumes:
       - ./backend:/app
-      - ./assets:/app/static/assets
+      - ./assets:/app/assets
     ports:
       - "8000:10000"
     depends_on:
