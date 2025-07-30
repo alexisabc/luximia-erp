@@ -22,6 +22,7 @@ import {
     ShieldCheckIcon,
     DocumentMagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
+import { Bars3Icon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 
 const ChevronIcon = ({ isOpen }) => (
     <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -86,6 +87,15 @@ export default function Sidebar() {
             <div
                 className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isOpen ? 'lg:w-64' : 'lg:w-20'}`}
             >
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <Bars3Icon className="h-6 w-6" />
+                        <span className="sr-only">Toggle sidebar</span>
+                    </button>
+                    <Link href="/" className={`${isCollapsed ? 'hidden' : ''} lg:hidden`}>
+                        <img src="/logo-luximia.png" className="h-6" alt="Luximia" />
+                    </Link>
+                </div>
                 <nav className="flex-1 px-4 py-4 overflow-y-auto">
                     <ul className="space-y-1">
                         {hasPermission('cxc.can_view_dashboard') ? (
@@ -402,7 +412,12 @@ export default function Sidebar() {
                         )}
                     </ul>
                 </nav>
-
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 lg:hidden">
+                    <button onClick={logoutUser} className="flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                        {isOpen && <span className="ml-2">Cerrar sesión</span>}
+                    </button>
+                </div>
                 </div>
         </>
     );

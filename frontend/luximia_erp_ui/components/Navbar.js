@@ -5,25 +5,21 @@ import { useState } from 'react';
 import { useSidebar } from '../context/SidebarContext';
 import { useAuth } from '../context/AuthContext';
 import ThemeSwitcher from './ThemeSwitcher';
-import { Bars3Icon, UserCircleIcon } from '@heroicons/react/24/solid';
+import { UserCircleIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
 
 export default function Navbar() {
-    const { isOpen, toggleSidebar } = useSidebar();
+    const { isOpen } = useSidebar();
     const { user, logoutUser } = useAuth();
     const [open, setOpen] = useState(false);
 
     return (
         <nav
-            className={`fixed top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 w-full ${isOpen ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}
+            className={`fixed top-0 left-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 w-full ${isOpen ? 'lg:left-64 lg:w-[calc(100%-16rem)]' : 'lg:left-20 lg:w-[calc(100%-5rem)]'}`}
         >
             <div className="px-3 py-3 lg:px-5">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                        <button onClick={toggleSidebar} type="button" className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-                            <Bars3Icon className="w-6 h-6" />
-                            <span className="sr-only">Toggle sidebar</span>
-                        </button>
-                        <Link href="/" className="flex ms-2">
+                        <Link href="/" className="flex">
                             <img src="/logo-luximia.png" className="h-8 me-3" alt="Luximia" />
                         </Link>
                     </div>
@@ -43,13 +39,16 @@ export default function Navbar() {
                             </div>
                             <ul className="py-1">
                                 <li>
-                                    <Link href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">Ajustes</Link>
+                                <Link href="/ajustes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">Ajustes</Link>
                                 </li>
                                 <li className="px-4 py-2">
                                     <ThemeSwitcher />
                                 </li>
                                 <li>
-                                    <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">Cerrar Sesión</button>
+                                    <button onClick={logoutUser} className="hidden lg:flex items-center w-full px-4 py-2 text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600">
+                                        <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                                        <span className="sr-only">Cerrar sesión</span>
+                                    </button>
                                 </li>
                             </ul>
                         </div>
