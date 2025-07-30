@@ -142,7 +142,7 @@ export const getStrategicDashboardData = (timeframe, projectIds, morosidadRange,
     }
     if (morosidadRange) params.append('morosidad_range', morosidadRange);
     if (porCobrarRange) params.append('por_cobrar_range', porCobrarRange);
-    return apiClient.get(`/dashboard/strategic/?${params.toString()}`);
+    return apiClient.get(`cxc/dashboard/strategic/?${params.toString()}`);
 };
 
 
