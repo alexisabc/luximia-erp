@@ -7,7 +7,7 @@ import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Bars3Icon, ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { Bars3Icon } from '@heroicons/react/24/solid';
 
 export default function AppContent({ children }) {
     const { authTokens, hasPermission } = useAuth();
@@ -33,19 +33,17 @@ export default function AppContent({ children }) {
         <div className="min-h-screen">
             <Sidebar />
             {/* ### Los estilos de fondo AHORA se aplican aquí ### */}
-            <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-0'}`}>
+            <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
 
                 {/* Botón para pantallas grandes (flecha) */}
                 <div className="hidden lg:block">
                     <button
                         onClick={toggleSidebar}
                         className="fixed top-5 left-0 z-50 p-1.5 bg-gray-700 text-white rounded-r-lg shadow-md transition-all duration-300 ease-in-out hover:bg-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
-                        style={{ transform: isOpen ? 'translateX(16rem)' : 'translateX(0)' }}
-                        aria-label="Ocultar menú"
+                        style={{ transform: isOpen ? 'translateX(16rem)' : 'translateX(5rem)' }}
+                        aria-label="Toggle menú"
                     >
-                        <div className={`transition-transform duration-300 ${isOpen ? '' : 'rotate-180'}`}>
-                            <ArrowLeftIcon className="h-6 w-6" />
-                        </div>
+                        <Bars3Icon className="h-6 w-6" />
                     </button>
                 </div>
 

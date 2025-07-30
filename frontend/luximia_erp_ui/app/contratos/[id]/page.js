@@ -8,7 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
-import { PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, TableCellsIcon } from '@heroicons/react/24/solid';
+import { PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -302,7 +302,7 @@ export default function ContratoDetallePage() {
                     >
                         <DocumentArrowDownIcon className="h-6 w-6" />
                     </button>
-                    <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><TableCellsIcon className="h-6 w-6" /></button>
+                    <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><ArrowDownTrayIcon className="h-6 w-6" /></button>
                 </div>
             </div>
 

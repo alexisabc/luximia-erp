@@ -8,7 +8,7 @@ import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal'; // <-- Usa el FormModal
 import ExportModal from '../../components/ExportModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
-import { TableCellsIcon } from '@heroicons/react/24/solid';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 
 
@@ -184,7 +184,7 @@ export default function ProyectosPage() {
                             </button>
                         )}
                         <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
-                            <TableCellsIcon className="h-6 w-6" />
+                            <ArrowDownTrayIcon className="h-6 w-6" />
                         </button>
                     </div>
                 </div>
