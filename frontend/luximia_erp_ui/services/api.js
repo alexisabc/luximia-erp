@@ -121,6 +121,7 @@ export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-camb
 
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/cxc/users/', data);
+export const getUser = (id) => apiClient.get(`/cxc/users/${id}/`);
 export const updateUser = (id, data) => apiClient.put(`/cxc/users/${id}/`, data);
 export const deleteUser = (id) => apiClient.delete(`/cxc/users/${id}/`);
 export const getInactiveUsers = () => apiClient.get('/cxc/users/inactive/');
