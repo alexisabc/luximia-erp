@@ -1,13 +1,16 @@
 // components/ThemeSwitcher.js
 'use client';
 
-import { useTheme } from 'next-themes';
+import { useTheme } from './ThemeProvider';
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';
 
 export default function ThemeSwitcher() {
     const [mounted, setMounted] = useState(false);
-    const { theme, resolvedTheme, setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
+    const resolvedTheme = theme === 'system'
+        ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
 
     useEffect(() => { setMounted(true); }, []);
 
