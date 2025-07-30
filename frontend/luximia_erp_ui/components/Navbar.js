@@ -13,7 +13,9 @@ export default function Navbar() {
     const [open, setOpen] = useState(false);
 
     return (
-        <nav className={`fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${isOpen ? 'lg:pl-64' : 'lg:pl-20'}` }>
+        <nav
+            className={`fixed top-0 z-50 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 w-full ${isOpen ? 'lg:ml-64 lg:w-[calc(100%-16rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}
+        >
             <div className="px-3 py-3 lg:px-5">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center">
