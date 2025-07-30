@@ -1,9 +1,13 @@
 // app/login/page.js
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
+
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 // ### 1. Se importan los íconos de Heroicons ###
@@ -19,6 +23,19 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [loginStatus, setLoginStatus] = useState(null); // 'success' | 'error'
+
+    const loginPlayerRef = useRef(null);
+
+    useEffect(() => {
+        const player = loginPlayerRef.current;
+        if (!player) return;
+        if (isInputFocused) {
+            player.play();
+        } else {
+            player.stop();
+        }
+    }, [isInputFocused]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,11 +57,26 @@ export default function LoginPage() {
 
     return (
         <div
+
+            className="relative flex items-center justify-center min-h-screen bg-gray-200 dark:bg-gray-900 overflow-hidden"
+        >
+            <Script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" strategy="afterInteractive" />
+            <lottie-player
+                src="https://lottie.host/343e2d45-d5f8-4a5f-9162-3173cd11fee5/cbTKtp4veN.lottie"
+                background="transparent"
+                speed="1"
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
+                loop
+                autoplay
+            ></lottie-player>
+            <div className="absolute inset-0 bg-black opacity-60 z-0"></div>
+
             className="flex items-center justify-center min-h-screen bg-cover bg-center bg-gray-200 dark:bg-gray-900"
             style={{ backgroundImage: 'url(/login-bg.png)' }}
         >
             <Script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js" strategy="beforeInteractive" />
             <div className="absolute inset-0 bg-black opacity-60"></div>
+
 
             <div className="relative z-10 p-8 max-w-sm w-full bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
                 <div className="flex justify-center mb-6">
@@ -55,6 +87,16 @@ export default function LoginPage() {
                         <lottie-player src="https://lottie.host/202b1fa9-fdab-4330-a924-0c443d0d225b/jxwreJMzoC.lottie" background="transparent" speed="1" style={{ width: 128, height: 128 }} autoplay></lottie-player>
                     )}
                     {!loginStatus && (
+
+                        <lottie-player
+                            ref={loginPlayerRef}
+                            src="https://lottie.host/343e2d45-d5f8-4a5f-9162-3173cd11fee5/cbTKtp4veN.lottie"
+                            background="transparent"
+                            speed="1"
+                            loop
+                            style={{ width: 128, height: 128 }}
+                        ></lottie-player>
+
                         isInputFocused ? (
                             <lottie-player src="https://lottie.host/343e2d45-d5f8-4a5f-9162-3173cd11fee5/cbTKtp4veN.lottie" background="transparent" speed="1" loop autoplay style={{ width: 128, height: 128 }}></lottie-player>
                         ) : (
@@ -66,7 +108,7 @@ export default function LoginPage() {
                                 className="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-600 shadow-lg"
                                 priority
                             />
-                        )
+
                     )}
                 </div>
 
