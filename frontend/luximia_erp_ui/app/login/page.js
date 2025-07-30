@@ -4,7 +4,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 import { useRouter } from 'next/navigation';
-import { EyeIcon, EyeSlashIcon, UserIcon, KeyIcon } from '@heroicons/react/24/solid';
+import { Eye, EyeOff, User, Key } from 'lucide-react';
 
 // --- Componente de Animación SVG ---
 // Este componente contiene el personaje y sus animaciones CSS.
@@ -247,7 +247,7 @@ export default function LoginPage() {
                         <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="username">Usuario</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <UserIcon className="h-5 w-5 text-gray-400" />
+                                <User className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
                                 id="username" type="text" value={username}
@@ -267,7 +267,7 @@ export default function LoginPage() {
                         <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">Contraseña</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <KeyIcon className="h-5 w-5 text-gray-400" />
+                                <Key className="h-5 w-5 text-gray-400" />
                             </div>
                             <input
                                 id="password"
@@ -286,7 +286,7 @@ export default function LoginPage() {
                                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-white"
                                 aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                             >
-                                {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                             </button>
                         </div>
                     </div>

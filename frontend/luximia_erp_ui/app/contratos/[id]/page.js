@@ -8,7 +8,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
-import { PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -270,10 +270,10 @@ export default function ContratoDetallePage() {
             header: 'Acciones', render: (pago) => (
                 <div className="flex items-center justify-end space-x-4">
                     {hasPermission('cxc.change_pago') && (
-                        <button onClick={() => handleEditClick(pago)} className="group"><PencilSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" /></button>
+                        <button onClick={() => handleEditClick(pago)} className="group"><SquarePen className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" /></button>
                     )}
                     {hasPermission('cxc.delete_pago') && (
-                        <button onClick={() => handleDeletePago(pago.id)} className="group"><TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" /></button>
+                        <button onClick={() => handleDeletePago(pago.id)} className="group"><Trash className="h-5 w-5 text-gray-400 group-hover:text-red-600 transition-colors" /></button>
                     )}
                 </div>
             )
@@ -300,9 +300,9 @@ export default function ContratoDetallePage() {
                         className="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
                         title="Descargar Estado de Cuenta en PDF"
                     >
-                        <DocumentArrowDownIcon className="h-6 w-6" />
+                        <FileDown className="h-6 w-6" />
                     </button>
-                    <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><ArrowDownTrayIcon className="h-6 w-6" /></button>
+                    <button onClick={() => setIsExcelModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar Excel"><Download className="h-6 w-6" /></button>
                 </div>
             </div>
 

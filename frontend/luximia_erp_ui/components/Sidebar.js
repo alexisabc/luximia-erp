@@ -8,21 +8,22 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from './ThemeSwitcher';
 import {
-    HomeIcon,
-    UserGroupIcon,
-    ClipboardDocumentListIcon,
-    DocumentTextIcon,
-    BanknotesIcon,
-    ChartBarIcon,
-    Cog6ToothIcon,
-    UserIcon,
-    KeyIcon,
-    ArrowUpTrayIcon,
-    CurrencyDollarIcon,
-    ShieldCheckIcon,
-    DocumentMagnifyingGlassIcon
-} from '@heroicons/react/24/outline';
-import { Bars3Icon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/solid';
+    Home,
+    Users,
+    ClipboardList,
+    FileText,
+    Banknote,
+    BarChart3,
+    Settings,
+    User,
+    Key,
+    Upload,
+    CircleDollarSign,
+    ShieldCheck,
+    FileSearch,
+    Menu,
+    LogOut
+} from 'lucide-react';
 
 const ChevronIcon = ({ isOpen }) => (
     <svg className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -89,7 +90,7 @@ export default function Sidebar() {
             >
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-                        <Bars3Icon className="h-6 w-6" />
+                        <Menu className="h-6 w-6" />
                         <span className="sr-only">Toggle sidebar</span>
                     </button>
                     <Link href="/" className={`${isCollapsed ? 'hidden' : ''} lg:hidden`}>
@@ -101,14 +102,14 @@ export default function Sidebar() {
                         {hasPermission('cxc.can_view_dashboard') ? (
                             <li>
                                 <Link href="/" className={getLinkClass('/')}> 
-                                    <HomeIcon className="h-5 w-5" />
+                                    <Home className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Dashboard</span>}
                                 </Link>
                             </li>
                         ) : (
                             <li>
                                 <Link href="/" className={getLinkClass('/')}> 
-                                    <HomeIcon className="h-5 w-5" />
+                                    <Home className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Inicio</span>}
                                 </Link>
                             </li>
@@ -116,7 +117,7 @@ export default function Sidebar() {
                         {hasPermission('cxc.view_cliente') && (
                             <li>
                                 <Link href="/clientes" className={getLinkClass('/clientes')}>
-                                    <UserGroupIcon className="h-5 w-5" />
+                                    <Users className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Clientes</span>}
                                 </Link>
                             </li>
@@ -124,7 +125,7 @@ export default function Sidebar() {
                         {hasPermission('cxc.view_proyecto') && (
                             <li>
                                 <Link href="/proyectos" className={getLinkClass('/proyectos')}>
-                                    <ClipboardDocumentListIcon className="h-5 w-5" />
+                                    <ClipboardList className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Proyectos</span>}
                                 </Link>
                             </li>
@@ -132,7 +133,7 @@ export default function Sidebar() {
                         {hasPermission('cxc.view_contrato') && (
                             <li>
                                 <Link href="/contratos" className={getLinkClass('/contratos')}>
-                                    <DocumentTextIcon className="h-5 w-5" />
+                                    <FileText className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Contratos</span>}
                                 </Link>
                             </li>
@@ -140,7 +141,7 @@ export default function Sidebar() {
                         {hasPermission('cxc.view_pago') && (
                             <li>
                                 <Link href="/pagos" className={getLinkClass('/pagos')}>
-                                    <BanknotesIcon className="h-5 w-5" />
+                                    <Banknote className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Pagos</span>}
                                 </Link>
                             </li>
@@ -148,7 +149,7 @@ export default function Sidebar() {
                         {hasPermission('cxc.can_export') && (
                             <li>
                                 <Link href="/reportes" className={getLinkClass('/reportes')}>
-                                    <ChartBarIcon className="h-5 w-5" />
+                                    <BarChart3 className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Reportes</span>}
                                 </Link>
                             </li>
@@ -161,7 +162,7 @@ export default function Sidebar() {
                                     className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''} ${adminActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
                                 >
                                     <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                                        <Cog6ToothIcon className="h-5 w-5" />
+                                        <Settings className="h-5 w-5" />
                                         {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Administración</span>}
                                     </div>
                                     {isOpen && <ChevronIcon isOpen={isAdminOpen} />}
@@ -172,7 +173,7 @@ export default function Sidebar() {
                                             <div className="relative">
                                                 <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                     <div className="flex items-center">
-                                                        <UserGroupIcon className="h-5 w-5" />
+                                                        <Users className="h-5 w-5" />
                                                         <span className="ml-2">Gestión de Usuarios</span>
                                                     </div>
                                                     <ChevronIcon isOpen={isGestionOpen} />
@@ -181,13 +182,13 @@ export default function Sidebar() {
                                                     <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
                                                         {hasPermission('cxc.view_user') && (
                                                             <Link href="/configuraciones/usuarios" className={getLinkClass('/configuraciones/usuarios', true)}>
-                                                                <UserIcon className="h-4 w-4" />
+                                                                <User className="h-4 w-4" />
                                                                 <span className="ml-2">Usuarios</span>
                                                             </Link>
                                                         )}
                                                         {hasPermission('cxc.view_group') && (
                                                             <Link href="/configuraciones/roles" className={getLinkClass('/configuraciones/roles', true)}>
-                                                                <KeyIcon className="h-4 w-4" />
+                                                                <Key className="h-4 w-4" />
                                                                 <span className="ml-2">Roles y Permisos</span>
                                                             </Link>
                                                         )}
@@ -198,7 +199,7 @@ export default function Sidebar() {
                                                 <div className="relative">
                                                     <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                         <div className="flex items-center">
-                                                            <Cog6ToothIcon className="h-5 w-5" />
+                                                            <Settings className="h-5 w-5" />
                                                             <span className="ml-2">Herramientas</span>
                                                         </div>
                                                         <ChevronIcon isOpen={isHerramientasOpen} />
@@ -208,7 +209,7 @@ export default function Sidebar() {
                                                             <div className="relative">
                                                                 <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                                     <div className="flex items-center">
-                                                                        <ArrowUpTrayIcon className="h-5 w-5" />
+                                                                        <Upload className="h-5 w-5" />
                                                                         <span className="ml-2">Importadores de Datos</span>
                                                                     </div>
                                                                     <ChevronIcon isOpen={isImportarOpen} />
@@ -217,31 +218,31 @@ export default function Sidebar() {
                                                                     <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
                                                                         {user?.is_superuser && (
                                                                             <Link href="/importar" className={getLinkClass('/importar', true)}>
-                                                                                <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Masivo (General)</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_cliente') && (
                                                                             <Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>
-                                                                                <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Clientes</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_upe') && (
                                                                             <Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>
-                                                                                <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">UPEs</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_contrato') && (
                                                                             <Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>
-                                                                                <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Contratos</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_pago') && (
                                                                             <Link href="/importar/pagos" className={getLinkClass('/importar/pagos', true)}>
-                                                                                <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Pagos Históricos</span>
                                                                             </Link>
                                                                         )}
@@ -250,7 +251,7 @@ export default function Sidebar() {
                                                             </div>
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
-                                                                    <CurrencyDollarIcon className="h-4 w-4" />
+                                                                    <CircleDollarSign className="h-4 w-4" />
                                                                     <span className="ml-2">Tipo de Cambio</span>
                                                                 </Link>
                                                             )}
@@ -262,7 +263,7 @@ export default function Sidebar() {
                                                 <div className="relative">
                                                     <button onClick={() => setIsSeguridadOpen(!isSeguridadOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                         <div className="flex items-center">
-                                                            <ShieldCheckIcon className="h-5 w-5" />
+                                                            <ShieldCheck className="h-5 w-5" />
                                                             <span className="ml-2">Seguridad</span>
                                                         </div>
                                                         <ChevronIcon isOpen={isSeguridadOpen} />
@@ -270,7 +271,7 @@ export default function Sidebar() {
                                                     {isSeguridadOpen && (
                                                         <div className="absolute left-full top-0 ml-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 whitespace-nowrap">
                                                             <Link href="/auditoria" className={getLinkClass('/auditoria', true)}>
-                                                                <DocumentMagnifyingGlassIcon className="h-4 w-4" />
+                                                                <FileSearch className="h-4 w-4" />
                                                                 <span className="ml-2">Registro de Auditoría</span>
                                                             </Link>
                                                         </div>
@@ -283,7 +284,7 @@ export default function Sidebar() {
                                             <li>
                                                 <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                     <div className="flex items-center">
-                                                        <UserGroupIcon className="h-5 w-5" />
+                                                        <Users className="h-5 w-5" />
                                                         <span className="ml-2">Gestión de Usuarios</span>
                                                     </div>
                                                     <ChevronIcon isOpen={isGestionOpen} />
@@ -293,7 +294,7 @@ export default function Sidebar() {
                                                         {hasPermission('cxc.view_user') && (
                                                             <li>
                                                                 <Link href="/configuraciones/usuarios" className={getLinkClass('/configuraciones/usuarios', true)}>
-                                                                    <UserIcon className="h-4 w-4" />
+                                                                    <User className="h-4 w-4" />
                                                                     <span className="ml-2">Usuarios</span>
                                                                 </Link>
                                                             </li>
@@ -301,7 +302,7 @@ export default function Sidebar() {
                                                         {hasPermission('cxc.view_group') && (
                                                             <li>
                                                                 <Link href="/configuraciones/roles" className={getLinkClass('/configuraciones/roles', true)}>
-                                                                    <KeyIcon className="h-4 w-4" />
+                                                                    <Key className="h-4 w-4" />
                                                                     <span className="ml-2">Roles y Permisos</span>
                                                                 </Link>
                                                             </li>
@@ -313,7 +314,7 @@ export default function Sidebar() {
                                                 <li>
                                                     <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                         <div className="flex items-center">
-                                                            <Cog6ToothIcon className="h-5 w-5" />
+                                                            <Settings className="h-5 w-5" />
                                                             <span className="ml-2">Herramientas</span>
                                                         </div>
                                                         <ChevronIcon isOpen={isHerramientasOpen} />
@@ -323,7 +324,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                                     <div className="flex items-center">
-                                                                        <ArrowUpTrayIcon className="h-5 w-5" />
+                                                                        <Upload className="h-5 w-5" />
                                                                         <span className="ml-2">Importadores de Datos</span>
                                                                     </div>
                                                                     <ChevronIcon isOpen={isImportarOpen} />
@@ -333,7 +334,7 @@ export default function Sidebar() {
                                                                         {user?.is_superuser && (
                                                                             <li>
                                                                                 <Link href="/importar" className={getLinkClass('/importar', true)}>
-                                                                                    <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                    <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Masivo (General)</span>
                                                                                 </Link>
                                                                             </li>
@@ -341,7 +342,7 @@ export default function Sidebar() {
                                                                         {hasPermission('cxc.add_cliente') && (
                                                                             <li>
                                                                                 <Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>
-                                                                                    <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                    <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Clientes</span>
                                                                                 </Link>
                                                                             </li>
@@ -349,7 +350,7 @@ export default function Sidebar() {
                                                                         {hasPermission('cxc.add_upe') && (
                                                                             <li>
                                                                                 <Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>
-                                                                                    <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                    <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">UPEs</span>
                                                                                 </Link>
                                                                             </li>
@@ -357,7 +358,7 @@ export default function Sidebar() {
                                                                         {hasPermission('cxc.add_contrato') && (
                                                                             <li>
                                                                                 <Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>
-                                                                                    <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                    <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Contratos</span>
                                                                                 </Link>
                                                                             </li>
@@ -365,7 +366,7 @@ export default function Sidebar() {
                                                                         {hasPermission('cxc.add_pago') && (
                                                                             <li>
                                                                                 <Link href="/importar/pagos" className={getLinkClass('/importar/pagos', true)}>
-                                                                                    <ArrowUpTrayIcon className="h-4 w-4" />
+                                                                                    <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Pagos Históricos</span>
                                                                                 </Link>
                                                                             </li>
@@ -376,7 +377,7 @@ export default function Sidebar() {
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <li>
                                                                     <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
-                                                                        <CurrencyDollarIcon className="h-4 w-4" />
+                                                                        <CircleDollarSign className="h-4 w-4" />
                                                                         <span className="ml-2">Tipo de Cambio</span>
                                                                     </Link>
                                                                 </li>
@@ -389,7 +390,7 @@ export default function Sidebar() {
                                                 <li>
                                                     <button onClick={() => setIsSeguridadOpen(!isSeguridadOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                                         <div className="flex items-center">
-                                                            <ShieldCheckIcon className="h-5 w-5" />
+                                                            <ShieldCheck className="h-5 w-5" />
                                                             <span className="ml-2">Seguridad</span>
                                                         </div>
                                                         <ChevronIcon isOpen={isSeguridadOpen} />
@@ -398,7 +399,7 @@ export default function Sidebar() {
                                                         <ul className="pl-4 mt-1 space-y-1">
                                                             <li>
                                                                 <Link href="/auditoria" className={getLinkClass('/auditoria', true)}>
-                                                                    <DocumentMagnifyingGlassIcon className="h-4 w-4" />
+                                                                    <FileSearch className="h-4 w-4" />
                                                                     <span className="ml-2">Registro de Auditoría</span>
                                                                 </Link>
                                                             </li>
@@ -414,7 +415,7 @@ export default function Sidebar() {
                 </nav>
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 lg:hidden">
                     <button onClick={logoutUser} className="flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+                        <LogOut className="h-5 w-5" />
                         {isOpen && <span className="ml-2">Cerrar sesión</span>}
                     </button>
                 </div>

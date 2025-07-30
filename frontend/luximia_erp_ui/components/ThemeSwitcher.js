@@ -2,7 +2,7 @@
 'use client';
 
 import { useTheme } from './ThemeProvider';
-import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/solid';
+import { Sun, Moon, Monitor } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function ThemeSwitcher() {
@@ -25,21 +25,21 @@ export default function ThemeSwitcher() {
                 className={`p-1.5 rounded-md ${theme === 'light' || (theme === 'system' && resolvedTheme === 'light') ? 'bg-white shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-900'}`}
                 title="Tema Claro"
             >
-                <SunIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                <Sun className="h-5 w-5 text-gray-700 dark:text-gray-300" />
             </button>
             <button
                 onClick={() => setTheme('system')}
                 className={`p-1.5 rounded-md ${theme === 'system' ? 'bg-white dark:bg-gray-900 shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                 title="Tema del Sistema"
             >
-                <ComputerDesktopIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />
             </button>
             <button
                 onClick={() => setTheme('dark')}
                 className={`p-1.5 rounded-md ${theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? 'bg-gray-800 shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                 title="Tema Oscuro"
             >
-                <MoonIcon className="h-5 w-5 text-white" />
+                <Moon className="h-5 w-5 text-white" />
             </button>
             
         </div>
