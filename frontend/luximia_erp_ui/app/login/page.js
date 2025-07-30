@@ -1,11 +1,61 @@
 // app/login/page.js
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
 import { useRouter } from 'next/navigation';
-import { DotLottie } from '@lottiefiles/dotlottie-web';
 import { EyeIcon, EyeSlashIcon, UserIcon, KeyIcon } from '@heroicons/react/24/solid';
+
+// --- Componente de Animación SVG ---
+// Este componente contiene el personaje y sus animaciones CSS.
+function LoginAnimation({ state }) { // state puede ser 'idle', 'typing', 'success', 'error'
+    return (
+        <>
+            <style jsx>{`
+                .eyes {
+                    transition: transform 0.3s ease-out;
+                }
+                .mouth {
+                    transition: all 0.3s ease-out;
+                }
+
+                /* Estado por defecto (mirando al frente) */
+                .typing .eyes { transform: translateX(0px); }
+                
+                /* Estado de éxito */
+                .success .eye-right { transform: scaleY(0.1) translateY(40px); }
+                .success .mouth { d: path('M 40 70 Q 50 85 60 70'); stroke-width: 3; }
+
+                /* Estado de error */
+                .error .eyes { transform: translateY(5px); }
+                .error .mouth { d: path('M 40 75 Q 50 60 60 75'); stroke-width: 3; }
+                
+                /* Animación de parpadeo */
+                @keyframes blink {
+                    0%, 90%, 100% { transform: scaleY(1); }
+                    95% { transform: scaleY(0.1); }
+                }
+                .eye {
+                    animation: blink 4s infinite;
+                }
+            `}</style>
+            <svg viewBox="0 0 100 100" className={state}>
+                {/* Cara */}
+                <circle cx="50" cy="50" r="45" fill="#e0e0e0" />
+
+                {/* Ojos */}
+                <g className="eyes">
+                    <circle className="eye eye-left" cx="35" cy="45" r="5" fill="#333" />
+                    <circle className="eye eye-right" cx="65" cy="45" r="5" fill="#333" />
+                </g>
+
+                {/* Boca */}
+                <path className="mouth" d="M 40 70 Q 50 75 60 70" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+            </svg>
+        </>
+    );
+}
+
 
 export default function LoginPage() {
     const { loginUser } = useAuth();
@@ -18,59 +68,8 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    // Estado para controlar la animación. Inicia en 'typing' por defecto.
-    const [animationState, setAnimationState] = useState('typing'); // 'typing', 'success', 'error'
-
-    // Referencias para el canvas y la instancia de Lottie
-    const canvasRef = useRef(null);
-    const lottieInstanceRef = useRef(null);
-
-    // URLs de tus animaciones
-    const animTypingURL = "https://lottie.host/343e2d45-d5f8-4a5f-9162-3173cd11fee5/cbTKtp4veN.json";
-    const animSuccessURL = "https://lottie.host/6297110d-74fd-4dfe-8075-eebcac7fbd43/RTKGmqA8wp.json";
-    const animErrorURL = "https://lottie.host/202b1fa9-fdab-4330-a924-0c443d0d225b/jxwreJMzoC.json";
-
-    // Hook para inicializar y destruir la instancia de Lottie
-    useEffect(() => {
-        if (canvasRef.current && !lottieInstanceRef.current) {
-            lottieInstanceRef.current = new DotLottie({
-                canvas: canvasRef.current,
-            });
-        }
-        return () => {
-            lottieInstanceRef.current?.destroy();
-            lottieInstanceRef.current = null;
-        };
-    }, []);
-
-    // Hook para cambiar la animación cuando el estado cambia
-    useEffect(() => {
-        const lottie = lottieInstanceRef.current;
-        if (!lottie) return;
-
-        let src;
-        switch (animationState) {
-            case 'typing':
-                src = animTypingURL;
-                break;
-            case 'success':
-                src = animSuccessURL;
-                break;
-            case 'error':
-                src = animErrorURL;
-                break;
-            default:
-                return;
-        }
-
-        lottie.load({
-            src,
-            loop: animationState === 'typing',
-            autoplay: true,
-        });
-
-    }, [animationState]);
-
+    // Estado para controlar la animación SVG
+    const [animationState, setAnimationState] = useState('idle'); // 'idle', 'typing', 'success', 'error'
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -85,14 +84,23 @@ export default function LoginPage() {
         } catch (err) {
             setError(err.message || "El usuario o la contraseña no son válidos.");
             setAnimationState('error');
-            // Regresar a la animación de 'typing' después de un error para que el usuario pueda reintentar
+            // Regresar a la animación de 'typing' después de un error
             setTimeout(() => {
                 setAnimationState('typing');
-            }, 2000); // Espera 2 segundos para mostrar la animación de error
+            }, 2000);
         } finally {
             setIsLoading(false);
         }
     };
+
+    const handleFocus = () => {
+        setAnimationState('typing');
+    };
+
+    const handleBlur = () => {
+        setAnimationState('idle');
+    };
+
 
     return (
         <div
@@ -101,14 +109,11 @@ export default function LoginPage() {
         >
             <div className="absolute inset-0 bg-black opacity-60"></div>
 
-            <div className="relative z-10 pt-24 pb-8 px-8 max-w-sm w-full bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
+            <div className="relative z-10 p-8 max-w-sm w-full bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
 
-                {/* Contenedor de la animación posicionado en la parte superior */}
-                <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48">
-                    <canvas
-                        ref={canvasRef}
-                        style={{ width: '100%', height: '100%' }}
-                    />
+                {/* Contenedor de la animación DENTRO del modal y en forma de círculo */}
+                <div className="flex justify-center mb-6 h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-white dark:border-gray-600 shadow-lg bg-white">
+                    <LoginAnimation state={animationState} />
                 </div>
 
                 <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Iniciar Sesión</h2>
@@ -123,7 +128,8 @@ export default function LoginPage() {
                             <input
                                 id="username" type="text" value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                onFocus={() => setAnimationState('typing')}
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
                                 required
                                 className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 placeholder="tu-usuario"
@@ -142,7 +148,8 @@ export default function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                onFocus={() => setAnimationState('typing')}
+                                onFocus={handleFocus}
+                                onBlur={handleBlur}
                                 required
                                 className="block w-full pl-10 pr-10 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                 placeholder="••••••••"
