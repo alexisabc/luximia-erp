@@ -150,7 +150,7 @@ export default function Sidebar() {
                         {canViewSettings && (
                             <li className="pt-2 relative">
                                 <button onClick={() => setIsAdminOpen(!isAdminOpen)} className="w-full flex items-center justify-between p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}> 
+                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                         <Cog6ToothIcon className="h-5 w-5" />
                                         {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Administración</span>}
                                     </div>
@@ -193,62 +193,62 @@ export default function Sidebar() {
                                             )}
                                         </div>
                                     ) : (
-                                    <ul className="pl-4 mt-1 space-y-1">
-                                        <li>
-                                            <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                <span>Gestión de Usuarios</span>
-                                                <ChevronIcon isOpen={isGestionOpen} />
-                                            </button>
-                                            {isGestionOpen && (
-                                                <ul className="pl-4 mt-1 space-y-1">
-                                                    {hasPermission('cxc.view_user') && <li><Link href="/configuraciones/usuarios" className={getLinkClass('/configuraciones/usuarios', true)}>Usuarios</Link></li>}
-                                                    {hasPermission('cxc.view_group') && <li><Link href="/configuraciones/roles" className={getLinkClass('/configuraciones/roles', true)}>Roles y Permisos</Link></li>}
-                                                </ul>
+                                        <ul className="pl-4 mt-1 space-y-1">
+                                            <li>
+                                                <button onClick={() => setIsGestionOpen(!isGestionOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                    <span>Gestión de Usuarios</span>
+                                                    <ChevronIcon isOpen={isGestionOpen} />
+                                                </button>
+                                                {isGestionOpen && (
+                                                    <ul className="pl-4 mt-1 space-y-1">
+                                                        {hasPermission('cxc.view_user') && <li><Link href="/configuraciones/usuarios" className={getLinkClass('/configuraciones/usuarios', true)}>Usuarios</Link></li>}
+                                                        {hasPermission('cxc.view_group') && <li><Link href="/configuraciones/roles" className={getLinkClass('/configuraciones/roles', true)}>Roles y Permisos</Link></li>}
+                                                    </ul>
+                                                )}
+                                            </li>
+                                            {canImportData && (
+                                                <li>
+                                                    <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                        <span>Herramientas</span>
+                                                        <ChevronIcon isOpen={isHerramientasOpen} />
+                                                    </button>
+                                                    {isHerramientasOpen && (
+                                                        <ul className="pl-4 mt-1 space-y-1">
+                                                            <li>
+                                                                <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                                    <span>Importadores de Datos</span>
+                                                                    <ChevronIcon isOpen={isImportarOpen} />
+                                                                </button>
+                                                                {isImportarOpen && (
+                                                                    <ul className="pl-4 mt-1 space-y-1">
+                                                                        {user?.is_superuser && <li><Link href="/importar" className={getLinkClass('/importar', true)}>Masivo (General)</Link></li>}
+                                                                        {hasPermission('cxc.add_cliente') && <li><Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>Clientes</Link></li>}
+                                                                        {hasPermission('cxc.add_upe') && <li><Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>UPEs</Link></li>}
+                                                                        {hasPermission('cxc.add_contrato') && <li><Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>Contratos</Link></li>}
+                                                                        {hasPermission('cxc.add_pago') && <li><Link href="/importar/pagos" className={getLinkClass('/importar/pagos', true)}>Pagos Históricos</Link></li>}
+                                                                    </ul>
+                                                                )}
+                                                            </li>
+                                                            {hasPermission('cxc.view_tipodecambio') && <li><Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>Tipo de Cambio</Link></li>}
+                                                        </ul>
+                                                    )}
+                                                </li>
                                             )}
-                                        </li>
-                                        {canImportData && (
-                                            <li>
-                                                <button onClick={() => setIsHerramientasOpen(!isHerramientasOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                    <span>Herramientas</span>
-                                                    <ChevronIcon isOpen={isHerramientasOpen} />
-                                                </button>
-                                                {isHerramientasOpen && (
-                                                    <ul className="pl-4 mt-1 space-y-1">
-                                                        <li>
-                                                            <button onClick={() => setIsImportarOpen(!isImportarOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                                <span>Importadores de Datos</span>
-                                                                <ChevronIcon isOpen={isImportarOpen} />
-                                                            </button>
-                                                            {isImportarOpen && (
-                                                                <ul className="pl-4 mt-1 space-y-1">
-                                                                    {user?.is_superuser && <li><Link href="/importar" className={getLinkClass('/importar', true)}>Masivo (General)</Link></li>}
-                                                                    {hasPermission('cxc.add_cliente') && <li><Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>Clientes</Link></li>}
-                                                                    {hasPermission('cxc.add_upe') && <li><Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>UPEs</Link></li>}
-                                                                    {hasPermission('cxc.add_contrato') && <li><Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>Contratos</Link></li>}
-                                                                    {hasPermission('cxc.add_pago') && <li><Link href="/importar/pagos" className={getLinkClass('/importar/pagos', true)}>Pagos Históricos</Link></li>}
-                                                                </ul>
-                                                            )}
-                                                        </li>
-                                                        {hasPermission('cxc.view_tipodecambio') && <li><Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>Tipo de Cambio</Link></li>}
-                                                    </ul>
-                                                )}
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.can_view_auditlog') && (
-                                            <li>
-                                                <button onClick={() => setIsSeguridadOpen(!isSeguridadOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                                    <span>Seguridad</span>
-                                                    <ChevronIcon isOpen={isSeguridadOpen} />
-                                                </button>
-                                                {isSeguridadOpen && (
-                                                    <ul className="pl-4 mt-1 space-y-1">
-                                                        <li><Link href="/auditoria" className={getLinkClass('/auditoria', true)}>Registro de Auditoría</Link></li>
-                                                    </ul>
-                                                )}
-                                            </li>
-                                        )}
-                                    </ul>
-                                )}
+                                            {hasPermission('cxc.can_view_auditlog') && (
+                                                <li>
+                                                    <button onClick={() => setIsSeguridadOpen(!isSeguridadOpen)} className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                                        <span>Seguridad</span>
+                                                        <ChevronIcon isOpen={isSeguridadOpen} />
+                                                    </button>
+                                                    {isSeguridadOpen && (
+                                                        <ul className="pl-4 mt-1 space-y-1">
+                                                            <li><Link href="/auditoria" className={getLinkClass('/auditoria', true)}>Registro de Auditoría</Link></li>
+                                                        </ul>
+                                                    )}
+                                                </li>
+                                            )}
+                                        </ul>
+                                    ))}
                             </li>
                         )}
                     </ul>
