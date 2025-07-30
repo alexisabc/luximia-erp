@@ -4,7 +4,6 @@
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { SidebarProvider } from "../context/SidebarContext";
-import ChartJSSetup from '../components/ChartJSSetup';
 import { ThemeProvider } from "../components/ThemeProvider";
 import AppContent from "./AppContent"; // <-- Importa el nuevo componente
 
@@ -26,7 +25,6 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <SidebarProvider>
               <AppContent>
-                <ChartJSSetup />
                 {children}
               </AppContent>
             </SidebarProvider>

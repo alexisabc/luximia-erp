@@ -4,6 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { EyeIcon, PencilSquareIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
 
 export default function ReusableTable({ data, columns, actions = {} }) {
     if (!data) {
@@ -42,41 +43,39 @@ export default function ReusableTable({ data, columns, actions = {} }) {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            {finalColumns.map((col, index) => (
-                                <th key={index} className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider text-center">
-                                    {col.header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {data.length > 0 ? (
-                            data.map((row, rowIndex) => (
-                                <tr key={row.id || rowIndex}>
-                                    {finalColumns.map((col, colIndex) => (
-                                        <td key={`${row.id || rowIndex}-${colIndex}`} className="p-4 whitespace-nowrap text-center"> {/* <-- CAMBIO: text-center */}
-                                            <div className="text-gray-900 dark:text-white">
-                                                {col.render ? col.render(row, rowIndex) : (row[col.accessor] || 'N/A')}
-                                            </div>
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={finalColumns.length} className="text-center p-8 text-gray-500 dark:text-gray-400">
-                                    No hay datos para mostrar.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-gray-50 dark:bg-gray-700">
+                        {finalColumns.map((col, index) => (
+                            <TableHead key={index} className="p-4 text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider text-center">
+                                {col.header}
+                            </TableHead>
+                        ))}
+                    </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {data.length > 0 ? (
+                        data.map((row, rowIndex) => (
+                            <TableRow key={row.id || rowIndex}>
+                                {finalColumns.map((col, colIndex) => (
+                                    <TableCell key={`${row.id || rowIndex}-${colIndex}`} className="p-4 whitespace-nowrap text-center">
+                                        <div className="text-gray-900 dark:text-white">
+                                            {col.render ? col.render(row, rowIndex) : (row[col.accessor] || 'N/A')}
+                                        </div>
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    ) : (
+                        <TableRow>
+                            <TableCell colSpan={finalColumns.length} className="text-center p-8 text-gray-500 dark:text-gray-400">
+                                No hay datos para mostrar.
+                            </TableCell>
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
         </div>
     );
 }

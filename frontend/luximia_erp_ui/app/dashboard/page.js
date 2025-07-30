@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 // ### 1. Se elimina 'getUpeStatusChartData' ###
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
-import { Bar } from 'react-chartjs-2';
+import { BarChart } from '@tremor/react';
 
 
 
@@ -60,20 +60,16 @@ export default function DashboardPage() {
     fetchData().then(() => setInitialLoad(false));
   }, [fetchData]);
 
-  const ventasChartData = {
-    labels: data?.chart?.labels || [],
-    datasets: [
-      { type: 'bar', label: 'Ventas', data: data?.chart?.ventas || [], backgroundColor: '#4BC0C0' }
-    ]
-  };
+  const ventasChartData = (data?.chart?.labels || []).map((label, i) => ({
+    label,
+    Ventas: data?.chart?.ventas?.[i] || 0,
+  }));
 
-  const cobranzaChartData = {
-    labels: data?.chart?.labels || [],
-    datasets: [
-      { type: 'bar', label: 'Cobrado', data: data?.chart?.recuperado || [], backgroundColor: '#36A2EB' },
-      { type: 'bar', label: 'Por Cobrar', data: data?.chart?.programado || [], backgroundColor: '#FFCD56' }
-    ]
-  };
+  const cobranzaChartData = (data?.chart?.labels || []).map((label, i) => ({
+    label,
+    Cobrado: data?.chart?.recuperado?.[i] || 0,
+    'Por Cobrar': data?.chart?.programado?.[i] || 0,
+  }));
 
   if (loading && initialLoad) return <div className="p-8">Cargando dashboard...</div>;
 
@@ -135,10 +131,24 @@ export default function DashboardPage() {
       {/* --- Gráficas --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard title="Ventas">
-          <Bar data={ventasChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+          <BarChart
+            className="w-full"
+            data={ventasChartData}
+            index="label"
+            categories={["Ventas"]}
+            colors={["cyan"]}
+            yAxisWidth={48}
+          />
         </ChartCard>
         <ChartCard title="Cobrado vs Por Cobrar">
-          <Bar data={cobranzaChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+          <BarChart
+            className="w-full"
+            data={cobranzaChartData}
+            index="label"
+            categories={["Cobrado", "Por Cobrar"]}
+            colors={["blue", "amber"]}
+            yAxisWidth={48}
+          />
         </ChartCard>
       </div>
 
