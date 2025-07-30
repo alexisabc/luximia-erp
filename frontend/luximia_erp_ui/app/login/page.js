@@ -26,7 +26,7 @@ function LoginAnimation({ state, eyeTranslation }) {
     return (
         <>
             <style jsx>{`
-                .svg-container, .eyes, .mouth, .eye, .hand, .arm {
+                .svg-container, .eyes, .mouth, .eye {
                     transition: all 0.4s ease-out;
                 }
                 .eye {
@@ -40,18 +40,12 @@ function LoginAnimation({ state, eyeTranslation }) {
                     transform: scaleY(0.1);
                 }
 
-                /* Manos y brazos arriba al mostrar contraseña */
-                .arm, .hand {
-                    opacity: 0;
-                    transform: translateY(25px);
+                /* Animación de espiar (alternar ojos) */
+                .peeking-pass .eye-left {
+                    animation: peek-a-boo-left 2s infinite;
                 }
-                .peeking-pass .arm, .peeking-pass .hand {
-                    opacity: 1;
-                    transform: translateY(0px);
-                }
-                .peeking-pass .eye {
-                    transform: scaleY(1); /* Asegura que los ojos estén abiertos */
-                    animation: none; /* Detiene el parpadeo */
+                .peeking-pass .eye-right {
+                    animation: peek-a-boo-right 2s infinite;
                 }
                 
                 /* Estado de éxito */
@@ -120,6 +114,16 @@ function LoginAnimation({ state, eyeTranslation }) {
                     30%, 50%, 70% { transform: translateX(-6px) rotate(-3deg); }
                     40%, 60% { transform: translateX(6px) rotate(3deg); }
                 }
+
+                /* Animación de espiar */
+                @keyframes peek-a-boo-left {
+                    0%, 40%, 100% { transform: scaleY(1); }
+                    50%, 90% { transform: scaleY(0.1); }
+                }
+                @keyframes peek-a-boo-right {
+                    0%, 40%, 100% { transform: scaleY(0.1); }
+                    50%, 90% { transform: scaleY(1); }
+                }
             `}</style>
             <svg viewBox="0 0 100 100" className={state}>
                 <g className="svg-container">
@@ -134,14 +138,6 @@ function LoginAnimation({ state, eyeTranslation }) {
 
                     {/* Boca */}
                     <path className="mouth" d="M 40 70 Q 50 75 60 70" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
-
-                    {/* Manos y Antebrazos */}
-                    <g className="hands">
-                        <path className="arm arm-left" d="M 35 100 C 35 80, 20 75, 20 60" fill="none" stroke="#e0e0e0" strokeWidth="14" />
-                        <path className="arm arm-right" d="M 65 100 C 65 80, 80 75, 80 60" fill="none" stroke="#e0e0e0" strokeWidth="14" />
-                        <path className="hand hand-left" d="M 20 60 C 10 50, 25 35, 40 45 Z" fill="#e0e0e0" stroke="#a18069" strokeWidth="2" />
-                        <path className="hand hand-right" d="M 80 60 C 90 50, 75 35, 60 45 Z" fill="#e0e0e0" stroke="#a18069" strokeWidth="2" />
-                    </g>
 
                     {/* Elementos para dormir */}
                     <g className="sleep-elements">
@@ -311,3 +307,4 @@ export default function LoginPage() {
         </div>
     );
 }
+
