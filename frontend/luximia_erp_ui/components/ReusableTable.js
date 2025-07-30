@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { EyeIcon, PencilSquareIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
 
 export default function ReusableTable({ data, columns, actions = {} }) {
@@ -19,22 +19,22 @@ export default function ReusableTable({ data, columns, actions = {} }) {
                 <div className="flex items-center justify-center space-x-4"> {/* <-- CAMBIO: justify-center */}
                     {actions.onView && (
                         <Link href={`${actions.viewPath}/${row.id}`} className="text-gray-400 hover:text-blue-500" title="Ver Detalle">
-                            <EyeIcon className="h-6 w-6" />
+                            <Eye className="h-6 w-6" />
                         </Link>
                     )}
                     {actions.onEdit && (
                         <button onClick={() => actions.onEdit(row)} className="group" title="Editar">
-                            <PencilSquareIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600" />
+                            <SquarePen className="h-5 w-5 text-gray-400 group-hover:text-blue-600" />
                         </button>
                     )}
                     {actions.onDelete && (
                         <button onClick={() => actions.onDelete(row.id)} className="group" title="Eliminar">
-                            <TrashIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
+                            <Trash className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
                         </button>
                     )}
                     {actions.onHardDelete && (
                         <button onClick={() => actions.onHardDelete(row.id)} className="group" title="Eliminar Definitivamente">
-                            <XCircleIcon className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
+                            <XCircle className="h-5 w-5 text-gray-400 group-hover:text-red-600" />
                         </button>
                     )}
                 </div>

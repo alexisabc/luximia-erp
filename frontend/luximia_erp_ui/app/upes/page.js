@@ -11,7 +11,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import { formatCurrency } from '../../utils/formatters';
-import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { Download } from 'lucide-react';
 
 // ### 2. Define las columnas para la tabla y la exportación ###
 const UPE_COLUMNAS_DISPLAY = [
@@ -218,7 +218,7 @@ export default function UPEsPage() {
                         </button>
                     )}
                     {hasPermission('cxc.add_upe') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nueva UPE</button>}
-                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><ArrowDownTrayIcon className="h-6 w-6" /></button>
+                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><Download className="h-6 w-6" /></button>
                 </div>
             </div>
 

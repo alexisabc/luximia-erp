@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { exportProyectosExcel, exportClientesExcel, exportUpesExcel, exportContratosExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import ExportModal from '../../components/ExportModal';
-import { ArrowDownTrayIcon } from '@heroicons/react/24/solid';
+import { Download } from 'lucide-react';
 
 const PROYECTO_COLUMNAS_EXPORT = [
     { id: 'id', label: 'ID' },
@@ -100,7 +100,7 @@ export default function ReportesPage() {
                     <div key={key} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex justify-between items-center">
                         <span className="font-medium">{rep.label}</span>
                         <button onClick={() => openModal(key)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Descargar">
-                            <ArrowDownTrayIcon className="h-6 w-6" />
+                            <Download className="h-6 w-6" />
                         </button>
                     </div>
                 ))}

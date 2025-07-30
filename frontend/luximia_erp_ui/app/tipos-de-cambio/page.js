@@ -6,7 +6,7 @@ import { getTiposDeCambio, actualizarTipoDeCambioHoy } from '../../services/api'
 import { useAuth } from '../../context/AuthContext';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import { ArrowPathIcon } from '@heroicons/react/24/solid';
+import { RefreshCcw } from 'lucide-react';
 
 export default function TiposDeCambioPage() {
     const { hasPermission } = useAuth();
@@ -68,7 +68,7 @@ export default function TiposDeCambioPage() {
                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold p-2 rounded-lg disabled:bg-gray-400"
                         title="Consultar/Actualizar TC de Hoy"
                     >
-                        <ArrowPathIcon className={`h-6 w-6 ${isLoading ? 'animate-spin' : ''}`} />
+                        <RefreshCcw className={`h-6 w-6 ${isLoading ? 'animate-spin' : ''}`} />
                     </button>
                 )}
             </div>
