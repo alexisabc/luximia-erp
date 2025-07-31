@@ -2,7 +2,7 @@
 
 import { Player } from '@lottiefiles/react-lottie-player';
 
-export default function Loader({ className = '', size = 150 }) {
+export default function Loader({ className = '', size = 400 }) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <Player

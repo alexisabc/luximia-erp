@@ -4,7 +4,13 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import apiClient from '../services/api';
-import Loader from '../components/Loader';
+import dynamic from 'next/dynamic'; // 1. Importa 'dynamic'
+
+// 2. Importa el Loader dinámicamente, desactivando el SSR
+const Loader = dynamic(
+    () => import('../components/Loader'),
+    { ssr: false }
+);
 
 const AuthContext = createContext();
 
@@ -26,7 +32,7 @@ export const AuthProvider = ({ children }) => {
             setUser(jwtDecode(parsedTokens.access));
         }
         const elapsed = Date.now() - start;
-        const timeout = setTimeout(() => setLoading(false), Math.max(0, 3000 - elapsed));
+        const timeout = setTimeout(() => setLoading(false), Math.max(0, 4000 - elapsed));
         return () => clearTimeout(timeout);
     }, []);
 
@@ -70,6 +76,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={contextData}>
+            {/* 3. Ahora esto funcionará sin problemas */}
             {loading ? <Loader className="min-h-screen" /> : children}
         </AuthContext.Provider>
     );
