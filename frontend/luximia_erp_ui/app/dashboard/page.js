@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 // ### 1. Se elimina 'getUpeStatusChartData' ###
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
-import { BarChart } from '@tremor/react';
+import { LineChart } from '@tremor/react';
 import Loader from '../../components/Loader';
 
 
@@ -75,6 +75,12 @@ export default function DashboardPage() {
     'Por Cobrar': Number(data?.chart?.programado?.[i] ?? 0),
   }));
 
+  const valueFormatter = (number) =>
+    `$${Number(number).toLocaleString('es-MX', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
   if (loading && initialLoad) return <Loader className="p-8" />;
 
   return (
@@ -135,22 +141,24 @@ export default function DashboardPage() {
       {/* --- Gráficas --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard title="Ventas">
-          <BarChart
+          <LineChart
             className="w-full"
             data={ventasChartData}
             index="label"
             categories={["Ventas"]}
             colors={["cyan"]}
+            valueFormatter={valueFormatter}
             yAxisWidth={48}
           />
         </ChartCard>
         <ChartCard title="Cobrado vs Por Cobrar">
-          <BarChart
+          <LineChart
             className="w-full"
             data={cobranzaChartData}
             index="label"
             categories={["Cobrado", "Por Cobrar"]}
             colors={["blue", "amber"]}
+            valueFormatter={valueFormatter}
             yAxisWidth={48}
           />
         </ChartCard>
