@@ -2,7 +2,6 @@
 'use client';
 
 import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
@@ -34,8 +33,7 @@ export default function AppContent({ children }) {
         <div className="min-h-screen">
             <Sidebar />
             {/* ### Los estilos de fondo AHORA se aplican aquí ### */}
-            <main className={`pt-16 transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-                <Navbar />
+            <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'} p-4`}>
                 <div>
                     {children}
                 </div>

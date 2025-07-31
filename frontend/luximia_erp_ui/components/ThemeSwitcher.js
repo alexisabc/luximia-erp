@@ -6,42 +6,34 @@ import { Sun, Moon, Monitor } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function ThemeSwitcher() {
-    const [mounted, setMounted] = useState(false);
     const { theme, setTheme } = useTheme();
-    const resolvedTheme = theme === 'system'
-        ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : theme;
+    const [mounted, setMounted] = useState(false);
 
-    useEffect(() => { setMounted(true); }, []);
+    useEffect(() => setMounted(true), []);
 
-    if (!mounted) {
-        return null;
-    }
+    if (!mounted) return null;
+
+    const cycleTheme = () => {
+        if (theme === 'light') setTheme('system');
+        else if (theme === 'system') setTheme('dark');
+        else setTheme('light');
+    };
+
+    const icon = theme === 'light'
+        ? <Sun className="h-5 w-5 text-yellow-500" />
+        : theme === 'system'
+            ? <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+            : <Moon className="h-5 w-5 text-blue-500" />;
 
     return (
-        <div className="flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
-            <button
-                onClick={() => setTheme('light')}
-                className={`p-1.5 rounded-md ${theme === 'light' || (theme === 'system' && resolvedTheme === 'light') ? 'bg-white shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-900'}`}
-                title="Tema Claro"
-            >
-                <Sun className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-            </button>
-            <button
-                onClick={() => setTheme('system')}
-                className={`p-1.5 rounded-md ${theme === 'system' ? 'bg-white dark:bg-gray-900 shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                title="Tema del Sistema"
-            >
-                <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-            </button>
-            <button
-                onClick={() => setTheme('dark')}
-                className={`p-1.5 rounded-md ${theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? 'bg-gray-800 shadow' : 'hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                title="Tema Oscuro"
-            >
-                <Moon className="h-5 w-5 text-white" />
-            </button>
-            
-        </div>
+        <button
+            onClick={cycleTheme}
+            className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300"
+            title="Cambiar tema"
+        >
+            <span className="transition-transform duration-300" key={theme}>
+                {icon}
+            </span>
+        </button>
     );
 }
