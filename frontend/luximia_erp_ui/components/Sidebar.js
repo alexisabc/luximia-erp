@@ -86,7 +86,7 @@ export default function Sidebar() {
             ></div>
 
             <div
-                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isOpen ? 'lg:w-64' : 'lg:w-20'}`}
+                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isOpen ? 'lg:w-64' : 'lg:w-20'} ${isCollapsed ? 'overflow-visible' : 'overflow-hidden'}`}
             >
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <button onClick={toggleSidebar} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -97,7 +97,7 @@ export default function Sidebar() {
                         <img src="/logo-luximia.png" className="h-6" alt="Luximia" />
                     </Link>
                 </div>
-                <nav className="flex-1 px-4 py-4 overflow-y-auto">
+                <nav className={`flex-1 px-4 py-4 ${isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}`}>
                     <ul className="space-y-1">
                         {hasPermission('cxc.can_view_dashboard') ? (
                             <li>

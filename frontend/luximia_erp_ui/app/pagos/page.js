@@ -72,7 +72,7 @@ export default function PagosPage() {
             <div ref={ref} className="flex-grow min-h-0 relative">
                 {isPaginating && (
                     <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10">
-                        <Loader />
+                        <Loader overlay={false} />
                     </div>
                 )}
                 <ReusableTable data={pageData.results} columns={columns} />

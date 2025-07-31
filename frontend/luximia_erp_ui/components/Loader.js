@@ -2,9 +2,11 @@
 
 import { Player } from '@lottiefiles/react-lottie-player';
 
-export default function Loader({ className = '', size = 400 }) {
+export default function Loader({ className = '', size = 400, overlay = true }) {
   return (
-    <div className={`flex items-center justify-center ${className}`}>
+    <div
+      className={`${overlay ? 'fixed inset-0 bg-black/40 backdrop-blur-sm z-50' : ''} flex items-center justify-center ${className}`}
+    >
       <Player
         autoplay
         loop

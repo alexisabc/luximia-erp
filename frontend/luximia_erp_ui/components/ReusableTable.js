@@ -1,16 +1,27 @@
 // components/ReusableTable.js
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
 import Loader from './Loader';
 
-export default function ReusableTable({ data, columns, actions = {} }) {
+export default function ReusableTable({ data, columns, actions = {}, search = true, filterFunction }) {
     if (!data) {
-        return <Loader className="p-8" />;
+        return <Loader className="p-8" overlay={false} />;
     }
+
+    const [query, setQuery] = useState('');
+
+    const defaultFilter = (row, q) =>
+        Object.values(row).some((value) =>
+            String(value).toLowerCase().includes(q.toLowerCase())
+        );
+
+    const filteredData = query
+        ? data.filter((row) => (filterFunction || defaultFilter)(row, query))
+        : data;
 
     const finalColumns = [...columns];
     if (Object.keys(actions).length > 0) {
@@ -45,6 +56,17 @@ export default function ReusableTable({ data, columns, actions = {} }) {
 
     return (
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
+            {search && (
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Buscar..."
+                        className="w-full p-2 text-sm rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500"
+                    />
+                </div>
+            )}
             <Table>
                 <TableHeader>
                     <TableRow className="bg-gray-50 dark:bg-gray-700">
@@ -56,8 +78,8 @@ export default function ReusableTable({ data, columns, actions = {} }) {
                     </TableRow>
                 </TableHeader>
                 <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {data.length > 0 ? (
-                        data.map((row, rowIndex) => (
+                    {filteredData.length > 0 ? (
+                        filteredData.map((row, rowIndex) => (
                             <TableRow key={row.id || rowIndex}>
                                 {finalColumns.map((col, colIndex) => (
                                     <TableCell key={`${row.id || rowIndex}-${colIndex}`} className="p-4 whitespace-nowrap text-center">

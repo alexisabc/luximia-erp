@@ -81,7 +81,7 @@ export default function DashboardPage() {
     <div className="relative p-8 space-y-8">
       {loading && !initialLoad && (
         <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-20">
-          <Loader size={80} />
+          <Loader size={80} overlay={false} />
         </div>
       )}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
