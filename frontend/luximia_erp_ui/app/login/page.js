@@ -33,7 +33,7 @@ export default function LoginPage() {
         if (animationState === 'idle' && hasInteracted) {
             inactivityTimerRef.current = setTimeout(() => {
                 setAnimationState('bored');
-            }, 5000); // 5 segundos de inactividad
+            }, 3000); // Tiempo de inactividad reducido a 3 segundos
         }
 
         // Función de limpieza para el desmontaje del componente
@@ -134,7 +134,7 @@ export default function LoginPage() {
         if (hasInteracted) {
             inactivityTimerRef.current = setTimeout(() => {
                 setAnimationState('bored');
-            }, 5000);
+            }, 3000); // Tiempo de inactividad reducido a 3 segundos
         }
     };
 
