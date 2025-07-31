@@ -8,6 +8,7 @@ import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Loader from "../components/Loader";
 
 export default function AppContent({ children }) {
     const { authTokens, hasPermission } = useAuth();
@@ -26,7 +27,7 @@ export default function AppContent({ children }) {
     }
 
     if (!authTokens) {
-        return <div className="text-center p-8">Cargando...</div>;
+        return <Loader className="p-8" />;
     }
 
     return (

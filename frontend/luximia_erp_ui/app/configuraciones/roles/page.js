@@ -9,6 +9,7 @@ import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import { translatePermission, translateModel } from '../../../utils/permissions';
+import Loader from '../../../components/Loader';
 
 // --- Constantes de Configuración ---
 
@@ -150,7 +151,7 @@ export default function RolesPage() {
         }
     };
 
-    if (loading) return <div className="p-8">Cargando roles...</div>
+    if (loading) return <Loader className="p-8" />;
 
     return (
         <div className="p-8 h-full flex flex-col">

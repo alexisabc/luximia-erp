@@ -7,6 +7,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import Loader from '../../../components/Loader';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },
@@ -143,7 +144,7 @@ export default function UsuariosPage() {
     };
 
 
-    if (loading) return <div className="p-8">Cargando datos...</div>
+    if (loading) return <Loader className="p-8" />;
 
     return (
         <div className="p-8">

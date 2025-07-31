@@ -5,10 +5,11 @@ import React from 'react';
 import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
+import Loader from './Loader';
 
 export default function ReusableTable({ data, columns, actions = {} }) {
     if (!data) {
-        return <p className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando datos...</p>;
+        return <Loader className="p-8" />;
     }
 
     const finalColumns = [...columns];

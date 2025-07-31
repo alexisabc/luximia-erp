@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import DashboardPage from './dashboard/page';
 import HomePage from './home/page';
 import { useEffect, useState } from 'react';
+import Loader from '../components/Loader';
 
 export default function IndexPage() {
   const { hasPermission } = useAuth();
@@ -16,7 +17,7 @@ export default function IndexPage() {
   }, [hasPermission]);
 
   if (!checked) {
-    return <div className="p-8">Cargando...</div>;
+    return <Loader className="p-8" />;
   }
 
   return canView ? <DashboardPage /> : <HomePage />;
