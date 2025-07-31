@@ -461,7 +461,7 @@ export default function Sidebar() {
                     {isUserMenuOpen && (
                         isCollapsed ? (
                             <div className="absolute left-full bottom-0 ml-2 mb-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 transition-all duration-200">
-                                <ThemeSwitcher />
+                                <ThemeSwitcher className="w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700" />
                                 <Link href="/ajustes" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <Settings className="h-5 w-5" />
                                     <span className="ml-2">Ajustes</span>
@@ -473,7 +473,7 @@ export default function Sidebar() {
                             </div>
                         ) : (
                             <div className="mt-2 space-y-1 transition-all duration-200">
-                                <ThemeSwitcher />
+                                <ThemeSwitcher className="w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700" />
                                 <Link href="/ajustes" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <Settings className="h-5 w-5" />
                                     <span className="ml-2">Ajustes</span>
