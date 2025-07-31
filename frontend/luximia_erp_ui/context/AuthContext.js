@@ -1,11 +1,10 @@
 // context/AuthContext.js
 'use client';
 
-import { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import { createContext, useState, useContext, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import apiClient from '../services/api';
+import Loader from '../components/Loader';
 
 const AuthContext = createContext();
 
@@ -17,16 +16,18 @@ export const AuthProvider = ({ children }) => {
     const [authTokens, setAuthTokens] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
 
     useEffect(() => {
+        const start = Date.now();
         const tokensFromStorage = localStorage.getItem('authTokens');
         if (tokensFromStorage) {
             const parsedTokens = JSON.parse(tokensFromStorage);
             setAuthTokens(parsedTokens);
             setUser(jwtDecode(parsedTokens.access));
         }
-        setLoading(false);
+        const elapsed = Date.now() - start;
+        const timeout = setTimeout(() => setLoading(false), Math.max(0, 3000 - elapsed));
+        return () => clearTimeout(timeout);
     }, []);
 
     const loginUser = async (username, password) => {
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={contextData}>
-            {loading ? null : children}
+            {loading ? <Loader className="min-h-screen" /> : children}
         </AuthContext.Provider>
     );
 };
