@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // ### 1. Se elimina 'getUpeStatusChartData' ###
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
 import { BarChart } from '@tremor/react';
+import Loader from '../../components/Loader';
 
 
 
@@ -71,13 +72,13 @@ export default function DashboardPage() {
     'Por Cobrar': data?.chart?.programado?.[i] || 0,
   }));
 
-  if (loading && initialLoad) return <div className="p-8">Cargando dashboard...</div>;
+  if (loading && initialLoad) return <Loader className="p-8" />;
 
   return (
     <div className="relative p-8 space-y-8">
       {loading && !initialLoad && (
         <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-20">
-          <span className="text-gray-700 dark:text-gray-200 animate-pulse">Actualizando...</span>
+          <Loader size={80} />
         </div>
       )}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">

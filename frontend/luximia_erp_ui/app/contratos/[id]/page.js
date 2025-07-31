@@ -9,6 +9,7 @@ import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
+import Loader from '../../../components/Loader';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -280,7 +281,7 @@ export default function ContratoDetallePage() {
         }
     ];
 
-    if (loading) return <div className="p-8">Cargando...</div>;
+    if (loading) return <Loader className="p-8" />;
     if (error && !contrato) return <div className="p-8 text-red-500 bg-red-100 p-4 rounded-md">{error}</div>;
     if (!contrato) return <div className="p-8">No se encontró el contrato.</div>;
 
