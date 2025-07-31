@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import Link from 'next/link';
+import Loader from '../../components/Loader';
 
 export default function PagosPage() {
     const { hasPermission } = useAuth();
@@ -16,9 +17,9 @@ export default function PagosPage() {
     const [isPaginating, setIsPaginating] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchData = useCallback(async (page, size) => {
+    const fetchData = useCallback(async (page, size, preserveData = false) => {
         if (!size) return;
-        pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
+        preserveData ? setIsPaginating(true) : setLoading(true);
         try {
             const res = await getPagos(page, size);
             setPageData(res.data);
@@ -29,14 +30,18 @@ export default function PagosPage() {
             setLoading(false);
             setIsPaginating(false);
         }
-    }, [pageData.results.length]);
+    }, []);
 
-    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize, fetchData]);
+    useEffect(() => {
+        if (pageSize > 0) {
+            fetchData(1, pageSize);
+        }
+    }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => {
         const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
         if (newPage > 0 && newPage <= totalPages) {
-            fetchData(newPage, pageSize);
+            fetchData(newPage, pageSize, true);
         }
     };
 
@@ -54,13 +59,22 @@ export default function PagosPage() {
         return <div className="p-8">Sin permiso para ver pagos.</div>;
     }
 
+    if (loading && !isPaginating) {
+        return <Loader className="p-8" />;
+    }
+
     return (
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Pagos Registrados</h1>
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
-            <div ref={ref} className="flex-grow min-h-0">
+            <div ref={ref} className="flex-grow min-h-0 relative">
+                {isPaginating && (
+                    <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10">
+                        <Loader />
+                    </div>
+                )}
                 <ReusableTable data={pageData.results} columns={columns} />
             </div>
             <div className="flex-shrink-0 flex justify-between items-center mt-4">
