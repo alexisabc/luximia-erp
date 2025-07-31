@@ -27,12 +27,10 @@ export default function LoginAnimation({ state, eyeTranslation }) {
 
                 /* --- Estados de la Animación --- */
 
-                /* Ojos cerrados al escribir contraseña */
                 .typing-pass .eye {
                     transform: scaleY(0.1);
                 }
 
-                /* Animación de espiar (humanizada) */
                 .peeking-pass .eye-left {
                     animation: peek-squint-left 4s infinite ease-in-out;
                 }
@@ -40,17 +38,12 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     animation: peek-squint-right 4s infinite ease-in-out;
                 }
                 
-                /* Estado de éxito */
-                .success .eye-left { transform: scaleY(0.1) translateY(40px) translateX(-5px); }
-                .success .eye-right { transform: scaleY(0.1) translateY(40px) translateX(5px); }
-                .success .mouth { d: path('M 40 70 Q 50 85 60 70'); stroke-width: 3; }
-
-                /* Estado de error: sacudir la cabeza */
+                .success .eye-right {
+                    animation: success-wink 2s infinite ease-in-out;
+                }
+                
                 .error .svg-container {
                     animation: shake 0.6s ease-in-out;
-                }
-                .error .mouth { 
-                    d: path('M 40 75 Q 50 65 60 75');
                 }
                 
                 /* --- Animación IDLE Simple --- */
@@ -62,12 +55,12 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     97.5% { transform: scaleY(0.1); }
                 }
 
-                /* --- Animación BORED Compleja (Ciclo de 60 segundos) --- */
+                /* --- Animación BORED Compleja --- */
                 .sleep-elements {
-                    opacity: 0; /* Oculto por defecto */
+                    opacity: 0;
                 }
                 .bored .sleep-elements {
-                    opacity: 1; /* Visible solo en estado 'bored' */
+                    animation: fade-in-sleep 60s infinite;
                 }
                 .bored .eyes {
                     animation: look-around 60s infinite;
@@ -76,45 +69,73 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     animation: sleepy-eyes 60s infinite;
                 }
                 .bored .drool-bubble {
-                    animation: drool-anim 60s infinite;
+                    animation: drool-cycle 20s infinite 30s;
                 }
                 .bored .zzz {
-                    animation: zzz-anim 60s infinite;
-                    animation-delay: calc(var(--i) * 0.2s); /* Delay para cada Z */
+                    animation: zzz-cycle 3s infinite;
+                    animation-delay: calc(30s + var(--i) * 0.3s);
+                }
+                
+                /* --- Expresiones de la Boca con Transiciones Suaves --- */
+                .mouth {
+                    opacity: 0;
+                    transition: opacity 0.3s ease-in-out;
+                }
+                .idle .mouth-idle,
+                .typing-user .mouth-typing,
+                .peeking-pass .mouth-peeking,
+                .typing-pass .mouth-peeking, /* CORRECCIÓN: Añadido para que la boca no desaparezca */
+                .success .mouth-success,
+                .error .mouth-error {
+                    opacity: 1;
+                }
+                
+                .bored .mouth-idle {
+                    animation: fade-out-mouth 60s infinite;
+                }
+                .bored .mouth-bored {
+                    animation: fade-in-mouth 60s infinite;
                 }
 
-                /* 0-30s: Mirando alrededor */
                 @keyframes look-around {
                     0%, 4%, 20%, 25%, 48%, 50%, 100% { transform: translateX(0) translateY(0); }
-                    5%, 9% { transform: translateX(-8px) translateY(0); }   /* Izquierda */
-                    10%, 14% { transform: translateX(8px) translateY(0); }  /* Derecha */
-                    15%, 19% { transform: translateY(-8px) translateX(0); } /* Arriba */
+                    5%, 9% { transform: translateX(-8px) translateY(0); }
+                    10%, 14% { transform: translateX(8px) translateY(0); }
+                    15%, 19% { transform: translateY(-8px) translateX(0); }
                 }
 
-                /* 0-30s: Parpadeo | 30-60s: Durmiendo */
                 @keyframes sleepy-eyes {
                     0%, 23%, 27%, 48%, 100% { transform: scaleY(1); }
-                    25% { transform: scaleY(0.1); } /* Parpadeo */
-                    50%, 99.9% { transform: scaleY(0.1) translateY(2px); } /* Durmiendo */
+                    25% { transform: scaleY(0.1); }
+                    50%, 99.9% { transform: scaleY(0.1) translateY(2px); }
+                }
+                
+                @keyframes fade-in-sleep {
+                    0%, 49.9% { opacity: 0; }
+                    50%, 100% { opacity: 1; }
+                }
+                
+                @keyframes fade-out-mouth {
+                    0%, 49.9% { opacity: 1; }
+                    50%, 100% { opacity: 0; }
+                }
+                @keyframes fade-in-mouth {
+                    0%, 49.9% { opacity: 0; }
+                    50%, 100% { opacity: 1; }
                 }
 
-                /* 50-60s: Babeo */
-                @keyframes drool-anim {
-                    0%, 83%, 100% { transform: scale(0); opacity: 0; }
-                    83.1% { transform: scale(0); opacity: 1; }
-                    88% { transform: scale(1.2); } /* Se infla */
-                    95% { transform: scale(1); } /* Se desinfla un poco */
-                    99.9% { transform: scale(0); opacity: 1; }
+                @keyframes drool-cycle {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.2); }
                 }
 
-                /* 40-50s: Zzz */
-                @keyframes zzz-anim {
-                    0%, 66%, 83%, 100% { opacity: 0; transform: translate(5px, -5px) scale(0.8); }
-                    66.1% { opacity: 1; transform: translate(5px, -5px) scale(1); }
-                    82.9% { opacity: 0; transform: translate(15px, -40px) scale(1.5); }
+                @keyframes zzz-cycle {
+                    0% { opacity: 0; transform: translate(5px, -5px) scale(0.8); }
+                    20% { opacity: 1; transform: translate(5px, -5px) scale(1); }
+                    80% { opacity: 0; transform: translate(15px, -40px) scale(1.5); }
+                    100% { opacity: 0; }
                 }
 
-                /* Animación de sacudir la cabeza */
                 @keyframes shake {
                     10%, 90% { transform: translateX(-2px) rotate(-3deg); }
                     20%, 80% { transform: translateX(4px) rotate(3deg); }
@@ -122,16 +143,19 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     40%, 60% { transform: translateX(6px) rotate(3deg); }
                 }
 
-                /* Animación de espiar (humanizada) */
                 @keyframes peek-squint-left {
-                    0%, 20%  { transform: scaleY(0.1); } /* Cerrado */
-                    25%, 45% { transform: scaleY(0.6); } /* Entrecerrado */
-                    50%, 100%{ transform: scaleY(0.1); } /* Cerrado */
+                    0%, 20%  { transform: scaleY(0.1); }
+                    25%, 45% { transform: scaleY(0.6); }
+                    50%, 100%{ transform: scaleY(0.1); }
                 }
                 @keyframes peek-squint-right {
-                    0%, 50%  { transform: scaleY(0.1); } /* Cerrado */
-                    55%, 75% { transform: scaleY(0.6); } /* Entrecerrado */
-                    80%, 100%{ transform: scaleY(0.1); } /* Cerrado */
+                    0%, 50%  { transform: scaleY(0.1); }
+                    55%, 75% { transform: scaleY(0.6); }
+                    80%, 100%{ transform: scaleY(0.1); }
+                }
+                @keyframes success-wink {
+                    0%, 80%, 100% { transform: scaleY(1); }
+                    90% { transform: scaleY(0.1); }
                 }
             `}</style>
             <svg viewBox="0 0 100 100" className={state}>
@@ -145,8 +169,15 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                         <circle className="eye eye-right" cx="65" cy="45" r="5" fill="#333" />
                     </g>
 
-                    {/* Boca */}
-                    <path className="mouth" d="M 40 70 Q 50 75 60 70" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                    {/* Grupo de Bocas para Transiciones */}
+                    <g>
+                        <path className="mouth mouth-idle" d="M 40 70 Q 50 75 60 70" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path className="mouth mouth-typing" d="M 45 72 Q 50 77 55 72" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path className="mouth mouth-peeking" d="M 42 72 L 58 72" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path className="mouth mouth-success" d="M 40 70 Q 50 85 60 70" stroke="#333" strokeWidth="3" fill="none" strokeLinecap="round" />
+                        <path className="mouth mouth-error" d="M 40 75 Q 50 65 60 75" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path className="mouth mouth-bored" d="M 45 72 Q 50 75 55 72" stroke="#333" strokeWidth="2" fill="none" strokeLinecap="round" />
+                    </g>
 
                     {/* Elementos para dormir */}
                     <g className="sleep-elements">

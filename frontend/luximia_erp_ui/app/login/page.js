@@ -21,29 +21,35 @@ export default function LoginPage() {
     // Estado para controlar la animación SVG
     const [animationState, setAnimationState] = useState('idle');
     const [eyeTranslation, setEyeTranslation] = useState(0);
+    const [hasInteracted, setHasInteracted] = useState(false);
     const inactivityTimerRef = useRef(null);
 
-    // Función para reiniciar el temporizador de inactividad
-    const resetInactivityTimer = () => {
-        clearTimeout(inactivityTimerRef.current);
-    };
-
-    // Función para iniciar el temporizador de inactividad
-    const startInactivityTimer = () => {
-        resetInactivityTimer(); // Limpia cualquier temporizador anterior
-        inactivityTimerRef.current = setTimeout(() => {
-            setAnimationState('bored');
-        }, 5000); // 5 segundos de inactividad
-    };
-
-    // Efecto de limpieza para cuando el componente se desmonte
+    // Efecto para manejar el temporizador de inactividad
     useEffect(() => {
+        // Limpiar cualquier temporizador existente cuando el estado cambie
+        clearTimeout(inactivityTimerRef.current);
+
+        // Si el estado es 'idle' Y el usuario ya ha interactuado, iniciar un temporizador para cambiar a 'bored'
+        if (animationState === 'idle' && hasInteracted) {
+            inactivityTimerRef.current = setTimeout(() => {
+                setAnimationState('bored');
+            }, 5000); // 5 segundos de inactividad
+        }
+
+        // Función de limpieza para el desmontaje del componente
         return () => clearTimeout(inactivityTimerRef.current);
-    }, []);
+    }, [animationState, hasInteracted]);
+
+    const markAsInteracted = () => {
+        if (!hasInteracted) {
+            setHasInteracted(true);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        resetInactivityTimer();
+        clearTimeout(inactivityTimerRef.current);
+        markAsInteracted();
         setIsLoading(true);
         setError(null);
         try {
@@ -51,13 +57,12 @@ export default function LoginPage() {
             setAnimationState('success');
             setTimeout(() => {
                 router.push('/');
-            }, 1500);
+            }, 2500); // Aumentar tiempo para ver la animación de éxito
         } catch (err) {
             setError(err.message || "El usuario o la contraseña no son válidos.");
             setAnimationState('error');
             setTimeout(() => {
                 setAnimationState('idle');
-                startInactivityTimer();
             }, 2000);
         } finally {
             setIsLoading(false);
@@ -65,16 +70,20 @@ export default function LoginPage() {
     };
 
     const handleFocus = (field) => {
-        resetInactivityTimer();
-        if (animationState === 'bored') {
+        markAsInteracted();
+        clearTimeout(inactivityTimerRef.current);
+        if (animationState === 'bored' || animationState === 'error') {
             setAnimationState('idle');
         }
 
-        if (field === 'username') {
-            setAnimationState('typing-user');
-        } else if (field === 'password') {
-            setAnimationState(showPassword ? 'peeking-pass' : 'typing-pass');
-        }
+        // Pequeño delay para que la transición de 'bored' a 'typing' sea más suave
+        setTimeout(() => {
+            if (field === 'username') {
+                setAnimationState('typing-user');
+            } else if (field === 'password') {
+                setAnimationState(showPassword ? 'peeking-pass' : 'typing-pass');
+            }
+        }, 50);
     };
 
     const handleBlur = () => {
@@ -83,15 +92,10 @@ export default function LoginPage() {
         startInactivityTimer();
     };
 
-    const handleInteraction = () => {
-        resetInactivityTimer();
-        if (animationState === 'bored') {
-            setAnimationState('idle');
-        }
-    };
-
     const handleUsernameChange = (e) => {
-        handleInteraction();
+        markAsInteracted();
+        clearTimeout(inactivityTimerRef.current);
+        if (animationState === 'bored') setAnimationState('idle');
         setUsername(e.target.value);
 
         const input = e.target;
@@ -106,18 +110,31 @@ export default function LoginPage() {
     };
 
     const handlePasswordChange = (e) => {
-        handleInteraction();
+        markAsInteracted();
+        clearTimeout(inactivityTimerRef.current);
+        if (animationState === 'bored') setAnimationState('idle');
         setPassword(e.target.value);
     };
 
     const toggleShowPassword = () => {
-        handleInteraction();
+        markAsInteracted();
+        clearTimeout(inactivityTimerRef.current);
+        if (animationState === 'bored') setAnimationState('idle');
         const nextShowPassword = !showPassword;
         setShowPassword(nextShowPassword);
 
         // Si el campo de contraseña está activo, cambia la animación inmediatamente
         if (document.activeElement.id === 'password') {
             setAnimationState(nextShowPassword ? 'peeking-pass' : 'typing-pass');
+        }
+    };
+
+    const startInactivityTimer = () => {
+        clearTimeout(inactivityTimerRef.current);
+        if (hasInteracted) {
+            inactivityTimerRef.current = setTimeout(() => {
+                setAnimationState('bored');
+            }, 5000);
         }
     };
 
