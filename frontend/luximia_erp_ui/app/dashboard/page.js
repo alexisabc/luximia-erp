@@ -9,14 +9,17 @@ import Loader from '../../components/Loader';
 
 
 
-const KpiCard = ({ title, value }) => (
-  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</h3>
-    <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-      ${parseFloat(value).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-    </p>
-  </div>
-);
+const KpiCard = ({ title, value }) => {
+  const numberValue = Number(value ?? 0);
+  return (
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</h3>
+      <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
+        ${numberValue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </p>
+    </div>
+  );
+};
 
 const ChartCard = ({ title, children }) => (
   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow h-full flex flex-col">
@@ -63,13 +66,13 @@ export default function DashboardPage() {
 
   const ventasChartData = (data?.chart?.labels || []).map((label, i) => ({
     label,
-    Ventas: data?.chart?.ventas?.[i] || 0,
+    Ventas: Number(data?.chart?.ventas?.[i] ?? 0),
   }));
 
   const cobranzaChartData = (data?.chart?.labels || []).map((label, i) => ({
     label,
-    Cobrado: data?.chart?.recuperado?.[i] || 0,
-    'Por Cobrar': data?.chart?.programado?.[i] || 0,
+    Cobrado: Number(data?.chart?.recuperado?.[i] ?? 0),
+    'Por Cobrar': Number(data?.chart?.programado?.[i] ?? 0),
   }));
 
   if (loading && initialLoad) return <Loader className="p-8" />;
