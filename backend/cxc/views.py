@@ -33,11 +33,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
-    PlanDePagosSerializer,
+    PlanDePagosSerializer, FormaPagoSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
@@ -200,6 +200,12 @@ class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
             'proyecto').filter(estado='Disponible')
         serializer = UPEReadSerializer(upes_disponibles, many=True)
         return Response(serializer.data)
+
+
+class FormaPagoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = FormaPago.objects.all().order_by('id')
+    serializer_class = FormaPagoSerializer
+    pagination_class = CustomPagination
 
 
 class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):

@@ -60,6 +60,15 @@ class UPE(ModeloBaseActivo):
         return f"{self.proyecto.nombre} - {self.identificador}"
 
 
+class FormaPago(ModeloBaseActivo):
+    """Define una forma de pago con porcentajes y meses."""
+    porcentajes = models.JSONField(help_text="Lista de porcentajes de cada pago")
+    meses = models.JSONField(help_text="Meses correspondientes a cada pago")
+
+    def __str__(self):
+        return f"FormaPago {self.id}"
+
+
 class Contrato(ModeloBaseActivo):
     """
     Define los términos de la venta y el financiamiento.

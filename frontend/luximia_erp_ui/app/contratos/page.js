@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getContratos, createContrato, getClientes, getUPEsDisponibles, exportContratosExcel } from '../../services/api';
+import { getContratos, createContrato, getClientes, getUPEsDisponibles, getFormasPago, exportContratosExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Modal from '../../components/Modal';
 import ReusableTable from '../../components/ReusableTable';
@@ -37,6 +37,8 @@ export default function ContratosPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [clientes, setClientes] = useState([]);
     const [upesDisponibles, setUpesDisponibles] = useState([]);
+    const [formasPago, setFormasPago] = useState([]);
+    const [selectedFormaPago, setSelectedFormaPago] = useState('');
     const [error, setError] = useState(null);
     const pageSize = 5;
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,12 +96,13 @@ export default function ContratosPage() {
         if (!authTokens || !size || size <= 0) return;
         pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
-            const [contratosRes, clientesRes, upesRes] = await Promise.all([
-                getContratos(page, size), getClientes(1, 1000), getUPEsDisponibles()
+            const [contratosRes, clientesRes, upesRes, formasRes] = await Promise.all([
+                getContratos(page, size), getClientes(1, 1000), getUPEsDisponibles(), getFormasPago()
             ]);
             setPageData(contratosRes.data);
             setClientes(clientesRes.data.results);
             setUpesDisponibles(upesRes.data);
+            setFormasPago(formasRes.data.results || formasRes.data);
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los datos.');
@@ -115,7 +118,33 @@ export default function ContratosPage() {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+            const updated = { ...prev, [name]: value };
+            if (name === 'precio_final_pactado' && selectedFormaPago) {
+                const fp = formasPago.find(f => f.id === parseInt(selectedFormaPago));
+                if (fp) {
+                    const pct = fp.porcentajes[0] || 0;
+                    updated.monto_enganche = ((parseFloat(value) || 0) * pct / 100).toFixed(2);
+                }
+            }
+            return updated;
+        });
+    };
+
+    const handleFormaPagoChange = (e) => {
+        const id = e.target.value;
+        setSelectedFormaPago(id);
+        const fp = formasPago.find(f => f.id === parseInt(id));
+        if (fp) {
+            const pct = fp.porcentajes[0] || 0;
+            const precio = parseFloat(formData.precio_final_pactado) || 0;
+            const enganche = (precio * pct) / 100;
+            setFormData(prev => ({
+                ...prev,
+                monto_enganche: enganche ? enganche.toFixed(2) : '',
+                numero_mensualidades: fp.meses[fp.meses.length - 1] || ''
+            }));
+        }
     };
 
     const handleCreateClick = () => {
@@ -124,6 +153,7 @@ export default function ContratosPage() {
             precio_final_pactado: '', moneda_pactada: 'USD', monto_enganche: '',
             numero_mensualidades: '', tasa_interes_mensual: '0.03'
         });
+        setSelectedFormaPago('');
         setIsModalOpen(true);
     };
 
@@ -233,6 +263,15 @@ export default function ContratosPage() {
                                     <option value="MXN">MXN</option>
                                 </select>
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-gray-700 text-sm font-bold mb-2">Forma de Pago</label>
+                            <select value={selectedFormaPago} onChange={handleFormaPagoChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-900">
+                                <option value="" disabled>Seleccione una forma</option>
+                                {formasPago.map(fp => (
+                                    <option key={fp.id} value={fp.id}>{`${fp.porcentajes.join('-')}% / ${fp.meses.join('-')} meses`}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
