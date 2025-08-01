@@ -158,11 +158,19 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+
+                        {hasPermission('cxc.view_vendedor') && (
+                            <li>
+                                <Link href="/vendedores" className={getLinkClass('/vendedores')}>
+                                    <User className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Vendedores</span>}
+
                         {hasPermission('cxc.view_empleado') && (
                             <li>
                                 <Link href="/empleados" className={getLinkClass('/empleados')}>
                                     <UserPlus className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Empleados</span>}
+
                                 </Link>
                             </li>
                         )}

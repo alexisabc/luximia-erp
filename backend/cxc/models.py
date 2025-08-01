@@ -91,6 +91,31 @@ class Puesto(ModeloBaseActivo):
         return self.nombre
 
 
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Vendedor(ModeloBaseActivo):
+    tipo = models.CharField(max_length=50)
+    nombre_completo = models.CharField(max_length=200)
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class UPE(ModeloBaseActivo):
+
 class Empleado(ModeloBaseActivo):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name='empleado')
@@ -120,6 +145,7 @@ class Cliente(ModeloBaseActivo):
 
 
 class UPE(ModeloBaseActivo):
+
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
 
