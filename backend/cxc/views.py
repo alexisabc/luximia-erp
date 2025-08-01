@@ -34,6 +34,61 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
 
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, FormaPagoSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
 from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, DepartamentoSerializer, PuestoSerializer, UPESerializer, UPEReadSerializer,
@@ -599,7 +654,11 @@ class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
 
+
 class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
 
 
     queryset = UPE.objects.select_related(
@@ -616,6 +675,12 @@ class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
             'proyecto').filter(estado='Disponible')
         serializer = UPEReadSerializer(upes_disponibles, many=True)
         return Response(serializer.data)
+
+
+class FormaPagoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = FormaPago.objects.all().order_by('id')
+    serializer_class = FormaPagoSerializer
+    pagination_class = CustomPagination
 
 
 class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):

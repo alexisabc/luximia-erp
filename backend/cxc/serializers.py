@@ -14,6 +14,9 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
+
+
 from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 
 
@@ -54,6 +57,7 @@ from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDe
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
 
 
 
@@ -182,6 +186,17 @@ class UPEReadSerializer(serializers.ModelSerializer):
 
         fields = ['id', 'identificador', 'valor_total',
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
+
+class FormaPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormaPago
+        fields = '__all__'
+
+
+        fields = ['id', 'identificador', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
 
 
 class EsquemaComisionSerializer(serializers.ModelSerializer):

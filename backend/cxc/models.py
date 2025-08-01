@@ -58,6 +58,8 @@ class Cliente(ModeloBaseActivo):
         return self.nombre_completo
 
 
+class UPE(ModeloBaseActivo):
+
 class Departamento(ModeloBaseActivo):
     nombre = models.CharField(max_length=100, unique=True)
 
@@ -122,6 +124,7 @@ class Puesto(ModeloBaseActivo):
 
 
 class UPE(ModeloBaseActivo):
+
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
 
@@ -204,6 +207,15 @@ class UPE(ModeloBaseActivo):
 
     def __str__(self):
         return f"{self.proyecto.nombre} - {self.identificador}"
+
+
+class FormaPago(ModeloBaseActivo):
+    """Define una forma de pago con porcentajes y meses."""
+    porcentajes = models.JSONField(help_text="Lista de porcentajes de cada pago")
+    meses = models.JSONField(help_text="Meses correspondientes a cada pago")
+
+    def __str__(self):
+        return f"FormaPago {self.id}"
 
 
 class Contrato(ModeloBaseActivo):
