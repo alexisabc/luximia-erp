@@ -2,9 +2,19 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from .views import (
     ProyectoViewSet, ClienteViewSet, DepartamentoViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
     UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+from .views import (
+
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, EsquemaComisionViewSet,
+
+    ProyectoViewSet, BancoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
     generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
     consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
     importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
@@ -13,13 +23,23 @@ from .views import (
     strategic_dashboard_data  # <-- Añade la nueva vista del dashboard
 )
 
+
 router = DefaultRouter()
 router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
 router.register(r'clientes', ClienteViewSet, basename='cliente')
 router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
 router.register(r'upes', UPEViewSet, basename='upe')
 router.register(r'contratos', ContratoViewSet, basename='contrato')
+
+router = DefaultRouter()
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'bancos', BancoViewSet, basename='banco')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'upes', UPEViewSet, basename='upe')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+
 router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'esquemas-comision', EsquemaComisionViewSet, basename='esquema-comision')
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'groups', GroupViewSet, basename='group')
 router.register(r'tipos-de-cambio', TipoDeCambioViewSet)

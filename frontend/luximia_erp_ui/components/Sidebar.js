@@ -197,6 +197,14 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_esquemacomision') && (
+                            <li>
+                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision')}>
+                                    <CircleDollarSign className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Esquemas</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.can_export') && (
                             <li>
                                 <Link href="/reportes" className={getLinkClass('/reportes')}>

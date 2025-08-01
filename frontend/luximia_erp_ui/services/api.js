@@ -59,11 +59,19 @@ export default apiClient;
 
 
 // --- FUNCIONES DE API (CON PAGINACIÓN) ---
+
 export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
 export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
 export const getDepartamentos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/departamentos/?page=${page}&page_size=${pageSize}`);
 export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
 export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+
+export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
+export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
+export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
+
 
 
 // --- FUNCIONES SIN PAGINACIÓN O POR ID ---
@@ -122,6 +130,13 @@ export const hardDeleteContrato = (id) => apiClient.delete(`/cxc/contratos/${id}
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/cxc/pagos/${pagoId}/`, data);
 export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
+
+// CRUD - Esquemas de Comisión
+export const createEsquemaComision = (data) => apiClient.post('/cxc/esquemas-comision/', data);
+export const updateEsquemaComision = (id, data) => apiClient.put(`/cxc/esquemas-comision/${id}/`, data);
+export const deleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/`);
+export const getInactiveEsquemasComision = () => apiClient.get('/cxc/esquemas-comision/inactive/');
+export const hardDeleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/hard_delete/`);
 
 // CRUD - Tipo de Cambio
 export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');

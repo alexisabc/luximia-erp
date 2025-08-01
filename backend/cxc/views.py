@@ -33,11 +33,74 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
+
 from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, DepartamentoSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
     PlanDePagosSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, EsquemaComisionSerializer,
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, BancoSerializer,
+
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
@@ -179,6 +242,7 @@ class ProyectoViewSet(SoftDeleteViewSetMixin,  viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+
 class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Cliente.objects.prefetch_related(
         'contratos__upe__proyecto').order_by('nombre_completo')
@@ -199,6 +263,28 @@ class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
 
 
 class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+class BancoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Banco.objects.all().order_by('nombre_corto')
+    serializer_class = BancoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        bancos = self.get_queryset()
+        serializer = self.get_serializer(bancos, many=True)
+        return Response(serializer.data)
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
     queryset = UPE.objects.select_related(
         'proyecto').all().order_by('identificador')
     pagination_class = CustomPagination
@@ -251,6 +337,12 @@ class PagoViewSet(viewsets.ModelViewSet):
         log_action(self.request.user, 'delete', instance)
         instance.delete()
         contrato_afectado.actualizar_plan_de_pagos()
+
+
+class EsquemaComisionViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = EsquemaComision.objects.all().order_by('esquema')
+    serializer_class = EsquemaComisionSerializer
+    pagination_class = CustomPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -1174,8 +1266,16 @@ def export_proyectos_excel(request):
     """
     try:
         PROYECTO_COLUMNAS = {
-            "id": "ID", "nombre": "Nombre",
-            "descripcion": "Descripción", "activo": "Estado"
+            "id": "ID",
+            "nombre": "Nombre",
+            "descripcion": "Descripción",
+            "niveles": "Niveles",
+            "numero_upes": "Número de UPEs",
+            "metros_cuadrados": "Metros cuadrados",
+            "numero_estacionamientos": "Número de Estacionamientos",
+            "valor_total": "Valor Total",
+            "estado": "Estado",
+            "activo": "Activo",
         }
         selected_cols = request.query_params.getlist(
             'cols', list(PROYECTO_COLUMNAS.keys()))
@@ -1190,12 +1290,21 @@ def export_proyectos_excel(request):
             if 'nombre' in selected_cols:
                 proyectos_data[PROYECTO_COLUMNAS['nombre']].append(p.nombre)
             if 'descripcion' in selected_cols:
-                proyectos_data[PROYECTO_COLUMNAS['descripcion']].append(
-                    p.descripcion)
+                proyectos_data[PROYECTO_COLUMNAS['descripcion']].append(p.descripcion)
+            if 'niveles' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['niveles']].append(p.niveles)
+            if 'numero_upes' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['numero_upes']].append(p.numero_upes)
+            if 'metros_cuadrados' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['metros_cuadrados']].append(float(p.metros_cuadrados))
+            if 'numero_estacionamientos' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['numero_estacionamientos']].append(p.numero_estacionamientos)
+            if 'valor_total' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['valor_total']].append(float(p.valor_total))
+            if 'estado' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['estado']].append(p.estado)
             if 'activo' in selected_cols:
-                # Lógica para cambiar Verdadero/Falso a texto
-                proyectos_data[PROYECTO_COLUMNAS['activo']].append(
-                    "Activo" if p.activo else "Inactivo")
+                proyectos_data[PROYECTO_COLUMNAS['activo']].append("Activo" if p.activo else "Inactivo")
 
         df_proyectos = pl.DataFrame(proyectos_data)
 
@@ -1307,9 +1416,12 @@ def export_upes_excel(request):
             "id": "ID",
             "proyecto__nombre": "Proyecto",  # Campo relacionado
             "identificador": "Identificador",
+            "nivel": "Nivel",
+            "metros_cuadrados": "Metros cuadrados",
+            "estacionamientos": "Estacionamientos",
             "valor_total": "Valor Total",
             "moneda": "Moneda",
-            "estado": "Estado"
+            "estado": "Estado",
         }
         selected_cols = request.query_params.getlist(
             'cols', list(UPE_COLUMNAS.keys()))
@@ -1327,11 +1439,15 @@ def export_upes_excel(request):
                 upes_data[UPE_COLUMNAS['proyecto__nombre']].append(
                     upe.proyecto.nombre)
             if 'identificador' in selected_cols:
-                upes_data[UPE_COLUMNAS['identificador']].append(
-                    upe.identificador)
+                upes_data[UPE_COLUMNAS['identificador']].append(upe.identificador)
+            if 'nivel' in selected_cols:
+                upes_data[UPE_COLUMNAS['nivel']].append(upe.nivel)
+            if 'metros_cuadrados' in selected_cols:
+                upes_data[UPE_COLUMNAS['metros_cuadrados']].append(float(upe.metros_cuadrados))
+            if 'estacionamientos' in selected_cols:
+                upes_data[UPE_COLUMNAS['estacionamientos']].append(upe.estacionamientos)
             if 'valor_total' in selected_cols:
-                upes_data[UPE_COLUMNAS['valor_total']].append(
-                    float(upe.valor_total))
+                upes_data[UPE_COLUMNAS['valor_total']].append(float(upe.valor_total))
             if 'moneda' in selected_cols:
                 upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda)
             if 'estado' in selected_cols:
