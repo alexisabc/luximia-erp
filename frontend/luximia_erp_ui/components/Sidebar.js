@@ -164,6 +164,14 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_upe') && (
+                            <li>
+                                <Link href="/upes" className={getLinkClass('/upes')}>
+                                    <FileSearch className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">UPEs</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_contrato') && (
                             <li>
                                 <Link href="/contratos" className={getLinkClass('/contratos')}>
