@@ -13,6 +13,12 @@ const permissionTranslations = {
   delete_cliente: "Eliminar cliente",
   view_cliente: "Ver cliente",
 
+  // Permisos para Empleado
+  add_empleado: "Añadir empleado",
+  change_empleado: "Cambiar empleado",
+  delete_empleado: "Eliminar empleado",
+  view_empleado: "Ver empleado",
+
   // Permisos para UPE
   add_upe: "Añadir UPE",
   change_upe: "Cambiar UPE",
@@ -70,6 +76,9 @@ export const translatePermission = (permission) => {
 const modelTranslations = {
   proyecto: 'Proyectos',
   cliente: 'Clientes',
+  empleado: 'Empleados',
+  departamento: 'Departamentos',
+  puesto: 'Puestos',
   upe: 'UPEs',
   contrato: 'Contratos',
   pago: 'Pagos',

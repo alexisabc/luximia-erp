@@ -11,11 +11,13 @@ import {
     Home,
     Users,
     ClipboardList,
+    Building,
     FileText,
     Banknote,
     BarChart3,
     Settings,
     User,
+    UserPlus,
     Key,
     Upload,
     CircleDollarSign,
@@ -156,11 +158,27 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_empleado') && (
+                            <li>
+                                <Link href="/empleados" className={getLinkClass('/empleados')}>
+                                    <UserPlus className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Empleados</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_proyecto') && (
                             <li>
                                 <Link href="/proyectos" className={getLinkClass('/proyectos')}>
                                     <ClipboardList className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Proyectos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_departamento') && (
+                            <li>
+                                <Link href="/departamentos" className={getLinkClass('/departamentos')}>
+                                    <Building className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Departamentos</span>}
                                 </Link>
                             </li>
                         )}
@@ -185,6 +203,14 @@ export default function Sidebar() {
                                 <Link href="/pagos" className={getLinkClass('/pagos')}>
                                     <Banknote className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Pagos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_esquemacomision') && (
+                            <li>
+                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision')}>
+                                    <CircleDollarSign className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Esquemas</span>}
                                 </Link>
                             </li>
                         )}
