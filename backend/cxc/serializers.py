@@ -14,6 +14,9 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, PlanPago, TipoDeCambio, AuditLog
+
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
 
 
@@ -57,6 +60,7 @@ from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDe
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
 
 
 
@@ -223,6 +227,19 @@ class PlanDePagosSerializer(serializers.ModelSerializer):
         model = PlanDePagos
         fields = ['id', 'fecha_vencimiento',
                   'monto_programado', 'tipo', 'pagado']
+
+
+class PlanPagoSerializer(serializers.ModelSerializer):
+    cliente_nombre = serializers.CharField(
+        source='cliente.nombre_completo', read_only=True)
+    upe_identificador = serializers.CharField(
+        source='upe.identificador', read_only=True)
+
+    class Meta:
+        model = PlanPago
+        fields = ['id', 'cliente', 'upe', 'monto_programado', 'monto_pagado',
+                  'fecha_programada', 'fecha_pago', 'moneda', 'forma_pago',
+                  'activo', 'cliente_nombre', 'upe_identificador']
 
 
 class PagoWriteSerializer(serializers.ModelSerializer):
