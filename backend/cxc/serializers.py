@@ -14,9 +14,13 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
 
 
 # ==============================================================================
@@ -29,6 +33,10 @@ class ProyectoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
 class BancoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banco
@@ -37,6 +45,7 @@ class BancoSerializer(serializers.ModelSerializer):
 
 class ClienteSerializer(serializers.ModelSerializer):
     proyectos_asociados = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Cliente
@@ -47,6 +56,12 @@ class ClienteSerializer(serializers.ModelSerializer):
         proyectos = obj.contratos.select_related('upe__proyecto').values_list(
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = '__all__'
 
 
 class UPESerializer(serializers.ModelSerializer):

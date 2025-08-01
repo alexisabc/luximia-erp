@@ -46,6 +46,7 @@ class Proyecto(ModeloBaseActivo):
         return self.nombre
 
 
+
 class Cliente(ModeloBaseActivo):
     nombre_completo = models.CharField(max_length=200)
     telefono = models.CharField(max_length=20, blank=True, null=True)
@@ -55,6 +56,25 @@ class Cliente(ModeloBaseActivo):
 
     def __str__(self):
         return self.nombre_completo
+
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
 
 
 class UPE(ModeloBaseActivo):
