@@ -59,11 +59,34 @@ export default apiClient;
 
 
 // --- FUNCIONES DE API (CON PAGINACIÓN) ---
+
 export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
+export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
+export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+export const getEmpleados = (page = 1, pageSize = 15) => apiClient.get(`/cxc/empleados/?page=${page}&page_size=${pageSize}`);
+
+
+export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
+export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
+export const getDepartamentos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/departamentos/?page=${page}&page_size=${pageSize}`);
+export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+
+
+export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
+
 export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
 export const getVendedores = (page = 1, pageSize = 15) => apiClient.get(`/cxc/vendedores/?page=${page}&page_size=${pageSize}`);
 export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
 export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+
+export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
+export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
+
+
 
 
 // --- FUNCIONES SIN PAGINACIÓN O POR ID ---
@@ -74,8 +97,16 @@ export const getGroups = () => apiClient.get('/cxc/groups/all/');
 export const getPermissions = () => apiClient.get('/cxc/permissions/');
 
 // Para Dropdowns
+
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
 export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
+export const getDepartamentos = () => apiClient.get('/cxc/departamentos/all/');
+export const getPuestos = () => apiClient.get('/cxc/puestos/all/');
+
+export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
+export const getAllDepartamentos = () => apiClient.get('/cxc/departamentos/all/');
+export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
+
 
 // Por ID
 export const getProyecto = (id) => apiClient.get(`/cxc/proyectos/${id}/`);
@@ -96,6 +127,7 @@ export const createCliente = (data) => apiClient.post('/cxc/clientes/', data);
 export const updateCliente = (id, data) => apiClient.put(`/cxc/clientes/${id}/`, data);
 export const deleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/`);
 export const getInactiveClientes = () => apiClient.get('/cxc/clientes/inactive/');
+
 export const hardDeleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/hard_delete/`);
 
 // CRUD - Vendedores
@@ -107,6 +139,26 @@ export const hardDeleteVendedor = (id) => apiClient.delete(`/cxc/vendedores/${id
 
 // CRUD - UPEs
 export const createUPE = (data) => apiClient.post('/cxc/upes/', data);
+
+export const hardDeleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/hard_delete/`);
+
+// CRUD - Empleados
+export const createEmpleado = (data) => apiClient.post('/cxc/empleados/', data);
+export const updateEmpleado = (id, data) => apiClient.put(`/cxc/empleados/${id}/`, data);
+export const deleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/`);
+export const getInactiveEmpleados = () => apiClient.get('/cxc/empleados/inactive/');
+export const hardDeleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/hard_delete/`);
+
+// CRUD - Departamentos
+export const createDepartamento = (data) => apiClient.post('/cxc/departamentos/', data);
+export const updateDepartamento = (id, data) => apiClient.put(`/cxc/departamentos/${id}/`, data);
+export const deleteDepartamento = (id) => apiClient.delete(`/cxc/departamentos/${id}/`);
+export const getInactiveDepartamentos = () => apiClient.get('/cxc/departamentos/inactive/');
+export const hardDeleteDepartamento = (id) => apiClient.delete(`/cxc/departamentos/${id}/hard_delete/`);
+
+// CRUD - UPEs
+export const createUPE = (data) => apiClient.post('/cxc/upes/', data);
+
 export const updateUPE = (id, data) => apiClient.put(`/cxc/upes/${id}/`, data);
 export const deleteUPE = (id) => apiClient.delete(`/cxc/upes/${id}/`);
 export const getInactiveUpes = () => apiClient.get('/cxc/upes/inactive/');
@@ -120,12 +172,35 @@ export const hardDeleteContrato = (id) => apiClient.delete(`/cxc/contratos/${id}
 // CRUD - Pagos
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/cxc/pagos/${pagoId}/`, data);
+
 export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
+
+// CRUD - Tipo Cambio
+export const getTiposCambio = (page = 1, pageSize = 15) =>
+    apiClient.get(`/cxc/tipos-cambio/?page=${page}&page_size=${pageSize}`);
+export const createTipoCambio = (data) => apiClient.post('/cxc/tipos-cambio/', data);
+export const updateTipoCambio = (id, data) => apiClient.put(`/cxc/tipos-cambio/${id}/`, data);
+export const deleteTipoCambio = (id) => apiClient.delete(`/cxc/tipos-cambio/${id}/`);
 
 // CRUD - Tipo de Cambio
 export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');
 export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
 export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-cambio/actualizar-hoy/');
+
+export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
+
+// CRUD - Esquemas de Comisión
+export const createEsquemaComision = (data) => apiClient.post('/cxc/esquemas-comision/', data);
+export const updateEsquemaComision = (id, data) => apiClient.put(`/cxc/esquemas-comision/${id}/`, data);
+export const deleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/`);
+export const getInactiveEsquemasComision = () => apiClient.get('/cxc/esquemas-comision/inactive/');
+export const hardDeleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/hard_delete/`);
+
+// CRUD - Tipo de Cambio
+export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');
+export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
+export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-cambio/actualizar-hoy/');
+
 
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/cxc/users/', data);
