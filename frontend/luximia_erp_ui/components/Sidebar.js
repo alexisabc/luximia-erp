@@ -47,7 +47,7 @@ export default function Sidebar() {
     const sidebarRef = useRef(null);
 
     const adminActive = pathname.startsWith('/configuraciones') || pathname.startsWith('/importar') ||
-        pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/auditoria');
+        pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/tipos-cambio') || pathname.startsWith('/auditoria');
 
     useEffect(() => {
         setIsAdminOpen(adminActive);
@@ -55,7 +55,7 @@ export default function Sidebar() {
         setIsGestionOpen(pathname.startsWith('/configuraciones'));
         const isImportarPath = pathname.startsWith('/importar');
         setIsImportarOpen(isImportarPath);
-        const herramientasPath = isImportarPath || pathname.startsWith('/tipos-de-cambio');
+        const herramientasPath = isImportarPath || pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/tipos-cambio');
         setIsHerramientasOpen(herramientasPath);
         setIsSeguridadOpen(pathname.startsWith('/auditoria'));
     }, [pathname]);
@@ -291,10 +291,16 @@ export default function Sidebar() {
                                                                     </div>
                                                                 )}
                                                             </div>
+                                                            {hasPermission('cxc.view_tipocambio') && (
+                                                                <Link href="/tipos-cambio" className={getLinkClass('/tipos-cambio', true)}>
+                                                                    <CircleDollarSign className="h-4 w-4" />
+                                                                    <span className="ml-2">Tipos de Cambio</span>
+                                                                </Link>
+                                                            )}
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
                                                                     <CircleDollarSign className="h-4 w-4" />
-                                                                    <span className="ml-2">Tipo de Cambio</span>
+                                                                    <span className="ml-2">Tipo de Cambio SAT</span>
                                                                 </Link>
                                                             )}
                                                         </div>
@@ -416,11 +422,19 @@ export default function Sidebar() {
                                                                     </ul>
                                                                 )}
                                                             </li>
+                                                            {hasPermission('cxc.view_tipocambio') && (
+                                                                <li>
+                                                                    <Link href="/tipos-cambio" className={getLinkClass('/tipos-cambio', true)}>
+                                                                        <CircleDollarSign className="h-4 w-4" />
+                                                                        <span className="ml-2">Tipos de Cambio</span>
+                                                                    </Link>
+                                                                </li>
+                                                            )}
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <li>
                                                                     <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
                                                                         <CircleDollarSign className="h-4 w-4" />
-                                                                        <span className="ml-2">Tipo de Cambio</span>
+                                                                        <span className="ml-2">Tipo de Cambio SAT</span>
                                                                     </Link>
                                                                 </li>
                                                             )}

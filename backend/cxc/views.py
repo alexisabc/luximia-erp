@@ -33,13 +33,29 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoCambio,
+    TipoDeCambio,
+    AuditLog,
+)
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
     PlanDePagosSerializer,
-    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
-    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+    UserReadSerializer,
+    UserWriteSerializer,
+    GroupReadSerializer,
+    GroupWriteSerializer,
+    MyTokenObtainPairSerializer,
+    TipoCambioSerializer,
+    TipoDeCambioSerializer,
+    AuditLogSerializer,
 )
 
 # ==============================================================================
@@ -688,6 +704,13 @@ def get_latest_tipo_de_cambio(request):
             {'error': 'No hay tipos de cambio registrados en la base de datos.'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+class TipoCambioViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = TipoCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoCambioSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
 
 
 class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
