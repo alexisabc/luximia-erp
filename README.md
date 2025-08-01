@@ -1,7 +1,7 @@
 # Luximia ERP - Documentación del Proyecto
 
-* **Versión:** 2.3
-* **Fecha de última actualización:** 24 de julio de 2025
+* **Versión:** 2.4
+* **Fecha de última actualización:** 25 de julio de 2025
 * **Resumen:** Este documento detalla la arquitectura, funcionalidades y procedimientos del sistema Luximia ERP. El sistema cuenta con un módulo de Cuentas por Cobrar (CXC) robusto y una arquitectura de frontend modular y reutilizable.
 
 ---
@@ -13,6 +13,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 
 ### 1.2. Características Principales
 * **Gestión Segura:** La eliminación de registros clave (Proyectos, Clientes, UPEs, Contratos) se ha reemplazado por un sistema de **desactivación (soft delete)** para prevenir la pérdida de datos.
+* **Catálogos y campos ampliados:** Los modelos de **Proyecto** y **UPE** ahora incluyen información detallada de niveles, metros cuadrados, estacionamientos y valores totales. Además, se incorporó un catálogo de **Bancos** para futuras integraciones con pagos.
 * **Dashboard Estratégico:** Una nueva interfaz de Business Intelligence que muestra proyecciones de **Ventas, Cobranza, Programado y Morosidad**. Los datos se pueden **filtrar por proyecto y por periodo** (semanal, mensual, anual).
 * **Reportes Personalizados:**
     * **PDF:** Generación de un estado de cuenta profesional para el cliente, con **columnas seleccionables** y el **logo de la empresa como marca de agua**.

@@ -17,6 +17,9 @@ import { Download } from 'lucide-react';
 const UPE_COLUMNAS_DISPLAY = [
     { header: 'Identificador', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.identificador}</span> },
     { header: 'Proyecto', render: (row) => <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">{row.proyecto_nombre}</span> },
+    { header: 'Nivel', render: (row) => row.nivel },
+    { header: 'm²', render: (row) => row.metros_cuadrados },
+    { header: 'Estacionamientos', render: (row) => row.estacionamientos },
     { header: 'Estado', render: (row) => row.estado },
     { header: 'Valor Total', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.valor_total, row.moneda)}</div> },
 ];
@@ -25,6 +28,9 @@ const UPE_COLUMNAS_EXPORT = [
     { id: 'id', label: 'ID' },
     { id: 'proyecto__nombre', label: 'Proyecto' },
     { id: 'identificador', label: 'Identificador' },
+    { id: 'nivel', label: 'Nivel' },
+    { id: 'metros_cuadrados', label: 'Metros cuadrados' },
+    { id: 'estacionamientos', label: 'Estacionamientos' },
     { id: 'valor_total', label: 'Valor Total' },
     { id: 'moneda', label: 'Moneda' },
     { id: 'estado', label: 'Estado' },
@@ -33,6 +39,9 @@ const UPE_COLUMNAS_EXPORT = [
 const UPE_FORM_FIELDS = [
     { name: 'identificador', label: 'Identificador', required: true },
     { name: 'proyecto', label: 'Proyecto', type: 'select', options: [], required: true }, // Las opciones se llenarán dinámicamente
+    { name: 'nivel', label: 'Nivel', type: 'number', required: true },
+    { name: 'metros_cuadrados', label: 'Metros cuadrados', type: 'number', required: true },
+    { name: 'estacionamientos', label: 'Estacionamientos', type: 'number', required: true },
     { name: 'valor_total', label: 'Valor Total', type: 'number', required: true },
     { name: 'moneda', label: 'Moneda', type: 'select', options: [{ value: 'USD', label: 'USD' }, { value: 'MXN', label: 'MXN' }], required: true },
     {
@@ -58,7 +67,7 @@ export default function UPEsPage() {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Estados para la gestión de datos
-    const [formData, setFormData] = useState({ identificador: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
+    const [formData, setFormData] = useState({ identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
     const [editingUPE, setEditingUPE] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
@@ -79,7 +88,7 @@ export default function UPEsPage() {
 
     const handleCreateClick = () => {
         setEditingUPE(null);
-        setFormData({ identificador: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
+        setFormData({ identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
         setIsFormModalOpen(true);
     };
 
