@@ -14,6 +14,9 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+
+
 from .models import Proyecto, Cliente, Vendedor, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 
 
@@ -56,6 +59,7 @@ from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeC
 
 
 
+
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
 # ==============================================================================
@@ -66,6 +70,9 @@ class ProyectoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
 
 class ClienteSerializer(serializers.ModelSerializer):
     proyectos_asociados = serializers.SerializerMethodField()
@@ -90,6 +97,7 @@ class ClienteSerializer(serializers.ModelSerializer):
     proyectos_asociados = serializers.SerializerMethodField()
 
 
+
     class Meta:
         model = Cliente
         fields = ['id', 'nombre_completo', 'telefono',
@@ -99,6 +107,22 @@ class ClienteSerializer(serializers.ModelSerializer):
         proyectos = obj.contratos.select_related('upe__proyecto').values_list(
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = '__all__'
+
+
+class PuestoSerializer(serializers.ModelSerializer):
+    departamento_nombre = serializers.CharField(
+        source='departamento.nombre', read_only=True)
+
+    class Meta:
+        model = Puesto
+        fields = ['id', 'nombre', 'descripcion',
+                  'departamento', 'departamento_nombre', 'activo']
 
 
 class VendedorSerializer(serializers.ModelSerializer):

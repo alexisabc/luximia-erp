@@ -37,6 +37,18 @@ const permissionTranslations = {
   delete_pago: "Eliminar pago",
   view_pago: "Ver pago",
 
+  // Permisos para Departamento
+  add_departamento: "Añadir departamento",
+  change_departamento: "Cambiar departamento",
+  delete_departamento: "Eliminar departamento",
+  view_departamento: "Ver departamento",
+
+  // Permisos para Puesto
+  add_puesto: "Añadir puesto",
+  change_puesto: "Cambiar puesto",
+  delete_puesto: "Eliminar puesto",
+  view_puesto: "Ver puesto",
+
   // Permisos para Plan de Pagos
   add_plandepagos: "Añadir plan de pagos",
   change_plandepagos: "Cambiar plan de pagos",
@@ -82,6 +94,8 @@ const modelTranslations = {
   upe: 'UPEs',
   contrato: 'Contratos',
   pago: 'Pagos',
+  departamento: 'Departamentos',
+  puesto: 'Puestos',
   plandepagos: 'Plan de Pagos',
   tipodecambio: 'Tipos de Cambio',
   user: 'Usuarios',

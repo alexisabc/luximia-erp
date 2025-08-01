@@ -16,6 +16,7 @@ import {
     Banknote,
     BarChart3,
     Settings,
+    Briefcase,
     User,
     UserPlus,
     Key,
@@ -159,6 +160,13 @@ export default function Sidebar() {
                             </li>
                         )}
 
+                        {hasPermission('cxc.view_puesto') && (
+                            <li>
+                                <Link href="/puestos" className={getLinkClass('/puestos')}>
+                                    <Briefcase className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Puestos</span>}
+
+
                         {hasPermission('cxc.view_vendedor') && (
                             <li>
                                 <Link href="/vendedores" className={getLinkClass('/vendedores')}>
@@ -170,6 +178,7 @@ export default function Sidebar() {
                                 <Link href="/empleados" className={getLinkClass('/empleados')}>
                                     <UserPlus className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Empleados</span>}
+
 
                                 </Link>
                             </li>

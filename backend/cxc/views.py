@@ -34,6 +34,61 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
 
+from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, DepartamentoSerializer, PuestoSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
 from .models import Proyecto, Cliente, Vendedor, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, VendedorSerializer, UPESerializer, UPEReadSerializer,
@@ -459,6 +514,42 @@ class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
 
+class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Departamento.objects.all().order_by('nombre')
+    serializer_class = DepartamentoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        departamentos = self.get_queryset()
+        serializer = self.get_serializer(departamentos, many=True)
+        return Response(serializer.data)
+
+
+class PuestoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Puesto.objects.select_related('departamento').all().order_by('nombre')
+    serializer_class = PuestoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        puestos = self.get_queryset()
+        serializer = self.get_serializer(puestos, many=True)
+        return Response(serializer.data)
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = UPE.objects.select_related(
+        'proyecto').all().order_by('identificador')
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
 class VendedorViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Vendedor.objects.all().order_by('nombre_completo')
     serializer_class = VendedorSerializer
@@ -513,6 +604,7 @@ class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
 
     queryset = UPE.objects.select_related(
         'proyecto').all().order_by('identificador')
+
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
