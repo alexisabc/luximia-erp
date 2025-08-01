@@ -33,13 +33,39 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoDeCambio,
+    AuditLog,
+    Departamento,
+    Puesto,
+    Empleado,
+)
 from .serializers import (
-    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
-    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    ProyectoSerializer,
+    ClienteSerializer,
+    DepartamentoSerializer,
+    PuestoSerializer,
+    EmpleadoSerializer,
+    UPESerializer,
+    UPEReadSerializer,
+    ContratoWriteSerializer,
+    ContratoReadSerializer,
+    PagoWriteSerializer,
+    PagoReadSerializer,
     PlanDePagosSerializer,
-    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
-    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+    UserReadSerializer,
+    UserWriteSerializer,
+    GroupReadSerializer,
+    GroupWriteSerializer,
+    MyTokenObtainPairSerializer,
+    TipoDeCambioSerializer,
+    AuditLogSerializer,
 )
 
 # ==============================================================================
@@ -239,6 +265,37 @@ class PagoViewSet(viewsets.ModelViewSet):
         log_action(self.request.user, 'delete', instance)
         instance.delete()
         contrato_afectado.actualizar_plan_de_pagos()
+
+
+class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Departamento.objects.all().order_by('nombre')
+    serializer_class = DepartamentoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        departamentos = self.get_queryset()
+        serializer = self.get_serializer(departamentos, many=True)
+        return Response(serializer.data)
+
+
+class PuestoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Puesto.objects.all().order_by('nombre')
+    serializer_class = PuestoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        puestos = self.get_queryset()
+        serializer = self.get_serializer(puestos, many=True)
+        return Response(serializer.data)
+
+
+class EmpleadoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Empleado.objects.select_related(
+        'user', 'puesto', 'departamento').all().order_by('user__username')
+    serializer_class = EmpleadoSerializer
+    pagination_class = CustomPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):

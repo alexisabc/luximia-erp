@@ -3,8 +3,19 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+    ProyectoViewSet,
+    ClienteViewSet,
+    UPEViewSet,
+    ContratoViewSet,
+    PagoViewSet,
+    DepartamentoViewSet,
+    PuestoViewSet,
+    EmpleadoViewSet,
+    UserViewSet,
+    GroupViewSet,
+    TipoDeCambioViewSet,
+    AuditLogViewSet,
+    get_all_permissions,
     generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
     consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
     importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
@@ -19,6 +30,9 @@ router.register(r'clientes', ClienteViewSet, basename='cliente')
 router.register(r'upes', UPEViewSet, basename='upe')
 router.register(r'contratos', ContratoViewSet, basename='contrato')
 router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
+router.register(r'puestos', PuestoViewSet, basename='puesto')
+router.register(r'empleados', EmpleadoViewSet, basename='empleado')
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'groups', GroupViewSet, basename='group')
 router.register(r'tipos-de-cambio', TipoDeCambioViewSet)

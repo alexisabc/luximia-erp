@@ -39,6 +39,32 @@ class Cliente(ModeloBaseActivo):
         return self.nombre_completo
 
 
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Puesto(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Empleado(ModeloBaseActivo):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='empleado')
+    puesto = models.ForeignKey(
+        Puesto, on_delete=models.PROTECT, related_name='empleados')
+    departamento = models.ForeignKey(
+        Departamento, on_delete=models.PROTECT, related_name='empleados')
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+
+
 class UPE(ModeloBaseActivo):
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
