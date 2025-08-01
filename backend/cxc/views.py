@@ -33,11 +33,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
-    PlanDePagosSerializer,
+    PlanDePagosSerializer, EsquemaComisionSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
@@ -239,6 +239,12 @@ class PagoViewSet(viewsets.ModelViewSet):
         log_action(self.request.user, 'delete', instance)
         instance.delete()
         contrato_afectado.actualizar_plan_de_pagos()
+
+
+class EsquemaComisionViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = EsquemaComision.objects.all().order_by('esquema')
+    serializer_class = EsquemaComisionSerializer
+    pagination_class = CustomPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
