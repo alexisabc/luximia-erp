@@ -11,11 +11,14 @@ import {
     Home,
     Users,
     ClipboardList,
+    Building,
     FileText,
     Banknote,
     BarChart3,
     Settings,
+    Briefcase,
     User,
+    UserPlus,
     Key,
     Upload,
     CircleDollarSign,
@@ -47,7 +50,7 @@ export default function Sidebar() {
     const sidebarRef = useRef(null);
 
     const adminActive = pathname.startsWith('/configuraciones') || pathname.startsWith('/importar') ||
-        pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/auditoria');
+        pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/tipos-cambio') || pathname.startsWith('/auditoria');
 
     useEffect(() => {
         setIsAdminOpen(adminActive);
@@ -55,7 +58,7 @@ export default function Sidebar() {
         setIsGestionOpen(pathname.startsWith('/configuraciones'));
         const isImportarPath = pathname.startsWith('/importar');
         setIsImportarOpen(isImportarPath);
-        const herramientasPath = isImportarPath || pathname.startsWith('/tipos-de-cambio');
+        const herramientasPath = isImportarPath || pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/tipos-cambio');
         setIsHerramientasOpen(herramientasPath);
         setIsSeguridadOpen(pathname.startsWith('/auditoria'));
     }, [pathname]);
@@ -156,11 +159,43 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+
+                        {hasPermission('cxc.view_puesto') && (
+                            <li>
+                                <Link href="/puestos" className={getLinkClass('/puestos')}>
+                                    <Briefcase className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Puestos</span>}
+
+
+                        {hasPermission('cxc.view_vendedor') && (
+                            <li>
+                                <Link href="/vendedores" className={getLinkClass('/vendedores')}>
+                                    <User className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Vendedores</span>}
+
+                        {hasPermission('cxc.view_empleado') && (
+                            <li>
+                                <Link href="/empleados" className={getLinkClass('/empleados')}>
+                                    <UserPlus className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Empleados</span>}
+
+
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_proyecto') && (
                             <li>
                                 <Link href="/proyectos" className={getLinkClass('/proyectos')}>
                                     <ClipboardList className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Proyectos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_departamento') && (
+                            <li>
+                                <Link href="/departamentos" className={getLinkClass('/departamentos')}>
+                                    <Building className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Departamentos</span>}
                                 </Link>
                             </li>
                         )}
@@ -185,6 +220,14 @@ export default function Sidebar() {
                                 <Link href="/pagos" className={getLinkClass('/pagos')}>
                                     <Banknote className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Pagos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_esquemacomision') && (
+                            <li>
+                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision')}>
+                                    <CircleDollarSign className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Esquemas</span>}
                                 </Link>
                             </li>
                         )}
@@ -291,10 +334,16 @@ export default function Sidebar() {
                                                                     </div>
                                                                 )}
                                                             </div>
+                                                            {hasPermission('cxc.view_tipocambio') && (
+                                                                <Link href="/tipos-cambio" className={getLinkClass('/tipos-cambio', true)}>
+                                                                    <CircleDollarSign className="h-4 w-4" />
+                                                                    <span className="ml-2">Tipos de Cambio</span>
+                                                                </Link>
+                                                            )}
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
                                                                     <CircleDollarSign className="h-4 w-4" />
-                                                                    <span className="ml-2">Tipo de Cambio</span>
+                                                                    <span className="ml-2">Tipo de Cambio SAT</span>
                                                                 </Link>
                                                             )}
                                                         </div>
@@ -416,11 +465,19 @@ export default function Sidebar() {
                                                                     </ul>
                                                                 )}
                                                             </li>
+                                                            {hasPermission('cxc.view_tipocambio') && (
+                                                                <li>
+                                                                    <Link href="/tipos-cambio" className={getLinkClass('/tipos-cambio', true)}>
+                                                                        <CircleDollarSign className="h-4 w-4" />
+                                                                        <span className="ml-2">Tipos de Cambio</span>
+                                                                    </Link>
+                                                                </li>
+                                                            )}
                                                             {hasPermission('cxc.view_tipodecambio') && (
                                                                 <li>
                                                                     <Link href="/tipos-de-cambio" className={getLinkClass('/tipos-de-cambio', true)}>
                                                                         <CircleDollarSign className="h-4 w-4" />
-                                                                        <span className="ml-2">Tipo de Cambio</span>
+                                                                        <span className="ml-2">Tipo de Cambio SAT</span>
                                                                     </Link>
                                                                 </li>
                                                             )}
