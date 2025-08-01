@@ -17,6 +17,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 * **Reportes Personalizados:**
     * **PDF:** Generación de un estado de cuenta profesional para el cliente, con **columnas seleccionables** y el **logo de la empresa como marca de agua**.
     * **Excel:** Exportación de reportes para cada módulo (Proyectos, Clientes, etc.) con **columnas seleccionables**, formatos de celda y el logo de la empresa.
+* **Gestión de Clientes:** Formularios en el frontend permiten el **alta, edición y listado** de clientes aprovechando componentes reutilizables.
 * **Lógica Financiera Automática:** El estado del plan de pagos se recalcula tras cada transacción (creación, edición o eliminación de pagos).
 * **Automatización de Tipo de Cambio:** El tipo de cambio oficial de Banxico se obtiene y almacena diariamente de forma automática a través de un Cron Job.
 * **Contraseñas Seguras:** Las claves de usuario se cifran con **Argon2** y una sal aleatoria para mayor seguridad.
