@@ -14,12 +14,28 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoDeCambio,
+    AuditLog,
+    Departamento,
+    Puesto,
+    Empleado,
+)
+
+
 from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
 
 
 
@@ -36,6 +52,11 @@ class ProyectoSerializer(serializers.ModelSerializer):
 
 class ClienteSerializer(serializers.ModelSerializer):
     proyectos_asociados = serializers.SerializerMethodField()
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
 
 class BancoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,6 +77,36 @@ class ClienteSerializer(serializers.ModelSerializer):
         proyectos = obj.contratos.select_related('upe__proyecto').values_list(
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = ['id', 'nombre', 'activo']
+
+
+class PuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Puesto
+        fields = ['id', 'nombre', 'activo']
+
+
+class EmpleadoSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(
+        source='user.username', read_only=True)
+    departamento_nombre = serializers.CharField(
+        source='departamento.nombre', read_only=True)
+    puesto_nombre = serializers.CharField(
+        source='puesto.nombre', read_only=True)
+
+    class Meta:
+        model = Empleado
+        fields = [
+            'id', 'user', 'user_username',
+            'puesto', 'puesto_nombre',
+            'departamento', 'departamento_nombre',
+            'activo'
+        ]
 
 
 class DepartamentoSerializer(serializers.ModelSerializer):

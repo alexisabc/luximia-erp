@@ -17,6 +17,7 @@ import {
     BarChart3,
     Settings,
     User,
+    UserPlus,
     Key,
     Upload,
     CircleDollarSign,
@@ -154,6 +155,14 @@ export default function Sidebar() {
                                 <Link href="/clientes" className={getLinkClass('/clientes')}>
                                     <Users className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Clientes</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_empleado') && (
+                            <li>
+                                <Link href="/empleados" className={getLinkClass('/empleados')}>
+                                    <UserPlus className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Empleados</span>}
                                 </Link>
                             </li>
                         )}
