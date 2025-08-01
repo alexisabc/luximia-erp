@@ -151,6 +151,21 @@ export const hardDeleteContrato = (id) => apiClient.delete(`/cxc/contratos/${id}
 // CRUD - Pagos
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/cxc/pagos/${pagoId}/`, data);
+
+export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
+
+// CRUD - Tipo Cambio
+export const getTiposCambio = (page = 1, pageSize = 15) =>
+    apiClient.get(`/cxc/tipos-cambio/?page=${page}&page_size=${pageSize}`);
+export const createTipoCambio = (data) => apiClient.post('/cxc/tipos-cambio/', data);
+export const updateTipoCambio = (id, data) => apiClient.put(`/cxc/tipos-cambio/${id}/`, data);
+export const deleteTipoCambio = (id) => apiClient.delete(`/cxc/tipos-cambio/${id}/`);
+
+// CRUD - Tipo de Cambio
+export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');
+export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
+export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-cambio/actualizar-hoy/');
+
 export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
 
 // CRUD - Esquemas de Comisión
@@ -164,6 +179,7 @@ export const hardDeleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas
 export const getLatestTipoDeCambio = () => apiClient.get('/cxc/tipo-de-cambio/latest/');
 export const getTiposDeCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-de-cambio/?page=${page}&page_size=${pageSize}`);
 export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipo-de-cambio/actualizar-hoy/');
+
 
 // CRUD - Usuarios y Roles
 export const createUser = (data) => apiClient.post('/cxc/users/', data);

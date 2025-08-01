@@ -41,6 +41,77 @@ from .models import (
     Contrato,
     Pago,
     PlanDePagos,
+    TipoCambio,
+    TipoDeCambio,
+    AuditLog,
+)
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer,
+    UserWriteSerializer,
+    GroupReadSerializer,
+    GroupWriteSerializer,
+    MyTokenObtainPairSerializer,
+    TipoCambioSerializer,
+    TipoDeCambioSerializer,
+    AuditLogSerializer,
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
     TipoDeCambio,
     AuditLog,
     Departamento,
@@ -1002,6 +1073,64 @@ def get_latest_tipo_de_cambio(request):
             fecha__lte=today).latest('fecha')
         return Response({'valor': ultimo_tc.valor})
     except TipoDeCambio.DoesNotExist:
+
+        return Response(
+            {'error': 'No hay tipos de cambio registrados en la base de datos.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+class TipoCambioViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = TipoCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoCambioSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+
+class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TipoDeCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoDeCambioSerializer
+    pagination_class = CustomPagination
+
+# Añade esta nueva vista
+
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AuditLog.objects.select_related('user').all()
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAuthenticated, CanViewAuditLog]
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'])
+    def excel(self, request):
+        logs_qs = self.get_queryset()
+        data = {
+            'Usuario': [log.user.username if log.user else '' for log in logs_qs],
+            'Acción': [log.action for log in logs_qs],
+            'Modelo': [log.model_name for log in logs_qs],
+            'ID': [log.object_id for log in logs_qs],
+            'Fecha': [log.timestamp.strftime('%Y-%m-%d %H:%M:%S') for log in logs_qs],
+            'Cambios': [log.changes for log in logs_qs],
+        }
+        df = pl.DataFrame(data)
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Auditoria')
+        worksheet.write_row(0, 0, df.columns)
+        for i, row in enumerate(df.iter_rows()):
+            worksheet.write_row(i + 1, 0, row)
+        _autoajustar_columnas_excel(worksheet, df)
+        workbook.close()
+        output.seek(0)
+        response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="auditlog.xlsx"'
+        return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def actualizar_tipo_de_cambio_hoy(request):
+
         return Response(
             {'error': 'No hay tipos de cambio registrados en la base de datos.'},
             status=status.HTTP_404_NOT_FOUND
@@ -1051,6 +1180,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def actualizar_tipo_de_cambio_hoy(request):
+
     today = timezone.now().date()
     if TipoDeCambio.objects.filter(fecha=today).exists():
         return Response({"mensaje": "El tipo de cambio para hoy ya está actualizado."})

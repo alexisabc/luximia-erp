@@ -349,6 +349,27 @@ class Pago(ModeloBaseActivo):
         return self.monto_pagado
 
     def __str__(self):
+
+        return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+class TipoCambio(ModeloBaseActivo):
+    escenario = models.CharField(max_length=50)
+    fecha = models.DateField()
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        unique_together = ('escenario', 'fecha')
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.escenario} - {self.fecha}: {self.valor}"
+
+
+class TipoDeCambio(ModeloBaseActivo):
+    fecha = models.DateField(unique=True, primary_key=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
 
 
@@ -366,6 +387,7 @@ class EsquemaComision(ModeloBaseActivo):
 class TipoDeCambio(ModeloBaseActivo):
     fecha = models.DateField(unique=True, primary_key=True)
     valor = models.DecimalField(max_digits=10, decimal_places=4)
+
 
     def __str__(self):
         return f"{self.fecha}: {self.valor}"

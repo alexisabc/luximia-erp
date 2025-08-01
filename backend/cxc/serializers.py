@@ -21,6 +21,19 @@ from .models import (
     Contrato,
     Pago,
     PlanDePagos,
+    TipoCambio,
+    TipoDeCambio,
+    AuditLog,
+)
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
     TipoDeCambio,
     AuditLog,
     Departamento,
@@ -439,6 +452,30 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['is_superuser'] = user.is_superuser
         return token
 
+
+# ==============================================================================
+# --- SERIALIZERS DE UTILIDADES  ---
+# ==============================================================================
+
+class TipoCambioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoCambio
+        fields = '__all__'
+
+
+class TipoDeCambioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoDeCambio
+        fields = '__all__'
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'user', 'action', 'model_name', 'object_id', 'timestamp', 'changes']
+
 # ==============================================================================
 # --- SERIALIZERS DE UTILIDADES  ---
 # ==============================================================================
@@ -455,3 +492,4 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = ['id', 'user', 'action', 'model_name', 'object_id', 'timestamp', 'changes']
+
