@@ -11,6 +11,7 @@ import {
     Home,
     Users,
     ClipboardList,
+    Building,
     FileText,
     Banknote,
     BarChart3,
@@ -173,6 +174,14 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_departamento') && (
+                            <li>
+                                <Link href="/departamentos" className={getLinkClass('/departamentos')}>
+                                    <Building className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Departamentos</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_upe') && (
                             <li>
                                 <Link href="/upes" className={getLinkClass('/upes')}>
@@ -194,6 +203,14 @@ export default function Sidebar() {
                                 <Link href="/pagos" className={getLinkClass('/pagos')}>
                                     <Banknote className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Pagos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_esquemacomision') && (
+                            <li>
+                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision')}>
+                                    <CircleDollarSign className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Esquemas</span>}
                                 </Link>
                             </li>
                         )}
