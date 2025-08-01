@@ -13,7 +13,11 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -22,6 +26,12 @@ from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeC
 class ProyectoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proyecto
+        fields = '__all__'
+
+
+class BancoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banco
         fields = '__all__'
 
 
@@ -51,6 +61,7 @@ class UPEReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UPE
+
         fields = ['id', 'identificador', 'valor_total',
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
 
@@ -59,6 +70,12 @@ class EsquemaComisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EsquemaComision
         fields = '__all__'
+
+
+        fields = ['id', 'identificador', 'nivel', 'metros_cuadrados',
+                  'estacionamientos', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
 
 
 # ==============================================================================
