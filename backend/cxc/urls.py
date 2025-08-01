@@ -3,7 +3,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    ProyectoViewSet, BancoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
     UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
     generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
     consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
@@ -15,6 +15,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'bancos', BancoViewSet, basename='banco')
 router.register(r'clientes', ClienteViewSet, basename='cliente')
 router.register(r'upes', UPEViewSet, basename='upe')
 router.register(r'contratos', ContratoViewSet, basename='contrato')
