@@ -19,13 +19,32 @@ class ModeloBaseActivo(models.Model):
         abstract = True  # Esto le dice a Django que no cree una tabla para este modelo
 
 
+class Banco(ModeloBaseActivo):
+    """Catálogo de bancos disponible para referenciar en pagos."""
+    clave = models.CharField(max_length=20, unique=True)
+    nombre_corto = models.CharField(max_length=100)
+    razon_social = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.nombre_corto
+
+
 class Proyecto(ModeloBaseActivo):
     nombre = models.CharField(
         max_length=100, unique=True, help_text="Ej: Shark Tower")
     descripcion = models.TextField(blank=True, null=True)
+    numero_upes = models.PositiveIntegerField(default=0)
+    niveles = models.PositiveIntegerField(default=0)
+    metros_cuadrados = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+    numero_estacionamientos = models.PositiveIntegerField(default=0)
+    valor_total = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0)
+    estado = models.CharField(max_length=50, default="Planificado")
 
     def __str__(self):
         return self.nombre
+
 
 
 class Cliente(ModeloBaseActivo):
@@ -40,12 +59,142 @@ class Cliente(ModeloBaseActivo):
 
 
 class UPE(ModeloBaseActivo):
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Puesto(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Puesto(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    departamento = models.ForeignKey(
+        Departamento, on_delete=models.CASCADE, related_name='puestos')
+
+    def __str__(self):
+        return self.nombre
+
+
+class UPE(ModeloBaseActivo):
+
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Vendedor(ModeloBaseActivo):
+    tipo = models.CharField(max_length=50)
+    nombre_completo = models.CharField(max_length=200)
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class UPE(ModeloBaseActivo):
+
+class Empleado(ModeloBaseActivo):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='empleado')
+    puesto = models.ForeignKey(
+        Puesto, on_delete=models.PROTECT, related_name='empleados')
+    departamento = models.ForeignKey(
+        Departamento, on_delete=models.PROTECT, related_name='empleados')
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+
+
+class UPE(ModeloBaseActivo):
+    ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
+                      ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+
+class UPE(ModeloBaseActivo):
+
+    ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
+                      ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+
     proyecto = models.ForeignKey(
         Proyecto, on_delete=models.CASCADE, related_name='upes')
     identificador = models.CharField(
         max_length=50, help_text="Ej: Departamento 501, Lote 23")
+    nivel = models.IntegerField(default=0)
+    metros_cuadrados = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0)
+    estacionamientos = models.PositiveIntegerField(default=0)
     valor_total = models.DecimalField(
         max_digits=12, decimal_places=2, help_text="Valor total de la unidad")
     moneda = models.CharField(max_length=3, choices=[(
@@ -58,6 +207,15 @@ class UPE(ModeloBaseActivo):
 
     def __str__(self):
         return f"{self.proyecto.nombre} - {self.identificador}"
+
+
+class FormaPago(ModeloBaseActivo):
+    """Define una forma de pago con porcentajes y meses."""
+    porcentajes = models.JSONField(help_text="Lista de porcentajes de cada pago")
+    meses = models.JSONField(help_text="Meses correspondientes a cada pago")
+
+    def __str__(self):
+        return f"FormaPago {self.id}"
 
 
 class Contrato(ModeloBaseActivo):
@@ -293,12 +451,45 @@ class Pago(ModeloBaseActivo):
         return self.monto_pagado
 
     def __str__(self):
+
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+class TipoCambio(ModeloBaseActivo):
+    escenario = models.CharField(max_length=50)
+    fecha = models.DateField()
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        unique_together = ('escenario', 'fecha')
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.escenario} - {self.fecha}: {self.valor}"
 
 
 class TipoDeCambio(ModeloBaseActivo):
     fecha = models.DateField(unique=True, primary_key=True)
     valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+        return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+class EsquemaComision(ModeloBaseActivo):
+    """Define los esquemas y escenarios de comisión."""
+    esquema = models.CharField(max_length=100)
+    escenario = models.CharField(max_length=100)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    iva = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.esquema} - {self.escenario}"
+
+
+class TipoDeCambio(ModeloBaseActivo):
+    fecha = models.DateField(unique=True, primary_key=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
 
     def __str__(self):
         return f"{self.fecha}: {self.valor}"
