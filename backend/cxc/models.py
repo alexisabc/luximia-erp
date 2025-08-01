@@ -289,6 +289,17 @@ class Pago(ModeloBaseActivo):
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
 
 
+class EsquemaComision(ModeloBaseActivo):
+    """Define los esquemas y escenarios de comisión."""
+    esquema = models.CharField(max_length=100)
+    escenario = models.CharField(max_length=100)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    iva = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.esquema} - {self.escenario}"
+
+
 class TipoDeCambio(ModeloBaseActivo):
     fecha = models.DateField(unique=True, primary_key=True)
     valor = models.DecimalField(max_digits=10, decimal_places=4)
