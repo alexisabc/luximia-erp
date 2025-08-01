@@ -39,6 +39,13 @@ class Cliente(ModeloBaseActivo):
         return self.nombre_completo
 
 
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
 class UPE(ModeloBaseActivo):
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]

@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -37,6 +37,12 @@ class ClienteSerializer(serializers.ModelSerializer):
         proyectos = obj.contratos.select_related('upe__proyecto').values_list(
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = '__all__'
 
 
 class UPESerializer(serializers.ModelSerializer):
