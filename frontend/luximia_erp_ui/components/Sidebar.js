@@ -13,6 +13,7 @@ import {
     ClipboardList,
     FileText,
     Banknote,
+    Calendar,
     BarChart3,
     Settings,
     User,
@@ -185,6 +186,14 @@ export default function Sidebar() {
                                 <Link href="/pagos" className={getLinkClass('/pagos')}>
                                     <Banknote className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Pagos</span>}
+                                </Link>
+                            </li>
+                        )}
+                        {hasPermission('cxc.view_planpago') && (
+                            <li>
+                                <Link href="/planes-pago" className={getLinkClass('/planes-pago')}>
+                                    <Calendar className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Planes de Pago</span>}
                                 </Link>
                             </li>
                         )}

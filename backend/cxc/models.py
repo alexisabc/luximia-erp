@@ -197,6 +197,35 @@ class PlanDePagos(ModeloBaseActivo):
         return f"Vencimiento {self.fecha_vencimiento} - {self.monto_programado} ({self.get_tipo_display()})"
 
 
+class PlanPago(ModeloBaseActivo):
+    """Plan de pagos independiente para un cliente y una UPE."""
+    FORMAS_PAGO_CHOICES = [
+        ('EFECTIVO', 'Efectivo'),
+        ('TRANSFERENCIA', 'Transferencia'),
+        ('TARJETA', 'Tarjeta'),
+    ]
+
+    cliente = models.ForeignKey(
+        Cliente, on_delete=models.CASCADE, related_name='planes_pago')
+    upe = models.ForeignKey(
+        UPE, on_delete=models.CASCADE, related_name='planes_pago')
+    monto_programado = models.DecimalField(max_digits=12, decimal_places=2)
+    monto_pagado = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+    fecha_programada = models.DateField()
+    fecha_pago = models.DateField(blank=True, null=True)
+    moneda = models.CharField(
+        max_length=3, choices=[('MXN', 'MXN'), ('USD', 'USD')])
+    forma_pago = models.CharField(
+        max_length=20, choices=FORMAS_PAGO_CHOICES, blank=True, null=True)
+
+    class Meta:
+        ordering = ['fecha_programada']
+
+    def __str__(self):
+        return f"{self.cliente} - {self.upe} ({self.monto_programado} {self.moneda})"
+
+
 class Pago(ModeloBaseActivo):
     """
     Registra cada transacción de dinero que entra.
