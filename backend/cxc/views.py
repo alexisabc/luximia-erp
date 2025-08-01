@@ -33,9 +33,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, Vendedor, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
 from .serializers import (
-    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ProyectoSerializer, ClienteSerializer, VendedorSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
     PlanDePagosSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
@@ -183,6 +183,12 @@ class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Cliente.objects.prefetch_related(
         'contratos__upe__proyecto').order_by('nombre_completo')
     serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class VendedorViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Vendedor.objects.all().order_by('nombre_completo')
+    serializer_class = VendedorSerializer
     pagination_class = CustomPagination
 
 
