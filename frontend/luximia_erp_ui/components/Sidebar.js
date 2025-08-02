@@ -169,13 +169,18 @@ export default function Sidebar() {
                                 <Link href="/puestos" className={getLinkClass('/puestos')}>
                                     <Briefcase className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Puestos</span>}
-
+                                </Link>
+                            </li>
+                        )}
 
                         {hasPermission('cxc.view_vendedor') && (
                             <li>
                                 <Link href="/vendedores" className={getLinkClass('/vendedores')}>
                                     <User className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Vendedores</span>}
+                                </Link>
+                            </li>
+                        )}
 
                         {hasPermission('cxc.view_empleado') && (
                             <li>
@@ -258,6 +263,9 @@ export default function Sidebar() {
                                 <Link href="/planes-pago" className={getLinkClass('/planes-pago')}>
                                     <Calendar className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Planes de Pago</span>}
+                                </Link>
+                            </li>
+                        )}
 
                         {hasPermission('cxc.view_esquemacomision') && (
                             <li>
