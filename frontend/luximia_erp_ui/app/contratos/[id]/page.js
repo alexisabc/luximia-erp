@@ -3,13 +3,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel, getMetodosPago } from '../../../services/api';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
 import Loader from '../../../components/Loader';
+import MetodoPagoSelect from '../../../components/MetodoPagoSelect';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -69,7 +70,6 @@ export default function ContratoDetallePage() {
 
     const [currentPago, setCurrentPago] = useState(null);
     const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
-    const [metodosPago, setMetodosPago] = useState([]);
 
     const [newPagoData, setNewPagoData] = useState({
         concepto: 'ABONO', monto_pagado: '', moneda_pagada: 'USD', tipo_cambio: '1.0',
@@ -112,16 +112,7 @@ export default function ContratoDetallePage() {
         }
     }, [contratoId]);
 
-    const fetchMetodosPago = useCallback(async () => {
-        try {
-            const res = await getMetodosPago();
-            setMetodosPago(res.data);
-        } catch (err) {
-            console.error('No se pudieron cargar los métodos de pago');
-        }
-    }, []);
-
-    useEffect(() => { fetchData(); fetchMetodosPago(); }, [fetchData, fetchMetodosPago]);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const handleCreateClick = () => {
         setNewPagoData({
@@ -130,7 +121,7 @@ export default function ContratoDetallePage() {
             moneda_pagada: 'USD',
             tipo_cambio: latestTipoCambio, // <-- Usa el estado más reciente
             fecha_pago: new Date().toISOString().split('T')[0],
-            metodo_pago: metodosPago[0]?.id || '',
+            metodo_pago: '',
             ordenante: contrato?.cliente?.nombre_completo || '', // <-- Más seguro
             banco_origen: '',
             num_cuenta_origen: '',
@@ -394,11 +385,7 @@ export default function ContratoDetallePage() {
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
-                            <select name="metodo_pago" value={newPagoData.metodo_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                {metodosPago.map(mp => (
-                                    <option key={mp.id} value={mp.id}>{mp.nombre}</option>
-                                ))}
-                            </select>
+                            <MetodoPagoSelect name="metodo_pago" value={newPagoData.metodo_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                         </div>
 
                         {/* --- Fila 4 --- */}
@@ -493,11 +480,7 @@ export default function ContratoDetallePage() {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
-                                <select name="metodo_pago" value={currentPago.metodo_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    {metodosPago.map(mp => (
-                                        <option key={mp.id} value={mp.id}>{mp.nombre}</option>
-                                    ))}
-                                </select>
+                                <MetodoPagoSelect name="metodo_pago" value={currentPago.metodo_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                             </div>
 
                             {/* --- Fila 4 --- */}
