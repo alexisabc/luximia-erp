@@ -14,6 +14,8 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Moneda
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, PlanPago, TipoDeCambio, AuditLog
 
 
@@ -72,6 +74,12 @@ from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeC
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
 # ==============================================================================
 
+class MonedaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Moneda
+        fields = '__all__'
+
+
 class ProyectoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proyecto
@@ -116,6 +124,15 @@ class ClienteSerializer(serializers.ModelSerializer):
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
 
+
+
+class UPESerializer(serializers.ModelSerializer):
+    moneda = serializers.SlugRelatedField(
+        slug_field='codigo', queryset=Moneda.objects.all())
+
+    class Meta:
+        model = UPE
+        fields = '__all__'
 
 class DepartamentoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -181,15 +198,24 @@ class UPESerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+
 class UPEReadSerializer(serializers.ModelSerializer):
     proyecto_nombre = serializers.CharField(
         source='proyecto.nombre', read_only=True)
+    moneda = serializers.CharField(source='moneda.codigo', read_only=True)
+
+    class Meta:
+        model = UPE
+        fields = ['id', 'identificador', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
 
     class Meta:
         model = UPE
 
         fields = ['id', 'identificador', 'valor_total',
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
 
 
 class FormaPagoSerializer(serializers.ModelSerializer):
@@ -229,6 +255,9 @@ class PlanDePagosSerializer(serializers.ModelSerializer):
                   'monto_programado', 'tipo', 'pagado']
 
 
+
+class PagoWriteSerializer(serializers.ModelSerializer):
+
 class PlanPagoSerializer(serializers.ModelSerializer):
     cliente_nombre = serializers.CharField(
         source='cliente.nombre_completo', read_only=True)
@@ -243,9 +272,13 @@ class PlanPagoSerializer(serializers.ModelSerializer):
 
 
 class PagoWriteSerializer(serializers.ModelSerializer):
+
     """
     Serializer para crear y actualizar Pagos.
     """
+    moneda_pagada = serializers.SlugRelatedField(
+        slug_field='codigo', queryset=Moneda.objects.all())
+
     class Meta:
         model = Pago
         fields = [
@@ -264,7 +297,7 @@ class PagoWriteSerializer(serializers.ModelSerializer):
         tipo_cambio_nuevo = data.get('tipo_cambio', self.instance.tipo_cambio)
 
         monto_nuevo_pago_convertido = monto_nuevo_pago
-        if moneda_nuevo_pago == 'USD':
+        if moneda_nuevo_pago and moneda_nuevo_pago.codigo == 'USD':
              monto_nuevo_pago_convertido = monto_nuevo_pago * tipo_cambio_nuevo
 
         # Excluimos el pago actual del cálculo si estamos editando
@@ -275,7 +308,7 @@ class PagoWriteSerializer(serializers.ModelSerializer):
         total_ya_pagado = pagos_anteriores.aggregate(
             total=Sum(
                 Case(
-                    When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')),
+                    When(moneda_pagada__codigo='USD', then=F('monto_pagado') * F('tipo_cambio')),
                     default=F('monto_pagado'),
                     output_field=DecimalField()
                 )
@@ -286,7 +319,7 @@ class PagoWriteSerializer(serializers.ModelSerializer):
 
         if monto_nuevo_pago_convertido > (adeudo_actual + Decimal('0.01')):
             raise serializers.ValidationError(
-                f"El pago excede el adeudo restante. Adeudo actual: {adeudo_actual:,.2f} {contrato.moneda_pactada}."
+                f"El pago excede el adeudo restante. Adeudo actual: {adeudo_actual:,.2f} {contrato.moneda_pactada.codigo}."
             )
         
         return data
@@ -301,6 +334,7 @@ class PagoReadSerializer(serializers.ModelSerializer):
     # ### LÍNEA AÑADIDA ###
     # Forzamos que este campo conserve sus 4 decimales al ser serializado.
     tipo_cambio = serializers.DecimalField(max_digits=10, decimal_places=4)
+    moneda_pagada = serializers.CharField(source='moneda_pagada.codigo')
 
     class Meta:
         model = Pago
@@ -312,6 +346,9 @@ class ContratoWriteSerializer(serializers.ModelSerializer):
     Serializer para crear/actualizar Contratos.
     Ahora incluye los términos del financiamiento.
     """
+    moneda_pactada = serializers.SlugRelatedField(
+        slug_field='codigo', queryset=Moneda.objects.all())
+
     class Meta:
         model = Contrato
         fields = [
@@ -325,6 +362,7 @@ class ContratoReadSerializer(serializers.ModelSerializer):
     cliente = ClienteSerializer(read_only=True)
     upe = UPEReadSerializer(read_only=True)
     plan_de_pagos = PlanDePagosSerializer(many=True, read_only=True)
+    moneda_pactada = serializers.CharField(source='moneda_pactada.codigo', read_only=True)
 
     # ### CAMBIO 1: Reemplazamos 'pagos' con este nuevo campo ###
     historial_con_saldo = serializers.SerializerMethodField()
@@ -405,7 +443,7 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         """
         # ### CAMBIO: Se usa el nuevo campo 'fecha_pago' y 'tipo_cambio' ###
         ultimo_pago_usd = Pago.objects.filter(
-            moneda_pagada='USD').order_by('-fecha_pago').first()
+            moneda_pagada__codigo='USD').order_by('-fecha_pago').first()
 
         tipo_cambio_reciente = ultimo_pago_usd.tipo_cambio if ultimo_pago_usd else Decimal(
             '17.50')
@@ -413,14 +451,14 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         precio_contrato = obj.precio_final_pactado or Decimal('0.0')
 
         valor_contrato_en_mxn = precio_contrato
-        if obj.moneda_pactada == 'USD':
+        if obj.moneda_pactada and obj.moneda_pactada.codigo == 'USD':
             valor_contrato_en_mxn = precio_contrato * tipo_cambio_reciente
 
         total_pagado_mxn = obj.pagos.aggregate(
             total=Coalesce(
                 Sum(
                     Case(
-                        When(moneda_pagada='USD', then=F(
+                        When(moneda_pagada__codigo='USD', then=F(
                             'monto_pagado') * F('tipo_cambio')),
                         default=F('monto_pagado'),
                         output_field=DecimalField()
@@ -441,7 +479,7 @@ class ContratoReadSerializer(serializers.ModelSerializer):
         total = obj.pagos.aggregate(
             total=Sum(
                 Case(
-                    When(moneda_pagada='USD', then=F(
+                    When(moneda_pagada__codigo='USD', then=F(
                         'monto_pagado') * F('tipo_cambio')),
                     default=F('monto_pagado'),
                     output_field=DecimalField()
