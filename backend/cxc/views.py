@@ -1,5 +1,6 @@
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import AllowAny
+
 from .models import (
     Banco,
     Proyecto,
@@ -11,7 +12,11 @@ from .models import (
     Puesto,
     Empleado,
     Contrato,
+    MetodoPago,
+    Presupuesto
 )
+
+
 from .serializers import (
     BancoSerializer,
     ProyectoSerializer,
@@ -23,6 +28,8 @@ from .serializers import (
     PuestoSerializer,
     EmpleadoSerializer,
     ContratoSerializer,
+    PresupuestoSerializer,
+    MetodoPagoSerializer,
 )
 
 
@@ -88,4 +95,15 @@ class ContratoViewSet(
 ):
     queryset = Contrato.objects.all()
     serializer_class = ContratoSerializer
+
+
+class PresupuestoViewSet(viewsets.ModelViewSet):
+    queryset = Presupuesto.objects.all()
+    serializer_class = PresupuestoSerializer
+
+    
+class MetodoPagoViewSet(viewsets.ModelViewSet):
+    queryset = MetodoPago.objects.all()
+    serializer_class = MetodoPagoSerializer
+
     permission_classes = [AllowAny]
