@@ -80,3 +80,130 @@ export const importarBancos = (formData) =>
   apiClient.post('/cxc/bancos/importar-excel/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+
+// ---- Clientes CRUD & utilities ----
+export const createCliente = (data) => apiClient.post('/cxc/clientes/', data);
+export const updateCliente = (id, data) => apiClient.patch(`/cxc/clientes/${id}/`, data);
+export const deleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/`);
+export const getInactiveClientes = () => apiClient.get('/cxc/clientes/inactivos/');
+export const hardDeleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/hard/`);
+export const exportClientesExcel = (columns) =>
+  apiClient.post('/cxc/clientes/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarClientes = (formData) =>
+  apiClient.post('/cxc/clientes/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+
+// ---- Departamentos CRUD ----
+export const createDepartamento = (data) => apiClient.post('/cxc/departamentos/', data);
+export const updateDepartamento = (id, data) => apiClient.patch(`/cxc/departamentos/${id}/`, data);
+export const deleteDepartamento = (id) => apiClient.delete(`/cxc/departamentos/${id}/`);
+export const getInactiveDepartamentos = () => apiClient.get('/cxc/departamentos/inactivos/');
+export const hardDeleteDepartamento = (id) => apiClient.delete(`/cxc/departamentos/${id}/hard/`);
+
+// ---- Puestos CRUD ----
+export const createPuesto = (data) => apiClient.post('/cxc/puestos/', data);
+export const updatePuesto = (id, data) => apiClient.patch(`/cxc/puestos/${id}/`, data);
+export const deletePuesto = (id) => apiClient.delete(`/cxc/puestos/${id}/`);
+export const getInactivePuestos = () => apiClient.get('/cxc/puestos/inactivos/');
+export const hardDeletePuesto = (id) => apiClient.delete(`/cxc/puestos/${id}/hard/`);
+export const getAllDepartamentos = () => apiClient.get('/cxc/departamentos/');
+
+// ---- Empleados CRUD ----
+export const createEmpleado = (data) => apiClient.post('/cxc/empleados/', data);
+export const updateEmpleado = (id, data) => apiClient.patch(`/cxc/empleados/${id}/`, data);
+export const deleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/`);
+export const getInactiveEmpleados = () => apiClient.get('/cxc/empleados/inactivos/');
+export const hardDeleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/hard/`);
+export const getUsers = () => apiClient.get('/cxc/users/');
+
+// ---- Vendedores CRUD ----
+export const createVendedor = (data) => apiClient.post('/cxc/vendedores/', data);
+export const updateVendedor = (id, data) => apiClient.patch(`/cxc/vendedores/${id}/`, data);
+export const deleteVendedor = (id) => apiClient.delete(`/cxc/vendedores/${id}/`);
+export const getInactiveVendedores = () => apiClient.get('/cxc/vendedores/inactivos/');
+export const hardDeleteVendedor = (id) => apiClient.delete(`/cxc/vendedores/${id}/hard/`);
+
+// ---- Proyectos CRUD & utilities ----
+export const createProyecto = (data) => apiClient.post('/cxc/proyectos/', data);
+export const updateProyecto = (id, data) => apiClient.patch(`/cxc/proyectos/${id}/`, data);
+export const deleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/`);
+export const getInactiveProyectos = () => apiClient.get('/cxc/proyectos/inactivos/');
+export const hardDeleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/hard/`);
+export const exportProyectosExcel = (columns) =>
+  apiClient.post('/cxc/proyectos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const getAllProyectos = () => apiClient.get('/cxc/proyectos/?page_size=1000');
+
+// ---- UPEs CRUD & utilities ----
+export const createUPE = (data) => apiClient.post('/cxc/upes/', data);
+export const updateUPE = (id, data) => apiClient.patch(`/cxc/upes/${id}/`, data);
+export const deleteUPE = (id) => apiClient.delete(`/cxc/upes/${id}/`);
+export const getInactiveUpes = () => apiClient.get('/cxc/upes/inactivos/');
+export const hardDeleteUpe = (id) => apiClient.delete(`/cxc/upes/${id}/hard/`);
+export const exportUpesExcel = (columns) =>
+  apiClient.post('/cxc/upes/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarUPEs = (formData) =>
+  apiClient.post('/cxc/upes/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+
+// ---- Clientes-Proyectos-Presupuestos ----
+export const createPresupuesto = (data) => apiClient.post('/cxc/presupuestos/', data);
+export const updatePresupuesto = (id, data) => apiClient.patch(`/cxc/presupuestos/${id}/`, data);
+export const getPresupuesto = (id) => apiClient.get(`/cxc/presupuestos/${id}/`);
+
+// ---- Planes de Pago ----
+export const createPlanPago = (data) => apiClient.post('/cxc/planes-pago/', data);
+
+// ---- Esquemas de Comisión ----
+export const createEsquemaComision = (data) => apiClient.post('/cxc/esquemas-comision/', data);
+export const updateEsquemaComision = (id, data) => apiClient.patch(`/cxc/esquemas-comision/${id}/`, data);
+export const deleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/`);
+export const getInactiveEsquemasComision = () => apiClient.get('/cxc/esquemas-comision/inactivos/');
+export const hardDeleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/hard/`);
+
+// ---- Tipos de Cambio ----
+export const createTipoCambio = (data) => apiClient.post('/cxc/tipos-cambio/', data);
+export const updateTipoCambio = (id, data) => apiClient.patch(`/cxc/tipos-cambio/${id}/`, data);
+export const deleteTipoCambio = (id) => apiClient.delete(`/cxc/tipos-cambio/${id}/`);
+
+// ---- Tipos de Cambio SAT ----
+export const getTiposDeCambio = () => apiClient.get('/cxc/tipos-de-cambio/');
+export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipos-de-cambio/actualizar/');
+
+// ---- Contratos & Pagos ----
+export const exportContratosExcel = (columns) =>
+  apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarContratos = (formData) =>
+  apiClient.post('/cxc/contratos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
+export const importarPagosHistoricos = (formData) =>
+  apiClient.post('/cxc/pagos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+
+// ---- Formas de Pago CRUD & utilities ----
+export const createFormaPago = (data) => apiClient.post('/cxc/formas-pago/', data);
+export const updateFormaPago = (id, data) => apiClient.patch(`/cxc/formas-pago/${id}/`, data);
+export const deleteFormaPago = (id) => apiClient.delete(`/cxc/formas-pago/${id}/`);
+export const getInactiveFormasPago = () => apiClient.get('/cxc/formas-pago/inactivos/');
+export const hardDeleteFormaPago = (id) => apiClient.delete(`/cxc/formas-pago/${id}/hard/`);
+export const exportFormasPagoExcel = (columns) =>
+  apiClient.post('/cxc/formas-pago/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarFormasPago = (formData) =>
+  apiClient.post('/cxc/formas-pago/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+
+// ---- Varios ----
+export const importarDatosMasivos = (formData) =>
+  apiClient.post('/cxc/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+export const getStrategicDashboardData = () => apiClient.get('/cxc/dashboard/');
+export const getUser = () => apiClient.get('/cxc/usuarios/me/');
+export const updateUser = (data) => apiClient.patch('/cxc/usuarios/me/', data);
+export const getAuditLogs = () => apiClient.get('/cxc/auditoria/');
+export const downloadAuditLogExcel = () => apiClient.get('/cxc/auditoria/exportar/', { responseType: 'blob' });
