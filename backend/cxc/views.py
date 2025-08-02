@@ -33,11 +33,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Moneda
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
-    PlanDePagosSerializer,
+    PlanDePagosSerializer, MonedaSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
@@ -183,6 +183,12 @@ class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Cliente.objects.prefetch_related(
         'contratos__upe__proyecto').order_by('nombre_completo')
     serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class MonedaViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Moneda.objects.all().order_by('codigo')
+    serializer_class = MonedaSerializer
     pagination_class = CustomPagination
 
 
@@ -364,7 +370,7 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
             if 'ordenante' in pago_cols_keys:
                 row_data['ordenante'] = pago.ordenante or ""
             if 'monto_pagado' in pago_cols_keys:
-                row_data['monto_pagado'] = f"${intcomma(round(pago.monto_pagado, 2))} {pago.moneda_pagada}"
+                row_data['monto_pagado'] = f"${intcomma(round(pago.monto_pagado, 2))} {pago.moneda_pagada.codigo}"
             if 'valor_mxn' in pago_cols_keys:
                 row_data['valor_mxn'] = f"${intcomma(round(pago.valor_mxn, 2))}"
 
@@ -820,7 +826,7 @@ def importar_datos_masivos(request):
                 identificador=str(row['upe_identificador']).strip(),
                 defaults={
                     'valor_total': row['upe_valor_total'],
-                    'moneda': str(row['upe_moneda']).strip(),
+                    'moneda': Moneda.objects.get(codigo=str(row['upe_moneda']).strip()),
                     'estado': str(row['upe_estado']).strip()
                 }
             )
@@ -841,7 +847,7 @@ def importar_datos_masivos(request):
                     'cliente': cliente,
                     'fecha_venta': fecha_obj,
                     'precio_final_pactado': row['contrato_precio_pactado'],
-                    'moneda_pactada': row['contrato_moneda'],
+                    'moneda_pactada': Moneda.objects.get(codigo=row['contrato_moneda']),
                     # ### NUEVOS CAMPOS FINANCIEROS ###
                     'monto_enganche': row.get('monto_enganche', 0),
                     'numero_mensualidades': row.get('numero_mensualidades', 0),
@@ -955,8 +961,8 @@ def importar_upes(request):
                     continue
 
                 defaults = {
-                    'valor_total': row['valor_total'], 
-                    'moneda': str(row['moneda']).strip(), 
+                    'valor_total': row['valor_total'],
+                    'moneda': Moneda.objects.get(codigo=str(row['moneda']).strip()),
                     'estado': str(row['estado']).strip()
                 }
                 upe, creado = UPE.objects.update_or_create(
@@ -1041,7 +1047,7 @@ def importar_contratos(request):
                     'cliente': cliente,
                     'fecha_venta': fecha_obj,
                     'precio_final_pactado': row['contrato_precio_pactado'],
-                    'moneda_pactada': str(row['moneda_pactada']).strip(),
+                    'moneda_pactada': Moneda.objects.get(codigo=str(row['moneda_pactada']).strip()),
                     'monto_enganche': row.get('monto_enganche', 0),
                     'numero_mensualidades': row.get('numero_mensualidades', 0),
                     'tasa_interes_mensual': row.get('tasa_interes_mensual', 0.0)
@@ -1109,7 +1115,7 @@ def importar_pagos_historicos(request):
                 pago_data = {
                     'contrato': contrato,
                     'monto_pagado': Decimal(row.get('monto_pagado', 0)),
-                    'moneda_pagada': row.get('moneda_pagada'),
+                    'moneda_pagada': Moneda.objects.get(codigo=row.get('moneda_pagada')),
                     'tipo_cambio': Decimal(row.get('tipo_cambio', '1.0')),
                     'fecha_pago': datetime.strptime(row['fecha_pago'], '%d/%m/%Y').date(),
                     'concepto': row.get('concepto', 'ABONO'),
@@ -1321,7 +1327,7 @@ def export_upes_excel(request):
                 upes_data[UPE_COLUMNAS['valor_total']].append(
                     float(upe.valor_total))
             if 'moneda' in selected_cols:
-                upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda)
+                upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda.codigo if upe.moneda else None)
             if 'estado' in selected_cols:
                 upes_data[UPE_COLUMNAS['estado']].append(upe.estado)
 
@@ -1415,7 +1421,7 @@ def export_contratos_excel(request):
                     float(c.precio_final_pactado))
             if 'moneda_pactada' in selected_cols:
                 contratos_data[CONTRATO_COLUMNAS['moneda_pactada']].append(
-                    c.moneda_pactada)
+                    c.moneda_pactada.codigo if c.moneda_pactada else None)
             if 'estado' in selected_cols:
                 contratos_data[CONTRATO_COLUMNAS['estado']].append(c.estado)
 
@@ -1548,7 +1554,7 @@ def strategic_dashboard_data(request):
         date_format = '%b %Y'
 
     # 3. Calcula KPIs usando los querysets ya filtrados por proyecto
-    valor_mxn_expression = Case(When(moneda_pagada='USD', then=F('monto_pagado') * F('tipo_cambio')), default=F('monto_pagado'), output_field=DecimalField())
+    valor_mxn_expression = Case(When(moneda_pagada__codigo='USD', then=F('monto_pagado') * F('tipo_cambio')), default=F('monto_pagado'), output_field=DecimalField())
     total_recuperado = pagos_base.aggregate(total=Sum(valor_mxn_expression))['total'] or 0
     total_ventas = contratos_base.aggregate(total=Sum('precio_final_pactado'))['total'] or 0
     total_programado = plan_pagos_base.aggregate(total=Sum('monto_programado'))['total'] or 0
