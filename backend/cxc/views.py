@@ -33,6 +33,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Moneda
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
@@ -86,6 +87,497 @@ def log_action(user, action, instance, changes=None):
         object_id=str(instance.pk),
         changes=changes or ''
     )
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, PlanPago, TipoDeCambio, AuditLog
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, PlanPagoSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, FormaPagoSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, DepartamentoSerializer, PuestoSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, Vendedor, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, VendedorSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoCambio,
+    TipoDeCambio,
+    AuditLog,
+)
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer,
+    UserWriteSerializer,
+    GroupReadSerializer,
+    GroupWriteSerializer,
+    MyTokenObtainPairSerializer,
+    TipoCambioSerializer,
+    TipoDeCambioSerializer,
+    AuditLogSerializer,
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoDeCambio,
+    AuditLog,
+    Departamento,
+    Puesto,
+    Empleado,
+)
+from .serializers import (
+    ProyectoSerializer,
+    ClienteSerializer,
+    DepartamentoSerializer,
+    PuestoSerializer,
+    EmpleadoSerializer,
+    UPESerializer,
+    UPEReadSerializer,
+    ContratoWriteSerializer,
+    ContratoReadSerializer,
+    PagoWriteSerializer,
+    PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer,
+    UserWriteSerializer,
+    GroupReadSerializer,
+    GroupWriteSerializer,
+    MyTokenObtainPairSerializer,
+    TipoDeCambioSerializer,
+    AuditLogSerializer,
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, DepartamentoSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer,
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, EsquemaComisionSerializer,
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+from .serializers import (
+    ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
+    ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
+    PlanDePagosSerializer, BancoSerializer,
+
+    UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
+    MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
+)
+
+# ==============================================================================
+# --- PERMISOS PERSONALIZADOS ---
+# ==============================================================================
+
+class CanViewDashboard(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para ver el dashboard."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_dashboard')
+
+
+class CanUseAI(BasePermission):
+    """Permite acceso si el usuario tiene el permiso para usar la IA."""
+
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_use_ai')
+
+
+class CanViewInactiveRecords(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_inactive_records')
+
+
+class CanDeletePermanently(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_delete_permanently')
+
+
+class CanViewAuditLog(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm('cxc.can_view_auditlog')
+
+# ==============================================================================
+# --- FUNCIONES AUXILIARES REUTILIZABLES ---
+# ==============================================================================
+
+def log_action(user, action, instance, changes=None):
+    AuditLog.objects.create(
+        user=user if user.is_authenticated else None,
+        action=action,
+        model_name=instance.__class__.__name__,
+        object_id=str(instance.pk),
+        changes=changes or ''
+    )
+
+
 
 def _autoajustar_columnas_excel(worksheet, dataframe):
     """
@@ -179,6 +671,7 @@ class ProyectoViewSet(SoftDeleteViewSetMixin,  viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+
 class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
     queryset = Cliente.objects.prefetch_related(
         'contratos__upe__proyecto').order_by('nombre_completo')
@@ -193,8 +686,111 @@ class MonedaViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
 
 
 class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Departamento.objects.all().order_by('nombre')
+    serializer_class = DepartamentoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        departamentos = self.get_queryset()
+        serializer = self.get_serializer(departamentos, many=True)
+        return Response(serializer.data)
+
+
+class PuestoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Puesto.objects.select_related('departamento').all().order_by('nombre')
+    serializer_class = PuestoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        puestos = self.get_queryset()
+        serializer = self.get_serializer(puestos, many=True)
+        return Response(serializer.data)
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
     queryset = UPE.objects.select_related(
         'proyecto').all().order_by('identificador')
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class VendedorViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Vendedor.objects.all().order_by('nombre_completo')
+    serializer_class = VendedorSerializer
+    pagination_class = CustomPagination
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Departamento.objects.all().order_by('nombre')
+    serializer_class = DepartamentoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        departamentos = self.get_queryset()
+        serializer = self.get_serializer(departamentos, many=True)
+        return Response(serializer.data)
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+class BancoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Banco.objects.all().order_by('nombre_corto')
+    serializer_class = BancoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        bancos = self.get_queryset()
+        serializer = self.get_serializer(bancos, many=True)
+        return Response(serializer.data)
+
+
+class ClienteViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Cliente.objects.prefetch_related(
+        'contratos__upe__proyecto').order_by('nombre_completo')
+    serializer_class = ClienteSerializer
+    pagination_class = CustomPagination
+
+
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+
+
+
+    queryset = UPE.objects.select_related(
+        'proyecto').all().order_by('identificador')
+
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
@@ -206,6 +802,12 @@ class UPEViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
             'proyecto').filter(estado='Disponible')
         serializer = UPEReadSerializer(upes_disponibles, many=True)
         return Response(serializer.data)
+
+
+class FormaPagoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = FormaPago.objects.all().order_by('id')
+    serializer_class = FormaPagoSerializer
+    pagination_class = CustomPagination
 
 
 class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
@@ -223,6 +825,7 @@ class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
             contrato=contrato).order_by('fecha_pago')
         serializer = PagoReadSerializer(pagos_del_contrato, many=True)
         return Response(serializer.data)
+
 
 
 class PagoViewSet(viewsets.ModelViewSet):
@@ -245,6 +848,37 @@ class PagoViewSet(viewsets.ModelViewSet):
         log_action(self.request.user, 'delete', instance)
         instance.delete()
         contrato_afectado.actualizar_plan_de_pagos()
+
+
+class DepartamentoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Departamento.objects.all().order_by('nombre')
+    serializer_class = DepartamentoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        departamentos = self.get_queryset()
+        serializer = self.get_serializer(departamentos, many=True)
+        return Response(serializer.data)
+
+
+class PuestoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Puesto.objects.all().order_by('nombre')
+    serializer_class = PuestoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        puestos = self.get_queryset()
+        serializer = self.get_serializer(puestos, many=True)
+        return Response(serializer.data)
+
+
+class EmpleadoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = Empleado.objects.select_related(
+        'user', 'puesto', 'departamento').all().order_by('user__username')
+    serializer_class = EmpleadoSerializer
+    pagination_class = CustomPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -323,6 +957,216 @@ class GroupViewSet(viewsets.ModelViewSet):
         groups = self.get_queryset()
         serializer = GroupReadSerializer(groups, many=True)
         return Response(serializer.data)
+
+class PagoViewSet(viewsets.ModelViewSet):
+    queryset = Pago.objects.all().order_by('-fecha_pago')
+    pagination_class = CustomPagination
+
+
+    def get_serializer_class(self):
+        return PagoReadSerializer if self.action in ['list', 'retrieve'] else PagoWriteSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        contrato_afectado = instance.contrato
+        log_action(self.request.user, 'delete', instance)
+        instance.delete()
+        contrato_afectado.actualizar_plan_de_pagos()
+
+
+class PlanPagoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = PlanPago.objects.select_related(
+        'cliente', 'upe__proyecto').order_by('fecha_programada')
+    serializer_class = PlanPagoSerializer
+    pagination_class = CustomPagination
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return UserWriteSerializer
+        return UserReadSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if getattr(self, 'action', None) == 'list':
+            return qs.filter(is_active=True)
+        return qs
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+        log_action(self.request.user, 'soft_delete', instance)
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveRecords], pagination_class=None)
+    def inactive(self, request):
+        users = User.objects.filter(is_active=False)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeletePermanently])
+    def hard_delete(self, request, pk=None):
+        user = self.get_object()
+        if user.pk == 1:
+            return Response({'detail': 'No se puede eliminar el superusuario inicial.'}, status=status.HTTP_400_BAD_REQUEST)
+        log_action(request.user, 'hard_delete', user)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all().order_by('name')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return GroupWriteSerializer
+        return GroupReadSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        log_action(self.request.user, 'delete', instance)
+        instance.delete()
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        groups = self.get_queryset()
+        serializer = GroupReadSerializer(groups, many=True)
+        return Response(serializer.data)
+
+    def get_serializer_class(self):
+        return PagoReadSerializer if self.action in ['list', 'retrieve'] else PagoWriteSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        contrato_afectado = instance.contrato
+        log_action(self.request.user, 'delete', instance)
+        instance.delete()
+        contrato_afectado.actualizar_plan_de_pagos()
+
+
+class EsquemaComisionViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = EsquemaComision.objects.all().order_by('esquema')
+    serializer_class = EsquemaComisionSerializer
+    pagination_class = CustomPagination
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('-date_joined')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return UserWriteSerializer
+        return UserReadSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if getattr(self, 'action', None) == 'list':
+            return qs.filter(is_active=True)
+        return qs
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+        log_action(self.request.user, 'soft_delete', instance)
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        users = self.get_queryset()
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated, CanViewInactiveRecords], pagination_class=None)
+    def inactive(self, request):
+        users = User.objects.filter(is_active=False)
+        serializer = self.get_serializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated, CanDeletePermanently])
+    def hard_delete(self, request, pk=None):
+        user = self.get_object()
+        if user.pk == 1:
+            return Response({'detail': 'No se puede eliminar el superusuario inicial.'}, status=status.HTTP_400_BAD_REQUEST)
+        log_action(request.user, 'hard_delete', user)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all().order_by('name')
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return GroupWriteSerializer
+        return GroupReadSerializer
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'create', instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        log_action(self.request.user, 'update', instance)
+
+    def perform_destroy(self, instance):
+        log_action(self.request.user, 'delete', instance)
+        instance.delete()
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        groups = self.get_queryset()
+        serializer = GroupReadSerializer(groups, many=True)
+        return Response(serializer.data)
+
+
 
 
 # ==============================================================================
@@ -690,6 +1534,64 @@ def get_latest_tipo_de_cambio(request):
             fecha__lte=today).latest('fecha')
         return Response({'valor': ultimo_tc.valor})
     except TipoDeCambio.DoesNotExist:
+
+        return Response(
+            {'error': 'No hay tipos de cambio registrados en la base de datos.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+class TipoCambioViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = TipoCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoCambioSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+
+class TipoDeCambioViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TipoDeCambio.objects.all().order_by('-fecha')
+    serializer_class = TipoDeCambioSerializer
+    pagination_class = CustomPagination
+
+# Añade esta nueva vista
+
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AuditLog.objects.select_related('user').all()
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsAuthenticated, CanViewAuditLog]
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'])
+    def excel(self, request):
+        logs_qs = self.get_queryset()
+        data = {
+            'Usuario': [log.user.username if log.user else '' for log in logs_qs],
+            'Acción': [log.action for log in logs_qs],
+            'Modelo': [log.model_name for log in logs_qs],
+            'ID': [log.object_id for log in logs_qs],
+            'Fecha': [log.timestamp.strftime('%Y-%m-%d %H:%M:%S') for log in logs_qs],
+            'Cambios': [log.changes for log in logs_qs],
+        }
+        df = pl.DataFrame(data)
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('Auditoria')
+        worksheet.write_row(0, 0, df.columns)
+        for i, row in enumerate(df.iter_rows()):
+            worksheet.write_row(i + 1, 0, row)
+        _autoajustar_columnas_excel(worksheet, df)
+        workbook.close()
+        output.seek(0)
+        response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="auditlog.xlsx"'
+        return response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def actualizar_tipo_de_cambio_hoy(request):
+
         return Response(
             {'error': 'No hay tipos de cambio registrados en la base de datos.'},
             status=status.HTTP_404_NOT_FOUND
@@ -739,6 +1641,7 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def actualizar_tipo_de_cambio_hoy(request):
+
     today = timezone.now().date()
     if TipoDeCambio.objects.filter(fecha=today).exists():
         return Response({"mensaje": "El tipo de cambio para hoy ya está actualizado."})
@@ -1168,8 +2071,16 @@ def export_proyectos_excel(request):
     """
     try:
         PROYECTO_COLUMNAS = {
-            "id": "ID", "nombre": "Nombre",
-            "descripcion": "Descripción", "activo": "Estado"
+            "id": "ID",
+            "nombre": "Nombre",
+            "descripcion": "Descripción",
+            "niveles": "Niveles",
+            "numero_upes": "Número de UPEs",
+            "metros_cuadrados": "Metros cuadrados",
+            "numero_estacionamientos": "Número de Estacionamientos",
+            "valor_total": "Valor Total",
+            "estado": "Estado",
+            "activo": "Activo",
         }
         selected_cols = request.query_params.getlist(
             'cols', list(PROYECTO_COLUMNAS.keys()))
@@ -1184,12 +2095,21 @@ def export_proyectos_excel(request):
             if 'nombre' in selected_cols:
                 proyectos_data[PROYECTO_COLUMNAS['nombre']].append(p.nombre)
             if 'descripcion' in selected_cols:
-                proyectos_data[PROYECTO_COLUMNAS['descripcion']].append(
-                    p.descripcion)
+                proyectos_data[PROYECTO_COLUMNAS['descripcion']].append(p.descripcion)
+            if 'niveles' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['niveles']].append(p.niveles)
+            if 'numero_upes' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['numero_upes']].append(p.numero_upes)
+            if 'metros_cuadrados' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['metros_cuadrados']].append(float(p.metros_cuadrados))
+            if 'numero_estacionamientos' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['numero_estacionamientos']].append(p.numero_estacionamientos)
+            if 'valor_total' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['valor_total']].append(float(p.valor_total))
+            if 'estado' in selected_cols:
+                proyectos_data[PROYECTO_COLUMNAS['estado']].append(p.estado)
             if 'activo' in selected_cols:
-                # Lógica para cambiar Verdadero/Falso a texto
-                proyectos_data[PROYECTO_COLUMNAS['activo']].append(
-                    "Activo" if p.activo else "Inactivo")
+                proyectos_data[PROYECTO_COLUMNAS['activo']].append("Activo" if p.activo else "Inactivo")
 
         df_proyectos = pl.DataFrame(proyectos_data)
 
@@ -1301,9 +2221,12 @@ def export_upes_excel(request):
             "id": "ID",
             "proyecto__nombre": "Proyecto",  # Campo relacionado
             "identificador": "Identificador",
+            "nivel": "Nivel",
+            "metros_cuadrados": "Metros cuadrados",
+            "estacionamientos": "Estacionamientos",
             "valor_total": "Valor Total",
             "moneda": "Moneda",
-            "estado": "Estado"
+            "estado": "Estado",
         }
         selected_cols = request.query_params.getlist(
             'cols', list(UPE_COLUMNAS.keys()))
@@ -1321,13 +2244,24 @@ def export_upes_excel(request):
                 upes_data[UPE_COLUMNAS['proyecto__nombre']].append(
                     upe.proyecto.nombre)
             if 'identificador' in selected_cols:
-                upes_data[UPE_COLUMNAS['identificador']].append(
-                    upe.identificador)
+                upes_data[UPE_COLUMNAS['identificador']].append(upe.identificador)
+            if 'nivel' in selected_cols:
+                upes_data[UPE_COLUMNAS['nivel']].append(upe.nivel)
+            if 'metros_cuadrados' in selected_cols:
+                upes_data[UPE_COLUMNAS['metros_cuadrados']].append(float(upe.metros_cuadrados))
+            if 'estacionamientos' in selected_cols:
+                upes_data[UPE_COLUMNAS['estacionamientos']].append(upe.estacionamientos)
             if 'valor_total' in selected_cols:
+
                 upes_data[UPE_COLUMNAS['valor_total']].append(
                     float(upe.valor_total))
             if 'moneda' in selected_cols:
                 upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda.codigo if upe.moneda else None)
+
+                upes_data[UPE_COLUMNAS['valor_total']].append(float(upe.valor_total))
+            if 'moneda' in selected_cols:
+                upes_data[UPE_COLUMNAS['moneda']].append(upe.moneda)
+
             if 'estado' in selected_cols:
                 upes_data[UPE_COLUMNAS['estado']].append(upe.estado)
 

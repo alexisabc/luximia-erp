@@ -13,7 +13,62 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Moneda
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, PlanPago, TipoDeCambio, AuditLog
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, FormaPago
+
+
+from .models import Proyecto, Cliente, Departamento, Puesto, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+
+
+from .models import Proyecto, Cliente, Vendedor, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoCambio,
+    TipoDeCambio,
+    AuditLog,
+)
+
+
+from .models import (
+    Proyecto,
+    Cliente,
+    UPE,
+    Contrato,
+    Pago,
+    PlanDePagos,
+    TipoDeCambio,
+    AuditLog,
+    Departamento,
+    Puesto,
+    Empleado,
+)
+
+
+from .models import Proyecto, Cliente, Departamento, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, EsquemaComision
+
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Banco
+
+
+
+
+
+
+
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -31,8 +86,33 @@ class ProyectoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class ClienteSerializer(serializers.ModelSerializer):
     proyectos_asociados = serializers.SerializerMethodField()
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
+
+class BancoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banco
+        fields = '__all__'
+
+
+class ClienteSerializer(serializers.ModelSerializer):
+    proyectos_asociados = serializers.SerializerMethodField()
+
+
 
     class Meta:
         model = Cliente
@@ -45,6 +125,7 @@ class ClienteSerializer(serializers.ModelSerializer):
         return list(proyectos)
 
 
+
 class UPESerializer(serializers.ModelSerializer):
     moneda = serializers.SlugRelatedField(
         slug_field='codigo', queryset=Moneda.objects.all())
@@ -52,6 +133,71 @@ class UPESerializer(serializers.ModelSerializer):
     class Meta:
         model = UPE
         fields = '__all__'
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = '__all__'
+
+
+class PuestoSerializer(serializers.ModelSerializer):
+    departamento_nombre = serializers.CharField(
+        source='departamento.nombre', read_only=True)
+
+    class Meta:
+        model = Puesto
+        fields = ['id', 'nombre', 'descripcion',
+                  'departamento', 'departamento_nombre', 'activo']
+
+
+class VendedorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendedor
+        fields = ['id', 'tipo', 'nombre_completo', 'email', 'telefono', 'activo']
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = ['id', 'nombre', 'activo']
+
+
+class PuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Puesto
+        fields = ['id', 'nombre', 'activo']
+
+
+class EmpleadoSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(
+        source='user.username', read_only=True)
+    departamento_nombre = serializers.CharField(
+        source='departamento.nombre', read_only=True)
+    puesto_nombre = serializers.CharField(
+        source='puesto.nombre', read_only=True)
+
+    class Meta:
+        model = Empleado
+        fields = [
+            'id', 'user', 'user_username',
+            'puesto', 'puesto_nombre',
+            'departamento', 'departamento_nombre',
+            'activo'
+        ]
+
+
+class DepartamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Departamento
+        fields = '__all__'
+
+
+class UPESerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UPE
+        fields = '__all__'
+
+
 
 
 class UPEReadSerializer(serializers.ModelSerializer):
@@ -63,6 +209,36 @@ class UPEReadSerializer(serializers.ModelSerializer):
         model = UPE
         fields = ['id', 'identificador', 'valor_total',
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
+    class Meta:
+        model = UPE
+
+        fields = ['id', 'identificador', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
+
+
+class FormaPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormaPago
+        fields = '__all__'
+
+
+        fields = ['id', 'identificador', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
+
+
+class EsquemaComisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EsquemaComision
+        fields = '__all__'
+
+
+        fields = ['id', 'identificador', 'nivel', 'metros_cuadrados',
+                  'estacionamientos', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
 
 
 # ==============================================================================
@@ -79,7 +255,24 @@ class PlanDePagosSerializer(serializers.ModelSerializer):
                   'monto_programado', 'tipo', 'pagado']
 
 
+
 class PagoWriteSerializer(serializers.ModelSerializer):
+
+class PlanPagoSerializer(serializers.ModelSerializer):
+    cliente_nombre = serializers.CharField(
+        source='cliente.nombre_completo', read_only=True)
+    upe_identificador = serializers.CharField(
+        source='upe.identificador', read_only=True)
+
+    class Meta:
+        model = PlanPago
+        fields = ['id', 'cliente', 'upe', 'monto_programado', 'monto_pagado',
+                  'fecha_programada', 'fecha_pago', 'moneda', 'forma_pago',
+                  'activo', 'cliente_nombre', 'upe_identificador']
+
+
+class PagoWriteSerializer(serializers.ModelSerializer):
+
     """
     Serializer para crear y actualizar Pagos.
     """
@@ -368,6 +561,30 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['is_superuser'] = user.is_superuser
         return token
 
+
+# ==============================================================================
+# --- SERIALIZERS DE UTILIDADES  ---
+# ==============================================================================
+
+class TipoCambioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoCambio
+        fields = '__all__'
+
+
+class TipoDeCambioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TipoDeCambio
+        fields = '__all__'
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField()
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'user', 'action', 'model_name', 'object_id', 'timestamp', 'changes']
+
 # ==============================================================================
 # --- SERIALIZERS DE UTILIDADES  ---
 # ==============================================================================
@@ -384,3 +601,4 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = ['id', 'user', 'action', 'model_name', 'object_id', 'timestamp', 'changes']
+

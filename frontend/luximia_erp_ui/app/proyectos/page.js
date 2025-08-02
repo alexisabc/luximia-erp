@@ -10,22 +10,52 @@ import ExportModal from '../../components/ExportModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { Download } from 'lucide-react';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
+import { formatCurrency } from '../../utils/formatters';
 
 
 const PROYECTO_COLUMNAS_DISPLAY = [
     { header: 'Nombre del Proyecto', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre}</span> },
     { header: 'Descripción', render: (row) => <span className="text-gray-700 dark:text-gray-300">{row.descripcion}</span> },
+    { header: 'Niveles', render: (row) => row.niveles },
+    { header: 'UPEs', render: (row) => row.numero_upes },
+    { header: 'm²', render: (row) => row.metros_cuadrados },
+    { header: 'Estacionamientos', render: (row) => row.numero_estacionamientos },
+    { header: 'Valor Total', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.valor_total, 'MXN')}</div> },
+    { header: 'Estado', render: (row) => row.estado },
 ];
 
 const PROYECTO_COLUMNAS_EXPORT = [
-    { id: 'id', label: 'ID' }, { id: 'nombre', label: 'Nombre' },
-    { id: 'descripcion', label: 'Descripción' }, { id: 'activo', label: 'Estado' }
+    { id: 'id', label: 'ID' },
+    { id: 'nombre', label: 'Nombre' },
+    { id: 'descripcion', label: 'Descripción' },
+    { id: 'niveles', label: 'Niveles' },
+    { id: 'numero_upes', label: 'Número de UPEs' },
+    { id: 'metros_cuadrados', label: 'Metros cuadrados' },
+    { id: 'numero_estacionamientos', label: 'Número de Estacionamientos' },
+    { id: 'valor_total', label: 'Valor Total' },
+    { id: 'estado', label: 'Estado' },
+    { id: 'activo', label: 'Activo' },
 ];
 
 
 const PROYECTO_FORM_FIELDS = [
     { name: 'nombre', label: 'Nombre del Proyecto', required: true },
-    { name: 'descripcion', label: 'Descripción', type: 'textarea' }
+    { name: 'descripcion', label: 'Descripción', type: 'textarea' },
+    { name: 'niveles', label: 'Niveles', type: 'number' },
+    { name: 'numero_upes', label: 'Número de UPEs', type: 'number' },
+    { name: 'metros_cuadrados', label: 'Metros cuadrados', type: 'number' },
+    { name: 'numero_estacionamientos', label: 'Número de Estacionamientos', type: 'number' },
+    { name: 'valor_total', label: 'Valor Total', type: 'number' },
+    {
+        name: 'estado',
+        label: 'Estado',
+        type: 'select',
+        options: [
+            { value: 'Planificado', label: 'Planificado' },
+            { value: 'En venta', label: 'En venta' },
+            { value: 'Terminado', label: 'Terminado' },
+        ],
+    },
 ];
 
 export default function ProyectosPage() {
@@ -42,7 +72,16 @@ export default function ProyectosPage() {
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Estados para la gestión de datos
-    const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
+    const [formData, setFormData] = useState({
+        nombre: '',
+        descripcion: '',
+        niveles: '',
+        numero_upes: '',
+        metros_cuadrados: '',
+        numero_estacionamientos: '',
+        valor_total: '',
+        estado: 'Planificado',
+    });
     const [editingProject, setEditingProject] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [selectedColumns, setSelectedColumns] = useState(() => {
@@ -82,13 +121,31 @@ export default function ProyectosPage() {
 
     const handleCreateClick = () => {
         setEditingProject(null);
-        setFormData({ nombre: '', descripcion: '' });
+        setFormData({
+            nombre: '',
+            descripcion: '',
+            niveles: '',
+            numero_upes: '',
+            metros_cuadrados: '',
+            numero_estacionamientos: '',
+            valor_total: '',
+            estado: 'Planificado',
+        });
         setIsFormModalOpen(true);
     };
 
     const handleEditClick = (proyecto) => {
         setEditingProject(proyecto);
-        setFormData({ nombre: proyecto.nombre, descripcion: proyecto.descripcion || '' });
+        setFormData({
+            nombre: proyecto.nombre,
+            descripcion: proyecto.descripcion || '',
+            niveles: proyecto.niveles || '',
+            numero_upes: proyecto.numero_upes || '',
+            metros_cuadrados: proyecto.metros_cuadrados || '',
+            numero_estacionamientos: proyecto.numero_estacionamientos || '',
+            valor_total: proyecto.valor_total || '',
+            estado: proyecto.estado || 'Planificado',
+        });
         setIsFormModalOpen(true);
     };
 
