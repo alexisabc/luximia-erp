@@ -24,6 +24,7 @@ import {
     Key,
     Upload,
     CircleDollarSign,
+    Coins,
     CreditCard,
     ShieldCheck,
     FileSearch,
@@ -210,6 +211,14 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_moneda') && (
+                            <li>
+                                <Link href="/monedas" className={getLinkClass('/monedas')}>
+                                    <Coins className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Monedas</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_upe') && (
                             <li>
                                 <Link href="/upes" className={getLinkClass('/upes')}>
@@ -345,6 +354,12 @@ export default function Sidebar() {
                                                                             <Link href="/importar/bancos" className={getLinkClass('/importar/bancos', true)}>
                                                                                 <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Bancos</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_moneda') && (
+                                                                            <Link href="/importar/monedas" className={getLinkClass('/importar/monedas', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Monedas</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_formapago') && (
@@ -483,6 +498,14 @@ export default function Sidebar() {
                                                                                 <Link href="/importar/bancos" className={getLinkClass('/importar/bancos', true)}>
                                                                                     <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Bancos</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_moneda') && (
+                                                                            <li>
+                                                                                <Link href="/importar/monedas" className={getLinkClass('/importar/monedas', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Monedas</span>
                                                                                 </Link>
                                                                             </li>
                                                                         )}

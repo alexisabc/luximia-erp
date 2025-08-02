@@ -55,6 +55,7 @@ export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/pro
 export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
 export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
 export const getBancos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/bancos/?page=${page}&page_size=${pageSize}`);
+export const getMonedas = (page = 1, pageSize = 15) => apiClient.get(`/cxc/monedas/?page=${page}&page_size=${pageSize}`);
 export const getDepartamentos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/departamentos/?page=${page}&page_size=${pageSize}`);
 export const getPuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/puestos/?page=${page}&page_size=${pageSize}`);
 export const getEmpleados = (page = 1, pageSize = 15) => apiClient.get(`/cxc/empleados/?page=${page}&page_size=${pageSize}`);
@@ -78,6 +79,19 @@ export const exportBancosExcel = (columns) =>
   apiClient.post('/cxc/bancos/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarBancos = (formData) =>
   apiClient.post('/cxc/bancos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+
+// ---- Monedas CRUD & utilities ----
+export const createMoneda = (data) => apiClient.post('/cxc/monedas/', data);
+export const updateMoneda = (id, data) => apiClient.patch(`/cxc/monedas/${id}/`, data);
+export const deleteMoneda = (id) => apiClient.delete(`/cxc/monedas/${id}/`);
+export const getInactiveMonedas = () => apiClient.get('/cxc/monedas/inactivos/');
+export const hardDeleteMoneda = (id) => apiClient.delete(`/cxc/monedas/${id}/hard/`);
+export const exportMonedasExcel = (columns) =>
+  apiClient.post('/cxc/monedas/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarMonedas = (formData) =>
+  apiClient.post('/cxc/monedas/importar-excel/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 
