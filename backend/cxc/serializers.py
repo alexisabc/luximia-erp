@@ -14,6 +14,8 @@ from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
 
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, MetodoPago
+
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, Moneda
 
 from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, PlanPago, TipoDeCambio, AuditLog
@@ -70,9 +72,13 @@ from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeC
 
 
 
+
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
 # ==============================================================================
+
+
+class ProyectoSerializer(serializers.ModelSerializer):
 
 class MonedaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -81,6 +87,7 @@ class MonedaSerializer(serializers.ModelSerializer):
 
 
 class ProyectoSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Proyecto
         fields = '__all__'
@@ -124,6 +131,9 @@ class ClienteSerializer(serializers.ModelSerializer):
             'upe__proyecto__nombre', flat=True).distinct()
         return list(proyectos)
 
+
+
+class UPESerializer(serializers.ModelSerializer):
 
 
 class UPESerializer(serializers.ModelSerializer):
@@ -193,14 +203,19 @@ class DepartamentoSerializer(serializers.ModelSerializer):
 
 
 class UPESerializer(serializers.ModelSerializer):
+
     class Meta:
         model = UPE
         fields = '__all__'
 
 
 
+class UPEReadSerializer(serializers.ModelSerializer):
+
+
 
 class UPEReadSerializer(serializers.ModelSerializer):
+
     proyecto_nombre = serializers.CharField(
         source='proyecto.nombre', read_only=True)
     moneda = serializers.CharField(source='moneda.codigo', read_only=True)
@@ -212,6 +227,21 @@ class UPEReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UPE
+
+        fields = ['id', 'identificador', 'valor_total',
+                  'moneda', 'estado', 'proyecto', 'proyecto_nombre']
+
+
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = '__all__'
+
+
+# ==============================================================================
+# --- SERIALIZERS DE ESCRITURA Y LECTURA DE MODELOS ---
+# ==============================================================================
+
 
         fields = ['id', 'identificador', 'valor_total',
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
@@ -245,6 +275,7 @@ class EsquemaComisionSerializer(serializers.ModelSerializer):
 # --- SERIALIZERS DE ESCRITURA Y LECTURA DE MODELOS ---
 # ==============================================================================
 
+
 class PlanDePagosSerializer(serializers.ModelSerializer):
     """
     Serializer para mostrar las cuotas del plan de pagos.
@@ -254,6 +285,9 @@ class PlanDePagosSerializer(serializers.ModelSerializer):
         fields = ['id', 'fecha_vencimiento',
                   'monto_programado', 'tipo', 'pagado']
 
+
+
+class PagoWriteSerializer(serializers.ModelSerializer):
 
 
 class PagoWriteSerializer(serializers.ModelSerializer):
@@ -283,7 +317,7 @@ class PagoWriteSerializer(serializers.ModelSerializer):
         model = Pago
         fields = [
             'contrato', 'concepto', 'monto_pagado', 'moneda_pagada', 'tipo_cambio',
-            'fecha_pago', 'fecha_ingreso_cuentas', 'instrumento_pago',
+            'fecha_pago', 'fecha_ingreso_cuentas', 'metodo_pago',
             'ordenante', 'banco_origen', 'num_cuenta_origen',
             'banco_destino', 'cuenta_beneficiaria', 'comentarios'
         ]
@@ -331,10 +365,17 @@ class PagoReadSerializer(serializers.ModelSerializer):
     """
     valor_mxn = serializers.ReadOnlyField()
 
+
+    # ### LÍNEA AÑADIDA ###
+    # Forzamos que este campo conserve sus 4 decimales al ser serializado.
+    tipo_cambio = serializers.DecimalField(max_digits=10, decimal_places=4)
+    metodo_pago = MetodoPagoSerializer(read_only=True)
+
     # ### LÍNEA AÑADIDA ###
     # Forzamos que este campo conserve sus 4 decimales al ser serializado.
     tipo_cambio = serializers.DecimalField(max_digits=10, decimal_places=4)
     moneda_pagada = serializers.CharField(source='moneda_pagada.codigo')
+
 
     class Meta:
         model = Pago

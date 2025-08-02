@@ -380,6 +380,28 @@ class PlanDePagos(ModeloBaseActivo):
         return f"Vencimiento {self.fecha_vencimiento} - {self.monto_programado} ({self.get_tipo_display()})"
 
 
+class MetodoPago(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
+
+
+class Pago(ModeloBaseActivo):
+    """
+    Registra cada transacción de dinero que entra.
+    Actualizado con todos los nuevos campos de detalle.
+    """
+    TIPO_PAGO_CHOICES = [
+        ('APARTADO', 'APARTADO'),
+        ('DEVOLUCIÓN', 'DEVOLUCIÓN'),
+        ('DESCUENTO', 'DESCUENTO'),
+        ('PAGO', 'PAGO'),
+    ]
+
 class PlanPago(ModeloBaseActivo):
     """Plan de pagos independiente para un cliente y una UPE."""
     FORMAS_PAGO_CHOICES = [
@@ -438,6 +460,7 @@ class Pago(ModeloBaseActivo):
         ('PAGO', 'PAGO'),
     ]
 
+
     # --- Relaciones y Datos del Pago ---
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='pagos')
     concepto = models.CharField(max_length=50, choices=TIPO_PAGO_CHOICES, default='ABONO', help_text="Concepto del pago (mapea a CONCEPTO)")
@@ -451,7 +474,7 @@ class Pago(ModeloBaseActivo):
     fecha_ingreso_cuentas = models.DateField(null=True, blank=True, help_text="Fecha en que el dinero ingresó a cuentas")
 
     # --- Detalles de la Transacción ---
-    instrumento_pago = models.CharField(max_length=100, choices=INSTRUMENTO_PAGO_CHOICES, null=True, blank=True, help_text="Mapea a TIPO_PAGO (METODO DE PAGO)")
+    metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.PROTECT, related_name='pagos', null=True, blank=True, help_text="Mapea a TIPO_PAGO (METODO DE PAGO)")
     ordenante = models.CharField(max_length=200, blank=True, null=True, help_text="Persona o empresa que ordena el pago")
     banco_origen = models.CharField(max_length=100, blank=True, null=True)
     num_cuenta_origen = models.CharField(max_length=50, blank=True, null=True)
