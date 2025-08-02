@@ -10,6 +10,7 @@ from .views import (
     DepartamentoViewSet,
     PuestoViewSet,
     EmpleadoViewSet,
+    ContratoViewSet,
 )
 
 router = DefaultRouter()
@@ -22,6 +23,7 @@ router.register(r'monedas', MonedaViewSet)
 router.register(r'departamentos', DepartamentoViewSet)
 router.register(r'puestos', PuestoViewSet)
 router.register(r'empleados', EmpleadoViewSet)
+router.register(r'contratos', ContratoViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

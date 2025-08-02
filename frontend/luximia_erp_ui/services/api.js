@@ -210,6 +210,7 @@ export const hardDeleteUpe = (id) => apiClient.delete(`/cxc/upes/${id}/hard_dele
 
 // CRUD - Contratos
 export const createContrato = (data) => apiClient.post('/cxc/contratos/', data);
+export const updateContrato = (id, data) => apiClient.put(`/cxc/contratos/${id}/`, data);
 export const createPlanPago = (data) => apiClient.post('/cxc/planes-pago/', data);
 export const getInactiveContratos = () => apiClient.get('/cxc/contratos/inactive/');
 
