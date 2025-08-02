@@ -374,6 +374,60 @@ export default function Sidebar() {
                                                                                 <span className="ml-2">UPEs</span>
                                                                             </Link>
                                                                         )}
+                                                                        {hasPermission('cxc.add_proyecto') && (
+                                                                            <Link href="/importar/proyectos" className={getLinkClass('/importar/proyectos', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Proyectos</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_departamento') && (
+                                                                            <Link href="/importar/departamentos" className={getLinkClass('/importar/departamentos', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Departamentos</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_puesto') && (
+                                                                            <Link href="/importar/puestos" className={getLinkClass('/importar/puestos', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Puestos</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_empleado') && (
+                                                                            <Link href="/importar/empleados" className={getLinkClass('/importar/empleados', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Empleados</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_vendedor') && (
+                                                                            <Link href="/importar/vendedores" className={getLinkClass('/importar/vendedores', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Vendedores</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_planpago') && (
+                                                                            <Link href="/importar/planes-pago" className={getLinkClass('/importar/planes-pago', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Planes de Pago</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_esquemacomision') && (
+                                                                            <Link href="/importar/esquemas-comision" className={getLinkClass('/importar/esquemas-comision', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Esquemas de Comisión</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_presupuesto') && (
+                                                                            <Link href="/importar/presupuestos" className={getLinkClass('/importar/presupuestos', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Presupuestos</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_tipocambio') && (
+                                                                            <Link href="/importar/tipos-cambio" className={getLinkClass('/importar/tipos-cambio', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Tipos de Cambio</span>
+                                                                            </Link>
+                                                                        )}
                                                                         {hasPermission('cxc.add_contrato') && (
                                                                             <Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>
                                                                                 <Upload className="h-4 w-4" />
@@ -522,6 +576,78 @@ export default function Sidebar() {
                                                                                 <Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>
                                                                                     <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">UPEs</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_proyecto') && (
+                                                                            <li>
+                                                                                <Link href="/importar/proyectos" className={getLinkClass('/importar/proyectos', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Proyectos</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_departamento') && (
+                                                                            <li>
+                                                                                <Link href="/importar/departamentos" className={getLinkClass('/importar/departamentos', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Departamentos</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_puesto') && (
+                                                                            <li>
+                                                                                <Link href="/importar/puestos" className={getLinkClass('/importar/puestos', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Puestos</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_empleado') && (
+                                                                            <li>
+                                                                                <Link href="/importar/empleados" className={getLinkClass('/importar/empleados', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Empleados</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_vendedor') && (
+                                                                            <li>
+                                                                                <Link href="/importar/vendedores" className={getLinkClass('/importar/vendedores', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Vendedores</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_planpago') && (
+                                                                            <li>
+                                                                                <Link href="/importar/planes-pago" className={getLinkClass('/importar/planes-pago', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Planes de Pago</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_esquemacomision') && (
+                                                                            <li>
+                                                                                <Link href="/importar/esquemas-comision" className={getLinkClass('/importar/esquemas-comision', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Esquemas de Comisión</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_presupuesto') && (
+                                                                            <li>
+                                                                                <Link href="/importar/presupuestos" className={getLinkClass('/importar/presupuestos', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Presupuestos</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_tipocambio') && (
+                                                                            <li>
+                                                                                <Link href="/importar/tipos-cambio" className={getLinkClass('/importar/tipos-cambio', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Tipos de Cambio</span>
                                                                                 </Link>
                                                                             </li>
                                                                         )}
