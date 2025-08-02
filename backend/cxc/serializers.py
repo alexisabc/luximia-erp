@@ -10,8 +10,11 @@ from .models import (
     Puesto,
     Empleado,
     MetodoPago,
+    Presupuesto,
     Contrato,
 )
+
+
 
 
 class BancoSerializer(serializers.ModelSerializer):
@@ -57,6 +60,18 @@ class ContratoSerializer(serializers.ModelSerializer):
         model = Contrato
         fields = '__all__'
 
+class PresupuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presupuesto
+        fields = '__all__'
+
+    def validate(self, data):
+        upe = data.get('upe')
+        proyecto = data.get('proyecto')
+        if upe and proyecto and upe.proyecto_id != proyecto.id:
+            raise serializers.ValidationError('La UPE no pertenece al proyecto seleccionado.')
+        return data
+
 
 class MonedaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,4 +94,22 @@ class PuestoSerializer(serializers.ModelSerializer):
 class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Empleado
+        fields = '__all__'
+
+
+
+class PresupuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presupuesto
+        fields = '__all__'
+
+
+class ContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+
         fields = '__all__'

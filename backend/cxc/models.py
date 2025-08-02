@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal
+from django.utils import timezone
 
 
 class ModeloBaseActivo(models.Model):
@@ -26,6 +28,21 @@ class Banco(ModeloBaseActivo):
 
     def __str__(self):
         return self.nombre_corto
+
+
+class MetodoPago(ModeloBaseActivo):
+    """Catálogo de métodos de pago permitidos."""
+    METODO_CHOICES = [
+        ("EFECTIVO", "Efectivo"),
+        ("TRANSFERENCIA", "Transferencia"),
+        ("TARJETA_DEBITO", "Tarjeta de Débito"),
+        ("TARJETA_CREDITO", "Tarjeta de Crédito"),
+        ("CHEQUE", "Cheque"),
+    ]
+    nombre = models.CharField(max_length=20, choices=METODO_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.get_nombre_display()
 
 
 class Proyecto(ModeloBaseActivo):
@@ -137,6 +154,7 @@ class Pago(ModeloBaseActivo):
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.SET_NULL, related_name='pagos', null=True, blank=True)
 
     def __str__(self):
+
         return f"{self.concepto} - {self.monto_pagado}"
 
     def save(self, *args, **kwargs):
@@ -145,3 +163,60 @@ class Pago(ModeloBaseActivo):
         else:
             self.valor_mxn = self.monto_pagado
         super().save(*args, **kwargs)
+
+        return f"{self.concepto} - {self.monto}"
+
+
+class Presupuesto(ModeloBaseActivo):
+
+    """Presupuesto generado para una posible venta."""
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='presupuestos')
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='presupuestos')
+    monto_total = models.DecimalField(max_digits=12, decimal_places=2)
+    fecha = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Presupuesto {self.id} - {self.cliente}"
+
+
+class Contrato(ModeloBaseActivo):
+    """Contrato firmado a partir de un presupuesto."""
+    presupuesto = models.ForeignKey(Presupuesto, on_delete=models.CASCADE, related_name='contratos')
+    fecha_firma = models.DateField(auto_now_add=True)
+    abonos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    saldo_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    saldo_pendiente = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    fecha_ultimo_abono = models.DateField(null=True, blank=True)
+
+    def registrar_abono(self, monto: Decimal):
+        monto = Decimal(monto)
+        if monto < 0:
+            raise ValueError("El monto no puede ser negativo")
+        if monto > self.saldo_pendiente:
+            raise ValueError("El abono excede el saldo pendiente")
+        self.abonos += monto
+        self.fecha_ultimo_abono = timezone.now().date()
+        self.save()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.saldo_total:
+            self.saldo_total = self.presupuesto.monto_total
+        self.saldo_pendiente = self.saldo_total - self.abonos
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Contrato {self.id} - {self.presupuesto}" 
+
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='presupuestos')
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='presupuestos')
+    upe = models.ForeignKey(UPE, on_delete=models.CASCADE, related_name='presupuestos')
+    monto_apartado = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    monto_total = models.DecimalField(max_digits=14, decimal_places=2)
+
+    class Meta:
+        unique_together = ('cliente', 'upe')
+
+    def __str__(self):
+        return f"Presupuesto {self.id}"
+
+

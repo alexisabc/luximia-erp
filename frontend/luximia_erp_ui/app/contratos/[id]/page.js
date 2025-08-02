@@ -3,13 +3,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel, getMetodosPago } from '../../../services/api';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
 import { formatCurrency } from '../../../utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
 import Loader from '../../../components/Loader';
+import MetodoPagoSelect from '../../../components/MetodoPagoSelect';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (
@@ -69,59 +70,93 @@ export default function ContratoDetallePage() {
 
     const [currentPago, setCurrentPago] = useState(null);
     const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
-    const [metodosPago, setMetodosPago] = useState([]);
 
-    const [newPagoData, setNewPagoData] = useState({
-        concepto: 'ABONO', monto_pagado: '', moneda_pagada: 'USD', tipo_cambio: '1.0',
-        fecha_pago: new Date().toISOString().split('T')[0], metodo_pago: '',
-        ordenante: '', banco_origen: '', num_cuenta_origen: '', banco_destino: '',
-        cuenta_beneficiaria: '', comentarios: ''
-    });
 
-    const [selectedColumns, setSelectedColumns] = useState(() => {
-        const allCols = {};
-        COLUMNAS_EXPORTABLES.planDePagos.forEach(c => allCols[`plan_${c.id}`] = true);
-        COLUMNAS_EXPORTABLES.historialPagos.forEach(c => allCols[`pago_${c.id}`] = true);
-        return allCols;
-    });
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { getContratoById, updateContrato } from '../../../services/api';
 
-    const fetchData = useCallback(async () => {
-        if (!contratoId) return;
-        setLoading(true);
+export default function ContratoDetail() {
+    const params = useParams();
+    const { id } = params;
+    const [contrato, setContrato] = useState(null);
+    const [formData, setFormData] = useState({ abonos: '', saldo_total: '' });
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        async function fetchContrato() {
+            try {
+                const res = await getContratoById(id);
+                setContrato(res.data);
+                setFormData({ abonos: res.data.abonos, saldo_total: res.data.saldo_total });
+            } catch (err) {
+                setError('No se pudo cargar el contrato');
+            }
+        }
+        if (id) {
+            fetchContrato();
+        }
+    }, [id]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setError(null);
         try {
-            const [contratoRes, tipoCambioRes] = await Promise.all([
-                getContratoById(contratoId),
-                getLatestTipoDeCambio()
-            ]);
-
-            setContrato(contratoRes.data);
-            const valorTC = parseFloat(tipoCambioRes.data.valor);
-            setLatestTipoCambio(valorTC);
-
-            setNewPagoData(prev => ({
-                ...prev,
-                ordenante: contratoRes.data.cliente.nombre_completo,
-                tipo_cambio: valorTC
-            }));
+            await updateContrato(id, formData);
+            const res = await getContratoById(id);
+            setContrato(res.data);
         } catch (err) {
-            setError('No se pudo cargar la información del contrato.');
-            setNewPagoData(prev => ({ ...prev, tipo_cambio: 18.0 }));
-        } finally {
-            setLoading(false);
+            setError('No se pudo actualizar el contrato');
         }
-    }, [contratoId]);
+    };
 
-    const fetchMetodosPago = useCallback(async () => {
-        try {
-            const res = await getMetodosPago();
-            setMetodosPago(res.data);
-        } catch (err) {
-            console.error('No se pudieron cargar los métodos de pago');
-        }
-    }, []);
+    if (!contrato) {
+        return <div className="p-8">Cargando...</div>;
+    }
 
-    useEffect(() => { fetchData(); fetchMetodosPago(); }, [fetchData, fetchMetodosPago]);
+    return (
+        <div className="p-8 space-y-4">
+            <h1 className="text-2xl font-bold">Contrato #{id}</h1>
+            {error && <p className="text-red-600">{error}</p>}
+            <p><strong>Saldo total:</strong> {contrato.saldo_total}</p>
+            <p><strong>Abonos:</strong> {contrato.abonos}</p>
+            <p><strong>Saldo pendiente:</strong> {contrato.saldo_pendiente}</p>
+            <form onSubmit={handleSubmit} className="space-y-4 max-w-sm">
+                <div>
+                    <label className="block text-sm font-medium">Abonos</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="abonos"
+                        value={formData.abonos}
+                        onChange={handleChange}
+                        className="mt-1 block w-full border px-2 py-1"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium">Saldo Total</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        name="saldo_total"
+                        value={formData.saldo_total}
+                        onChange={handleChange}
+                        className="mt-1 block w-full border px-2 py-1"
+                    />
+                </div>
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Actualizar</button>
+            </form>
+        </div>
+    );
+}
+
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const handleCreateClick = () => {
         setNewPagoData({
@@ -130,7 +165,7 @@ export default function ContratoDetallePage() {
             moneda_pagada: 'USD',
             tipo_cambio: latestTipoCambio, // <-- Usa el estado más reciente
             fecha_pago: new Date().toISOString().split('T')[0],
-            metodo_pago: metodosPago[0]?.id || '',
+            metodo_pago: '',
             ordenante: contrato?.cliente?.nombre_completo || '', // <-- Más seguro
             banco_origen: '',
             num_cuenta_origen: '',
@@ -394,11 +429,7 @@ export default function ContratoDetallePage() {
                         </div>
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
-                            <select name="metodo_pago" value={newPagoData.metodo_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                {metodosPago.map(mp => (
-                                    <option key={mp.id} value={mp.id}>{mp.nombre}</option>
-                                ))}
-                            </select>
+                            <MetodoPagoSelect name="metodo_pago" value={newPagoData.metodo_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                         </div>
 
                         {/* --- Fila 4 --- */}
@@ -493,11 +524,7 @@ export default function ContratoDetallePage() {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
-                                <select name="metodo_pago" value={currentPago.metodo_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    {metodosPago.map(mp => (
-                                        <option key={mp.id} value={mp.id}>{mp.nombre}</option>
-                                    ))}
-                                </select>
+                                <MetodoPagoSelect name="metodo_pago" value={currentPago.metodo_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                             </div>
 
                             {/* --- Fila 4 --- */}

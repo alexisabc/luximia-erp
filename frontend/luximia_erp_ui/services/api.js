@@ -114,7 +114,7 @@ export const getPermissions = () => apiClient.get('/cxc/permissions/');
 
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
 export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
-export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/all/');
+export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/');
 
 
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
@@ -210,6 +210,7 @@ export const hardDeleteUpe = (id) => apiClient.delete(`/cxc/upes/${id}/hard_dele
 
 // CRUD - Contratos
 export const createContrato = (data) => apiClient.post('/cxc/contratos/', data);
+export const updateContrato = (id, data) => apiClient.put(`/cxc/contratos/${id}/`, data);
 export const createPlanPago = (data) => apiClient.post('/cxc/planes-pago/', data);
 export const getInactiveContratos = () => apiClient.get('/cxc/contratos/inactive/');
 
@@ -218,6 +219,13 @@ export const hardDeleteContrato = (id) => apiClient.delete(`/cxc/contratos/${id}
 // CRUD - Pagos
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (pagoId, data) => apiClient.put(`/cxc/pagos/${pagoId}/`, data);
+// CRUD - Presupuestos
+export const getPresupuestos = (page = 1, pageSize = 15) =>
+    apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
+export const createPresupuesto = (data) => apiClient.post('/cxc/presupuestos/', data);
+export const updatePresupuesto = (id, data) => apiClient.put(`/cxc/presupuestos/${id}/`, data);
+export const deletePresupuesto = (id) => apiClient.delete(`/cxc/presupuestos/${id}/`);
+export const getPresupuesto = (id) => apiClient.get(`/cxc/presupuestos/${id}/`);
 export const deletePago = (pagoId) => apiClient.delete(`/cxc/pagos/${pagoId}/`);
 export const updatePlanPago = (id, data) => apiClient.put(`/cxc/planes-pago/${id}/`, data);
 export const deletePlanPago = (id) => apiClient.delete(`/cxc/planes-pago/${id}/`);

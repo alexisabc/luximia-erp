@@ -12,6 +12,8 @@ from .views import (
     EmpleadoViewSet,
     MetodoPagoViewSet,
     ContratoViewSet,
+    PresupuestoViewSet,
+    
 )
 
 router = DefaultRouter()
@@ -24,8 +26,12 @@ router.register(r'monedas', MonedaViewSet)
 router.register(r'departamentos', DepartamentoViewSet)
 router.register(r'puestos', PuestoViewSet)
 router.register(r'empleados', EmpleadoViewSet)
-router.register(r'metodos-pago', MetodoPagoViewSet)
+
 router.register(r'contratos', ContratoViewSet)
+router.register(r'presupuestos', PresupuestoViewSet)
+router.register(r'metodos-pago', MetodoPagoViewSet)
+
+
 
 urlpatterns = [
     path('', include(router.urls)),
