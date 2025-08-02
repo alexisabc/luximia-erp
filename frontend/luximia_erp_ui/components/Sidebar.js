@@ -14,6 +14,7 @@ import {
     Building,
     FileText,
     Banknote,
+    Landmark,
     Calendar,
     BarChart3,
     Settings,
@@ -200,6 +201,14 @@ export default function Sidebar() {
                                 </Link>
                             </li>
                         )}
+                        {hasPermission('cxc.view_banco') && (
+                            <li>
+                                <Link href="/bancos" className={getLinkClass('/bancos')}>
+                                    <Landmark className="h-5 w-5" />
+                                    {isOpen && <span className="ml-2">Bancos</span>}
+                                </Link>
+                            </li>
+                        )}
                         {hasPermission('cxc.view_upe') && (
                             <li>
                                 <Link href="/upes" className={getLinkClass('/upes')}>
@@ -320,6 +329,12 @@ export default function Sidebar() {
                                                                             <Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>
                                                                                 <Upload className="h-4 w-4" />
                                                                                 <span className="ml-2">Clientes</span>
+                                                                            </Link>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_banco') && (
+                                                                            <Link href="/importar/bancos" className={getLinkClass('/importar/bancos', true)}>
+                                                                                <Upload className="h-4 w-4" />
+                                                                                <span className="ml-2">Bancos</span>
                                                                             </Link>
                                                                         )}
                                                                         {hasPermission('cxc.add_upe') && (
@@ -444,6 +459,14 @@ export default function Sidebar() {
                                                                                 <Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>
                                                                                     <Upload className="h-4 w-4" />
                                                                                     <span className="ml-2">Clientes</span>
+                                                                                </Link>
+                                                                            </li>
+                                                                        )}
+                                                                        {hasPermission('cxc.add_banco') && (
+                                                                            <li>
+                                                                                <Link href="/importar/bancos" className={getLinkClass('/importar/bancos', true)}>
+                                                                                    <Upload className="h-4 w-4" />
+                                                                                    <span className="ml-2">Bancos</span>
                                                                                 </Link>
                                                                             </li>
                                                                         )}
