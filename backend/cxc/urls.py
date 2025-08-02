@@ -2,9 +2,27 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from .views import (
     ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, MetodoPagoViewSet,
     UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    MonedaViewSet, UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, PlanPagoViewSet,
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, FormaPagoViewSet, ContratoViewSet, PagoViewSet,
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
     generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
     consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
     importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
@@ -14,16 +32,164 @@ from .views import (
 )
 
 router = DefaultRouter()
+
 router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
 router.register(r'clientes', ClienteViewSet, basename='cliente')
 router.register(r'upes', UPEViewSet, basename='upe')
 router.register(r'contratos', ContratoViewSet, basename='contrato')
 router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'monedas', MonedaViewSet, basename='moneda')
+
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'upes', UPEViewSet, basename='upe')
+
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+router.register(r'pagos', PagoViewSet, basename='pago')
 router.register(r'metodos-pago', MetodoPagoViewSet, basename='metodopago')
+router.register(r'users', UserViewSet, basename='user')
+
+
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'planes-pago', PlanPagoViewSet, basename='planpago')
+
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'groups', GroupViewSet, basename='group')
 router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
 router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+router.register(r'formas-pago', FormaPagoViewSet, basename='formapago')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'users', UserViewSet, basename='user')
+
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
+router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, DepartamentoViewSet, PuestoViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, VendedorViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    UserViewSet, GroupViewSet, TipoCambioViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+from .views import (
+    ProyectoViewSet,
+    ClienteViewSet,
+    UPEViewSet,
+    ContratoViewSet,
+    PagoViewSet,
+    DepartamentoViewSet,
+    PuestoViewSet,
+    EmpleadoViewSet,
+    UserViewSet,
+    GroupViewSet,
+    TipoDeCambioViewSet,
+    AuditLogViewSet,
+    get_all_permissions,
+
+    generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
+
+
+from .views import (
+    ProyectoViewSet, ClienteViewSet, DepartamentoViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+from .views import (
+
+    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, EsquemaComisionViewSet,
+
+    ProyectoViewSet, BancoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
+
+    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
+
+
+
+    generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
+
+    consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
+    importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
+    importar_pagos_historicos, export_proyectos_excel, export_clientes_excel,
+    export_upes_excel, export_contratos_excel,
+    strategic_dashboard_data  # <-- Añade la nueva vista del dashboard
+)
+
+
+router = DefaultRouter()
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
+router.register(r'puestos', PuestoViewSet, basename='puesto')
+router.register(r'upes', UPEViewSet, basename='upe')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+router.register(r'pagos', PagoViewSet, basename='pago')
+
+
+router = DefaultRouter()
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'vendedores', VendedorViewSet, basename='vendedor')
+router.register(r'upes', UPEViewSet, basename='upe')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+router.register(r'pagos', PagoViewSet, basename='pago')
+
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
+router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+
+router = DefaultRouter()
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
+router.register(r'upes', UPEViewSet, basename='upe')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+
+router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
+router.register(r'puestos', PuestoViewSet, basename='puesto')
+router.register(r'empleados', EmpleadoViewSet, basename='empleado')
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
+router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+
+router = DefaultRouter()
+router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
+router.register(r'bancos', BancoViewSet, basename='banco')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
+router.register(r'upes', UPEViewSet, basename='upe')
+router.register(r'contratos', ContratoViewSet, basename='contrato')
+
+router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'esquemas-comision', EsquemaComisionViewSet, basename='esquema-comision')
+router.register(r'users', UserViewSet, basename='user')
+
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'tipos-cambio', TipoCambioViewSet)
+router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
+router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
+router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
+
+
+
+
 
 # ### CAMBIO CLAVE: El orden de esta lista es muy importante ###
 urlpatterns = [

@@ -13,6 +13,12 @@ const permissionTranslations = {
   delete_cliente: "Eliminar cliente",
   view_cliente: "Ver cliente",
 
+  // Permisos para Empleado
+  add_empleado: "Añadir empleado",
+  change_empleado: "Cambiar empleado",
+  delete_empleado: "Eliminar empleado",
+  view_empleado: "Ver empleado",
+
   // Permisos para UPE
   add_upe: "Añadir UPE",
   change_upe: "Cambiar UPE",
@@ -30,6 +36,18 @@ const permissionTranslations = {
   change_pago: "Cambiar pago",
   delete_pago: "Eliminar pago",
   view_pago: "Ver pago",
+
+  // Permisos para Departamento
+  add_departamento: "Añadir departamento",
+  change_departamento: "Cambiar departamento",
+  delete_departamento: "Eliminar departamento",
+  view_departamento: "Ver departamento",
+
+  // Permisos para Puesto
+  add_puesto: "Añadir puesto",
+  change_puesto: "Cambiar puesto",
+  delete_puesto: "Eliminar puesto",
+  view_puesto: "Ver puesto",
 
   // Permisos para Plan de Pagos
   add_plandepagos: "Añadir plan de pagos",
@@ -70,9 +88,14 @@ export const translatePermission = (permission) => {
 const modelTranslations = {
   proyecto: 'Proyectos',
   cliente: 'Clientes',
+  empleado: 'Empleados',
+  departamento: 'Departamentos',
+  puesto: 'Puestos',
   upe: 'UPEs',
   contrato: 'Contratos',
   pago: 'Pagos',
+  departamento: 'Departamentos',
+  puesto: 'Puestos',
   plandepagos: 'Plan de Pagos',
   tipodecambio: 'Tipos de Cambio',
   user: 'Usuarios',

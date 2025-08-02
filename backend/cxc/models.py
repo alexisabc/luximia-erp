@@ -16,16 +16,51 @@ class ModeloBaseActivo(models.Model):
     activo = models.BooleanField(default=True)
 
     class Meta:
+
         abstract = True  # Esto le dice a Django que no cree una tabla para este modelo
 
 
+class Moneda(ModeloBaseActivo):
+    """Representa una divisa utilizada en el sistema."""
+    codigo = models.CharField(max_length=3, unique=True)
+    nombre = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.codigo
+
+
 class Proyecto(ModeloBaseActivo):
+
+        abstract = True  # Esto le dice a Django que no cree una tabla para este modelo
+
+
+class Banco(ModeloBaseActivo):
+    """Catálogo de bancos disponible para referenciar en pagos."""
+    clave = models.CharField(max_length=20, unique=True)
+    nombre_corto = models.CharField(max_length=100)
+    razon_social = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.nombre_corto
+
+
+class Proyecto(ModeloBaseActivo):
+
     nombre = models.CharField(
         max_length=100, unique=True, help_text="Ej: Shark Tower")
     descripcion = models.TextField(blank=True, null=True)
+    numero_upes = models.PositiveIntegerField(default=0)
+    niveles = models.PositiveIntegerField(default=0)
+    metros_cuadrados = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+    numero_estacionamientos = models.PositiveIntegerField(default=0)
+    valor_total = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0)
+    estado = models.CharField(max_length=50, default="Planificado")
 
     def __str__(self):
         return self.nombre
+
 
 
 class Cliente(ModeloBaseActivo):
@@ -40,12 +75,150 @@ class Cliente(ModeloBaseActivo):
 
 
 class UPE(ModeloBaseActivo):
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Puesto(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Departamento(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Puesto(ModeloBaseActivo):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    departamento = models.ForeignKey(
+        Departamento, on_delete=models.CASCADE, related_name='puestos')
+
+    def __str__(self):
+        return self.nombre
+
+
+class UPE(ModeloBaseActivo):
+
     ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
                       ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class Vendedor(ModeloBaseActivo):
+    tipo = models.CharField(max_length=50)
+    nombre_completo = models.CharField(max_length=200)
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+class UPE(ModeloBaseActivo):
+
+class Empleado(ModeloBaseActivo):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='empleado')
+    puesto = models.ForeignKey(
+        Puesto, on_delete=models.PROTECT, related_name='empleados')
+    departamento = models.ForeignKey(
+        Departamento, on_delete=models.PROTECT, related_name='empleados')
+
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+
+
+class UPE(ModeloBaseActivo):
+    ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
+                      ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+class Cliente(ModeloBaseActivo):
+    nombre_completo = models.CharField(max_length=200)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    # Hacemos el email único
+    email = models.EmailField(
+        max_length=254, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.nombre_completo
+
+
+
+class UPE(ModeloBaseActivo):
+
+    ESTADO_CHOICES = [('Disponible', 'Disponible'), ('Vendida', 'Vendida'),
+                      ('Pagada', 'Pagada y Entregada'), ('Bloqueada', 'Bloqueada')]
+
+
     proyecto = models.ForeignKey(
         Proyecto, on_delete=models.CASCADE, related_name='upes')
     identificador = models.CharField(
         max_length=50, help_text="Ej: Departamento 501, Lote 23")
+
+    valor_total = models.DecimalField(
+        max_digits=12, decimal_places=2, help_text="Valor total de la unidad")
+    moneda = models.ForeignKey(
+        Moneda, on_delete=models.PROTECT, null=True, blank=True)
+    estado = models.CharField(
+        max_length=20, choices=ESTADO_CHOICES, default='Disponible')
+
+    nivel = models.IntegerField(default=0)
+    metros_cuadrados = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0)
+    estacionamientos = models.PositiveIntegerField(default=0)
     valor_total = models.DecimalField(
         max_digits=12, decimal_places=2, help_text="Valor total de la unidad")
     moneda = models.CharField(max_length=3, choices=[(
@@ -53,11 +226,21 @@ class UPE(ModeloBaseActivo):
     estado = models.CharField(
         max_length=20, choices=ESTADO_CHOICES, default='Disponible')
 
+
     class Meta:
         unique_together = ('proyecto', 'identificador')
 
     def __str__(self):
         return f"{self.proyecto.nombre} - {self.identificador}"
+
+
+class FormaPago(ModeloBaseActivo):
+    """Define una forma de pago con porcentajes y meses."""
+    porcentajes = models.JSONField(help_text="Lista de porcentajes de cada pago")
+    meses = models.JSONField(help_text="Meses correspondientes a cada pago")
+
+    def __str__(self):
+        return f"FormaPago {self.id}"
 
 
 class Contrato(ModeloBaseActivo):
@@ -79,8 +262,8 @@ class Contrato(ModeloBaseActivo):
 
     # --- Términos financieros (mapea a PRECIO_VENTA) ---
     precio_final_pactado = models.DecimalField(max_digits=12, decimal_places=2)
-    moneda_pactada = models.CharField(
-        max_length=3, choices=[('MXN', 'MXN'), ('USD', 'USD')])
+    moneda_pactada = models.ForeignKey(
+        Moneda, on_delete=models.PROTECT, null=True, blank=True)
 
     # --- Términos del plan de pagos ---
     monto_enganche = models.DecimalField(
@@ -155,14 +338,14 @@ class Contrato(ModeloBaseActivo):
         with transaction.atomic():
             # ### LÓGICA DE SUMA CORREGIDA ###
             total_pagado = self.pagos.aggregate(
-                total=Sum(
-                    Case(
-                        When(moneda_pagada='USD', then=F(
-                            'monto_pagado') * F('tipo_cambio')),
-                        default=F('monto_pagado'),
-                        output_field=DecimalField()
-                    )
+            total=Sum(
+                Case(
+                    When(moneda_pagada__codigo='USD', then=F(
+                        'monto_pagado') * F('tipo_cambio')),
+                    default=F('monto_pagado'),
+                    output_field=DecimalField()
                 )
+            )
             )['total'] or 0
 
             cuotas = self.plan_de_pagos.order_by('fecha_vencimiento')
@@ -219,11 +402,71 @@ class Pago(ModeloBaseActivo):
         ('PAGO', 'PAGO'),
     ]
 
+class PlanPago(ModeloBaseActivo):
+    """Plan de pagos independiente para un cliente y una UPE."""
+    FORMAS_PAGO_CHOICES = [
+        ('EFECTIVO', 'Efectivo'),
+        ('TRANSFERENCIA', 'Transferencia'),
+        ('TARJETA', 'Tarjeta'),
+    ]
+
+    cliente = models.ForeignKey(
+        Cliente, on_delete=models.CASCADE, related_name='planes_pago')
+    upe = models.ForeignKey(
+        UPE, on_delete=models.CASCADE, related_name='planes_pago')
+    monto_programado = models.DecimalField(max_digits=12, decimal_places=2)
+    monto_pagado = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+    fecha_programada = models.DateField()
+    fecha_pago = models.DateField(blank=True, null=True)
+    moneda = models.CharField(
+        max_length=3, choices=[('MXN', 'MXN'), ('USD', 'USD')])
+    forma_pago = models.CharField(
+        max_length=20, choices=FORMAS_PAGO_CHOICES, blank=True, null=True)
+
+    class Meta:
+        ordering = ['fecha_programada']
+
+    def __str__(self):
+        return f"{self.cliente} - {self.upe} ({self.monto_programado} {self.moneda})"
+
+
+class Pago(ModeloBaseActivo):
+    """
+    Registra cada transacción de dinero que entra.
+    Actualizado con todos los nuevos campos de detalle.
+    """
+    INSTRUMENTO_PAGO_CHOICES = [
+        ('EFECTIVO', 'EFECTIVO'),
+        ('TARJETA DE CREDITO', 'TARJETA DE CREDITO'),
+        ('TARJETA DE DEBITO', 'TARJETA DE DEBITO'),
+        ('TARJETA DE PREPAGO', 'TARJETA DE PREPAGO'),
+        ('CHEQUE NOMINATIVO', 'CHEQUE NOMINATIVO'),
+        ('CHEQUE DE CAJA', 'CHEQUE DE CAJA'),
+        ('CHEQUE DE VIAJERO', 'CHEQUE DE VIAJERO'),
+        ('TRANSFERENCIA INTERBANCARIA', 'TRANSFERENCIA INTERBANCARIA'),
+        ('TRANSFERENCIA MISMA INSTITUCION', 'TRANSFERENCIA MISMA INSTITUCION'),
+        ('TRANSFERENCIA INTERNACIONAL', 'TRANSFERENCIA INTERNACIONAL'),
+        ('ORDEN DE PAGO', 'ORDEN DE PAGO'),
+        ('GIRO', 'GIRO'),
+        ('ORO O PLATINO AMONEDADOS', 'ORO O PLATINO AMONEDADOS'),
+        ('PLATA AMONEDADA', 'PLATA AMONEDADA'),
+        ('METALES PRECIOSO', 'METALES PRECIOSO'),
+    ]
+    TIPO_PAGO_CHOICES = [
+        ('APARTADO', 'APARTADO'),
+        ('DEVOLUCIÓN', 'DEVOLUCIÓN'),
+        ('DESCUENTO', 'DESCUENTO'),
+        ('PAGO', 'PAGO'),
+    ]
+
+
     # --- Relaciones y Datos del Pago ---
     contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='pagos')
     concepto = models.CharField(max_length=50, choices=TIPO_PAGO_CHOICES, default='ABONO', help_text="Concepto del pago (mapea a CONCEPTO)")
     monto_pagado = models.DecimalField(max_digits=12, decimal_places=2, help_text="Monto real de la transacción (mapea a PAGOS/ABONOS)")
-    moneda_pagada = models.CharField(max_length=3, choices=[('MXN', 'MXN'), ('USD', 'USD')], help_text="Mapea a DIVISA")
+    moneda_pagada = models.ForeignKey(
+        Moneda, on_delete=models.PROTECT, null=True, blank=True, help_text="Mapea a DIVISA")
     tipo_cambio = models.DecimalField(max_digits=10, decimal_places=4, default=1.0, help_text="Mapea a TIPO_CAMBIO")
 
     # --- Fechas ---
@@ -252,17 +495,60 @@ class Pago(ModeloBaseActivo):
     @property
     def valor_mxn(self):
         # ... (tu property existente) ...
+        if self.moneda_pagada and self.moneda_pagada.codigo == 'USD':
+            return self.monto_pagado * self.tipo_cambio
+        return self.monto_pagado
+
+    def __str__(self):
+        codigo = self.moneda_pagada.codigo if self.moneda_pagada else ''
+        return f"Pago de {self.monto_pagado} {codigo} para {self.contrato}"
+    def valor_mxn(self):
+        # ... (tu property existente) ...
         if self.moneda_pagada == 'USD':
             return self.monto_pagado * self.tipo_cambio
         return self.monto_pagado
 
     def __str__(self):
+
         return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+class TipoCambio(ModeloBaseActivo):
+    escenario = models.CharField(max_length=50)
+    fecha = models.DateField()
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+    class Meta:
+        unique_together = ('escenario', 'fecha')
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.escenario} - {self.fecha}: {self.valor}"
 
 
 class TipoDeCambio(ModeloBaseActivo):
     fecha = models.DateField(unique=True, primary_key=True)
     valor = models.DecimalField(max_digits=10, decimal_places=4)
+
+        return f"Pago de {self.monto_pagado} {self.moneda_pagada} para {self.contrato}"
+
+
+
+class EsquemaComision(ModeloBaseActivo):
+    """Define los esquemas y escenarios de comisión."""
+    esquema = models.CharField(max_length=100)
+    escenario = models.CharField(max_length=100)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    iva = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.esquema} - {self.escenario}"
+
+
+class TipoDeCambio(ModeloBaseActivo):
+    fecha = models.DateField(unique=True, primary_key=True)
+    valor = models.DecimalField(max_digits=10, decimal_places=4)
+
 
     def __str__(self):
         return f"{self.fecha}: {self.valor}"
