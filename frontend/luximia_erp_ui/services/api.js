@@ -67,3 +67,16 @@ export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/');
 export const getPresupuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
 export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
 export const getPagos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/pagos/?page=${page}&page_size=${pageSize}`);
+
+// ---- Bancos CRUD & utilities ----
+export const createBanco = (data) => apiClient.post('/cxc/bancos/', data);
+export const updateBanco = (id, data) => apiClient.patch(`/cxc/bancos/${id}/`, data);
+export const deleteBanco = (id) => apiClient.delete(`/cxc/bancos/${id}/`);
+export const getInactiveBancos = () => apiClient.get('/cxc/bancos/inactivos/');
+export const hardDeleteBanco = (id) => apiClient.delete(`/cxc/bancos/${id}/hard/`);
+export const exportBancosExcel = (columns) =>
+  apiClient.post('/cxc/bancos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarBancos = (formData) =>
+  apiClient.post('/cxc/bancos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
