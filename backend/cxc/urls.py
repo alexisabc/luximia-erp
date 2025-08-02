@@ -1,233 +1,28 @@
-# backend/cxc/urls.py
-
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-
 from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, MetodoPagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    MonedaViewSet, UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, PlanPagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, FormaPagoViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-    generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
-    consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
-    importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
-    importar_pagos_historicos, export_proyectos_excel, export_clientes_excel,
-    export_upes_excel, export_contratos_excel,
-    strategic_dashboard_data  # <-- Añade la nueva vista del dashboard
-)
-
-router = DefaultRouter()
-
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'upes', UPEViewSet, basename='upe')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'monedas', MonedaViewSet, basename='moneda')
-
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'upes', UPEViewSet, basename='upe')
-
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'metodos-pago', MetodoPagoViewSet, basename='metodopago')
-router.register(r'users', UserViewSet, basename='user')
-
-
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'planes-pago', PlanPagoViewSet, basename='planpago')
-
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-router.register(r'formas-pago', FormaPagoViewSet, basename='formapago')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'users', UserViewSet, basename='user')
-
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, DepartamentoViewSet, PuestoViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, VendedorViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoCambioViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-from .views import (
+    BancoViewSet,
     ProyectoViewSet,
-    ClienteViewSet,
     UPEViewSet,
-    ContratoViewSet,
+    ClienteViewSet,
     PagoViewSet,
+    MonedaViewSet,
     DepartamentoViewSet,
     PuestoViewSet,
     EmpleadoViewSet,
-    UserViewSet,
-    GroupViewSet,
-    TipoDeCambioViewSet,
-    AuditLogViewSet,
-    get_all_permissions,
-
-    generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
-
-
-from .views import (
-    ProyectoViewSet, ClienteViewSet, DepartamentoViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-from .views import (
-
-    ProyectoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet, EsquemaComisionViewSet,
-
-    ProyectoViewSet, BancoViewSet, ClienteViewSet, UPEViewSet, ContratoViewSet, PagoViewSet,
-
-    UserViewSet, GroupViewSet, TipoDeCambioViewSet, AuditLogViewSet, get_all_permissions,
-
-
-
-    generar_estado_de_cuenta_pdf, generar_estado_de_cuenta_excel,
-
-    consulta_inteligente, get_latest_tipo_de_cambio, actualizar_tipo_de_cambio_hoy,
-    importar_datos_masivos, importar_clientes, importar_upes, importar_contratos,
-    importar_pagos_historicos, export_proyectos_excel, export_clientes_excel,
-    export_upes_excel, export_contratos_excel,
-    strategic_dashboard_data  # <-- Añade la nueva vista del dashboard
 )
 
-
 router = DefaultRouter()
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
-router.register(r'puestos', PuestoViewSet, basename='puesto')
-router.register(r'upes', UPEViewSet, basename='upe')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
+router.register(r'bancos', BancoViewSet)
+router.register(r'proyectos', ProyectoViewSet)
+router.register(r'upes', UPEViewSet)
+router.register(r'clientes', ClienteViewSet)
+router.register(r'pagos', PagoViewSet)
+router.register(r'monedas', MonedaViewSet)
+router.register(r'departamentos', DepartamentoViewSet)
+router.register(r'puestos', PuestoViewSet)
+router.register(r'empleados', EmpleadoViewSet)
 
-
-router = DefaultRouter()
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'vendedores', VendedorViewSet, basename='vendedor')
-router.register(r'upes', UPEViewSet, basename='upe')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-router.register(r'pagos', PagoViewSet, basename='pago')
-
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-
-router = DefaultRouter()
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
-router.register(r'upes', UPEViewSet, basename='upe')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'departamentos', DepartamentoViewSet, basename='departamento')
-router.register(r'puestos', PuestoViewSet, basename='puesto')
-router.register(r'empleados', EmpleadoViewSet, basename='empleado')
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-
-router = DefaultRouter()
-router.register(r'proyectos', ProyectoViewSet, basename='proyecto')
-router.register(r'bancos', BancoViewSet, basename='banco')
-router.register(r'clientes', ClienteViewSet, basename='cliente')
-router.register(r'upes', UPEViewSet, basename='upe')
-router.register(r'contratos', ContratoViewSet, basename='contrato')
-
-router.register(r'pagos', PagoViewSet, basename='pago')
-router.register(r'esquemas-comision', EsquemaComisionViewSet, basename='esquema-comision')
-router.register(r'users', UserViewSet, basename='user')
-
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-cambio', TipoCambioViewSet)
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-router.register(r'groups', GroupViewSet, basename='group')
-router.register(r'tipos-de-cambio', TipoDeCambioViewSet)
-router.register(r'auditlog', AuditLogViewSet, basename='auditlog')
-
-
-
-
-
-# ### CAMBIO CLAVE: El orden de esta lista es muy importante ###
 urlpatterns = [
-
-    #Rutas de Gráficas
-    path('dashboard/strategic/', strategic_dashboard_data,
-         name='dashboard-strategic'),
-
-     #Rutas de PDF y Excel
-    path('contratos/<int:pk>/pdf/',
-         generar_estado_de_cuenta_pdf, name='contrato-pdf'),
-    path('contratos/<int:pk>/excel/',
-         generar_estado_de_cuenta_excel, name='contrato-excel'),
-
-     #Rutas de Importación
-    path('importar-masivo/', importar_datos_masivos, name='importar-masivo'),
-    path('importar-clientes/', importar_clientes, name='importar-clientes'),
-    path('importar-upes/', importar_upes, name='importar-upes'),
-    path('importar-contratos/', importar_contratos, name='importar-contratos'),
-    path('importar-pagos-historicos/',
-         importar_pagos_historicos, name='importar-pagos'),
-    
-    #Rutas de Utilerias
-    path('permissions/', get_all_permissions, name='get-all-permissions'),
-    path('consulta-inteligente/', consulta_inteligente,
-         name='consulta-inteligente'),
-    path('tipo-de-cambio/latest/', get_latest_tipo_de_cambio,
-         name='latest-tipo-de-cambio'),
-    path('tipo-de-cambio/actualizar-hoy/',
-         actualizar_tipo_de_cambio_hoy, name='actualizar-tc-hoy'),
-
-    # Rutas de Exportación
-    path('proyectos/export/', export_proyectos_excel, name='export-proyectos'),
-    path('clientes/export/', export_clientes_excel, name='export-clientes'),
-    path('upes/export/', export_upes_excel, name='export-upes'),
-    path('contratos/export/', export_contratos_excel, name='export-contratos'),
-    
-
-    # 2. El router va al final para que capture todo lo demás (CRUDs estándar)
     path('', include(router.urls)),
 ]
