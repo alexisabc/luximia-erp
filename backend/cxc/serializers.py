@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     Banco,
     Proyecto,
@@ -127,3 +128,24 @@ class PagoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pago
         fields = "__all__"
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom serializer adding user data to JWT tokens and responses."""
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["username"] = user.get_username()
+        token["email"] = getattr(user, "email", "")
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data.update(
+            {
+                "username": self.user.get_username(),
+                "email": getattr(self.user, "email", ""),
+            }
+        )
+        return data
