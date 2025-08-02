@@ -9,9 +9,11 @@ from .models import (
     Departamento,
     Puesto,
     Empleado,
+    MetodoPago,
     Presupuesto,
     Contrato,
 )
+
 
 
 
@@ -40,10 +42,23 @@ class ClienteSerializer(serializers.ModelSerializer):
 
 
 class PagoSerializer(serializers.ModelSerializer):
+    metodo_pago_nombre = serializers.CharField(source='metodo_pago.nombre', read_only=True)
+
     class Meta:
         model = Pago
         fields = '__all__'
 
+
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = '__all__'
+
+
+class ContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+        fields = '__all__'
 
 class PresupuestoSerializer(serializers.ModelSerializer):
     class Meta:
