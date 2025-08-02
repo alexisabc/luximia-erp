@@ -1,6 +1,20 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from .models import Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento, Puesto, Empleado
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import (
+    Banco,
+    Proyecto,
+    UPE,
+    Cliente,
+    Pago,
+    Moneda,
+    Departamento,
+    Puesto,
+    Empleado,
+    MetodoPago,
+    Contrato,
+)
 from .serializers import (
     BancoSerializer,
     ProyectoSerializer,
@@ -11,6 +25,8 @@ from .serializers import (
     DepartamentoSerializer,
     PuestoSerializer,
     EmpleadoSerializer,
+    MetodoPagoSerializer,
+    ContratoSerializer,
 )
 
 
@@ -65,4 +81,21 @@ class PuestoViewSet(viewsets.ModelViewSet):
 class EmpleadoViewSet(viewsets.ModelViewSet):
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializer
+    permission_classes = [AllowAny]
+
+
+class MetodoPagoViewSet(viewsets.ModelViewSet):
+    queryset = MetodoPago.objects.all()
+    serializer_class = MetodoPagoSerializer
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['get'], url_path='all')
+    def list_all(self, request):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data)
+
+
+class ContratoViewSet(viewsets.ModelViewSet):
+    queryset = Contrato.objects.all()
+    serializer_class = ContratoSerializer
     permission_classes = [AllowAny]

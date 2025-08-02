@@ -92,6 +92,24 @@ class UPE(ModeloBaseActivo):
         return self.identificador
 
 
+class MetodoPago(ModeloBaseActivo):
+    """Métodos aceptados para registrar un pago."""
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Contrato(ModeloBaseActivo):
+    """Contrato asociado a un cliente para la compra de una UPE."""
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='contratos')
+    fecha_contrato = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Contrato {self.id}"
+
+
 class Pago(ModeloBaseActivo):
     """Registro de pagos con tipo de concepto."""
     TIPO_PAGO_CHOICES = [
@@ -102,10 +120,28 @@ class Pago(ModeloBaseActivo):
         ('MENSUALIDAD', 'MENSUALIDAD'),
     ]
     concepto = models.CharField(max_length=20, choices=TIPO_PAGO_CHOICES, default='PAGO')
-    monto = models.DecimalField(max_digits=12, decimal_places=2)
-    fecha = models.DateField(auto_now_add=True)
+    monto_pagado = models.DecimalField(max_digits=12, decimal_places=2)
+    moneda_pagada = models.CharField(max_length=3, default='MXN')
+    tipo_cambio = models.DecimalField(max_digits=10, decimal_places=4, default=1.0)
+    fecha_pago = models.DateField(auto_now_add=True)
+    valor_mxn = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    ordenante = models.CharField(max_length=200, blank=True, null=True)
+    banco_origen = models.CharField(max_length=100, blank=True, null=True)
+    num_cuenta_origen = models.CharField(max_length=50, blank=True, null=True)
+    banco_destino = models.CharField(max_length=100, blank=True, null=True)
+    cuenta_beneficiaria = models.CharField(max_length=100, blank=True, null=True)
+    comentarios = models.TextField(blank=True, null=True)
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='pagos', null=True, blank=True)
     banco = models.ForeignKey(Banco, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos')
+    contrato = models.ForeignKey(Contrato, on_delete=models.CASCADE, related_name='pagos', null=True, blank=True)
+    metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.SET_NULL, related_name='pagos', null=True, blank=True)
 
     def __str__(self):
-        return f"{self.concepto} - {self.monto}"
+        return f"{self.concepto} - {self.monto_pagado}"
+
+    def save(self, *args, **kwargs):
+        if self.moneda_pagada == 'USD':
+            self.valor_mxn = self.monto_pagado * self.tipo_cambio
+        else:
+            self.valor_mxn = self.monto_pagado
+        super().save(*args, **kwargs)
