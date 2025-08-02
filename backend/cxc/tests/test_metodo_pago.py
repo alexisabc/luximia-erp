@@ -23,9 +23,9 @@ class MetodoPagoCRUDTests(APITestCase):
         self.assertEqual(response.data['count'], 1)
 
         detail_url = reverse('metodopago-detail', args=[metodo_id])
-        response = self.client.patch(detail_url, {'nombre': 'TRANSFERENCIA'}, format='json')
+        response = self.client.patch(detail_url, {'nombre': 'TRANSFERENCIA_INTERBANCARIA'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['nombre'], 'TRANSFERENCIA')
+        self.assertEqual(response.data['nombre'], 'TRANSFERENCIA_INTERBANCARIA')
 
         response = self.client.delete(detail_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
