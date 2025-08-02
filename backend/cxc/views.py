@@ -1,8 +1,5 @@
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-
-from rest_framework.response import Response
-from rest_framework.decorators import action
 
 from .models import (
     Banco,
@@ -14,12 +11,15 @@ from .models import (
     Departamento,
     Puesto,
     Empleado,
-    Contrato,
     MetodoPago,
-    Presupuesto
+    Presupuesto,
+    Contrato,
+    TipoCambio,
+    Vendedor,
+    FormaPago,
+    PlanPago,
+    EsquemaComision,
 )
-
-
 
 from .serializers import (
     BancoSerializer,
@@ -31,90 +31,101 @@ from .serializers import (
     DepartamentoSerializer,
     PuestoSerializer,
     EmpleadoSerializer,
-    ContratoSerializer,
-    PresupuestoSerializer,
     MetodoPagoSerializer,
-
+    PresupuestoSerializer,
+    ContratoSerializer,
+    TipoCambioSerializer,
+    VendedorSerializer,
+    FormaPagoSerializer,
+    PlanPagoSerializer,
+    EsquemaComisionSerializer,
 )
 
 
-class BancoViewSet(viewsets.ModelViewSet):
+class BaseViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
+
+
+class BancoViewSet(BaseViewSet):
     queryset = Banco.objects.all()
     serializer_class = BancoSerializer
-    permission_classes = [AllowAny]
 
 
-class ProyectoViewSet(viewsets.ModelViewSet):
+class ProyectoViewSet(BaseViewSet):
     queryset = Proyecto.objects.all()
     serializer_class = ProyectoSerializer
-    permission_classes = [AllowAny]
 
 
-class UPEViewSet(viewsets.ModelViewSet):
+class UPEViewSet(BaseViewSet):
     queryset = UPE.objects.all()
     serializer_class = UPESerializer
-    permission_classes = [AllowAny]
 
 
-class ClienteViewSet(viewsets.ModelViewSet):
+class ClienteViewSet(BaseViewSet):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
-    permission_classes = [AllowAny]
 
 
-class PagoViewSet(viewsets.ModelViewSet):
+class PagoViewSet(BaseViewSet):
     queryset = Pago.objects.all()
     serializer_class = PagoSerializer
-    permission_classes = [AllowAny]
 
 
-class MonedaViewSet(viewsets.ModelViewSet):
+class MonedaViewSet(BaseViewSet):
     queryset = Moneda.objects.all()
     serializer_class = MonedaSerializer
-    permission_classes = [AllowAny]
 
 
-class DepartamentoViewSet(viewsets.ModelViewSet):
+class DepartamentoViewSet(BaseViewSet):
     queryset = Departamento.objects.all()
     serializer_class = DepartamentoSerializer
-    permission_classes = [AllowAny]
 
 
-class PuestoViewSet(viewsets.ModelViewSet):
+class PuestoViewSet(BaseViewSet):
     queryset = Puesto.objects.all()
     serializer_class = PuestoSerializer
-    permission_classes = [AllowAny]
 
 
-class EmpleadoViewSet(viewsets.ModelViewSet):
+class EmpleadoViewSet(BaseViewSet):
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializer
-    permission_classes = [AllowAny]
 
 
-
-class MetodoPagoViewSet(viewsets.ModelViewSet):
+class MetodoPagoViewSet(BaseViewSet):
     queryset = MetodoPago.objects.all()
     serializer_class = MetodoPagoSerializer
-    permission_classes = [AllowAny]
-
-    @action(detail=False, methods=['get'], url_path='all')
-    def list_all(self, request):
-        serializer = self.get_serializer(self.get_queryset(), many=True)
-        return Response(serializer.data)
-
-class ContratoViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    queryset = Contrato.objects.all()
-    serializer_class = ContratoSerializer
 
 
-class PresupuestoViewSet(viewsets.ModelViewSet):
+class TipoCambioViewSet(BaseViewSet):
+    queryset = TipoCambio.objects.all()
+    serializer_class = TipoCambioSerializer
+
+
+class VendedorViewSet(BaseViewSet):
+    queryset = Vendedor.objects.all()
+    serializer_class = VendedorSerializer
+
+
+class FormaPagoViewSet(BaseViewSet):
+    queryset = FormaPago.objects.all()
+    serializer_class = FormaPagoSerializer
+
+
+class PlanPagoViewSet(BaseViewSet):
+    queryset = PlanPago.objects.all()
+    serializer_class = PlanPagoSerializer
+
+
+class EsquemaComisionViewSet(BaseViewSet):
+    queryset = EsquemaComision.objects.all()
+    serializer_class = EsquemaComisionSerializer
+
+
+class PresupuestoViewSet(BaseViewSet):
     queryset = Presupuesto.objects.all()
     serializer_class = PresupuestoSerializer
 
-    
+
+class ContratoViewSet(BaseViewSet):
+    queryset = Contrato.objects.all()
+    serializer_class = ContratoSerializer

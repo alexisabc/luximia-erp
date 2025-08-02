@@ -21,7 +21,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 * **Gestión de Clientes:** Formularios en el frontend permiten el **alta, edición y listado** de clientes aprovechando componentes reutilizables.
 
 * **Gestión Segura:** La eliminación de registros clave (Proyectos, Clientes, UPEs, Contratos) se ha reemplazado por un sistema de **desactivación (soft delete)** para prevenir la pérdida de datos.
-* **Catálogos y campos ampliados:** Los modelos de **Proyecto** y **UPE** ahora incluyen información detallada de niveles, metros cuadrados, estacionamientos y valores totales. Además, se incorporó un catálogo de **Bancos** para futuras integraciones con pagos.
+* **Catálogos y campos ampliados:** Los modelos de **Proyecto** y **UPE** ahora incluyen información detallada de niveles, metros cuadrados, estacionamientos y valores totales. Se añadieron catálogos para **Bancos**, **Departamentos**, **Puestos**, **Empleados**, **Vendedores**, **Formas de Pago**, **Planes de Pago** y **Esquemas de Comisión**, lo que normaliza la base de datos y evita duplicidades.
 * **Dashboard Estratégico:** Una nueva interfaz de Business Intelligence que muestra proyecciones de **Ventas, Cobranza, Programado y Morosidad**. Los datos se pueden **filtrar por proyecto y por periodo** (semanal, mensual, anual).
 * **Reportes Personalizados:**
     * **PDF:** Generación de un estado de cuenta profesional para el cliente, con **columnas seleccionables** y el **logo de la empresa como marca de agua**.
@@ -30,6 +30,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 * **Lógica Financiera Automática:** El estado del plan de pagos se recalcula tras cada transacción (creación, edición o eliminación de pagos).
 * **Automatización de Tipo de Cambio:** El tipo de cambio oficial de Banxico se obtiene y almacena diariamente de forma automática a través de un Cron Job.
 * **Contraseñas Seguras:** Las claves de usuario se cifran con **Argon2** y una sal aleatoria para mayor seguridad.
+* **Migraciones Limpias:** Se depuraron migraciones y modelos duplicados para garantizar una base de datos consistente y escalable.
 
 ### 1.3. Stack Tecnológico
 * **Backend:** Python con **Django Rest Framework**.
