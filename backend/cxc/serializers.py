@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento, Puesto, Empleado
+from .models import Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento, Puesto, Empleado, Presupuesto
 
 
 class BancoSerializer(serializers.ModelSerializer):
@@ -30,6 +30,19 @@ class PagoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pago
         fields = '__all__'
+
+
+class PresupuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presupuesto
+        fields = '__all__'
+
+    def validate(self, data):
+        upe = data.get('upe')
+        proyecto = data.get('proyecto')
+        if upe and proyecto and upe.proyecto_id != proyecto.id:
+            raise serializers.ValidationError('La UPE no pertenece al proyecto seleccionado.')
+        return data
 
 
 class MonedaSerializer(serializers.ModelSerializer):
