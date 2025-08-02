@@ -124,3 +124,17 @@ class Pago(ModeloBaseActivo):
 
     def __str__(self):
         return f"{self.concepto} - {self.monto}"
+
+
+class Presupuesto(ModeloBaseActivo):
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='presupuestos')
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE, related_name='presupuestos')
+    upe = models.ForeignKey(UPE, on_delete=models.CASCADE, related_name='presupuestos')
+    monto_apartado = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    monto_total = models.DecimalField(max_digits=14, decimal_places=2)
+
+    class Meta:
+        unique_together = ('cliente', 'upe')
+
+    def __str__(self):
+        return f"Presupuesto {self.id}"
