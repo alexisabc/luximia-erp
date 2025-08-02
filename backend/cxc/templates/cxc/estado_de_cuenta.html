@@ -180,7 +180,7 @@
             <tr>
                 {% for header in table_headers %}
                 <th
-                    class="{% if header != 'Concepto' and header != 'Instrumento' and header != 'Ordenante' %}text-align: center"{% endif %}">
+                    class="{% if header != 'Concepto' and header != 'Método' and header != 'Ordenante' %}text-align: center"{% endif %}">
                     {{ header }}</th>
                 {% endfor %}
             </tr>
@@ -190,7 +190,7 @@
             <tr>
                 {% if 'fecha_pago' in pago_cols_keys %}<td>{{ row.fecha_pago|date:"d/m/Y" }}</td>{% endif %}
                 {% if 'concepto' in pago_cols_keys %}<td>{{ row.concepto }}</td>{% endif %}
-                {% if 'instrumento_pago' in pago_cols_keys %}<td>{{ row.instrumento_pago }}</td>{% endif %}
+                {% if 'metodo_pago' in pago_cols_keys %}<td>{{ row.metodo_pago }}</td>{% endif %}
                 {% if 'ordenante' in pago_cols_keys %}<td>{{ row.ordenante }}</td>{% endif %}
                 {% if 'monto_pagado' in pago_cols_keys %}<td class="text-right">{{ row.monto_pagado }}</td>{% endif %}
                 {% if 'valor_mxn' in pago_cols_keys %}<td class="text-right">{{ row.valor_mxn }}</td>{% endif %}

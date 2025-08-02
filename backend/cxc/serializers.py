@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.db.models import Sum, F, When, Case, DecimalField
 
 # --- Importaciones de Modelos Locales ---
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, MetodoPago
 
 # ==============================================================================
 # --- SERIALIZERS DE MODELOS PRINCIPALES ---
@@ -55,6 +55,12 @@ class UPEReadSerializer(serializers.ModelSerializer):
                   'moneda', 'estado', 'proyecto', 'proyecto_nombre']
 
 
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = '__all__'
+
+
 # ==============================================================================
 # --- SERIALIZERS DE ESCRITURA Y LECTURA DE MODELOS ---
 # ==============================================================================
@@ -77,7 +83,7 @@ class PagoWriteSerializer(serializers.ModelSerializer):
         model = Pago
         fields = [
             'contrato', 'concepto', 'monto_pagado', 'moneda_pagada', 'tipo_cambio',
-            'fecha_pago', 'fecha_ingreso_cuentas', 'instrumento_pago',
+            'fecha_pago', 'fecha_ingreso_cuentas', 'metodo_pago',
             'ordenante', 'banco_origen', 'num_cuenta_origen',
             'banco_destino', 'cuenta_beneficiaria', 'comentarios'
         ]
@@ -128,6 +134,7 @@ class PagoReadSerializer(serializers.ModelSerializer):
     # ### LÍNEA AÑADIDA ###
     # Forzamos que este campo conserve sus 4 decimales al ser serializado.
     tipo_cambio = serializers.DecimalField(max_digits=10, decimal_places=4)
+    metodo_pago = MetodoPagoSerializer(read_only=True)
 
     class Meta:
         model = Pago
