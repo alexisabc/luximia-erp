@@ -1,5 +1,18 @@
 from rest_framework import serializers
-from .models import Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento, Puesto, Empleado, Presupuesto
+from .models import (
+    Banco,
+    Proyecto,
+    UPE,
+    Cliente,
+    Pago,
+    Moneda,
+    Departamento,
+    Puesto,
+    Empleado,
+    Presupuesto,
+    Contrato,
+)
+
 
 
 class BancoSerializer(serializers.ModelSerializer):
@@ -69,7 +82,19 @@ class EmpleadoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class PresupuestoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presupuesto
+        fields = '__all__'
+
+
+class ContratoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contrato
+
 class MetodoPagoSerializer(serializers.ModelSerializer):
     class Meta:
         model = MetodoPago
+
         fields = '__all__'
