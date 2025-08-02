@@ -75,6 +75,7 @@ export const getPermissions = () => apiClient.get('/cxc/permissions/');
 // Para Dropdowns
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
 export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
+export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/all/');
 
 // Por ID
 export const getProyecto = (id) => apiClient.get(`/cxc/proyectos/${id}/`);

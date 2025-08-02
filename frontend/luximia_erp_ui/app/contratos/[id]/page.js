@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel } from '../../../services/api';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, getLatestTipoDeCambio, descargarEstadoDeCuentaExcel, getMetodosPago } from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/Modal';
@@ -29,7 +29,7 @@ const COLUMNAS_EXPORTABLES = {
     ],
     historialPagos: [
         { id: 'fecha_pago', label: 'Fecha de Pago' }, { id: 'concepto', label: 'Concepto' },
-        { id: 'instrumento_pago', label: 'Instrumento' }, { id: 'ordenante', label: 'Ordenante' },
+        { id: 'metodo_pago', label: 'Método' }, { id: 'ordenante', label: 'Ordenante' },
         { id: 'monto_pagado', label: 'Monto Pagado' }, { id: 'moneda_pagada', label: 'Moneda' },
         { id: 'tipo_cambio', label: 'Tipo de Cambio' }, { id: 'valor_mxn', label: 'Valor (MXN)' },
         { id: 'banco_origen', label: 'Banco Origen' }, { id: 'num_cuenta_origen', label: 'Cuenta Origen' },
@@ -41,7 +41,7 @@ const COLUMNAS_EXPORTABLES = {
 const COLUMNAS_PDF = [
     { id: 'fecha_pago', label: 'Fecha de Pago' },
     { id: 'concepto', label: 'Concepto' },
-    { id: 'instrumento_pago', label: 'Instrumento' },
+    { id: 'metodo_pago', label: 'Método' },
     { id: 'monto_pagado', label: 'Monto Pagado' },
     { id: 'valor_mxn', label: 'Valor (MXN)' },
 ];
@@ -69,10 +69,11 @@ export default function ContratoDetallePage() {
 
     const [currentPago, setCurrentPago] = useState(null);
     const [latestTipoCambio, setLatestTipoCambio] = useState('1.0');
+    const [metodosPago, setMetodosPago] = useState([]);
 
     const [newPagoData, setNewPagoData] = useState({
         concepto: 'ABONO', monto_pagado: '', moneda_pagada: 'USD', tipo_cambio: '1.0',
-        fecha_pago: new Date().toISOString().split('T')[0], instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
+        fecha_pago: new Date().toISOString().split('T')[0], metodo_pago: '',
         ordenante: '', banco_origen: '', num_cuenta_origen: '', banco_destino: '',
         cuenta_beneficiaria: '', comentarios: ''
     });
@@ -111,7 +112,16 @@ export default function ContratoDetallePage() {
         }
     }, [contratoId]);
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    const fetchMetodosPago = useCallback(async () => {
+        try {
+            const res = await getMetodosPago();
+            setMetodosPago(res.data);
+        } catch (err) {
+            console.error('No se pudieron cargar los métodos de pago');
+        }
+    }, []);
+
+    useEffect(() => { fetchData(); fetchMetodosPago(); }, [fetchData, fetchMetodosPago]);
 
     const handleCreateClick = () => {
         setNewPagoData({
@@ -120,7 +130,7 @@ export default function ContratoDetallePage() {
             moneda_pagada: 'USD',
             tipo_cambio: latestTipoCambio, // <-- Usa el estado más reciente
             fecha_pago: new Date().toISOString().split('T')[0],
-            instrumento_pago: 'TRANSFERENCIA INTERBANCARIA',
+            metodo_pago: metodosPago[0]?.id || '',
             ordenante: contrato?.cliente?.nombre_completo || '', // <-- Más seguro
             banco_origen: '',
             num_cuenta_origen: '',
@@ -143,6 +153,7 @@ export default function ContratoDetallePage() {
             ...newPagoData, contrato: contratoId,
             monto_pagado: parseFloat(newPagoData.monto_pagado) || 0,
             tipo_cambio: parseFloat(newPagoData.tipo_cambio) || 1.0,
+            metodo_pago: newPagoData.metodo_pago || null,
         };
         try {
             await createPago(dataToSend);
@@ -156,7 +167,7 @@ export default function ContratoDetallePage() {
     };
 
     const handleEditClick = (pago) => {
-        setCurrentPago({ ...pago });
+        setCurrentPago({ ...pago, metodo_pago: pago.metodo_pago?.id || '' });
         setIsEditModalOpen(true);
     };
 
@@ -169,7 +180,7 @@ export default function ContratoDetallePage() {
         e.preventDefault();
         setError(null);
         try {
-            await updatePago(currentPago.id, currentPago);
+            await updatePago(currentPago.id, { ...currentPago, metodo_pago: currentPago.metodo_pago || null });
             setIsEditModalOpen(false);
             setCurrentPago(null);
             fetchData();
@@ -260,7 +271,7 @@ export default function ContratoDetallePage() {
     const historialPagosColumns = [
         { header: 'Fecha Pago', render: (pago) => new Date(pago.fecha_pago + 'T00:00:00-06:00').toLocaleDateString('es-MX') },
         { header: 'Concepto', render: (pago) => pago.concepto },
-        { header: 'Instrumento', render: (pago) => pago.instrumento_pago || '---' },
+        { header: 'Método', render: (pago) => pago.metodo_pago ? pago.metodo_pago.nombre : '---' },
         { header: 'Monto Pagado', render: (pago) => <span className="font-semibold">{formatCurrency(pago.monto_pagado, pago.moneda_pagada)}</span> },
         { header: 'Tipo Cambio', render: (pago) => (pago.moneda_pagada === 'USD' ? parseFloat(pago.tipo_cambio).toFixed(4) : '1.00') },
         { header: 'Valor (MXN)', render: (pago) => formatCurrency(pago.valor_mxn, 'MXN') },
@@ -295,7 +306,14 @@ export default function ContratoDetallePage() {
                     <p className="text-lg text-gray-500 dark:text-gray-400">Contrato #{contrato.id} - {contrato.cliente.nombre_completo}</p>
                 </div>
                 <div className="flex items-center space-x-3">
-                    {hasPermission('cxc.add_pago') && <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Registrar Pago</button>}
+                    {hasPermission('cxc.add_pago') && (
+                        <button
+                            onClick={handleCreateClick}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                        >
+                            + Registrar Pago
+                        </button>
+                    )}
                     <button
                         onClick={() => setIsPdfModalOpen(true)}
                         className="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg"
@@ -382,11 +400,11 @@ export default function ContratoDetallePage() {
                             </select>
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Instrumento de Pago</label>
-                            <select name="instrumento_pago" value={newPagoData.instrumento_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="TRANSFERENCIA INTERBANCARIA">TRANSFERENCIA INTERBANCARIA</option>
-                                <option value="EFECTIVO">EFECTIVO</option>
-                                <option value="TARJETA DE CRÉDITO">TARJETA DE CRÉDITO</option>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
+                            <select name="metodo_pago" value={newPagoData.metodo_pago} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                {metodosPago.map(mp => (
+                                    <option key={mp.id} value={mp.id}>{mp.nombre}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -481,23 +499,11 @@ export default function ContratoDetallePage() {
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Instrumento de Pago</label>
-                                <select name="instrumento_pago" value={currentPago.instrumento_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="EFECTIVO">EFECTIVO</option>
-                                    <option value="TARJETA DE CREDITO">TARJETA DE CREDITO</option>
-                                    <option value="TARJETA DE DEBITO">TARJETA DE DEBITO</option>
-                                    <option value="TARJETA DE PREPAGO">TARJETA DE PREPAGO</option>
-                                    <option value="CHEQUE NOMINATIVO">CHEQUE NOMINATIVO</option>
-                                    <option value="CHEQUE DE CAJA">CHEQUE DE CAJA</option>
-                                    <option value="CHEQUE DE VIAJERO">CHEQUE DE VIAJERO</option>
-                                    <option value="TRANSFERENCIA INTERBANCARIA">TRANSFERENCIA INTERBANCARIA</option>
-                                    <option value="TRANSFERENCIA MISMA INSTITUCION">TRANSFERENCIA MISMA INSTITUCION</option>
-                                    <option value="TRANSFERENCIA INTERNACIONAL">TRANSFERENCIA INTERNACIONAL</option>
-                                    <option value="ORDEN DE PAGO">ORDEN DE PAGO</option>
-                                    <option value="GIRO">GIRO</option>
-                                    <option value="ORO O PLATINO AMONEDADOS">ORO O PLATINO AMONEDADOS</option>
-                                    <option value="PLATA AMONEDADA">PLATA AMONEDADA</option>
-                                    <option value="METALES PRECIOSO">METALES PRECIOSO</option>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Pago</label>
+                                <select name="metodo_pago" value={currentPago.metodo_pago} onChange={handleEditFormChange} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    {metodosPago.map(mp => (
+                                        <option key={mp.id} value={mp.id}>{mp.nombre}</option>
+                                    ))}
                                 </select>
                             </div>
 

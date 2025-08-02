@@ -29,7 +29,7 @@ export default function ImportarPagosPage() {
             'tipo_cambio', // Requerido si la moneda es USD
             'fecha_pago', // Formato: DD/MM/YYYY
             'concepto', // ABONO, INTERES, o COMPLETO
-            'instrumento_pago',
+            'metodo_pago',
             'ordenante',
             'banco_origen',
             'num_cuenta_origen',

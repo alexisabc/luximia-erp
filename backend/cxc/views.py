@@ -33,11 +33,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from weasyprint import HTML
-from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog
+from .models import Proyecto, Cliente, UPE, Contrato, Pago, PlanDePagos, TipoDeCambio, AuditLog, MetodoPago
 from .serializers import (
     ProyectoSerializer, ClienteSerializer, UPESerializer, UPEReadSerializer,
     ContratoWriteSerializer, ContratoReadSerializer, PagoWriteSerializer, PagoReadSerializer,
-    PlanDePagosSerializer,
+    PlanDePagosSerializer, MetodoPagoSerializer,
     UserReadSerializer, UserWriteSerializer, GroupReadSerializer, GroupWriteSerializer,
     MyTokenObtainPairSerializer, TipoDeCambioSerializer, AuditLogSerializer
 )
@@ -219,6 +219,18 @@ class ContratoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class MetodoPagoViewSet(SoftDeleteViewSetMixin, viewsets.ModelViewSet):
+    queryset = MetodoPago.objects.all().order_by('nombre')
+    serializer_class = MetodoPagoSerializer
+    pagination_class = CustomPagination
+
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def all(self, request):
+        metodos = self.get_queryset()
+        serializer = self.get_serializer(metodos, many=True)
+        return Response(serializer.data)
+
+
 class PagoViewSet(viewsets.ModelViewSet):
     queryset = Pago.objects.all().order_by('-fecha_pago')
     pagination_class = CustomPagination
@@ -339,7 +351,7 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
         pago_cols_keys = request.query_params.getlist(
             'pago_cols', ['fecha_pago', 'concepto', 'monto_pagado', 'valor_mxn'])
         PAGO_COLUMNAS = {
-            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "instrumento_pago": "Instrumento",
+            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "metodo_pago": "Método",
             "ordenante": "Ordenante", "monto_pagado": "Monto Pagado", "valor_mxn": "Valor (MXN)"
         }
         table_headers = [PAGO_COLUMNAS[key]
@@ -359,8 +371,8 @@ def generar_estado_de_cuenta_pdf(request, pk=None):
                 row_data['fecha_pago'] = pago.fecha_pago
             if 'concepto' in pago_cols_keys:
                 row_data['concepto'] = pago.get_concepto_display()
-            if 'instrumento_pago' in pago_cols_keys:
-                row_data['instrumento_pago'] = pago.instrumento_pago or ""
+            if 'metodo_pago' in pago_cols_keys:
+                row_data['metodo_pago'] = pago.metodo_pago.nombre if pago.metodo_pago else ""
             if 'ordenante' in pago_cols_keys:
                 row_data['ordenante'] = pago.ordenante or ""
             if 'monto_pagado' in pago_cols_keys:
@@ -432,7 +444,7 @@ def generar_estado_de_cuenta_excel(request, pk=None):
             "monto_programado": "Monto Programado", "pagado": "Estado"
         }
         PAGO_COLUMNAS = {
-            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "instrumento_pago": "Instrumento",
+            "fecha_pago": "Fecha de Pago", "concepto": "Concepto", "metodo_pago": "Método",
             "ordenante": "Ordenante", "monto_pagado": "Monto Pagado", "moneda_pagada": "Moneda",
             "tipo_cambio": "Tipo de Cambio", "valor_mxn": "Valor (MXN)", "banco_origen": "Banco Origen",
             "num_cuenta_origen": "Cuenta Origen", "banco_destino": "Banco Destino",
@@ -467,6 +479,8 @@ def generar_estado_de_cuenta_excel(request, pk=None):
             for col_key in pago_cols:
                 col_name = PAGO_COLUMNAS[col_key]
                 value = getattr(p, col_key) if hasattr(p, col_key) else None
+                if col_key == 'metodo_pago' and value:
+                    value = value.nombre
                 if isinstance(value, Decimal):
                     value = float(value)
                 historial_data[col_name].append(value)
@@ -1113,7 +1127,7 @@ def importar_pagos_historicos(request):
                     'tipo_cambio': Decimal(row.get('tipo_cambio', '1.0')),
                     'fecha_pago': datetime.strptime(row['fecha_pago'], '%d/%m/%Y').date(),
                     'concepto': row.get('concepto', 'ABONO'),
-                    'instrumento_pago': row.get('instrumento_pago'),
+                    'metodo_pago': MetodoPago.objects.filter(nombre=row.get('metodo_pago')).first(),
                     'ordenante': row.get('ordenante'),
                     'banco_origen': row.get('banco_origen'),
                     'num_cuenta_origen': row.get('num_cuenta_origen'),
