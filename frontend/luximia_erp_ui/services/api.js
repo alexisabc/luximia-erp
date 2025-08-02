@@ -114,7 +114,7 @@ export const getPermissions = () => apiClient.get('/cxc/permissions/');
 
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');
 export const getUPEsDisponibles = () => apiClient.get('/cxc/upes/disponibles/');
-export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/all/');
+export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/');
 
 
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/all/');

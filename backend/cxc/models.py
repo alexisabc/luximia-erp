@@ -28,6 +28,21 @@ class Banco(ModeloBaseActivo):
         return self.nombre_corto
 
 
+class MetodoPago(ModeloBaseActivo):
+    """Catálogo de métodos de pago permitidos."""
+    METODO_CHOICES = [
+        ("EFECTIVO", "Efectivo"),
+        ("TRANSFERENCIA", "Transferencia"),
+        ("TARJETA_DEBITO", "Tarjeta de Débito"),
+        ("TARJETA_CREDITO", "Tarjeta de Crédito"),
+        ("CHEQUE", "Cheque"),
+    ]
+    nombre = models.CharField(max_length=20, choices=METODO_CHOICES, unique=True)
+
+    def __str__(self):
+        return self.get_nombre_display()
+
+
 class Proyecto(ModeloBaseActivo):
     nombre = models.CharField(max_length=100, unique=True, help_text="Ej: Shark Tower")
     descripcion = models.TextField(blank=True, null=True)
