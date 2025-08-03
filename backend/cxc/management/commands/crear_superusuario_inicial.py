@@ -30,7 +30,10 @@ class Command(BaseCommand):
             }
         )
 
-        # Siempre establece la contraseña para asegurar que sea la correcta
+        # Siempre actualiza credenciales y privilegios del usuario
+        user.email = email
+        user.is_staff = True
+        user.is_superuser = True
         user.set_password(password)
         user.save()
 
