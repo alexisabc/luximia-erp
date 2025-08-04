@@ -3,15 +3,12 @@
 export default function LoginAnimation({ state, eyeTranslation }) {
     // Determinar la transformación completa de los ojos basada en el estado
     let eyesTransform = `translateX(${eyeTranslation}px)`;
-    if (state === 'typing-user') {
+    if (state === 'typing-user' || state === 'typing-otp') {
         // Mirar MÁS hacia abajo Y seguir el cursor horizontalmente
         eyesTransform = `translateY(8px) translateX(${eyeTranslation}px)`;
-    } else if (state === 'error') {
-        // Solo mirar hacia abajo durante el error
+    } else if (state === 'error' || state === 'authenticating') {
+        // Solo mirar ligeramente hacia abajo durante el error o autenticación
         eyesTransform = 'translateY(4px)';
-    } else if (state === 'peeking-pass') {
-        // Centrar los ojos cuando se tapa la cara
-        eyesTransform = 'translateX(0px)';
     }
 
 
@@ -30,17 +27,6 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                 }
 
                 /* --- Estados de la Animación --- */
-
-                .typing-pass .eye {
-                    transform: scaleY(0.1);
-                }
-
-                .peeking-pass .eye-left {
-                    animation: peek-squint-left 4s infinite ease-in-out;
-                }
-                .peeking-pass .eye-right {
-                    animation: peek-squint-right 4s infinite ease-in-out;
-                }
                 
                 .success .eye-right {
                     animation: success-wink 2s infinite ease-in-out;
@@ -87,12 +73,12 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                 .idle .mouth {
                     d: path('M 40 70 Q 50 75 60 70'); /* Sonrisa normal */
                 }
-                .typing-user .mouth {
+                .typing-user .mouth,
+                .typing-otp .mouth {
                     d: path('M 45 72 Q 50 77 55 72'); /* Boca de concentración */
                 }
-                .peeking-pass .mouth,
-                .typing-pass .mouth {
-                    d: path('M 42 72 L 58 72'); /* Boca tensa/recta */
+                .authenticating .mouth {
+                    d: path('M 42 72 L 58 72'); /* Boca recta mientras se autentica */
                 }
                 .success .mouth { 
                     d: path('M 40 70 Q 50 85 60 70'); /* Sonrisa grande */
@@ -155,16 +141,6 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     40%, 60% { transform: translateX(6px) rotate(3deg); }
                 }
 
-                @keyframes peek-squint-left {
-                    0%, 20%  { transform: scaleY(0.1); }
-                    25%, 45% { transform: scaleY(0.6); }
-                    50%, 100%{ transform: scaleY(0.1); }
-                }
-                @keyframes peek-squint-right {
-                    0%, 50%  { transform: scaleY(0.1); }
-                    55%, 75% { transform: scaleY(0.6); }
-                    80%, 100%{ transform: scaleY(0.1); }
-                }
                 @keyframes success-wink {
                     0%, 80%, 100% { transform: scaleY(1); }
                     90% { transform: scaleY(0.1); }

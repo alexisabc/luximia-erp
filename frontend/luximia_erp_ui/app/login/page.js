@@ -2,23 +2,23 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext'; // Asegúrate de que esta ruta sea correcta
+import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, User, Key } from 'lucide-react'; // Íconos de Lucide
-import LoginAnimation from '../../components/LoginAnimation'; // Importa el nuevo componente
+import { User, Key } from 'lucide-react';
+import { startAuthentication } from '@simplewebauthn/browser';
+import apiClient from '../../services/api';
+import LoginAnimation from '../../components/LoginAnimation';
 
 export default function LoginPage() {
-    const { loginUser } = useAuth();
+    const { completeLogin } = useAuth();
     const router = useRouter();
 
     // Estados del formulario
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [loginMethod, setLoginMethod] = useState(null); // 'passkey' o 'totp'
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [mfaRequired, setMfaRequired] = useState(false);
-    const [otp, setOtp] = useState('');
 
     // Estado para controlar la animación SVG
     const [animationState, setAnimationState] = useState('idle');
@@ -48,6 +48,28 @@ export default function LoginPage() {
         }
     };
 
+    const handlePasskeyLogin = async () => {
+        const { data: options } = await apiClient.get(`/users/verify_passkey_login/?email=${encodeURIComponent(email)}`);
+        const credential = await startAuthentication(options);
+        const { data } = await apiClient.post('/users/verify_passkey_login/', {
+            email,
+            credential,
+        });
+        completeLogin(data);
+        setAnimationState('success');
+        setTimeout(() => router.push('/'), 2500);
+    };
+
+    const handleTotpLogin = async () => {
+        const { data } = await apiClient.post('/users/verify_totp_login/', {
+            email,
+            totp_code: otp,
+        });
+        completeLogin(data);
+        setAnimationState('success');
+        setTimeout(() => router.push('/'), 2500);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         clearTimeout(inactivityTimerRef.current);
@@ -55,23 +77,24 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const result = await loginUser(username, password, mfaRequired ? otp : null);
-            if (result?.mfaRequired) {
-                setMfaRequired(true);
-            } else if (result?.registerAuthy) {
-                router.push('/authy-register');
-            } else {
-                setAnimationState('success');
-                setTimeout(() => {
-                    router.push('/');
-                }, 2500);
+            if (!loginMethod) {
+                const { data } = await apiClient.post('/users/start_login/', { email });
+                if (data.login_method === 'passkey') {
+                    setLoginMethod('passkey');
+                    setAnimationState('authenticating');
+                    await handlePasskeyLogin();
+                } else if (data.login_method === 'totp') {
+                    setLoginMethod('totp');
+                } else {
+                    throw new Error('Método de inicio de sesión no soportado.');
+                }
+            } else if (loginMethod === 'totp') {
+                await handleTotpLogin();
             }
         } catch (err) {
-            setError(err.message || "El usuario o la contraseña no son válidos.");
+            setError(err.message || 'Error durante el inicio de sesión.');
             setAnimationState('error');
-            setTimeout(() => {
-                setAnimationState('idle');
-            }, 2000);
+            setTimeout(() => setAnimationState('idle'), 2000);
         } finally {
             setIsLoading(false);
         }
@@ -86,10 +109,10 @@ export default function LoginPage() {
 
         // Pequeño delay para que la transición de 'bored' a 'typing' sea más suave
         setTimeout(() => {
-            if (field === 'username') {
+            if (field === 'email') {
                 setAnimationState('typing-user');
-            } else if (field === 'password') {
-                setAnimationState(showPassword ? 'peeking-pass' : 'typing-pass');
+            } else if (field === 'otp') {
+                setAnimationState('typing-otp');
             }
         }, 50);
     };
@@ -100,11 +123,11 @@ export default function LoginPage() {
         startInactivityTimer();
     };
 
-    const handleUsernameChange = (e) => {
+    const handleEmailChange = (e) => {
         markAsInteracted();
         clearTimeout(inactivityTimerRef.current);
         if (animationState === 'bored') setAnimationState('idle');
-        setUsername(e.target.value);
+        setEmail(e.target.value);
 
         const input = e.target;
         const selection = input.selectionStart || 0;
@@ -117,24 +140,11 @@ export default function LoginPage() {
         setEyeTranslation(translation);
     };
 
-    const handlePasswordChange = (e) => {
+    const handleOtpChange = (e) => {
         markAsInteracted();
         clearTimeout(inactivityTimerRef.current);
         if (animationState === 'bored') setAnimationState('idle');
-        setPassword(e.target.value);
-    };
-
-    const toggleShowPassword = () => {
-        markAsInteracted();
-        clearTimeout(inactivityTimerRef.current);
-        if (animationState === 'bored') setAnimationState('idle');
-        const nextShowPassword = !showPassword;
-        setShowPassword(nextShowPassword);
-
-        // Si el campo de contraseña está activo, cambia la animación inmediatamente
-        if (document.activeElement.id === 'password') {
-            setAnimationState(nextShowPassword ? 'peeking-pass' : 'typing-pass');
-        }
+        setOtp(e.target.value);
     };
 
     const startInactivityTimer = () => {
@@ -163,67 +173,49 @@ export default function LoginPage() {
                 <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">Iniciar Sesión</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="username">Usuario</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <User className="h-5 w-5 text-gray-400" />
+                    {loginMethod !== 'totp' && (
+                        <div>
+                            <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">Correo electrónico</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <User className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={handleEmailChange}
+                                    onFocus={() => handleFocus('email')}
+                                    onBlur={handleBlur}
+                                    onKeyUp={handleEmailChange}
+                                    onClick={handleEmailChange}
+                                    required
+                                    className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                    placeholder="tu@correo.com"
+                                />
                             </div>
-                            <input
-                                id="username" type="text" value={username}
-                                onChange={handleUsernameChange}
-                                onFocus={() => handleFocus('username')}
-                                onBlur={handleBlur}
-                                onKeyUp={handleUsernameChange}
-                                onClick={handleUsernameChange}
-                                required
-                                className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                                placeholder="tu-usuario"
-                            />
                         </div>
-                    </div>
+                    )}
 
-                    <div>
-                        <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">Contraseña</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Key className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                value={password}
-                                onChange={handlePasswordChange}
-                                onFocus={() => handleFocus('password')}
-                                onBlur={handleBlur}
-                                required
-                                className="block w-full pl-10 pr-10 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                                placeholder="••••••••"
-                            />
-                            <button
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()} // Evita que el input pierda el foco
-                                onClick={toggleShowPassword}
-                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-                                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                            >
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                            </button>
-                        </div>
-                    </div>
-
-                    {mfaRequired && (
+                    {loginMethod === 'totp' && (
                         <div>
                             <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="otp">Código de verificación</label>
-                            <input
-                                id="otp"
-                                type="text"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                required
-                                className="block w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                                placeholder="123456"
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Key className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="otp"
+                                    type="text"
+                                    value={otp}
+                                    onChange={handleOtpChange}
+                                    onFocus={() => handleFocus('otp')}
+                                    onBlur={handleBlur}
+                                    required
+                                    className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                    placeholder="123456"
+                                />
+                            </div>
                         </div>
                     )}
 
@@ -235,7 +227,11 @@ export default function LoginPage() {
                             disabled={isLoading}
                             className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg disabled:bg-gray-400 dark:disabled:bg-gray-600"
                         >
-                            {isLoading ? 'Verificando...' : 'Entrar'}
+                            {isLoading
+                                ? 'Verificando...'
+                                : loginMethod === 'totp'
+                                ? 'Verificar'
+                                : 'Continuar'}
                         </button>
                     </div>
                 </form>
