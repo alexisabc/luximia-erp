@@ -17,6 +17,8 @@ export default function LoginPage() {
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [mfaRequired, setMfaRequired] = useState(false);
+    const [otp, setOtp] = useState('');
 
     // Estado para controlar la animación SVG
     const [animationState, setAnimationState] = useState('idle');
@@ -53,11 +55,17 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
         try {
-            await loginUser(username, password);
-            setAnimationState('success');
-            setTimeout(() => {
-                router.push('/');
-            }, 2500); // Aumentar tiempo para ver la animación de éxito
+            const result = await loginUser(username, password, mfaRequired ? otp : null);
+            if (result?.mfaRequired) {
+                setMfaRequired(true);
+            } else if (result?.registerAuthy) {
+                router.push('/authy-register');
+            } else {
+                setAnimationState('success');
+                setTimeout(() => {
+                    router.push('/');
+                }, 2500);
+            }
         } catch (err) {
             setError(err.message || "El usuario o la contraseña no son válidos.");
             setAnimationState('error');
@@ -203,6 +211,21 @@ export default function LoginPage() {
                             </button>
                         </div>
                     </div>
+
+                    {mfaRequired && (
+                        <div>
+                            <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="otp">Código de verificación</label>
+                            <input
+                                id="otp"
+                                type="text"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                required
+                                className="block w-full px-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                                placeholder="123456"
+                            />
+                        </div>
+                    )}
 
                     {error && <div className="bg-red-500/20 text-red-400 dark:text-red-300 p-3 rounded-lg text-center text-sm">{error}</div>}
 
