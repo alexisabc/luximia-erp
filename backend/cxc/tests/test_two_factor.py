@@ -11,7 +11,10 @@ User = get_user_model()
 class TwoFactorTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username="john", password="secret")
+        # Users must be activated before authenticating
+        self.user = User.objects.create_user(
+            username="john", password="secret", is_active=True
+        )
 
     @patch('cxc.serializers.request_sms')
     def test_login_requires_otp_when_enabled(self, mock_sms):
