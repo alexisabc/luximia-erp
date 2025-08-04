@@ -138,6 +138,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token["username"] = user.get_username()
         token["email"] = getattr(user, "email", "")
+        # Include administrative flags and permissions in the token so the
+        # frontend can determine what to display without additional requests.
+        token["is_superuser"] = user.is_superuser
+        token["permissions"] = list(user.get_all_permissions())
         return token
 
     def validate(self, attrs):
@@ -146,6 +150,12 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             {
                 "username": self.user.get_username(),
                 "email": getattr(self.user, "email", ""),
+                "is_superuser": self.user.is_superuser,
+                # ``get_all_permissions`` returns a set of permission strings
+                # in the format ``app_label.codename``. Converting to a list
+                # ensures the value is JSON serialisable for the response and
+                # matches what is stored in the token above.
+                "permissions": list(self.user.get_all_permissions()),
             }
         )
         return data
