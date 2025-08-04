@@ -99,9 +99,12 @@ WSGI_APPLICATION = 'luximia_erp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'TIMEOUT': 30,
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'luximiadb',         # El valor de POSTGRES_DB en docker-compose.yml
+        'USER': 'luximiauser',      # El valor de POSTGRES_USER
+        'PASSWORD': 'luximiapass',  # El valor de POSTGRES_PASSWORD
+        'HOST': 'db',               # El nombre del servicio de la base de datos en docker-compose.yml
+        'PORT': '5432',             # El puerto estándar de PostgreSQL
     }
 }
 
