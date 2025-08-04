@@ -59,6 +59,12 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const completeLogin = (data) => {
+        setAuthTokens(data);
+        setUser(jwtDecode(data.access));
+        localStorage.setItem('authTokens', JSON.stringify(data));
+    };
+
     const logoutUser = () => {
         setAuthTokens(null);
         setUser(null);
@@ -79,6 +85,7 @@ export const AuthProvider = ({ children }) => {
         user,
         authTokens,
         loginUser,
+        completeLogin,
         logoutUser,
         hasPermission,
     };
