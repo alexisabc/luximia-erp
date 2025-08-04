@@ -10,7 +10,9 @@ User = get_user_model()
 
 class BancoCRUDTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test', password='pass')
+        self.user = User.objects.create_user(
+            username='test', password='pass', is_active=True
+        )
         self.client.force_authenticate(self.user)
         self.list_url = reverse('banco-list')
 
@@ -41,7 +43,9 @@ class BancoCRUDTests(APITestCase):
 
 class ProyectoUPEValidationTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test2', password='pass')
+        self.user = User.objects.create_user(
+            username='test2', password='pass', is_active=True
+        )
         self.client.force_authenticate(self.user)
         self.proyecto_url = reverse('proyecto-list')
         self.upe_url = reverse('upe-list')

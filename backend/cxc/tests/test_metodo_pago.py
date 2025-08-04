@@ -10,7 +10,9 @@ User = get_user_model()
 
 class MetodoPagoCRUDTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='test', password='pass')
+        self.user = User.objects.create_user(
+            username='test', password='pass', is_active=True
+        )
         self.client.force_authenticate(self.user)
         self.list_url = reverse('metodopago-list')
 
