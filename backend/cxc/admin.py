@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import (
     Banco,
     Proyecto,
@@ -34,5 +34,11 @@ class UserAdmin(BaseUserAdmin):
     inlines = (UserTwoFactorInline,)
 
 
-admin.site.unregister(User)
+User = get_user_model()
+
+try:
+    admin.site.unregister(User)
+except admin.sites.NotRegistered:  # pragma: no cover - depends on registration state
+    pass
+
 admin.site.register(User, UserAdmin)

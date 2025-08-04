@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 class ModeloBaseActivo(models.Model):
@@ -95,7 +95,7 @@ class Puesto(ModeloBaseActivo):
 
 
 class Empleado(ModeloBaseActivo):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="empleado")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="empleado")
     nombre_completo = models.CharField(max_length=200)
     puesto = models.ForeignKey(Puesto, on_delete=models.PROTECT, related_name="empleados")
     departamento = models.ForeignKey(Departamento, on_delete=models.PROTECT, related_name="empleados")
@@ -106,7 +106,7 @@ class Empleado(ModeloBaseActivo):
 
 class UserTwoFactor(models.Model):
     """Configura la autenticación de dos factores para un usuario."""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="two_factor")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="two_factor")
     authy_id = models.CharField(max_length=50, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     country_code = models.CharField(max_length=5, blank=True, null=True)
