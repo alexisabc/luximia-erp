@@ -1,8 +1,11 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from unittest.mock import patch
 from cxc.models import UserTwoFactor
+
+
+User = get_user_model()
 
 
 class TwoFactorTests(TestCase):
