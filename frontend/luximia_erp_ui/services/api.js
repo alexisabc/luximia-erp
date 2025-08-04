@@ -273,3 +273,7 @@ export const getUser = () => apiClient.get('/cxc/usuarios/me/');
 export const updateUser = (data) => apiClient.patch('/cxc/usuarios/me/', data);
 export const getAuditLogs = () => apiClient.get('/cxc/auditoria/');
 export const downloadAuditLogExcel = () => apiClient.get('/cxc/auditoria/exportar/', { responseType: 'blob' });
+
+// ---- Chat Inteligente ----
+export const consultaInteligente = (consulta) =>
+  apiClient.post('/cxc/consulta-inteligente/', { consulta });
