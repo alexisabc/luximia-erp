@@ -9,15 +9,13 @@ services:
       - POSTGRES_PASSWORD=luximiapass
     ports:
       - "5432:5432"
-    # ### AÑADIDO 1/2 ###
-    # Conecta el contenedor a un volumen persistente.
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
   backend:
     build:
-      context: .  # El contexto es la raíz del proyecto
-      dockerfile: ./backend/Dockerfile # La ruta al Dockerfile desde la raíz
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: luximia-backend-local
     command: bash run.sh
     volumes:
@@ -27,12 +25,29 @@ services:
       - "8000:10000"
     depends_on:
       - db
-    # ### CAMBIO CLAVE ###
-    # Le decimos a Docker que cargue las variables desde el archivo .env
     env_file:
       - ./.env
 
-# ### AÑADIDO 2/2 ###
-# Define el volumen que Docker debe crear y gestionar.
+  # ### AÑADIDO: SERVICIO PARA EL FRONTEND ###
+  frontend:
+    build:
+      context: ./frontend/luximia_erp_ui  # El contexto es la carpeta del frontend
+      dockerfile: Dockerfile # El Dockerfile dentro de esa carpeta
+    container_name: luximia-frontend-local
+    ports:
+      - "3000:3000"
+    volumes:
+      # Monta el código del frontend para que los cambios se reflejen en vivo (hot-reloading)
+      - ./frontend:/app
+      # Evita que la carpeta local node_modules sobreescriba la del contenedor
+      - /app/node_modules
+       # Monta la carpeta de assets en /assets dentro del contenedor
+      - ./assets:/assets
+    depends_on:
+      - backend # Opcional, pero bueno para controlar el orden de arranque
+    env_file:
+      - ./.env # Si tu frontend también necesita variables de entorno
+
+
 volumes:
   postgres_data:

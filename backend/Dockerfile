@@ -1,11 +1,12 @@
 # backend/Dockerfile
 
-FROM python:3.12-slim-bookworm
+FROM python:3.13-slim-bookworm
 
+# Variables de entorno estándar
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# --- SECCIÓN PARA INSTALAR LOCALES Y DEPENDENCIAS DEL SISTEMA ---
+# Instala dependencias del sistema y configura locales
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
@@ -22,8 +23,8 @@ ENV LANG es_ES.UTF-8
 ENV LANGUAGE es_ES:es
 ENV LC_ALL es_ES.UTF-8
 
-# --- FIN DE LA SECCIÓN ---
 
+# Establece el directorio de trabajo
 WORKDIR /app
 
 # Asegura que la carpeta de assets exista antes de cualquier otra cosa
@@ -32,7 +33,7 @@ RUN mkdir -p /app/assets
 # Copia los requerimientos del backend
 COPY backend/requirements.txt .
 
-# --- CAMBIO: Actualiza pip y luego instala los requerimientos ---
+# Actualiza pip e instala los requerimientos
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
