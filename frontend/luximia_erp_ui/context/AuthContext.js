@@ -36,17 +36,26 @@ export const AuthProvider = ({ children }) => {
         return () => clearTimeout(timeout);
     }, []);
 
-    const loginUser = async (username, password) => {
+    const loginUser = async (username, password, otp = null) => {
         try {
-            const response = await apiClient.post('/token/', { username, password });
+            const payload = { username, password };
+            if (otp) payload.otp = otp;
+            const response = await apiClient.post('/token/', payload);
             const data = response.data;
             setAuthTokens(data);
             setUser(jwtDecode(data.access));
             localStorage.setItem('authTokens', JSON.stringify(data));
-            return data;
+            return { success: true };
         } catch (error) {
+            const detail = error.response?.data?.detail;
+            if (detail === 'two_factor_token_required') {
+                return { mfaRequired: true };
+            }
+            if (detail === 'authy_user_not_registered') {
+                return { registerAuthy: true };
+            }
             console.error("Error en el login", error);
-            throw new Error(error.response?.data?.detail || "Usuario o contraseña no válidos.");
+            throw new Error(detail || "Usuario o contraseña no válidos.");
         }
     };
 

@@ -104,6 +104,18 @@ class Empleado(ModeloBaseActivo):
         return self.nombre_completo
 
 
+class UserTwoFactor(models.Model):
+    """Configura la autenticación de dos factores para un usuario."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="two_factor")
+    authy_id = models.CharField(max_length=50, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    country_code = models.CharField(max_length=5, blank=True, null=True)
+    is_enabled = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"2FA {self.user.username}"
+
+
 class TipoCambio(ModeloBaseActivo):
     ESCENARIO_CHOICES = [
         ("PACTADO", "Pactado"),

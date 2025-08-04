@@ -1,5 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
 
 from .models import (
     Banco,
@@ -19,6 +22,7 @@ from .models import (
     FormaPago,
     PlanPago,
     EsquemaComision,
+    UserTwoFactor,
 )
 
 from .serializers import (
@@ -40,6 +44,7 @@ from .serializers import (
     PlanPagoSerializer,
     EsquemaComisionSerializer,
 )
+from .authy import register_user
 
 
 class BaseViewSet(viewsets.ModelViewSet):
@@ -129,3 +134,31 @@ class PresupuestoViewSet(BaseViewSet):
 class ContratoViewSet(BaseViewSet):
     queryset = Contrato.objects.all()
     serializer_class = ContratoSerializer
+
+
+class AuthyRegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        phone = request.data.get("phone")
+        country_code = request.data.get("country_code", "52")
+
+        user = authenticate(username=username, password=password)
+        if not user:
+            return Response({"detail": "invalid_credentials"}, status=400)
+
+        two_factor, _ = UserTwoFactor.objects.get_or_create(user=user)
+        try:
+            resp = register_user(user.email, phone, country_code)
+        except Exception:
+            return Response({"detail": "authy_registration_failed"}, status=400)
+
+        if getattr(resp, "ok", False):
+            two_factor.authy_id = resp.id
+            two_factor.phone_number = phone
+            two_factor.country_code = country_code
+            two_factor.save()
+            return Response({"authy_id": resp.id})
+        return Response({"detail": "authy_registration_failed"}, status=400)
