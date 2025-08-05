@@ -49,22 +49,16 @@ export default function LoginPage() {
     };
 
     const handlePasskeyLogin = async () => {
-        const { data: options } = await apiClient.get(`/users/verify_passkey_login/?email=${encodeURIComponent(email)}`);
-        const credential = await startAuthentication(options);
-        const { data } = await apiClient.post('/users/verify_passkey_login/', {
-            email,
-            credential,
-        });
+        const { data: options } = await apiClient.get('/users/passkey/login/challenge/');
+        const assertion = await startAuthentication(options);
+        const { data } = await apiClient.post('/users/passkey/login/verify/', { assertion });
         completeLogin(data);
         setAnimationState('success');
         setTimeout(() => router.push('/'), 2500);
     };
 
     const handleTotpLogin = async () => {
-        const { data } = await apiClient.post('/users/verify_totp_login/', {
-            email,
-            totp_code: otp,
-        });
+        const { data } = await apiClient.post('/users/totp/login/verify/', { code: otp });
         completeLogin(data);
         setAnimationState('success');
         setTimeout(() => router.push('/'), 2500);
