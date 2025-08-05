@@ -53,7 +53,7 @@ webencodings==0.5.1
 whitenoise==6.9.0
 xlsxwriter==3.2.5
 zopfli==0.2.3.post1
-bcrypt==4.1.2
+bcrypt==4.3.0
 authy==2.2.6
 psycopg2-binary
 webauthn
