@@ -10,7 +10,7 @@ import apiClient from '../../services/api';
 import LoginAnimation from '../../components/LoginAnimation';
 
 export default function LoginPage() {
-    const { completeLogin } = useAuth();
+    const { setAuthData } = useAuth();
     const router = useRouter();
 
     // Estados del formulario
@@ -49,23 +49,17 @@ export default function LoginPage() {
     };
 
     const handlePasskeyLogin = async () => {
-        const { data: options } = await apiClient.get(`/users/verify_passkey_login/?email=${encodeURIComponent(email)}`);
-        const credential = await startAuthentication(options);
-        const { data } = await apiClient.post('/users/verify_passkey_login/', {
-            email,
-            credential,
-        });
-        completeLogin(data);
+        const { data: options } = await apiClient.get('/users/passkey/login/challenge/');
+        const assertion = await startAuthentication(options);
+        const { data } = await apiClient.post('/users/passkey/login/verify/', { assertion });
+        setAuthData(data);
         setAnimationState('success');
         setTimeout(() => router.push('/'), 2500);
     };
 
     const handleTotpLogin = async () => {
-        const { data } = await apiClient.post('/users/verify_totp_login/', {
-            email,
-            totp_code: otp,
-        });
-        completeLogin(data);
+        const { data } = await apiClient.post('/users/totp/login/verify/', { code: otp });
+        setAuthData(data);
         setAnimationState('success');
         setTimeout(() => router.push('/'), 2500);
     };

@@ -1,9 +1,12 @@
+#luximia_erp/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from . import views
 from cxc.views import AuthyRegisterView
+
+print(">>> [DEBUG] Cargando luximia_erp/urls.py...")
 
 urlpatterns = [
     path('', views.home, name='home'),

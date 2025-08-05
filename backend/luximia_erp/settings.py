@@ -15,11 +15,13 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
-load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+dotenv_path = BASE_DIR.parent / '.env'
+load_dotenv(dotenv_path=dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -53,6 +55,8 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
+    # Herramientas de desarrollo
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -100,11 +104,11 @@ WSGI_APPLICATION = 'luximia_erp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'luximiadb',         # El valor de POSTGRES_DB en docker-compose.yml
-        'USER': 'luximiauser',      # El valor de POSTGRES_USER
-        'PASSWORD': 'luximiapass',  # El valor de POSTGRES_PASSWORD
-        'HOST': 'db',               # El nombre del servicio de la base de datos en docker-compose.yml
-        'PORT': '5432',             # El puerto estándar de PostgreSQL
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST', 'db'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -216,3 +220,5 @@ LOGGING = {
         'level': LOG_LEVEL,
     },
 }
+
+FRONTEND_DOMAIN = os.getenv('FRONTEND_DOMAIN', 'localhost:3000')

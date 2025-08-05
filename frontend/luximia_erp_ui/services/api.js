@@ -2,7 +2,13 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
+// 1. Determina si el código se está ejecutando en el servidor o en el navegador
+const isServer = typeof window === 'undefined';
+
+// 2. Elige la URL base correcta
+const baseURL = isServer
+  ? process.env.API_URL // En el servidor (Docker), usa la URL interna
+  : process.env.NEXT_PUBLIC_API_URL; // En el navegador, usa la URL pública
 
 const apiClient = axios.create({
   baseURL,

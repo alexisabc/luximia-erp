@@ -1,3 +1,4 @@
+#users/management/commands/create_enrollment_link.py
 from datetime import timedelta
 import hashlib
 import secrets

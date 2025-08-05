@@ -4,9 +4,8 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import apiClient from '../services/api';
-import dynamic from 'next/dynamic'; // 1. Importa 'dynamic'
+import dynamic from 'next/dynamic';
 
-// 2. Importa el Loader dinámicamente, desactivando el SSR
 const Loader = dynamic(
     () => import('../components/Loader'),
     { ssr: false }
@@ -32,34 +31,14 @@ export const AuthProvider = ({ children }) => {
             setUser(jwtDecode(parsedTokens.access));
         }
         const elapsed = Date.now() - start;
-        const timeout = setTimeout(() => setLoading(false), Math.max(0, 4000 - elapsed));
+        // Muestra el loader por un mínimo de tiempo para una mejor UX
+        const timeout = setTimeout(() => setLoading(false), Math.max(0, 1500 - elapsed));
         return () => clearTimeout(timeout);
     }, []);
 
-    const loginUser = async (username, password, otp = null) => {
-        try {
-            const payload = { username, password };
-            if (otp) payload.otp = otp;
-            const response = await apiClient.post('/token/', payload);
-            const data = response.data;
-            setAuthTokens(data);
-            setUser(jwtDecode(data.access));
-            localStorage.setItem('authTokens', JSON.stringify(data));
-            return { success: true };
-        } catch (error) {
-            const detail = error.response?.data?.detail;
-            if (detail === 'two_factor_token_required') {
-                return { mfaRequired: true };
-            }
-            if (detail === 'authy_user_not_registered') {
-                return { registerAuthy: true };
-            }
-            console.error("Error en el login", error);
-            throw new Error(detail || "Usuario o contraseña no válidos.");
-        }
-    };
-
-    const completeLogin = (data) => {
+    // Esta es ahora la única función para establecer la sesión.
+    // LoginPage la llama después de un login exitoso con Passkey o TOTP.
+    const setAuthData = (data) => {
         setAuthTokens(data);
         setUser(jwtDecode(data.access));
         localStorage.setItem('authTokens', JSON.stringify(data));
@@ -70,9 +49,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem('authTokens');
         localStorage.removeItem('luximia-erp-theme');
-        window.location.href = '/login';
-        localStorage.removeItem('authTokens');
-        localStorage.removeItem('luximia-erp-theme');
+        // Redirigir al login
         window.location.href = '/login';
     };
 
@@ -84,15 +61,13 @@ export const AuthProvider = ({ children }) => {
     const contextData = {
         user,
         authTokens,
-        loginUser,
-        completeLogin,
+        setAuthData, // Exportamos la nueva función
         logoutUser,
         hasPermission,
     };
 
     return (
         <AuthContext.Provider value={contextData}>
-            {/* 3. Ahora esto funcionará sin problemas */}
             {loading ? <Loader className="min-h-screen" /> : children}
         </AuthContext.Provider>
     );
