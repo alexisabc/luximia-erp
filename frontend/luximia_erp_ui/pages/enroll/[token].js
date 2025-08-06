@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import apiClient from '../../services/api';
-import { startRegistration } from '@simplewebauthn/browser';
+import { startRegistration, bufferToBase64URLString } from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
 
 export default function EnrollPage() {
@@ -49,11 +49,29 @@ export default function EnrollPage() {
     try {
       const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
 
-      // El objeto que devuelve startRegistration es complejo y contiene toda la info criptográfica.
+      // El objeto que devuelve startRegistration contiene ArrayBuffers que deben
+      // serializarse a base64url para enviarse correctamente al backend.
       const registrationResponse = await startRegistration(options);
 
-      // 👇 CAMBIO CLAVE: Envía el objeto completo, sin seleccionar campos.
-      await apiClient.post('/users/passkey/register/', registrationResponse);
+      const credential = {
+        id: registrationResponse.id,
+        rawId: bufferToBase64URLString(registrationResponse.rawId),
+        response: {
+          clientDataJSON: bufferToBase64URLString(
+            registrationResponse.response.clientDataJSON,
+          ),
+          attestationObject: bufferToBase64URLString(
+            registrationResponse.response.attestationObject,
+          ),
+        },
+        type: registrationResponse.type,
+        clientExtensionResults:
+          registrationResponse.getClientExtensionResults?.() || {},
+        authenticatorAttachment:
+          registrationResponse.authenticatorAttachment || null,
+      };
+
+      await apiClient.post('/users/passkey/register/', credential);
 
       setStep(2); // Avanza al siguiente paso (TOTP)
     } catch (err) {
