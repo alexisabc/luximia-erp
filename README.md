@@ -29,7 +29,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 
 * **Lógica Financiera Automática:** El estado del plan de pagos se recalcula tras cada transacción (creación, edición o eliminación de pagos).
 * **Automatización de Tipo de Cambio:** El tipo de cambio oficial de Banxico se obtiene y almacena diariamente de forma automática a través de un Cron Job.
-* **Contraseñas Seguras:** Las claves de usuario se cifran con **Argon2** y una sal aleatoria para mayor seguridad.
+* **Autenticación Moderna:** Inicio de sesión sin contraseñas mediante **passkeys** y verificación con **códigos OTP** (por ejemplo, **Authy**).
 * **Migraciones Limpias:** Se depuraron migraciones y modelos duplicados para garantizar una base de datos consistente y escalable.
 
 ### 1.3. Stack Tecnológico
@@ -55,11 +55,10 @@ La interfaz ha sido refactorizada a una arquitectura basada en componentes reuti
 ### 3.1. Configuración del Entorno de Desarrollo
 1.  **Requisitos:** Tener **Docker Desktop** instalado y corriendo.
 2.  **Clonar:** Clonar el repositorio de GitHub.
-3.  **Archivo `.env`**: Crear un archivo `.env` en la raíz (usar `.env.example` como plantilla) y llenarlo con las credenciales locales y el token de Banxico.
-4.  **Iniciar Servicios:** En la raíz del proyecto, ejecutar `docker-compose up -d --build`.
-5.  **Iniciar Frontend:** En una terminal separada, navegar a `frontend/luximia_erp_ui` y ejecutar `npm run dev`.
-6.  **Acceso:** Backend en `http://localhost:8000/api/` y Frontend en `http://localhost:3000`.
-7.  **Fechas en Español:** El contenedor genera automáticamente el locale `es_ES.UTF-8`, por lo que las fechas se mostrarán en español tanto en desarrollo como en producción.
+3.  **Archivo `.env` único:** Crear un archivo `.env` en la raíz (usar `.env.example` como plantilla) y llenarlo con las credenciales locales y el token de Banxico. Este archivo es compartido por el backend y el frontend.
+4.  **Iniciar Servicios:** En la raíz del proyecto, ejecutar `docker-compose up -d --build` para levantar todos los contenedores.
+5.  **Acceso:** Backend en `http://localhost:8000/api/` y Frontend en `http://localhost:3000`.
+6.  **Fechas en Español:** El contenedor genera automáticamente el locale `es_ES.UTF-8`, por lo que las fechas se mostrarán en español tanto en desarrollo como en producción.
 
 ### 3.2. Flujo de Trabajo con Git (Recomendado)
 Se recomienda el uso de ramas para cada nueva funcionalidad.
@@ -68,3 +67,14 @@ Se recomienda el uso de ramas para cada nueva funcionalidad.
 3.  **Trabajar y Guardar:** `git add .` -> `git commit -m "feat: Descripcion del cambio"`.
 4.  **Subir Rama:** `git push origin feat/nombre-de-la-funcionalidad`.
 5.  **Integrar:** Crear un **Pull Request** en GitHub para revisar y fusionar los cambios a `main`.
+
+---
+
+## 4. Estructura del Repositorio
+El proyecto se organiza en los siguientes directorios principales:
+
+* `backend/`: API y lógica de negocio desarrollada con Django Rest Framework.
+* `frontend/`: Interfaz de usuario construida con Next.js.
+* `assets/`: Recursos estáticos compartidos como imágenes o plantillas.
+* `.env`: Variables de entorno unificadas para backend y frontend.
+* `docker-compose.yml`: Orquestación de contenedores para el entorno de desarrollo.
