@@ -1,3 +1,4 @@
+# users/management/commands/create_and_invite_superuser.py
 from datetime import timedelta
 import hashlib
 import os
@@ -8,23 +9,21 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-
 from users.models import EnrollmentToken
 
-
 class Command(BaseCommand):
-    """Create the initial superuser and send an enrollment link."""
-
-    help = "Create the initial superuser and send an enrollment link"
+    """Crea el superusuario inicial desde variables de entorno y envía un enlace de inscripción."""
+    help = "Crea el superusuario inicial y envía un enlace de inscripción por correo."
 
     def handle(self, *args, **options):
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
         if not email:
+            self.stdout.write(self.style.WARNING("La variable de entorno DJANGO_SUPERUSER_EMAIL no está definida. Omitiendo."))
             return
 
         User = get_user_model()
         if User.objects.filter(email=email).exists():
-            self.stdout.write(f"Superuser with email {email} already exists")
+            self.stdout.write(self.style.SUCCESS(f"El superusuario con el correo {email} ya existe."))
             return
 
         user = User(
@@ -44,19 +43,21 @@ class Command(BaseCommand):
             user=user, token_hash=token_hash, expires_at=expires_at
         )
 
-        domain = getattr(settings, "FRONTEND_DOMAIN", "localhost:3000")
-        enroll_url = f"https://{domain}/enroll/{token}"
+        domain = settings.FRONTEND_DOMAIN
+        # Asegúrate de usar http para desarrollo local
+        protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
+        enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
         send_mail(
-            "Superuser enrollment",
+            "Invitación para Administrador de Luximia ERP",
             (
-                "You have been invited to become the superuser.\n"
-                f"Use the following link to complete setup: {enroll_url}\n"
-                "This link expires in 24 hours."
+                "Has sido invitado para ser el superusuario de la plataforma Luximia ERP.\n\n"
+                f"Usa el siguiente enlace para completar tu registro: {enroll_url}\n\n"
+                "Este enlace expira en 24 horas."
             ),
-            None,
+            settings.DEFAULT_FROM_EMAIL, # Usa el remitente por defecto
             [email],
             fail_silently=False,
         )
 
-        self.stdout.write(f"Invitación de superusuario enviada a {email}")
+        self.stdout.write(self.style.SUCCESS(f"Invitación de superusuario enviada a {email}."))

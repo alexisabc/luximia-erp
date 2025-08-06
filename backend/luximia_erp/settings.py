@@ -82,8 +82,18 @@ WSGI_APPLICATION = 'luximia_erp.wsgi.application'
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # --- Base de Datos ---
-if DEBUG:
-    # En desarrollo, usa las variables individuales para claridad.
+if 'DATABASE_URL' in os.environ:
+    # --- Configuración para PRODUCCIÓN (Render) ---
+    # Usa DATABASE_URL y exige SSL
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # --- Configuración para DESARROLLO (Docker Local) ---
+    # Usa las variables individuales y no exige SSL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -93,14 +103,6 @@ if DEBUG:
             'HOST': os.getenv('POSTGRES_HOST', 'db'),
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
         }
-    }
-else:
-    # En producción (Render), usa DATABASE_URL con SSL requerido.
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=True
-        )
     }
 
 # --- Plantillas, Internacionalización, etc. (se mantienen igual) ---
@@ -194,3 +196,10 @@ LOGGING = {
     },
     'root': {'handlers': ['console'], 'level': os.getenv('LOG_LEVEL', 'INFO')},
 }
+
+# --- Configuración para Passkeys (WebAuthn) ---
+# El "Relying Party ID" debe ser el dominio donde corre tu app (sin puerto).
+RP_ID = "localhost"
+
+# El "Origen" debe ser la URL completa de tu frontend.
+WEBAUTHN_ORIGIN = f"http://{os.getenv('FRONTEND_DOMAIN', 'localhost:3000')}"

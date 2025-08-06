@@ -153,14 +153,14 @@ class PasskeyRegisterView(APIView):
             verification = verify_registration_response(
                 credential=credential,
                 expected_challenge=challenge.encode(),
-                expected_origin=getattr(settings, "WEBAUTHN_ORIGIN", f"http://{request.get_host()}"),
-                expected_rp_id=getattr(settings, "RP_ID", request.get_host()),
+                expected_origin=settings.WEBAUTHN_ORIGIN,
+                expected_rp_id=settings.RP_ID,
                 require_user_verification=True,
             )
             
             new_credential = {
-                "id": verification.credential_id.decode('utf-8', 'ignore'),
-                "public_key": verification.credential_public_key.decode('utf-8', 'ignore'),
+                "id": base64.urlsafe_b64encode(verification.credential_id).decode('utf-8').rstrip("="),
+                "public_key": base64.urlsafe_b64encode(verification.credential_public_key).decode('utf-8').rstrip("="),
                 "sign_count": verification.sign_count,
             }
             
@@ -297,9 +297,9 @@ class PasskeyLoginView(APIView):
             verification = verify_authentication_response(
                 credential=credential,
                 expected_challenge=challenge.encode(),
-                expected_rp_id=getattr(settings, "RP_ID", request.get_host()),
-                expected_origin=getattr(settings, "WEBAUTHN_ORIGIN", f"http://{request.get_host()}"),
-                credential_public_key=user_credential["public_key"].encode(),
+                expected_rp_id=settings.RP_ID,
+                expected_origin=settings.WEBAUTHN_ORIGIN,
+                credential_public_key=base64.urlsafe_b64decode(user_credential["public_key"] + "=="),
                 credential_current_sign_count=user_credential["sign_count"],
                 require_user_verification=True,
             )

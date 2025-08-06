@@ -48,17 +48,23 @@ export default function EnrollPage() {
     setError(null);
     try {
       const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
-      const registrationResponse = await startRegistration({
-        ...options,
-        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-      });
-      await apiClient.post('/users/passkey/register/', {
-        id: registrationResponse.id,
-        clientDataJSON: registrationResponse.response.clientDataJSON,
-      });
-      setStep(2);
+
+      // El objeto que devuelve startRegistration es complejo y contiene toda la info criptográfica.
+      const registrationResponse = await startRegistration(options);
+
+      // 👇 CAMBIO CLAVE: Envía el objeto completo, sin seleccionar campos.
+      await apiClient.post('/users/passkey/register/', registrationResponse);
+
+      setStep(2); // Avanza al siguiente paso (TOTP)
     } catch (err) {
-      setError('Error al registrar la passkey.');
+      // Si el usuario cancela, err.name suele ser 'AbortError' o 'InvalidStateError'.
+      // Puedes manejarlo para no mostrar un mensaje de error genérico.
+      if (err.name === 'AbortError' || err.name === 'InvalidStateError') {
+        setError('El registro de la passkey fue cancelado.');
+      } else {
+        setError('Error al registrar la passkey.');
+      }
+      console.error("Error en Passkey:", err);
     } finally {
       setLoading(false);
     }
