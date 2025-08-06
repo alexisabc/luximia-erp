@@ -16,7 +16,7 @@ from .views import (
     VerifyTOTPLoginView,
 )
 
-print(">>> [DEBUG] Cargando users/urls.py...")
+
 app_name = 'users'
 
 urlpatterns = [

@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "Recolectando archivos estáticos..."
-# Añade esta línea para que Whitenoise funcione correctamente
-python manage.py collectstatic --noinput
+# Solo ejecuta collectstatic si NO estamos en modo desarrollo
+if [ "$DEVELOPMENT_MODE" != "True" ]; then
+    echo "Recolectando archivos estáticos para producción..."
+    python manage.py collectstatic --noinput
+fi 
 
 echo "Aplicando migraciones..."
 python manage.py migrate

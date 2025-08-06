@@ -227,7 +227,6 @@ class StartLoginView(APIView):
     """Inicia el flujo de login para un usuario existente."""
     permission_classes = [permissions.AllowAny]
     def post(self, request: HttpRequest) -> Response:
-        print(">>> [DEBUG] ¡La vista StartLoginView ha sido alcanzada!")
         email = request.data.get("email")
         if not email:
             return Response({"detail": "Email requerido"}, status=status.HTTP_400_BAD_REQUEST)

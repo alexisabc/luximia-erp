@@ -6,7 +6,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from . import views
 from cxc.views import AuthyRegisterView
 
-print(">>> [DEBUG] Cargando luximia_erp/urls.py...")
 
 urlpatterns = [
     path('', views.home, name='home'),

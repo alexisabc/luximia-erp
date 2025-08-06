@@ -16,7 +16,8 @@ export default function AppContent({ children }) {
     const router = useRouter();
 
     useEffect(() => {
-        if (!authTokens && pathname !== '/login') {
+        const publicPaths = ['/login'];
+        if (!authTokens && !publicPaths.includes(pathname) && !pathname.startsWith('/enroll')) {
             router.push('/login');
         }
     }, [authTokens, pathname, router]);
