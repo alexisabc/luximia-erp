@@ -12,7 +12,8 @@ const baseURL = isServer
 
 const apiClient = axios.create({
   baseURL,
-  headers: { 'Content-Type': 'application/json' }
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use(async req => {

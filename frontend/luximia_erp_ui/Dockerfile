@@ -1,3 +1,4 @@
+#Frontend/luximia_erp_ui/Dockerfile
 # Etapa 1: Base de desarrollo
 # Usamos una imagen ligera de Node.js con Alpine Linux
 FROM node:22-alpine

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import apiClient from '../../services/api';
-import { startRegistration, bufferToBase64URLString } from '@simplewebauthn/browser';
+import { startRegistration} from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
 
 export default function EnrollPage() {
@@ -49,34 +49,14 @@ export default function EnrollPage() {
     try {
       const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
 
-      // El objeto que devuelve startRegistration contiene ArrayBuffers que deben
-      // serializarse a base64url para enviarse correctamente al backend.
+      // Esta función de la librería convierte los datos binarios a texto
       const registrationResponse = await startRegistration(options);
 
-      const credential = {
-        id: registrationResponse.id,
-        rawId: bufferToBase64URLString(registrationResponse.rawId),
-        response: {
-          clientDataJSON: bufferToBase64URLString(
-            registrationResponse.response.clientDataJSON,
-          ),
-          attestationObject: bufferToBase64URLString(
-            registrationResponse.response.attestationObject,
-          ),
-        },
-        type: registrationResponse.type,
-        clientExtensionResults:
-          registrationResponse.getClientExtensionResults?.() || {},
-        authenticatorAttachment:
-          registrationResponse.authenticatorAttachment || null,
-      };
-
-      await apiClient.post('/users/passkey/register/', credential);
+      // Envía la respuesta ya procesada al backend
+      await apiClient.post('/users/passkey/register/', registrationResponse);
 
       setStep(2); // Avanza al siguiente paso (TOTP)
     } catch (err) {
-      // Si el usuario cancela, err.name suele ser 'AbortError' o 'InvalidStateError'.
-      // Puedes manejarlo para no mostrar un mensaje de error genérico.
       if (err.name === 'AbortError' || err.name === 'InvalidStateError') {
         setError('El registro de la passkey fue cancelado.');
       } else {
@@ -87,7 +67,6 @@ export default function EnrollPage() {
       setLoading(false);
     }
   };
-
   const handleVerifyTotp = async (e) => {
     e.preventDefault();
     setLoading(true);
