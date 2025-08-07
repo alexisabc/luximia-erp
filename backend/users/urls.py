@@ -1,6 +1,7 @@
 # backend/users/urls.py
 
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     # Vistas de Inscripción (Enrollment)
     EnrollmentValidationView,
@@ -32,4 +33,7 @@ urlpatterns = [
     path("passkey/login/challenge/", PasskeyLoginChallengeView.as_view(), name="passkey-login-challenge"),
     path("passkey/login/verify/", PasskeyLoginView.as_view(), name="passkey-login-verify"),
     path("totp/login/verify/", VerifyTOTPLoginView.as_view(), name="totp-login-verify"),
+
+    # --- Ruta para Refrescar el Token ---
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"), 
 ]

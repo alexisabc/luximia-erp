@@ -1,54 +1,26 @@
+# cxc/views.py
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.contrib.auth import authenticate
+from rest_framework.permissions import IsAuthenticated
 
 from .models import (
-    Banco,
-    Proyecto,
-    UPE,
-    Cliente,
-    Pago,
-    Moneda,
-    Departamento,
-    Puesto,
-    Empleado,
-    MetodoPago,
-    Presupuesto,
-    Contrato,
-    TipoCambio,
-    Vendedor,
-    FormaPago,
-    PlanPago,
-    EsquemaComision,
-    UserTwoFactor,
+    Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento,
+    Puesto, Empleado, MetodoPago, Presupuesto, Contrato, TipoCambio,
+    Vendedor, FormaPago, PlanPago, EsquemaComision,
 )
 
 from .serializers import (
-    BancoSerializer,
-    ProyectoSerializer,
-    UPESerializer,
-    ClienteSerializer,
-    PagoSerializer,
-    MonedaSerializer,
-    DepartamentoSerializer,
-    PuestoSerializer,
-    EmpleadoSerializer,
-    MetodoPagoSerializer,
-    PresupuestoSerializer,
-    ContratoSerializer,
-    TipoCambioSerializer,
-    VendedorSerializer,
-    FormaPagoSerializer,
-    PlanPagoSerializer,
-    EsquemaComisionSerializer,
+    BancoSerializer, ProyectoSerializer, UPESerializer, ClienteSerializer,
+    PagoSerializer, MonedaSerializer, DepartamentoSerializer, PuestoSerializer,
+    EmpleadoSerializer, MetodoPagoSerializer, PresupuestoSerializer,
+    ContratoSerializer, TipoCambioSerializer, VendedorSerializer,
+    FormaPagoSerializer, PlanPagoSerializer, EsquemaComisionSerializer,
 )
-from .authy import register_user
-
 
 class BaseViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    """
+    ViewSet base que requiere que el usuario esté autenticado.
+    """
+    permission_classes = [IsAuthenticated]
 
 
 class BancoViewSet(BaseViewSet):
@@ -135,30 +107,3 @@ class ContratoViewSet(BaseViewSet):
     queryset = Contrato.objects.all()
     serializer_class = ContratoSerializer
 
-
-class AuthyRegisterView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        phone = request.data.get("phone")
-        country_code = request.data.get("country_code", "52")
-
-        user = authenticate(username=username, password=password)
-        if not user:
-            return Response({"detail": "invalid_credentials"}, status=400)
-
-        two_factor, _ = UserTwoFactor.objects.get_or_create(user=user)
-        try:
-            resp = register_user(user.email, phone, country_code)
-        except Exception:
-            return Response({"detail": "authy_registration_failed"}, status=400)
-
-        if getattr(resp, "ok", False):
-            two_factor.authy_id = resp.id
-            two_factor.phone_number = phone
-            two_factor.country_code = country_code
-            two_factor.save()
-            return Response({"authy_id": resp.id})
-        return Response({"detail": "authy_registration_failed"}, status=400)

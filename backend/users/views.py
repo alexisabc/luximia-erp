@@ -15,6 +15,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import signing
 from django.http import HttpRequest
+from django.db import transaction
+
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,38 +79,66 @@ def _verify_totp(secret: str, token: str, interval: int = 30, window: int = 1) -
             return True
     return False
 
+
 def _get_jwt_for_user(user) -> dict:
-    """Genera tokens JWT para un usuario."""
+    """Genera tokens JWT para un usuario, incluyendo permisos."""
     refresh = RefreshToken.for_user(user)
-    return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+    # --- Lógica para añadir datos extra al token ---
+    access_token = refresh.access_token
+    access_token["username"] = user.username
+    access_token["email"] = user.email
+    access_token["is_superuser"] = user.is_superuser
+    access_token["permissions"] = list(user.get_all_permissions())
+
+    return {
+        "refresh": str(refresh),
+        "access": str(access_token),
+    }
 
 # ---------------------------------------------------------------------------
 # Vistas de Inscripción (Enrollment)
 # ---------------------------------------------------------------------------
 
+
 class EnrollmentValidationView(APIView):
-    """Valida el token de inscripción e inicia una sesión."""
+    """Valida el token de inscripción vía POST, inicia una sesión y elimina el token."""
+
+    # Define los atributos de clase al principio para mayor claridad
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         token = request.data.get("token")
+        print(f">>> [BACKEND] Token recibido del frontend: {token}")
         if not token:
             return Response({"detail": "Token requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
         token_hash = hashlib.sha256(token.encode()).hexdigest()
+
         try:
-            enrollment = EnrollmentToken.objects.get(token_hash=token_hash)
+            # Usamos una transacción para asegurar que la operación sea atómica
+            with transaction.atomic():
+                # select_for_update() bloquea la fila para prevenir race conditions
+                enrollment = EnrollmentToken.objects.select_for_update().get(token_hash=token_hash)
+
+                if enrollment.is_expired():
+                    enrollment.delete()  # Borra el token si ya expiró
+                    return Response({"detail": "Token expirado"}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Si el token es válido, establece la sesión y luego elimina el token
+                request.session["enrollment_user_id"] = enrollment.user_id
+                enrollment.delete()  # <-- La excelente mejora de seguridad
+
         except EnrollmentToken.DoesNotExist:
             return Response({"detail": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if enrollment.is_expired():
-            return Response({"detail": "Token expirado"}, status=status.HTTP_400_BAD_REQUEST)
-
-        request.session["enrollment_user_id"] = enrollment.user_id
         return Response({"detail": "Token válido"})
 
 class PasskeyRegisterChallengeView(APIView):
     """Genera un desafío para registrar una nueva passkey."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def get(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -139,6 +169,7 @@ class PasskeyRegisterChallengeView(APIView):
 class PasskeyRegisterView(APIView):
     """Verifica la respuesta del navegador y guarda la nueva passkey."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -178,6 +209,7 @@ class PasskeyRegisterView(APIView):
 class TOTPSetupView(APIView):
     """Genera un secreto TOTP y devuelve una URI para el QR."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -195,6 +227,7 @@ class TOTPSetupView(APIView):
 class TOTPVerifyView(APIView):
     """Verifica un código TOTP durante la inscripción y activa al usuario."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -226,6 +259,7 @@ class TOTPVerifyView(APIView):
 class StartLoginView(APIView):
     """Inicia el flujo de login para un usuario existente."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         email = request.data.get("email")
         if not email:
@@ -252,6 +286,7 @@ class StartLoginView(APIView):
 class PasskeyLoginChallengeView(APIView):
     """Genera un desafío para autenticar con una passkey existente."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def get(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         if not user:
@@ -275,6 +310,7 @@ class PasskeyLoginChallengeView(APIView):
 class PasskeyLoginView(APIView):
     """Verifica la respuesta de la passkey y emite tokens JWT."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         challenge = request.session.get("login_challenge")
@@ -320,6 +356,7 @@ class PasskeyLoginView(APIView):
 class VerifyTOTPLoginView(APIView):
     """Verifica un código TOTP para login y emite tokens JWT."""
     permission_classes = [permissions.AllowAny]
+    authentication_classes = []
     def post(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         if not user:

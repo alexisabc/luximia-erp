@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
     const contextData = {
         user,
         authTokens,
+        loading,
         setAuthData, // Exportamos la nueva función
         logoutUser,
         hasPermission,

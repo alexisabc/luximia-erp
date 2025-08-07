@@ -1,21 +1,15 @@
-#luximia_erp/urls.py
+# luximia_erp/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.views import TokenObtainPairView
 from . import views
-from cxc.views import AuthyRegisterView
-
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),
 
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/authy/register/', AuthyRegisterView.as_view(), name='authy_register'),
-
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Las rutas de tokens ahora vivirán dentro de 'users.urls'
     path('api/cxc/', include('cxc.urls')),
     path('api/users/', include('users.urls')),
+
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

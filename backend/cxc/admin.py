@@ -1,6 +1,5 @@
+# backend/cxc/admin.py
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth import get_user_model
 from .models import (
     Banco,
     Proyecto,
@@ -11,9 +10,18 @@ from .models import (
     Departamento,
     Puesto,
     Empleado,
-    UserTwoFactor,
+    # Asegúrate de que todos tus otros modelos de cxc estén aquí
+    MetodoPago,
+    Presupuesto,
+    Contrato,
+    TipoCambio,
+    Vendedor,
+    FormaPago,
+    PlanPago,
+    EsquemaComision,
 )
 
+# Registra aquí solo los modelos de la app 'cxc'
 admin.site.register(Banco)
 admin.site.register(Proyecto)
 admin.site.register(UPE)
@@ -23,22 +31,11 @@ admin.site.register(Moneda)
 admin.site.register(Departamento)
 admin.site.register(Puesto)
 admin.site.register(Empleado)
-
-
-class UserTwoFactorInline(admin.StackedInline):
-    model = UserTwoFactor
-    can_delete = False
-
-
-class UserAdmin(BaseUserAdmin):
-    inlines = (UserTwoFactorInline,)
-
-
-User = get_user_model()
-
-try:
-    admin.site.unregister(User)
-except admin.sites.NotRegistered:  # pragma: no cover - depends on registration state
-    pass
-
-admin.site.register(User, UserAdmin)
+admin.site.register(MetodoPago)
+admin.site.register(Presupuesto)
+admin.site.register(Contrato)
+admin.site.register(TipoCambio)
+admin.site.register(Vendedor)
+admin.site.register(FormaPago)
+admin.site.register(PlanPago)
+admin.site.register(EsquemaComision)
