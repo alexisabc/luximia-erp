@@ -35,8 +35,15 @@ function EnrollmentComponent() {
           console.log("Token validado con éxito.");
           setIsTokenValidated(true);
         })
-        .catch(() => {
-          setError("Este enlace de inscripción no es válido o ha expirado.");
+        .catch((err) => {
+          const detail = err.response?.data?.detail;
+          if (detail === 'Token expirado') {
+            setError('Este enlace de inscripción ha expirado. Solicita uno nuevo.');
+          } else if (detail === 'Token inválido') {
+            setError('Este enlace de inscripción no existe o ya fue utilizado.');
+          } else {
+            setError(detail || 'No se pudo validar el enlace de inscripción.');
+          }
         })
         .finally(() => {
           setIsValidatingToken(false);
