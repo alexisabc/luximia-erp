@@ -1,4 +1,6 @@
 from datetime import timedelta
+import hashlib
+import json
 import os
 from unittest.mock import patch
 
@@ -52,3 +54,36 @@ class CreateAndInviteSuperuserTests(TestCase):
         self.assertEqual(CustomUser.objects.count(), 0)
         self.assertEqual(EnrollmentToken.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
+
+
+@override_settings(
+    DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
+)
+class EnrollmentValidationViewTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create(
+            username="testuser", email="test@example.com", is_active=False
+        )
+
+    def test_enrollment_token_validation_flow(self):
+        token = "validtoken"
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        EnrollmentToken.objects.create(
+            user=self.user,
+            token_hash=token_hash,
+            expires_at=timezone.now() + timedelta(hours=1),
+        )
+
+        url = "/api/users/enrollment/validate/"
+        response = self.client.post(
+            url, data=json.dumps({"token": token}), content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get("detail"), "Token válido")
+        self.assertFalse(EnrollmentToken.objects.filter(token_hash=token_hash).exists())
+
+        response2 = self.client.post(
+            url, data=json.dumps({"token": token}), content_type="application/json"
+        )
+        self.assertEqual(response2.status_code, 400)
+        self.assertEqual(response2.json().get("detail"), "Token inválido")
