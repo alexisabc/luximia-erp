@@ -9,6 +9,7 @@ import json
 import os
 import struct
 import time
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -31,6 +32,9 @@ from webauthn.helpers.structs import (
 )
 
 from .models import EnrollmentToken
+
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -110,7 +114,7 @@ class EnrollmentValidationView(APIView):
 
     def post(self, request: HttpRequest) -> Response:
         token = request.data.get("token")
-        print(f">>> [BACKEND] Token recibido del frontend: {token}")
+        logger.debug("[BACKEND] Token recibido del frontend: %s", token)
         if not token:
             return Response({"detail": "Token requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
