@@ -78,21 +78,27 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # --- Base de Datos ---
 # La lógica revisa si DATABASE_URL existe (para Render) o usa las variables locales
 if 'DATABASE_URL' in os.environ and os.getenv('DATABASE_URL'):
+    # Configuración para producción (Render, etc.)
     DATABASES = {
         'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
     }
 else:
+    # Configuración para desarrollo local con pool de conexiones
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'dj_db_conn_pool.backends.postgresql',
             'NAME': os.getenv('POSTGRES_DB'),
             'USER': os.getenv('POSTGRES_USER'),
             'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
             'HOST': os.getenv('POSTGRES_HOST', 'db'),
             'PORT': os.getenv('POSTGRES_PORT', '5432'),
+            'POOL_OPTIONS': {
+                'max_overflow': 10,
+                'pool_size': 10,
+                'recycle': 24 * 60 * 60,
+            }
         }
     }
-
 
 # --- Internacionalización ---
 LANGUAGE_CODE = 'es-mx'

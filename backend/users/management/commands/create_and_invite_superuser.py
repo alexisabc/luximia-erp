@@ -9,13 +9,16 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
-from django.db import transaction  # 1. Importa transaction
+from django.db import transaction
 from users.models import EnrollmentToken
 
 
 class Command(BaseCommand):
-    """Crea el superusuario inicial y envía un enlace de inscripción por correo."""
-    help = "Crea el superusuario inicial y envía un enlace de inscripción por correo."
+    """
+    Crea o actualiza el superusuario y siempre genera un nuevo enlace de
+    inscripción, basado en una lógica de escritura probada.
+    """
+    help = "Asegura que el superusuario exista y genera un nuevo enlace de inscripción."
 
     def handle(self, *args, **options):
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
@@ -25,24 +28,29 @@ class Command(BaseCommand):
             return
 
         User = get_user_model()
-        if User.objects.filter(email=email).exists():
-            self.stdout.write(self.style.SUCCESS(
-                f"El superusuario con el correo {email} ya existe."))
-            return
+        token = ""
 
         try:
-            # 2. Envuelve la lógica de creación en una transacción atómica
             with transaction.atomic():
-                user = User(
-                    username=email,
+                user, created = User.objects.get_or_create(
                     email=email,
-                    is_active=False,
-                    is_staff=True,
-                    is_superuser=True,
+                    defaults={
+                        'username': email,
+                        'is_staff': True,
+                        'is_superuser': True,
+                    }
                 )
-                user.set_unusable_password()
-                user.save()
 
+                if created:
+                    user.set_unusable_password()
+                    user.save()
+                    self.stdout.write(self.style.SUCCESS(
+                        f"Superusuario {email} creado."))
+                else:
+                    self.stdout.write(self.style.SUCCESS(
+                        f"El superusuario {email} ya existe. Se generará un nuevo enlace."))
+
+                EnrollmentToken.objects.filter(user=user).delete()
                 token = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token.encode()).hexdigest()
                 expires_at = timezone.now() + timedelta(hours=24)
@@ -50,7 +58,7 @@ class Command(BaseCommand):
                     user=user, token_hash=token_hash, expires_at=expires_at
                 )
         except Exception as e:
-            raise CommandError(f"No se pudo crear el usuario y el token: {e}")
+            raise CommandError(f"Ocurrió una excepción: {e}")
 
         domain = settings.FRONTEND_DOMAIN
         protocol = "https" if not settings.DEVELOPMENT_MODE else "http"

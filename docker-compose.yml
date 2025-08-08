@@ -2,7 +2,7 @@
 services:
   ### SERVICIO PARA DB ###
   db:
-    image: postgres:latest
+    image: postgres:17.5
     container_name: luximia-db-local
     environment:
       - POSTGRES_DB=luximiadb
@@ -12,11 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U luximiauser -d luximiadb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   ### SERVICIO PARA EL BACKEND ###
   backend:
@@ -24,14 +19,14 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile
     container_name: luximia-backend-local
-    #command: tail -f /dev/null
     command: bash run.sh
+    #command: tail -f /dev/null
     volumes:
       - ./backend:/app
       - ./assets:/app/assets
     ports:
       - "8000:10000"
-    depends_on:
+    depends_on: # El backend ahora solo espera a que el contenedor de la db se inicie
       - db
       - mailhog
     env_file:
@@ -40,31 +35,27 @@ services:
   ### SERVICIO PARA EL FRONTEND ###
   frontend:
     build:
-      context: ./frontend/luximia_erp_ui  # El contexto es la carpeta del frontend
-      dockerfile: Dockerfile # El Dockerfile dentro de esa carpeta
+      context: ./frontend/luximia_erp_ui
+      dockerfile: Dockerfile
     container_name: luximia-frontend-local
     ports:
       - "3000:3000"
     volumes:
-      # Monta el código del frontend para que los cambios se reflejen en vivo (hot-reloading)
       - ./frontend:/app
-      # Evita que la carpeta local node_modules sobreescriba la del contenedor
       - /app/node_modules
-       # Monta la carpeta de assets en /assets dentro del contenedor
       - ./assets:/assets
     depends_on:
-      - backend # Opcional, pero bueno para controlar el orden de arranque
+      - backend
     env_file:
-      - ./.env # Si tu frontend también necesita variables de entorno
+      - ./.env
 
   ### SERVICIO PARA CORREOS ###
   mailhog:
     image: mailhog/mailhog
     container_name: luximia-mailhog-local
     ports:
-      - "1025:1025" # Puerto SMTP para que Django envíe correos
-      - "8025:8025" # Interfaz web para ver los correos
-
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   postgres_data:

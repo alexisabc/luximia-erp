@@ -1,3 +1,4 @@
+//app/enroll/[token]/page.js
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
