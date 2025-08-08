@@ -1,53 +1,88 @@
 // services/api.js
+// services/api.js
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-// 1. Determina si el código se está ejecutando en el servidor o en el navegador
+// --- Util ---
 const isServer = typeof window === 'undefined';
 
-// 2. Elige la URL base correcta
+// Base URL:
+// - En servidor (SSR/Docker): API_URL
+// - En navegador: NEXT_PUBLIC_API_URL
 const baseURL = isServer
-  ? process.env.API_URL // En el servidor (Docker), usa la URL interna
-  : process.env.NEXT_PUBLIC_API_URL; // En el navegador, usa la URL pública
+  ? process.env.API_URL || 'http://backend:8000'      // ajusta a tu host interno en Docker
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'; // ajusta al host público
 
+// Helper: lee cookie por nombre
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+// --- Cliente Axios principal ---
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  // Configura nombres de CSRF que Django reconoce por defecto
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
 
-apiClient.interceptors.request.use(async req => {
-  let authTokens = typeof window !== 'undefined' ? localStorage.getItem('authTokens') : null;
-  authTokens = authTokens ? JSON.parse(authTokens) : null;
-  if (authTokens) {
-    const user = jwtDecode(authTokens.access);
-    const isExpired = Date.now() >= user.exp * 1000;
-    if (isExpired) {
-      try {
-        const response = await axios.post(`${baseURL}/token/refresh/`, { refresh: authTokens.refresh });
-        localStorage.setItem('authTokens', JSON.stringify(response.data));
-        req.headers.Authorization = `Bearer ${response.data.access}`;
-      } catch (err) {
-        localStorage.removeItem('authTokens');
-        if (typeof window !== 'undefined') window.location.href = '/login';
-        return Promise.reject(err);
-      }
-    } else {
-      req.headers.Authorization = `Bearer ${authTokens.access}`;
+// Inyecto CSRF y Authorization en cada request
+apiClient.interceptors.request.use(async (req) => {
+  // 1) CSRF: solo para métodos “no seguros”
+  const method = (req.method || 'get').toLowerCase();
+  const needsCSRF = !['get', 'head', 'options'].includes(method);
+  if (needsCSRF) {
+    const csrftoken =
+      // prioriza cookie configurada por xsrfCookieName
+      getCookie(apiClient.defaults.xsrfCookieName) ||
+      getCookie('csrftoken');
+    if (csrftoken) {
+      req.headers[apiClient.defaults.xsrfHeaderName] = csrftoken;
     }
   }
+
+  // 2) JWT: si tienes tokens, inyéctalos (excepto si expiraron)
+  let authTokens = typeof window !== 'undefined' ? localStorage.getItem('authTokens') : null;
+  authTokens = authTokens ? JSON.parse(authTokens) : null;
+
+  if (authTokens?.access) {
+    try {
+      const payload = jwtDecode(authTokens.access);
+      const isExpired = Date.now() >= payload.exp * 1000;
+
+      if (isExpired && authTokens.refresh) {
+        // Usa SIEMPRE apiClient (mantiene cookies de sesión y CORS)
+        const { data } = await apiClient.post('/token/refresh/', { refresh: authTokens.refresh });
+        localStorage.setItem('authTokens', JSON.stringify(data));
+        req.headers.Authorization = `Bearer ${data.access}`;
+      } else if (!isExpired) {
+        req.headers.Authorization = `Bearer ${authTokens.access}`;
+      }
+    } catch {
+      // Si algo raro pasa con el token, lo limpiamos
+      if (typeof window !== 'undefined') localStorage.removeItem('authTokens');
+    }
+  }
+
   return req;
 });
 
+// Manejo de respuestas/errores
 apiClient.interceptors.response.use(
-  res => res,
-  error => {
-    const status = error.response?.status;
+  (res) => res,
+  (error) => {
+    const status = error?.response?.status;
     if (typeof window !== 'undefined' && status) {
       if (status === 401) {
         localStorage.removeItem('authTokens');
         window.location.href = '/login';
       } else if (status === 403) {
+        // Si es CSRF, te conviene mostrar feedback contextual
+        // pero por default redirigimos a unauthorized
         window.location.href = '/unauthorized';
       }
     }
@@ -67,11 +102,7 @@ export const getDepartamentos = (page = 1, pageSize = 15) => apiClient.get(`/cxc
 export const getPuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/puestos/?page=${page}&page_size=${pageSize}`);
 export const getEmpleados = (page = 1, pageSize = 15) => apiClient.get(`/cxc/empleados/?page=${page}&page_size=${pageSize}`);
 export const getVendedores = (page = 1, pageSize = 15) => apiClient.get(`/cxc/vendedores/?page=${page}&page_size=${pageSize}`);
-export const getFormasPago = (page = 1, pageSize = 15) => apiClient.get(`/cxc/formas-pago/?page=${page}&page_size=${pageSize}`);
-export const getPlanesPago = (page = 1, pageSize = 15) => apiClient.get(`/cxc/planes-pago/?page=${page}&page_size=${pageSize}`);
-export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
-export const getTiposCambio = (page = 1, pageSize = 15) => apiClient.get(`/cxc/tipos-cambio/?page=${page}&page_size=${pageSize}`);
-export const getMetodosPago = () => apiClient.get('/cxc/metodos-pago/');
+export const getFormasPago = () => apiClient.get('/cxc/metodos-pago/');
 export const getPresupuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
 export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
 export const getPagos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/pagos/?page=${page}&page_size=${pageSize}`);

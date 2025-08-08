@@ -11,24 +11,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv_path = BASE_DIR.parent / '.env'
 load_dotenv(dotenv_path=dotenv_path)
 
-
 # --- Variables Clave de Entorno ---
 SECRET_KEY = os.getenv('SECRET_KEY')
-# La variable DEVELOPMENT_MODE es la única fuente de verdad para el entorno
 DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
 DEBUG = DEVELOPMENT_MODE
 
-
 # --- Dominios y Hosts ---
-# En desarrollo, permite localhost. En producción, lee de la variable de entorno.
+FRONTEND_DOMAIN = os.getenv(
+    'FRONTEND_DOMAIN', 'localhost:3000')  # p.ej. localhost:3000
+# Añade 0.0.0.0 para Docker/WSL y el host de tu backend si usas otro nombre
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
-
-# Se usará para configurar Passkeys, CORS y otras URLs
-FRONTEND_DOMAIN = os.getenv('FRONTEND_DOMAIN', 'localhost:3000')
-
+    ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h]
 
 # --- Application definition ---
 INSTALLED_APPS = [
@@ -63,10 +58,22 @@ MIDDLEWARE = [
 
 
 # --- Configuración de CORS ---
-# Leemos los orígenes permitidos desde las variables de entorno, con un valor por defecto para desarrollo
 CORS_ALLOWED_ORIGINS = os.getenv(
-    'CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:3000,http://127.0.0.1:3000'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
+
+# --- CSRF (importante incluso en dev cuando hay dominio/puerto distinto) ---
+CSRF_TRUSTED_ORIGINS = list({
+    f"http://{FRONTEND_DOMAIN}",
+    f"https://{FRONTEND_DOMAIN}",
+    "http://localhost:3000",
+    "https://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://127.0.0.1:3000",
+})
+# Nota: mantenlo también en prod; ya no lo limites con if not DEBUG
 
 
 # --- Rutas, WSGI y Modelo de Usuario ---
@@ -149,16 +156,52 @@ SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# Cookies seguras en producción, Lax en desarrollo
+# --- Cookies de sesión ---
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+# Para que el navegador envíe cookies en cross-site (frontend:3000 -> backend:8000)
 SESSION_COOKIE_SAMESITE = 'None' if not DEBUG else 'Lax'
 SESSION_COOKIE_HTTPONLY = True
 
-# Orígenes de confianza para CSRF en producción (Render)
-if not DEBUG:
-    CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+# --- Configuración para Passkeys (WebAuthn) ---
+PASSKEY_STRICT_UV = os.getenv("PASSKEY_STRICT_UV", "True") == "True"
+# RP_NAME explícito para mostrar en diálogos del sistema
+RP_NAME = os.getenv('RP_NAME', 'Luximia ERP')
+if DEBUG:
+    # RP_ID = dominio “puro” (sin puerto). En dev normalmente es localhost.
+    RP_ID = os.getenv('RP_ID', 'localhost')
+    # debe coincidir EXACTO con el origin del navegador
+    WEBAUTHN_ORIGIN = os.getenv('WEBAUTHN_ORIGIN', f"http://{FRONTEND_DOMAIN}")
+else:
+    # En producción usa tu dominio raíz como RP_ID (sin subdominio si aplica)
+    RP_ID = os.getenv('RP_ID', 'tu-dominio.com')
+    WEBAUTHN_ORIGIN = os.getenv(
+        'WEBAUTHN_ORIGIN', f"https://{FRONTEND_DOMAIN}")
 
+# --- Content Security Policy (híbrida) ---
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ("'self'",),
+
+        "connect-src": (
+            "'self'",
+            f"http://{FRONTEND_DOMAIN}",
+            f"https://{FRONTEND_DOMAIN}",
+            "http://localhost:3000",
+            "https://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://127.0.0.1:3000",
+        ),
+
+        # En desarrollo permitimos 'unsafe-inline' para evitar errores con Next/Tailwind.
+        # En prod se recomienda quitarlo.
+        "script-src": ("'self'", "'unsafe-inline'") if DEBUG else ("'self'",),
+
+        "style-src": ("'self'", "'unsafe-inline'") if DEBUG else ("'self'",),
+
+        "img-src": ("'self'", "data:"),
+    }
+}
 
 # --- Configuración de Email ---
 if DEBUG:
@@ -173,16 +216,6 @@ else:
     ANYMAIL = {"SENDGRID_API_KEY": os.getenv("SENDGRID_API_KEY")}
     DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
 
-
-# --- Configuración para Passkeys (WebAuthn) ---
-if DEBUG:
-    RP_ID = "localhost"
-    WEBAUTHN_ORIGIN = f"http://{FRONTEND_DOMAIN}"
-else:
-    # En producción, el RP_ID es tu dominio raíz sin subdominio.
-    # Por ejemplo, si tu app corre en 'app.luximia-erp.com', el RP_ID es 'luximia-erp.com'
-    RP_ID = os.getenv("RP_ID", "tu-dominio.com")
-    WEBAUTHN_ORIGIN = f"https://{FRONTEND_DOMAIN}"
 
 # --- Django REST Framework y JWT ---
 REST_FRAMEWORK = {

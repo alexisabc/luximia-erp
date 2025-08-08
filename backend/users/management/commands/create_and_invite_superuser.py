@@ -14,10 +14,6 @@ from users.models import EnrollmentToken
 
 
 class Command(BaseCommand):
-    """
-    Crea o actualiza el superusuario y siempre genera un nuevo enlace de
-    inscripción, basado en una lógica de escritura probada.
-    """
     help = "Asegura que el superusuario exista y genera un nuevo enlace de inscripción."
 
     def handle(self, *args, **options):
@@ -55,8 +51,7 @@ class Command(BaseCommand):
                 token_hash = hashlib.sha256(token.encode()).hexdigest()
                 expires_at = timezone.now() + timedelta(hours=24)
                 EnrollmentToken.objects.create(
-                    user=user, token_hash=token_hash, expires_at=expires_at
-                )
+                    user=user, token_hash=token_hash, expires_at=expires_at)
         except Exception as e:
             raise CommandError(f"Ocurrió una excepción: {e}")
 

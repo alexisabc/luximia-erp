@@ -12,20 +12,13 @@ from users.models import EnrollmentToken
 
 
 class Command(BaseCommand):
-    """
-    Crea o actualiza un usuario y siempre genera un nuevo enlace de
-    inscripción para él, basado en una lógica de escritura probada.
-    """
     help = "Asegura que un usuario exista y genera un nuevo enlace de inscripción."
 
     def add_arguments(self, parser):
         parser.add_argument("--email", required=True,
                             help="Email del usuario.")
-        parser.add_argument(
-            "--is-superuser",
-            action="store_true",
-            help="Marcar al usuario como superusuario.",
-        )
+        parser.add_argument("--is-superuser", action="store_true",
+                            help="Marcar al usuario como superusuario.")
 
     def handle(self, *args, **options):
         email = options["email"]
@@ -35,7 +28,6 @@ class Command(BaseCommand):
 
         try:
             with transaction.atomic():
-                # Usamos get_or_create que es seguro y probado.
                 user, created = User.objects.get_or_create(
                     email=email,
                     defaults={
@@ -54,14 +46,12 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(
                         f"El usuario {email} ya existe. Se generará un nuevo enlace."))
 
-                # Borra tokens antiguos y crea uno nuevo dentro de la misma transacción.
                 EnrollmentToken.objects.filter(user=user).delete()
                 token = secrets.token_urlsafe(32)
                 token_hash = hashlib.sha256(token.encode()).hexdigest()
                 expires_at = timezone.now() + timedelta(hours=24)
                 EnrollmentToken.objects.create(
-                    user=user, token_hash=token_hash, expires_at=expires_at
-                )
+                    user=user, token_hash=token_hash, expires_at=expires_at)
         except Exception as e:
             raise CommandError(f"Ocurrió una excepción: {e}")
 

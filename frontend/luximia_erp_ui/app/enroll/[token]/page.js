@@ -1,8 +1,7 @@
 //app/enroll/[token]/page.js
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-// ✨ CAMBIO: Se importa `useParams` en lugar de `useSearchParams`.
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import apiClient from '../../../services/api';
 import { startRegistration } from '@simplewebauthn/browser';
@@ -10,7 +9,6 @@ import QRCode from 'react-qr-code';
 
 function EnrollmentComponent() {
   const router = useRouter();
-  // ✨ CAMBIO: Se usa `useParams` para leer el token de la ruta dinámica.
   const params = useParams();
   const token = params.token;
 
@@ -18,39 +16,39 @@ function EnrollmentComponent() {
   const [isTokenValidated, setIsTokenValidated] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✨ MEJORA: Estados de carga más específicos para una mejor UX.
   const [isValidatingToken, setIsValidatingToken] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [qrUri, setQrUri] = useState('');
   const [totpCode, setTotpCode] = useState('');
 
+  const validationEffectRan = useRef(false);
+
   useEffect(() => {
-    console.log(">>> [FRONTEND] Token leído de la URL:", token);
-    if (token) {
-      setIsValidatingToken(true);
-      setError(null);
-      apiClient.post('/users/enrollment/validate/', { token })
-        .then(() => {
-          console.log("Token validado con éxito.");
-          setIsTokenValidated(true);
-        })
-        .catch((err) => {
-          const detail = err.response?.data?.detail;
-          if (detail === 'Token expirado') {
-            setError('Este enlace de inscripción ha expirado. Solicita uno nuevo.');
-          } else if (detail === 'Token inválido') {
-            setError('Este enlace de inscripción no existe o ya fue utilizado.');
-          } else {
-            setError(detail || 'No se pudo validar el enlace de inscripción.');
-          }
-        })
-        .finally(() => {
-          setIsValidatingToken(false);
-        });
-    } else {
-      setIsValidatingToken(false);
-      setError("No se encontró un token de inscripción en la URL.");
+    if (validationEffectRan.current === false) {
+      console.log(">>> [FRONTEND] Token leído de la URL:", token);
+      if (token) {
+        setIsValidatingToken(true);
+        setError(null);
+        apiClient.post('/users/enrollment/validate/', { token })
+          .then(() => {
+            console.log("Token validado con éxito.");
+            setIsTokenValidated(true);
+          })
+          .catch(() => {
+            setError("Este enlace de inscripción no es válido o ha expirado.");
+          })
+          .finally(() => {
+            setIsValidatingToken(false);
+          });
+      } else {
+        setIsValidatingToken(false);
+        setError("No se encontró un token de inscripción en la URL.");
+      }
+
+      return () => {
+        validationEffectRan.current = true;
+      };
     }
   }, [token]);
 
@@ -68,27 +66,35 @@ function EnrollmentComponent() {
   }, [step]);
 
   const handlePasskey = async () => {
-    setIsProcessing(true); // ✨ Se usa el estado de procesamiento
+    setIsProcessing(true);
     setError(null);
     try {
       const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
       if (!options || !options.challenge) {
         throw new Error("Respuesta inválida del servidor.");
       }
-      const registrationResponse = await startRegistration(options);
+
+      const registrationResponse = await startRegistration({ optionsJSON: options });
+
       await apiClient.post('/users/passkey/register/', registrationResponse);
       setStep(2);
     } catch (err) {
-      setError(err.name === 'AbortError' ? 'Registro de passkey cancelado.' : 'Error al registrar la passkey.');
-      console.error("Error en Passkey:", err);
+      if (err.response) {
+        console.error("Error del backend:", err.response.data);
+        const detail = err.response.data?.detail || 'Fallo en el registro.';
+        setError(`Error del servidor: ${detail}`);
+      } else {
+        setError(err.name === 'AbortError' ? 'Registro de passkey cancelado.' : 'Error al registrar la passkey.');
+        console.error("Error en Passkey:", err);
+      }
     } finally {
-      setIsProcessing(false); // ✨ Se finaliza el procesamiento
+      setIsProcessing(false);
     }
   };
 
   const handleVerifyTotp = async (e) => {
     e.preventDefault();
-    setIsProcessing(true); // ✨ Se usa el estado de procesamiento
+    setIsProcessing(true);
     setError(null);
     try {
       await apiClient.post('/users/totp/verify/', { code: totpCode });
@@ -96,7 +102,7 @@ function EnrollmentComponent() {
     } catch (err) {
       setError('Código TOTP inválido.');
     } finally {
-      setIsProcessing(false); // ✨ Se finaliza el procesamiento
+      setIsProcessing(false);
     }
   };
 
@@ -111,11 +117,9 @@ function EnrollmentComponent() {
             <p className="text-center text-gray-400">Paso 1: Configura tu passkey para continuar.</p>
             <button
               onClick={handlePasskey}
-              // ✨ MEJORA: La lógica de deshabilitado es más clara
               disabled={!isTokenValidated || isValidatingToken || isProcessing}
               className="w-full bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 disabled:bg-gray-500"
             >
-              {/* ✨ MEJORA: El texto del botón es más informativo */}
               {isValidatingToken ? 'Validando enlace...' : (isProcessing ? 'Procesando...' : 'Configurar Passkey')}
             </button>
           </div>
@@ -140,7 +144,7 @@ function EnrollmentComponent() {
             />
             <button
               type="submit"
-              disabled={isProcessing} // ✨ Se usa el estado de procesamiento
+              disabled={isProcessing}
               className="bg-green-600 text-white px-4 py-2 rounded w-full disabled:bg-gray-400"
             >
               {isProcessing ? 'Verificando...' : 'Verificar y Activar Cuenta'}

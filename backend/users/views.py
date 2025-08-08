@@ -1,8 +1,8 @@
 # backend/users/views.py
-
 from __future__ import annotations
 
 import base64
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 import hashlib
 import hmac
 import json
@@ -23,16 +23,32 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-# Asegúrate de tener 'webauthn' en tu requirements.txt
-from webauthn import verify_authentication_response, verify_registration_response
-from webauthn.helpers import base64url_to_bytes
+# WebAuthn core
+from webauthn import (
+    generate_registration_options,
+    generate_authentication_options,
+    verify_registration_response,
+    verify_authentication_response,
+)
+
+# Helpers/parsers oficiales (evitan dicts "crudos")
+from webauthn.helpers import (
+    options_to_json,
+    bytes_to_base64url,
+    base64url_to_bytes,
+    parse_registration_credential_json,
+    parse_authentication_credential_json,
+)
+
 from webauthn.helpers.structs import (
-    RegistrationCredential,
-    AuthenticationCredential,
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+    AttestationConveyancePreference,
+    AuthenticatorAttachment,
+    ResidentKeyRequirement,
 )
 
 from .models import EnrollmentToken
-
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +56,8 @@ logger = logging.getLogger(__name__)
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _get_enrollment_user(request: HttpRequest):
-    """Obtiene al usuario de la sesión de inscripción (enrollment)."""
     user_id = request.session.get("enrollment_user_id")
     if not user_id:
         return None
@@ -51,8 +67,8 @@ def _get_enrollment_user(request: HttpRequest):
     except User.DoesNotExist:
         return None
 
+
 def _get_login_user(request: HttpRequest):
-    """Obtiene al usuario de la sesión de inicio de sesión (login)."""
     user_id = request.session.get("login_user_id")
     if not user_id:
         return None
@@ -62,12 +78,12 @@ def _get_login_user(request: HttpRequest):
     except User.DoesNotExist:
         return None
 
+
 def _generate_totp_secret() -> str:
-    """Genera un secreto TOTP codificado en base32."""
     return base64.b32encode(os.urandom(20)).decode("utf-8")
 
+
 def _verify_totp(secret: str, token: str, interval: int = 30, window: int = 1) -> bool:
-    """Verifica un código TOTP de 6 dígitos."""
     try:
         key = base64.b32decode(secret, True)
     except Exception:
@@ -78,17 +94,15 @@ def _verify_totp(secret: str, token: str, interval: int = 30, window: int = 1) -
         msg = struct.pack(">Q", tm + offset)
         h = hmac.new(key, msg, hashlib.sha1).digest()
         o = h[19] & 15
-        code = (struct.unpack(">I", h[o : o + 4])[0] & 0x7FFFFFFF) % 1000000
+        code = (struct.unpack(">I", h[o: o + 4])[0] & 0x7FFFFFFF) % 1000000
         if f"{code:06d}" == token:
             return True
     return False
 
 
 def _get_jwt_for_user(user) -> dict:
-    """Genera tokens JWT para un usuario, incluyendo permisos."""
     refresh = RefreshToken.for_user(user)
 
-    # --- Lógica para añadir datos extra al token ---
     access_token = refresh.access_token
     access_token["username"] = user.username
     access_token["email"] = user.email
@@ -106,9 +120,6 @@ def _get_jwt_for_user(user) -> dict:
 
 
 class EnrollmentValidationView(APIView):
-    """Valida el token de inscripción vía POST, inicia una sesión y elimina el token."""
-
-    # Define los atributos de clase al principio para mayor claridad
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
@@ -121,84 +132,95 @@ class EnrollmentValidationView(APIView):
         token_hash = hashlib.sha256(token.encode()).hexdigest()
 
         try:
-            # Usamos una transacción para asegurar que la operación sea atómica
             with transaction.atomic():
-                # select_for_update() bloquea la fila para prevenir race conditions
                 enrollment = EnrollmentToken.objects.select_for_update().get(token_hash=token_hash)
 
                 if enrollment.is_expired():
-                    enrollment.delete()  # Borra el token si ya expiró
+                    enrollment.delete()
                     return Response({"detail": "Token expirado"}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Si el token es válido, establece la sesión y luego elimina el token
                 request.session["enrollment_user_id"] = enrollment.user_id
-                enrollment.delete()  # <-- La excelente mejora de seguridad
+                enrollment.delete()
 
         except EnrollmentToken.DoesNotExist:
             return Response({"detail": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Token válido"})
 
+
 class PasskeyRegisterChallengeView(APIView):
-    """Genera un desafío para registrar una nueva passkey."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def get(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
-            return Response({"detail": "Sesión de inscripción no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Sesión de inscripción no encontrada"}, status=400)
 
-        challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip("=")
-        request.session["passkey_challenge"] = challenge
-
-        user_id_b64 = base64.urlsafe_b64encode(str(user.pk).encode()).decode().rstrip("=")
+        rp_id = getattr(settings, "RP_ID", request.get_host().split(":")[0])
         rp_name = getattr(settings, "RP_NAME", "Luximia ERP")
-        rp_id = getattr(settings, "RP_ID", request.get_host())
 
-        data: dict[str, Any] = {
-            "challenge": challenge,
-            "rp": {"name": rp_name, "id": rp_id},
-            "user": {
-                "id": user_id_b64,
-                "name": user.email,
-                "displayName": user.get_full_name() or user.email,
-            },
-            "pubKeyCredParams": [{"type": "public-key", "alg": -7}], # ES256
-            "authenticatorSelection": {"userVerification": "required"},
-            "timeout": 60000,
-            "attestation": "direct",
-        }
-        return Response(data)
+        uv_mode = (UserVerificationRequirement.REQUIRED
+                   if settings.PASSKEY_STRICT_UV
+                   else UserVerificationRequirement.PREFERRED)
+
+
+        attachment = (AuthenticatorAttachment.PLATFORM
+                    if settings.PASSKEY_STRICT_UV
+                    else AuthenticatorAttachment.CROSS_PLATFORM)
+
+        options = generate_registration_options(
+            rp_id=rp_id,
+            rp_name=rp_name,
+            user_name=user.email,
+            user_display_name=user.get_full_name() or user.email,
+            authenticator_selection=AuthenticatorSelectionCriteria(
+                user_verification=uv_mode,
+                authenticator_attachment=attachment,
+                resident_key=ResidentKeyRequirement.REQUIRED,  # ← clave para passkeys
+                # ← legacy flag, ayuda a algunos gestores
+                require_resident_key=True,
+            ),
+            attestation=AttestationConveyancePreference.NONE,
+        )
+
+        request.session["passkey_challenge"] = bytes_to_base64url(
+            options.challenge)
+        return Response(json.loads(options_to_json(options)))
 
 class PasskeyRegisterView(APIView):
-    """Verifica la respuesta del navegador y guarda la nueva passkey."""
+    """Parsea JSON -> dataclass y verifica con challenge original (bytes)."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
             return Response({"detail": "Sesión de inscripción no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        challenge = request.session.get("passkey_challenge")
-        if not challenge:
+
+        challenge_b64url = request.session.get("passkey_challenge")
+        if not challenge_b64url:
             return Response({"detail": "Desafío no encontrado en la sesión"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            credential = RegistrationCredential.parse_raw(json.dumps(request.data))
+            # ✅ convertir JSON del navegador a RegistrationCredential (dataclass)
+            credential = parse_registration_credential_json(request.data)
+
             verification = verify_registration_response(
                 credential=credential,
-                expected_challenge=challenge.encode(),
+                expected_challenge=base64url_to_bytes(challenge_b64url),
                 expected_origin=settings.WEBAUTHN_ORIGIN,
-                expected_rp_id=settings.RP_ID,
-                require_user_verification=True,
+                expected_rp_id=getattr(
+                    settings, "RP_ID", request.get_host().split(":")[0]),
+                require_user_verification=settings.PASSKEY_STRICT_UV,  # <- clave
             )
-            
+
             new_credential = {
-                "id": base64.urlsafe_b64encode(verification.credential_id).decode('utf-8').rstrip("="),
-                "public_key": base64.urlsafe_b64encode(verification.credential_public_key).decode('utf-8').rstrip("="),
-                "sign_count": verification.sign_count,
+                "id": urlsafe_b64encode(verification.credential_id).decode('utf-8').rstrip("="),
+                "public_key": urlsafe_b64encode(verification.credential_public_key).decode('utf-8').rstrip("="),
+                "sign_count": verification.new_sign_count,
             }
-            
+
             creds = user.passkey_credentials or []
             creds.append(new_credential)
             user.passkey_credentials = creds
@@ -206,14 +228,17 @@ class PasskeyRegisterView(APIView):
 
             request.session.pop("passkey_challenge", None)
             return Response({"detail": "Passkey registrada"})
-            
+
         except Exception as e:
+            logger.error("Error en el registro de Passkey: %s",
+                         e, exc_info=True)
             return Response({"detail": f"Fallo en el registro de la Passkey: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class TOTPSetupView(APIView):
-    """Genera un secreto TOTP y devuelve una URI para el QR."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -225,13 +250,14 @@ class TOTPSetupView(APIView):
 
         issuer = getattr(settings, "TOTP_ISSUER", "Luximia ERP")
         label = f"{issuer}:{user.email}"
-        otpauth_uri = (f"otpauth://totp/{label}?secret={secret}&issuer={issuer}&digits=6")
+        otpauth_uri = f"otpauth://totp/{label}?secret={secret}&issuer={issuer}&digits=6"
         return Response({"otpauth_uri": otpauth_uri})
 
+
 class TOTPVerifyView(APIView):
-    """Verifica un código TOTP durante la inscripción y activa al usuario."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         user = _get_enrollment_user(request)
         if not user:
@@ -252,7 +278,7 @@ class TOTPVerifyView(APIView):
         if user.passkey_credentials:
             user.is_active = True
         user.save()
-        
+
         request.session.pop("enrollment_user_id", None)
         return Response({"detail": "TOTP verificado y usuario activado"})
 
@@ -260,10 +286,11 @@ class TOTPVerifyView(APIView):
 # Vistas de Inicio de Sesión (Login)
 # ---------------------------------------------------------------------------
 
+
 class StartLoginView(APIView):
-    """Inicia el flujo de login para un usuario existente."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         email = request.data.get("email")
         if not email:
@@ -280,17 +307,18 @@ class StartLoginView(APIView):
             login_method = "passkey"
         elif user.totp_secret:
             login_method = "totp"
-        
+
         if not login_method:
             return Response({"detail": "Ningún método de login configurado"}, status=status.HTTP_400_BAD_REQUEST)
 
         request.session["login_user_id"] = user.pk
         return Response({"login_method": login_method})
 
+
 class PasskeyLoginChallengeView(APIView):
-    """Genera un desafío para autenticar con una passkey existente."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def get(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         if not user:
@@ -299,68 +327,82 @@ class PasskeyLoginChallengeView(APIView):
         if not user.passkey_credentials:
             return Response({"detail": "No hay passkeys registradas para este usuario"}, status=status.HTTP_400_BAD_REQUEST)
 
-        challenge = base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip("=")
-        request.session["login_challenge"] = challenge
+        rp_id = getattr(settings, "RP_ID", request.get_host().split(":")[0])
 
-        data: dict[str, Any] = {
-            "challenge": challenge,
-            "allowCredentials": [{"type": "public-key", "id": cred.get("id")} for cred in user.passkey_credentials],
-            "timeout": 60000,
-            "userVerification": "required",
-            "rpId": getattr(settings, "RP_ID", request.get_host()),
-        }
-        return Response(data)
+        # mapear a allowCredentials
+        allow_credentials = [{
+            "type": "public-key",
+            "id": cred.get("id"),
+        } for cred in user.passkey_credentials]
+
+        options = generate_authentication_options(
+            rp_id=rp_id,
+            allow_credentials=allow_credentials,   # tus ids ya guardados
+            user_verification=(
+                UserVerificationRequirement.REQUIRED
+                if settings.PASSKEY_STRICT_UV else
+                UserVerificationRequirement.PREFERRED
+            ),
+        )
+        request.session["login_challenge"] = bytes_to_base64url(
+            options.challenge)
+        return Response(json.loads(options_to_json(options)))
+
 
 class PasskeyLoginView(APIView):
-    """Verifica la respuesta de la passkey y emite tokens JWT."""
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
-        challenge = request.session.get("login_challenge")
-        if not user or not challenge:
+        challenge_b64url = request.session.get("login_challenge")
+        if not user or not challenge_b64url:
             return Response({"detail": "Sesión de login no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            credential_data = request.data
-            credential = AuthenticationCredential.parse_raw(json.dumps(credential_data))
-            
-            user_credential = None
-            for cred in user.passkey_credentials:
-                if base64url_to_bytes(cred["id"]) == credential.raw_id:
-                    user_credential = cred
-                    break
 
+        try:
+            # ✅ convertir JSON del navegador a AuthenticationCredential (dataclass)
+            credential = parse_authentication_credential_json(request.data)
+
+            # localizar la cred del usuario
+            user_credential = next(
+                (c for c in (user.passkey_credentials or [])
+                 if urlsafe_b64decode(c["id"] + "==") == credential.raw_id),
+                None
+            )
             if not user_credential:
                 return Response({"detail": "Credencial desconocida"}, status=status.HTTP_400_BAD_REQUEST)
 
             verification = verify_authentication_response(
                 credential=credential,
-                expected_challenge=challenge.encode(),
-                expected_rp_id=settings.RP_ID,
+                expected_challenge=base64url_to_bytes(challenge_b64url),
+                expected_rp_id=getattr(
+                    settings, "RP_ID", request.get_host().split(":")[0]),
                 expected_origin=settings.WEBAUTHN_ORIGIN,
-                credential_public_key=base64.urlsafe_b64decode(user_credential["public_key"] + "=="),
+                credential_public_key=urlsafe_b64decode(
+                    user_credential["public_key"] + "=="),
                 credential_current_sign_count=user_credential["sign_count"],
-                require_user_verification=True,
+                require_user_verification=settings.PASSKEY_STRICT_UV,  # <- clave
             )
 
-            # Actualizar el contador de firmas para prevenir ataques de repetición
             user_credential["sign_count"] = verification.new_sign_count
             user.save()
-
-            # Limpiar la sesión
             request.session.pop("login_user_id", None)
             request.session.pop("login_challenge", None)
-
             return Response(_get_jwt_for_user(user))
-
         except Exception as e:
+            logger.error(
+                "Error en la autenticación con Passkey: %s", e, exc_info=True)
             return Response({"detail": f"Fallo en la autenticación: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class VerifyTOTPLoginView(APIView):
-    """Verifica un código TOTP para login y emite tokens JWT."""
+    """
+    Verifica un código TOTP durante el LOGIN (no enrollment) y emite JWT.
+    Requiere que StartLoginView haya guardado 'login_user_id' en sesión.
+    """
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
     def post(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         if not user:
@@ -377,22 +419,24 @@ class VerifyTOTPLoginView(APIView):
 
         if not _verify_totp(secret, code):
             return Response({"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # OK: emitir JWT y limpiar sesión de login
+        tokens = _get_jwt_for_user(user)
         request.session.pop("login_user_id", None)
-        return Response(_get_jwt_for_user(user))
+        request.session.pop("login_challenge", None)  # por si venía de passkey
+        return Response(tokens)
 
 # ---------------------------------------------------------------------------
 # Exportaciones
 # ---------------------------------------------------------------------------
 
+
 __all__ = [
-    # Vistas de Inscripción
     "EnrollmentValidationView",
     "PasskeyRegisterChallengeView",
     "PasskeyRegisterView",
     "TOTPSetupView",
     "TOTPVerifyView",
-    # Vistas de Inicio de Sesión
     "StartLoginView",
     "PasskeyLoginChallengeView",
     "PasskeyLoginView",
