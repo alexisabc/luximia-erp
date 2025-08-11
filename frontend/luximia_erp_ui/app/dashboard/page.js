@@ -1,4 +1,4 @@
-// app/page.js
+// app/dashboard/page.js
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -113,13 +113,13 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <span className="text-sm">Morosidad:</span>
             <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
-              {['30','60','90','mas'].map(val => (
+              {['30', '60', '90', 'mas'].map(val => (
                 <button key={val} onClick={() => setMorosidadRange(val)} className={`px-2 py-1 rounded-md ${morosidadRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
               ))}
             </div>
             <span className="text-sm ml-2">Por Cobrar:</span>
             <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
-              {['30','60','90','mas'].map(val => (
+              {['30', '60', '90', 'mas'].map(val => (
                 <button key={val} onClick={() => setPorCobrarRange(val)} className={`px-2 py-1 rounded-md ${porCobrarRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
               ))}
             </div>

@@ -46,7 +46,11 @@ from webauthn.helpers.structs import (
     AttestationConveyancePreference,
     AuthenticatorAttachment,
     ResidentKeyRequirement,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,  
 )
+
+from webauthn.helpers.exceptions import InvalidRegistrationResponse
 
 from .models import EnrollmentToken
 
@@ -124,12 +128,18 @@ class EnrollmentValidationView(APIView):
     authentication_classes = []
 
     def post(self, request: HttpRequest) -> Response:
+        # ✅ Si la sesión de inscripción ya existe, no vuelvas a validar el token
+        if request.session.get("enrollment_user_id"):
+            return Response({"detail": "Sesión de inscripción activa"})
+
         token = request.data.get("token")
-        logger.debug("[BACKEND] Token recibido del frontend: %s", token)
         if not token:
             return Response({"detail": "Token requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Log seguro: NO expongas el token; si quieres, loguea un hash truncado
         token_hash = hashlib.sha256(token.encode()).hexdigest()
+        logger.debug(
+            "[BACKEND] Hash del token recibido (prefix): %s", token_hash[:12])
 
         try:
             with transaction.atomic():
@@ -139,6 +149,7 @@ class EnrollmentValidationView(APIView):
                     enrollment.delete()
                     return Response({"detail": "Token expirado"}, status=status.HTTP_400_BAD_REQUEST)
 
+                # One-time: crea sesión y destruye el token
                 request.session["enrollment_user_id"] = enrollment.user_id
                 enrollment.delete()
 
@@ -167,7 +178,8 @@ class PasskeyRegisterChallengeView(APIView):
 
         attachment = (AuthenticatorAttachment.PLATFORM
                     if settings.PASSKEY_STRICT_UV
-                    else AuthenticatorAttachment.CROSS_PLATFORM)
+                    else None #AuthenticatorAttachment.CROSS_PLATFORM
+                    )
 
         options = generate_registration_options(
             rp_id=rp_id,
@@ -215,10 +227,14 @@ class PasskeyRegisterView(APIView):
                 require_user_verification=settings.PASSKEY_STRICT_UV,  # <- clave
             )
 
+            # fallback defensivo
+            sign_count = getattr(verification, "sign_count", 0)
+
+
             new_credential = {
-                "id": urlsafe_b64encode(verification.credential_id).decode('utf-8').rstrip("="),
-                "public_key": urlsafe_b64encode(verification.credential_public_key).decode('utf-8').rstrip("="),
-                "sign_count": verification.new_sign_count,
+                "id": urlsafe_b64encode(verification.credential_id).decode("utf-8").rstrip("="),
+                "public_key": urlsafe_b64encode(verification.credential_public_key).decode("utf-8").rstrip("="),
+                "sign_count": int(sign_count) if sign_count is not None else 0,
             }
 
             creds = user.passkey_credentials or []
@@ -229,10 +245,12 @@ class PasskeyRegisterView(APIView):
             request.session.pop("passkey_challenge", None)
             return Response({"detail": "Passkey registrada"})
 
+        except InvalidRegistrationResponse as e:
+            return Response({"detail": str(e)}, status=400)
         except Exception as e:
             logger.error("Error en el registro de Passkey: %s",
                          e, exc_info=True)
-            return Response({"detail": f"Fallo en el registro de la Passkey: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Fallo en el registro de la Passkey."}, status=400)
 
 
 class TOTPSetupView(APIView):
@@ -322,32 +340,26 @@ class PasskeyLoginChallengeView(APIView):
     def get(self, request: HttpRequest) -> Response:
         user = _get_login_user(request)
         if not user:
-            return Response({"detail": "Sesión de login no encontrada"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Sesión de login no encontrada"}, status=400)
 
         if not user.passkey_credentials:
-            return Response({"detail": "No hay passkeys registradas para este usuario"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "No hay passkeys registradas para este usuario"}, status=400)
 
         rp_id = getattr(settings, "RP_ID", request.get_host().split(":")[0])
 
-        # mapear a allowCredentials
-        allow_credentials = [{
-            "type": "public-key",
-            "id": cred.get("id"),
-        } for cred in user.passkey_credentials]
-
+        # ✅ No enviar allow_credentials → account discovery
         options = generate_authentication_options(
             rp_id=rp_id,
-            allow_credentials=allow_credentials,   # tus ids ya guardados
+            allow_credentials=None,
             user_verification=(
                 UserVerificationRequirement.REQUIRED
                 if settings.PASSKEY_STRICT_UV else
                 UserVerificationRequirement.PREFERRED
             ),
         )
-        request.session["login_challenge"] = bytes_to_base64url(
-            options.challenge)
-        return Response(json.loads(options_to_json(options)))
 
+        request.session["login_challenge"] = bytes_to_base64url(options.challenge)
+        return Response(json.loads(options_to_json(options)))
 
 class PasskeyLoginView(APIView):
     permission_classes = [permissions.AllowAny]
