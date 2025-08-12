@@ -33,7 +33,7 @@ class BaseViewSet(viewsets.ModelViewSet):
 
 
 class BancoViewSet(BaseViewSet):
-    queryset = Banco.objects.all()
+    queryset = Banco.objects.all().order_by('id')
     serializer_class = BancoSerializer
 
 
@@ -43,77 +43,77 @@ class ProyectoViewSet(BaseViewSet):
 
 
 class UPEViewSet(BaseViewSet):
-    queryset = UPE.objects.all()
+    queryset = UPE.objects.all().order_by('id')
     serializer_class = UPESerializer
 
 
 class ClienteViewSet(BaseViewSet):
-    queryset = Cliente.objects.all()
+    queryset = Cliente.objects.all().order_by('id')
     serializer_class = ClienteSerializer
 
 
 class PagoViewSet(BaseViewSet):
-    queryset = Pago.objects.all()
+    queryset = Pago.objects.all().order_by('id')
     serializer_class = PagoSerializer
 
 
 class MonedaViewSet(BaseViewSet):
-    queryset = Moneda.objects.all()
+    queryset = Moneda.objects.all().order_by('id')
     serializer_class = MonedaSerializer
 
 
 class DepartamentoViewSet(BaseViewSet):
-    queryset = Departamento.objects.all()
+    queryset = Departamento.objects.all().order_by('id')
     serializer_class = DepartamentoSerializer
 
 
 class PuestoViewSet(BaseViewSet):
-    queryset = Puesto.objects.all()
+    queryset = Puesto.objects.all().order_by('id')
     serializer_class = PuestoSerializer
 
 
 class EmpleadoViewSet(BaseViewSet):
-    queryset = Empleado.objects.all()
+    queryset = Empleado.objects.all().order_by('id')
     serializer_class = EmpleadoSerializer
 
 
 class MetodoPagoViewSet(BaseViewSet):
-    queryset = MetodoPago.objects.all()
+    queryset = MetodoPago.objects.all().order_by('id')
     serializer_class = MetodoPagoSerializer
 
 
 class TipoCambioViewSet(BaseViewSet):
-    queryset = TipoCambio.objects.all()
+    queryset = TipoCambio.objects.all().order_by('id')
     serializer_class = TipoCambioSerializer
 
 
 class VendedorViewSet(BaseViewSet):
-    queryset = Vendedor.objects.all()
+    queryset = Vendedor.objects.all().order_by('id')
     serializer_class = VendedorSerializer
 
 
 class FormaPagoViewSet(BaseViewSet):
-    queryset = FormaPago.objects.all()
+    queryset = FormaPago.objects.all().order_by('id')
     serializer_class = FormaPagoSerializer
 
 
 class PlanPagoViewSet(BaseViewSet):
-    queryset = PlanPago.objects.all()
+    queryset = PlanPago.objects.all().order_by('id')
     serializer_class = PlanPagoSerializer
 
 
 class EsquemaComisionViewSet(BaseViewSet):
-    queryset = EsquemaComision.objects.all()
+    queryset = EsquemaComision.objects.all().order_by('id')
     serializer_class = EsquemaComisionSerializer
 
 
 class PresupuestoViewSet(BaseViewSet):
-    queryset = Presupuesto.objects.all()
+    queryset = Presupuesto.objects.all().order_by('id')
     serializer_class = PresupuestoSerializer
 
 
 class ContratoViewSet(BaseViewSet):
-    queryset = Contrato.objects.all()
+    queryset = Contrato.objects.all().order_by('id')
     serializer_class = ContratoSerializer
 
 @api_view(["GET"])
