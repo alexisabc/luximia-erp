@@ -18,7 +18,7 @@ from django.core import signing
 from django.http import HttpRequest
 from django.db import transaction
 
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -53,6 +53,7 @@ from webauthn.helpers.structs import (
 from webauthn.helpers.exceptions import InvalidRegistrationResponse
 
 from .models import EnrollmentToken
+from .serializers import UserSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +118,20 @@ def _get_jwt_for_user(user) -> dict:
         "refresh": str(refresh),
         "access": str(access_token),
     }
+
+# ---------------------------------------------------------------------------
+# API de usuarios
+# ---------------------------------------------------------------------------
+
+
+class UserListView(generics.ListAPIView):
+    """Lista de usuarios activos."""
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        User = get_user_model()
+        return User.objects.filter(is_active=True)
 
 # ---------------------------------------------------------------------------
 # Vistas de Inscripción (Enrollment)

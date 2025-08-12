@@ -2,6 +2,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
+    UserListView,
     EnrollmentValidationView,
     PasskeyRegisterChallengeView,
     PasskeyRegisterView,
@@ -16,6 +17,9 @@ from .views import (
 app_name = 'users'
 
 urlpatterns = [
+    # --- Users ---
+    path("", UserListView.as_view(), name="user-list"),
+
     # --- Enrollment ---
     path("enrollment/validate/", EnrollmentValidationView.as_view(), name="enrollment-validate"),
     path("passkey/register/challenge/", PasskeyRegisterChallengeView.as_view(), name="passkey-register-challenge"),
