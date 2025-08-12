@@ -42,10 +42,20 @@ export default function PuestosPage() {
         try {
             const { data } = await getAllDepartamentos(); // o getDepartamentos()
             const items = Array.isArray(data) ? data : (data?.results ?? []);
-            setDepartamentos(items);
+            setFormFields(prevFields =>
+                prevFields.map(field =>
+                    field.name === 'departamento'
+                        ? { ...field, options: items.map(d => ({ value: d.id, label: d.nombre })) }
+                        : field
+                )
+            );
         } catch (e) {
             console.error('Error cargando departamentos', e);
-            setDepartamentos([]); // fallback
+            setFormFields(prevFields =>
+                prevFields.map(field =>
+                    field.name === 'departamento' ? { ...field, options: [] } : field
+                )
+            );
         }
     }, []);
 
