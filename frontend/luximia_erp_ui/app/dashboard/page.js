@@ -77,12 +77,6 @@ export default function DashboardPage() {
     Ventas: Number(data?.chart?.ventas?.[i] ?? 0),
   }));
 
-  const cobranzaChartData = (data?.chart?.labels || []).map((label, i) => ({
-    label,
-    Cobrado: Number(data?.chart?.recuperado?.[i] ?? 0),
-    'Por Cobrar': Number(data?.chart?.programado?.[i] ?? 0),
-  }));
-
   const valueFormatter = (number) =>
     `$${Number(number).toLocaleString('es-MX', {
       minimumFractionDigits: 2,
@@ -159,8 +153,8 @@ export default function DashboardPage() {
             yAxisWidth={48}
           />
         </ChartCard>
-        <ChartCard title="Flujo (Cobrado / Por Cobrar / Morosidad)">
-          <FlujoCobranzaChart raw={data?.chart} asArea />
+        <ChartCard title="Flujo (Cobrado / Por Cobrar)">
+          <FlujoCobranzaChart raw={data?.chart} />
         </ChartCard>
       </div>
 

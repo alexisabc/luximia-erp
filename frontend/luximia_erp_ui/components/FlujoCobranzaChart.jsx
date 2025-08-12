@@ -13,43 +13,47 @@ const money = (n) =>
 /**
  * props:
  * - raw (obj) -> { labels: string[], recuperado: number[], programado: number[], vencido: number[] }
- * - initialMonth (string) -> ej "2025-06"
+ * - initialStartMonth (string)
+ * - initialEndMonth (string)
  * - asArea (bool) -> si quieres área en vez de líneas
  */
-export default function FlujoCobranzaChart({ raw, initialMonth, asArea = false }) {
+export default function FlujoCobranzaChart({ raw, initialStartMonth, initialEndMonth, asArea = false }) {
     // Construye (meses) únicos a partir de labels tipo "Marzo", "Abril", etc.
     // Si tus labels ya vienen como "2025-03", mejor usa eso directo.
     const months = useMemo(() => raw?.labels ?? [], [raw]);
 
-    // Mes seleccionado (último por defecto o initialMonth)
-    const [selectedMonth, setSelectedMonth] = useState(
-        initialMonth ||
-        (months.length ? months[months.length - 1] : '')
-    );
+    // Meses seleccionados
+    const [startMonth, setStartMonth] = useState(initialStartMonth || (months[0] ?? ''));
+    const [endMonth, setEndMonth] = useState(initialEndMonth || (months[months.length - 1] ?? ''));
 
     useEffect(() => {
-        if (!selectedMonth && months.length) {
-            setSelectedMonth(months[months.length - 1]);
+        if (months.length) {
+            setStartMonth((prev) => prev || initialStartMonth || months[0]);
+            setEndMonth((prev) => prev || initialEndMonth || months[months.length - 1]);
         }
-    }, [months, selectedMonth]);
+    }, [months, initialStartMonth, initialEndMonth]);
 
     // Data para la gráfica (todos los meses) y Tremor
     const chartData = useMemo(() => {
         const labels = raw?.labels ?? [];
         const cob = raw?.recuperado ?? [];
         const por = raw?.programado ?? [];
-        const mor = raw?.vencido ?? [];
 
         return labels.map((label, i) => ({
             label,
             Cobrado: Number(cob[i] ?? 0),
             'Por Cobrar': Number(por[i] ?? 0),
-            Morosidad: Number(mor[i] ?? 0),
         }));
     }, [raw]);
 
-    // Si quieres filtrar por una ventana móvil (p. ej. últimos 4 meses respecto a selectedMonth)
-    // aquí podrías cortar chartData según selectedMonth. Por ahora mostramos todo el rango.
+    // Filtra datos según rango seleccionado
+    const filteredData = useMemo(() => {
+        const startIdx = months.indexOf(startMonth);
+        const endIdx = months.indexOf(endMonth);
+        if (startIdx === -1 || endIdx === -1) return chartData;
+        const [s, e] = startIdx <= endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+        return chartData.slice(s, e + 1);
+    }, [chartData, startMonth, endMonth, months]);
 
     const Chart = asArea ? AreaChart : LineChart;
 
@@ -59,38 +63,51 @@ export default function FlujoCobranzaChart({ raw, initialMonth, asArea = false }
                 <div>
                     <h3 className="text-lg font-semibold">Flujo de Ingresos y Egresos</h3>
                     <p className="text-sm text-gray-500">
-                        Cobrado vs Por Cobrar vs Morosidad
+                        Cobrado vs Por Cobrar
                     </p>
                 </div>
 
-                {/* Selector de mes (solo decorativo ahora; úsalo para filtrar si lo necesitas) */}
+                {/* Selectores de rango de meses */}
                 {months.length > 0 && (
-                    <Select
-                        value={selectedMonth}
-                        onValueChange={setSelectedMonth}
-                        className="max-w-[180px]"
-                    >
-                        {months.map((m) => (
-                            <SelectItem key={m} value={m}>
-                                {m}
-                            </SelectItem>
-                        ))}
-                    </Select>
+                    <div className="flex items-center gap-2">
+                        <Select
+                            value={startMonth}
+                            onValueChange={setStartMonth}
+                            className="max-w-[160px]"
+                        >
+                            {months.map((m) => (
+                                <SelectItem key={m} value={m}>
+                                    {m}
+                                </SelectItem>
+                            ))}
+                        </Select>
+                        <span className="text-sm">a</span>
+                        <Select
+                            value={endMonth}
+                            onValueChange={setEndMonth}
+                            className="max-w-[160px]"
+                        >
+                            {months.map((m) => (
+                                <SelectItem key={m} value={m}>
+                                    {m}
+                                </SelectItem>
+                            ))}
+                        </Select>
+                    </div>
                 )}
             </div>
 
             <Chart
                 className="w-full h-72"
-                data={chartData}
+                data={filteredData}
                 index="label"
-                categories={['Cobrado', 'Por Cobrar', 'Morosidad']}
-                // Colores: emerald, amber, rose
-                colors={['emerald', 'amber', 'rose']}
+                categories={['Cobrado', 'Por Cobrar']}
+                // Colores: emerald, amber
+                colors={['emerald', 'amber']}
                 valueFormatter={money}
                 yAxisWidth={64}
                 showLegend
-            // Para LineChart, curva lineal por defecto; si quieres suavizada: curveType="monotone"
-            // curveType="monotone"
+                curveType="linear"
             />
         </Card>
     );
