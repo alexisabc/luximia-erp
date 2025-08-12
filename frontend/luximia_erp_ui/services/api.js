@@ -153,7 +153,7 @@ export const getInactiveEmpleados = () => apiClient.get('/cxc/empleados/inactivo
 export const hardDeleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/hard/`);
 export const exportEmpleadosExcel = (columns) => apiClient.post('/cxc/empleados/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarEmpleados = (formData) => apiClient.post('/cxc/empleados/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const getUsers = () => apiClient.get('/cxc/users/');
+export const getUsers = () => apiClient.get('/users/');
 
 // ===================== Vendedores =====================
 export const createVendedor = (data) => apiClient.post('/cxc/vendedores/', data);
