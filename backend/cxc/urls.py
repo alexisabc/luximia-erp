@@ -20,7 +20,7 @@ from .views import (
     FormaPagoViewSet,
     PlanPagoViewSet,
     EsquemaComisionViewSet,
-    StrategicDashboardView,
+    strategic_dashboard,
 )
 
 router = DefaultRouter()
@@ -43,6 +43,6 @@ router.register(r'presupuestos', PresupuestoViewSet)
 router.register(r'contratos', ContratoViewSet)
 
 urlpatterns = [
-    path('dashboard/strategic/', StrategicDashboardView.as_view(), name='dashboard-strategic'),
     path('', include(router.urls)),
+    path('dashboard/strategic/', strategic_dashboard), 
 ]

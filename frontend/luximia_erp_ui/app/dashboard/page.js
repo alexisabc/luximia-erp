@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
 import { LineChart } from '@tremor/react';
 import Loader from '../../components/Loader';
-
+import FlujoCobranzaChart from '@/components/FlujoCobranzaChart';
 
 
 const KpiCard = ({ title, value }) => {
@@ -51,7 +51,15 @@ export default function DashboardPage() {
       ]);
 
       setData(dashboardRes.data);
-      setProyectos(proyectosRes.data);
+
+      // DRF suele devolver { results: [...] }
+      const list = Array.isArray(proyectosRes.data)
+        ? proyectosRes.data
+        : (proyectosRes.data?.results ?? []);
+      setProyectos(list);
+
+      setData(dashboardRes.data);
+
 
     } catch (error) {
       console.error("Error al cargar datos del dashboard", error);
@@ -151,16 +159,8 @@ export default function DashboardPage() {
             yAxisWidth={48}
           />
         </ChartCard>
-        <ChartCard title="Cobrado vs Por Cobrar">
-          <LineChart
-            className="w-full"
-            data={cobranzaChartData}
-            index="label"
-            categories={["Cobrado", "Por Cobrar"]}
-            colors={["blue", "amber"]}
-            valueFormatter={valueFormatter}
-            yAxisWidth={48}
-          />
+        <ChartCard title="Flujo (Cobrado / Por Cobrar / Morosidad)">
+          <FlujoCobranzaChart raw={data?.chart} asArea />
         </ChartCard>
       </div>
 

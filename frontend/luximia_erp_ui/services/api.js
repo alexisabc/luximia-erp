@@ -248,18 +248,11 @@ export const getStrategicDashboardData = (timeframe, selectedProjects, morosidad
   const projects =
     selectedProjects === 'all'
       ? 'all'
-      : Array.isArray(selectedProjects)
-        ? selectedProjects.join(',')
-        : String(selectedProjects);
+      : Array.isArray(selectedProjects) ? selectedProjects.join(',') : String(selectedProjects);
 
-  // Usa /cxc/dashboard/ por defecto (evita 404). Si tu backend tiene /cxc/dashboard/strategic/, cambia la ruta aquí.
-  return apiClient.get('/cxc/dashboard/', {
-    params: {
-      timeframe,
-      projects,
-      morosidad: morosidadRange,
-      por_cobrar: porCobrarRange,
-    },
+  // Si vas a quedarte con /dashboard/strategic/
+  return apiClient.get('/cxc/dashboard/strategic/', {
+    params: { timeframe, projects, morosidad: morosidadRange, por_cobrar: porCobrarRange },
   });
 };
 

@@ -40,14 +40,12 @@ export default function PuestosPage() {
 
     const fetchDepartamentos = useCallback(async () => {
         try {
-            const res = await getAllDepartamentos();
-            const options = res.data.map((d) => ({ value: d.id, label: d.nombre }));
-            setFormFields((fields) => fields.map((f) => f.name === 'departamento' ? { ...f, options } : f));
-            if (options.length > 0) {
-                setFormData((data) => ({ ...data, departamento: options[0].value }));
-            }
-        } catch (err) {
-            console.error(err);
+            const { data } = await getAllDepartamentos(); // o getDepartamentos()
+            const items = Array.isArray(data) ? data : (data?.results ?? []);
+            setDepartamentos(items);
+        } catch (e) {
+            console.error('Error cargando departamentos', e);
+            setDepartamentos([]); // fallback
         }
     }, []);
 

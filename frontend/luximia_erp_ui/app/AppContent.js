@@ -18,11 +18,11 @@ export default function AppContent({ children }) {
 
     useEffect(() => {
         // 2. No hagas nada si el contexto aún está cargando la información inicial
-        if (loading) return;
+        if (loading) return; // <-- nunca retornes "null" desde useEffect
 
         const publicPaths = ['/login'];
         if (!authTokens && !publicPaths.includes(pathname) && !pathname.startsWith('/enroll')) {
-            router.push('/login');
+            router.replace('/login'); // replace evita que el usuario "vuelva" a la privada con back
         }
         // 3. Añade 'loading' a las dependencias del useEffect
     }, [authTokens, pathname, router, loading]);
