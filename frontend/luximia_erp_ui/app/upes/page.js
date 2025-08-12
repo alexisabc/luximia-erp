@@ -4,12 +4,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import Modal from '../../components/Modal';
 import FormModal from '../../components/FormModal';
 import ExportModal from '../../components/ExportModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ReusableTable from '../../components/ReusableTable';
-import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import { formatCurrency } from '../../utils/formatters';
 import { Download } from 'lucide-react';
 
