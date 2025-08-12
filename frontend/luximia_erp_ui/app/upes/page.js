@@ -162,7 +162,7 @@ export default function UPEsPage() {
                 getAllProyectos()
             ]);
             setPageData(upesRes.data);
-            setProyectos(proyectosRes.data);
+            setProyectos(proyectosRes.data.results || proyectosRes.data);
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los datos.');

@@ -34,6 +34,9 @@ class ProyectoSerializer(serializers.ModelSerializer):
 
 
 class UPESerializer(serializers.ModelSerializer):
+    proyecto_nombre = serializers.CharField(source="proyecto.nombre", read_only=True)
+    moneda = serializers.CharField(source="moneda.codigo", read_only=True)
+
     class Meta:
         model = UPE
         fields = "__all__"
