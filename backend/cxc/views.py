@@ -43,7 +43,7 @@ class ProyectoViewSet(BaseViewSet):
 
 
 class UPEViewSet(BaseViewSet):
-    queryset = UPE.objects.all().order_by('id')
+    queryset = UPE.objects.select_related('proyecto', 'moneda').all().order_by('id')
     serializer_class = UPESerializer
 
 
