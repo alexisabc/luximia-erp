@@ -1,4 +1,4 @@
-// app/debug/page.js
+// app/debug/page.jsx
 export default function DebugPage() {
     return (
         <div className="p-6">

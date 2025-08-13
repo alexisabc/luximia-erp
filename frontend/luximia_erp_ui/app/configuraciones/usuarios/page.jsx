@@ -1,4 +1,4 @@
-// app/configuraciones/usuarios/page.js
+// app/configuraciones/usuarios/page.jsx
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';

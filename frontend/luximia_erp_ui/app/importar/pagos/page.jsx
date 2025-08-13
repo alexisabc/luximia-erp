@@ -1,4 +1,4 @@
-// app/importar/pagos/page.js
+// app/importar/pagos/page.jsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';

@@ -1,4 +1,4 @@
-// app/configuraciones/roles/page.js
+// app/configuraciones/roles/page.jsx
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
