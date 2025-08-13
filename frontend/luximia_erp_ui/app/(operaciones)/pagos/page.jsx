@@ -71,7 +71,16 @@ export default function PagosPage() {
         { header: 'Contrato', render: row => <Link href={`/contratos/${row.contrato}`}>{row.contrato}</Link> },
         { header: 'Método Pago', render: row => row.metodo_pago_nombre || row.metodo_pago },
         { header: 'Fecha Pago', render: row => new Date(row.fecha_pago + 'T00:00:00').toLocaleDateString('es-MX') },
-        { header: 'Monto Pagado', render: row => `${parseFloat(row.monto_pagado).toLocaleString('es-MX', { minimumFractionDigits: 2 })} ${row.moneda_pagada}` },
+        {
+            header: 'Monto Pagado',
+            render: (row) => {
+                // Si el monto no existe, muestra 'N/A'
+                if (!row.monto_pagado) {
+                    return 'N/A';
+                }
+                return formatCurrency(row.monto_pagado, row.moneda);
+            },
+        },
         { header: 'Tipo Cambio', render: row => row.moneda_pagada === 'USD' ? parseFloat(row.tipo_cambio).toFixed(4) : '1.00' },
         { header: 'Valor MXN', render: row => parseFloat(row.valor_mxn).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) },
         { header: 'Concepto', render: row => row.concepto },

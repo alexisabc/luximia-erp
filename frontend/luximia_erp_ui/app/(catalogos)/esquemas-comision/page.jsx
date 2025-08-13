@@ -160,17 +160,19 @@ export default function EsquemasComisionPage() {
                         onHardDelete: showInactive && hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
                     }}
                 />
-                <div className="mt-4 flex justify-center space-x-2">
-                    {[...Array(Math.ceil(pageData.count / pageSize)).keys()].map((page) => (
-                        <button
-                            key={page + 1}
-                            onClick={() => handlePageChange(page + 1)}
-                            className={`px-3 py-1 rounded ${currentPage === page + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-white'}`}
-                        >
-                            {page + 1}
-                        </button>
-                    ))}
-                </div>
+                {pageData.count > 0 && pageSize > 0 && (
+                    <div className="mt-4 flex justify-center space-x-2">
+                        {[...Array(Math.ceil(pageData.count / pageSize)).keys()].map((page) => (
+                            <button
+                                key={page + 1}
+                                onClick={() => handlePageChange(page + 1)}
+                                className={`px-3 py-1 rounded ${currentPage === page + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-white'}`}
+                            >
+                                {page + 1}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <FormModal

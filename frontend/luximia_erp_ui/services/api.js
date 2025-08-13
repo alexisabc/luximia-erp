@@ -191,13 +191,13 @@ export const exportPresupuestosExcel = (columns) => apiClient.post('/cxc/presupu
 export const importarPresupuestos = (formData) => apiClient.post('/cxc/presupuestos/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Planes de Pago =====================
+export const getPlanesPago = (page = 1, pageSize = 15) => apiClient.get(`/cxc/planes-pago/?page=${page}&page_size=${pageSize}`)
 export const createPlanPago = (data) => apiClient.post('/cxc/planes-pago/', data);
 export const exportPlanesPagoExcel = (columns) => apiClient.post('/cxc/planes-pago/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarPlanesPago = (formData) => apiClient.post('/cxc/planes-pago/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Esquemas de Comisión =====================
-export const getEsquemasComision = (page = 1, pageSize = 15) =>
-  apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
+export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
 export const createEsquemaComision = (data) => apiClient.post('/cxc/esquemas-comision/', data);
 export const updateEsquemaComision = (id, data) => apiClient.patch(`/cxc/esquemas-comision/${id}/`, data);
 export const deleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/`);
@@ -217,11 +217,20 @@ export const importarTiposCambio = (formData) => apiClient.post('/cxc/tipos-camb
 export const getTiposDeCambio = () => apiClient.get('/cxc/tipos-de-cambio/');
 export const actualizarTipoDeCambioHoy = () => apiClient.post('/cxc/tipos-de-cambio/actualizar/');
 
-// ===================== Contratos & Pagos =====================
-export const exportContratosExcel = (columns) => apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
-export const importarContratos = (formData) => apiClient.post('/cxc/contratos/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+// ===================== Contratos =====================
+export const getContratoById = (id) => apiClient.get(`/cxc/contratos/${id}/`);
+export const descargarEstadoDeCuentaPDF = (contratoId, columns) =>
+  apiClient.post(`/cxc/contratos/${contratoId}/descargar-pdf/`, { columns }, { responseType: 'blob' });
+export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) =>
+  apiClient.post(`/cxc/contratos/${contratoId}/descargar-excel/`, { plan_cols: planCols, pago_cols: pagoCols }, { responseType: 'blob' });
+export const exportContratosExcel = (columns) =>
+  apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
+
+
+// ===================== Pagos =====================
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
-export const importarPagosHistoricos = (formData) => apiClient.post('/cxc/pagos/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const updatePago = (id, data) => apiClient.patch(`/cxc/pagos/${id}/`, data);
+export const deletePago = (id) => apiClient.delete(`/cxc/pagos/${id}/`);
 
 // ===================== Métodos de Pago vs Formas de Pago =====================
 // Métodos de pago (catálogo "MetodoPago")

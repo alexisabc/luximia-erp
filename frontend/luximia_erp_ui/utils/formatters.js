@@ -1,8 +1,11 @@
-//utils/formatters.js
+// utils/formatters.js
 
 export const formatCurrency = (value, currency = 'USD') => {
-    // Esta línea convierte el valor a número y si es inválido (NaN), usa 0.
-    const numericValue = Number(value) || 0;
+    // Si el valor no es un número válido, devuelve una cadena de texto predeterminada.
+    const numericValue = Number(value);
+    if (isNaN(numericValue)) {
+        return 'N/A'; // O cualquier otro valor que quieras mostrar
+    }
 
     try {
         return new Intl.NumberFormat('es-MX', {

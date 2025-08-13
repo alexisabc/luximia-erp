@@ -1,4 +1,4 @@
-// app/AppContent.jsx
+//components/AppContent.jsx
 'use client';
 
 import Sidebar from "@/components/layout/Sidebar";
@@ -7,7 +7,7 @@ import ChatInteligente from "@/components/features/ChatInteligente";
 import { useSidebar } from "@/context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Overlay from "@/components/loaders/index";
+import Overlay from '@/components/loaders/Overlay';
 
 export default function AppContent({ children }) {
     // 1. Obtén 'loading' desde el contexto
