@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarBancos } from '../../../services/api';
+import { importarBancos } from '@/services/api';
 
 export default function ImportarBancosPage() {
   const [selectedFile, setSelectedFile] = useState(null);

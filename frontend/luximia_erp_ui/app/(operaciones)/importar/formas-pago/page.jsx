@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarFormasPago } from '../../../services/api';
+import { importarFormasPago } from '@/services/api';
 
 export default function ImportarFormasPagoPage() {
   const [selectedFile, setSelectedFile] = useState(null);

@@ -3,9 +3,9 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useSidebar } from '../../context/SidebarContext';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ThemeSwitcher from './ThemeSwitcher';
+import { useSidebar } from '@/context/SidebarContext';
+import { useAuth } from '@/context/AuthContext';
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
 import { CircleUser, LogOut } from 'lucide-react';
 
 export default function Navbar() {

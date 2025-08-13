@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarPlanesPago } from '../../../services/api';
+import { importarPlanesPago } from '@/services/api';
 
 export default function ImportarPlanesPagoPage() {
   const [selectedFile, setSelectedFile] = useState(null);

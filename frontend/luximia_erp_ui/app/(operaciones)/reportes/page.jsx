@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { exportProyectosExcel, exportClientesExcel, exportUpesExcel, exportContratosExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ExportModal from '../../components/ExportModal';
+import { exportProyectosExcel, exportClientesExcel, exportUpesExcel, exportContratosExcel } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ExportModal from '@/components/ui/modals/Export';
 import { Download } from 'lucide-react';
 
 const PROYECTO_COLUMNAS_EXPORT = [

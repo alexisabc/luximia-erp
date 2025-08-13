@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPuestos, createPuesto, updatePuesto, deletePuesto, getInactivePuestos, hardDeletePuesto, getAllDepartamentos } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
+import { getPuestos, createPuesto, updatePuesto, deletePuesto, getInactivePuestos, hardDeletePuesto, getAllDepartamentos } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
 
 const PUESTO_COLUMNAS_DISPLAY = [
     { header: 'Nombre', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre}</span> },

@@ -2,12 +2,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext.jsx';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Key } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
-import apiClient from '../../../services/api.js';
-import LoginAnimation from '../../../components/ui/LoginAnimation.jsx';
+import apiClient from '@/services/api';
+import LoginAnimation from '@/components/ui/LoginAnimation';
 
 export default function LoginPage() {
     const { setAuthData } = useAuth();

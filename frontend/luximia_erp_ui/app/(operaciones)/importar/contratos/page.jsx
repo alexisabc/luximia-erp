@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarContratos } from '../../../services/api';
+import { importarContratos } from '@/services/api';
 
 export default function ImportarContratosPage() {
     const [selectedFile, setSelectedFile] = useState(null);

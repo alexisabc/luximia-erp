@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './shadcn-table-base';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/tables/shadcn-table-base';
 import Overlay from '@/components/loaders/Overlay';
 
 export default function ReusableTable({ data, columns, actions = {}, search = true, filterFunction }) {

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import apiClient from '../../services/api';
+import apiClient from '@/services/api';
 
 export default function AuthyRegisterPage() {
     const [username, setUsername] = useState('');

@@ -2,12 +2,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import ReusableTable from '../../../components/ReusableTable';
-import FormModal from '../../../components/FormModal';
-import ConfirmationModal from '../../../components/ConfirmationModal';
-import Loader from '../../../components/loaders/Loader';
+import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import Loader from '@/components/loaders/Spinner';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },

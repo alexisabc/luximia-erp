@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { importarClientes } from '../../../services/api';
+import { importarClientes } from '@/services/api';
 import Link from 'next/link';
 
 export default function ImportarClientesPage() {

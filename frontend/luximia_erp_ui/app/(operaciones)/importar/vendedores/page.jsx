@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarVendedores } from '../../../services/api';
+import { importarVendedores } from '@/services/api';
 
 export default function ImportarVendedoresPage() {
   const [selectedFile, setSelectedFile] = useState(null);

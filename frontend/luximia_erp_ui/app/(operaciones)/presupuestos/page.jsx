@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getClientes, getProyectos, getUPEs, createPresupuesto, updatePresupuesto, getPresupuesto } from '../../../services/api';
+import { getClientes, getProyectos, getUPEs, createPresupuesto, updatePresupuesto, getPresupuesto } from '@/services/api';
 
 export default function PresupuestoFormPage() {
     const searchParams = useSearchParams();

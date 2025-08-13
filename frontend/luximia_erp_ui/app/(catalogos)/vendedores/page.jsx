@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getVendedores, createVendedor, updateVendedor, deleteVendedor, getInactiveVendedores, hardDeleteVendedor } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import ReusableTable from '../../components/ReusableTable';
+import { getVendedores, createVendedor, updateVendedor, deleteVendedor, getInactiveVendedores, hardDeleteVendedor } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
 
 const VENDEDOR_COLUMNAS_DISPLAY = [
     { header: 'Tipo', render: (row) => row.tipo },

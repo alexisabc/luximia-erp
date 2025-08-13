@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarPuestos } from '../../../services/api';
+import { importarPuestos } from '@/services/api';
 
 export default function ImportarPuestosPage() {
   const [selectedFile, setSelectedFile] = useState(null);

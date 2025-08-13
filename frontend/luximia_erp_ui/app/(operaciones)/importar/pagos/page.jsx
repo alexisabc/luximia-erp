@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 // ### CAMBIO: Importamos la función correcta ###
-import { importarPagosHistoricos } from '../../../services/api';
+import { importarPagosHistoricos } from '@/services/api';
 import Link from 'next/link';
 
 // ### CAMBIO: Renombramos el componente ###

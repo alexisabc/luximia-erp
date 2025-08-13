@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPlanesPago, createPlanPago, getClientes, getUPEs } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import FormModal from '../../components/FormModal';
-import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import Loader from '../../components/loaders/Loader';
+import { getPlanesPago, createPlanPago, getClientes, getUPEs } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
+import Loader from '@/components/loaders/Spinner';
 
 export default function PlanesPagoPage() {
     const { hasPermission } = useAuth();

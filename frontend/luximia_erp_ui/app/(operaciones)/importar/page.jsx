@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { importarDatosMasivos } from '../../services/api';
+import { importarDatosMasivos } from '@/services/api';
 
 export default function ImportarPage() {
     const [selectedFile, setSelectedFile] = useState(null);

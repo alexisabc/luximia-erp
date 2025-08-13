@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getStrategicDashboardData, getAllProyectos } from '../../../services/api';
+import { getStrategicDashboardData, getAllProyectos } from '@/services/api';
 
 // Componentes de UI
-import Loader from '../../components/loaders/Loader';
+import Loader from '@/components/loaders/Spinner';
 import KpiCard from '@/components/ui/cards/Kpi';
 import VentasChart from '@/components/charts/Ventas';
 import FlujoCobranzaChart from '@/components/charts/FlujoCobranza';
