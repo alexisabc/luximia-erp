@@ -1,10 +1,11 @@
+// app/page.jsx
 'use client';
 
-import { useAuth } from '../context/AuthContext';
-import DashboardPage from './dashboard/page';
-import HomePage from './home/page';
+import { useAuth } from '@/context/AuthContext';
+import DashboardPage from '@/dashboard/page';
+import HomePage from '@/home/page';
 import { useEffect, useState } from 'react';
-import Loader from '../components/loaders/Loader';
+import Overlay from '@/components/loaders/Overlay';
 
 export default function IndexPage() {
   const { hasPermission } = useAuth();
@@ -17,7 +18,7 @@ export default function IndexPage() {
   }, [hasPermission]);
 
   if (!checked) {
-    return <Loader className="p-8" />;
+    return <Overlay className="p-8" />;
   }
 
   return canView ? <DashboardPage /> : <HomePage />;

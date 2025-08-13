@@ -1,13 +1,13 @@
-// app/AppContent.js
+// app/AppContent.jsx
 'use client';
 
-import Sidebar from "../components/layout/Sidebar";
-import { useAuth } from "../context/AuthContext";
-import ChatInteligente from "../components/ChatInteligente";
-import { useSidebar } from "../context/SidebarContext";
+import Sidebar from "@/components/layout/Sidebar";
+import { useAuth } from "@/context/AuthContext";
+import ChatInteligente from "@/components/features/ChatInteligente";
+import { useSidebar } from "@/context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Loader from "@/components/loaders/Loader";
+import Overlay from "@/components/loaders/index";
 
 export default function AppContent({ children }) {
     // 1. Obtén 'loading' desde el contexto
@@ -29,7 +29,7 @@ export default function AppContent({ children }) {
 
     // 4. Muestra un loader principal si el contexto está en su fase de carga inicial
     if (loading) {
-        return <Loader className="min-h-screen" />;
+        return <Overlay className="min-h-screen" />;
     }
 
     // 5. Si ya no está cargando, decide qué mostrar
@@ -41,7 +41,7 @@ export default function AppContent({ children }) {
     // Si no es una página pública y no hay tokens, el useEffect ya lo está redirigiendo,
     // pero podemos mostrar un loader como fallback.
     if (!authTokens) {
-        return <Loader className="min-h-screen" />;
+        return <Overlay className="min-h-screen" />;
     }
 
     // Si todo está bien, muestra la aplicación principal

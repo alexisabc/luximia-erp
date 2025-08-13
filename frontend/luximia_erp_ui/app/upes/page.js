@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import FormModal from '../../components/FormModal';
 import ExportModal from '../../components/ExportModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -152,7 +152,7 @@ export default function UPEsPage() {
         setSelectedColumns(prev => ({ ...prev, [name]: checked }));
     };
 
-    
+
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
         pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
@@ -172,7 +172,7 @@ export default function UPEsPage() {
         }
     }, [authTokens, pageData.results.length, showInactive]);
 
-    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize,fetchData]);
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
 

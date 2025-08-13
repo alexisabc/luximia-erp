@@ -1,15 +1,15 @@
-// components/ReusableTable.js
+// components/ui/ReusableTable.jsx
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
-import Loader from './loaders/Loader';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './shadcn-table-base';
+import Overlay from '@/components/loaders/Overlay';
 
 export default function ReusableTable({ data, columns, actions = {}, search = true, filterFunction }) {
     if (!data) {
-        return <Loader className="p-8" overlay={false} />;
+        return <Overlay className="p-8" overlay={false} />;
     }
 
     const [query, setQuery] = useState('');
@@ -28,7 +28,7 @@ export default function ReusableTable({ data, columns, actions = {}, search = tr
         finalColumns.push({
             header: 'Acciones',
             render: (row) => (
-                <div className="flex items-center justify-center space-x-4"> {/* <-- CAMBIO: justify-center */}
+                <div className="flex items-center justify-center space-x-4">
                     {actions.onView && (
                         <Link href={`${actions.viewPath}/${row.id}`} className="text-gray-400 hover:text-blue-500" title="Ver Detalle">
                             <Eye className="h-6 w-6" />
@@ -50,7 +50,7 @@ export default function ReusableTable({ data, columns, actions = {}, search = tr
                         </button>
                     )}
                 </div>
-            )
+            ),
         });
     }
 
@@ -77,7 +77,7 @@ export default function ReusableTable({ data, columns, actions = {}, search = tr
                         ))}
                     </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-gray-200 dark:divide-gray-700">
+                <TableBody>
                     {filteredData.length > 0 ? (
                         filteredData.map((row, rowIndex) => (
                             <TableRow key={row.id || rowIndex}>

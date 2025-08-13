@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useSidebar } from '../../context/SidebarContext';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ThemeSwitcher from './ThemeSwitcher';
 import { CircleUser, LogOut } from 'lucide-react';
 

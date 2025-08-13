@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, descargarEstadoDeCuentaExcel } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext.jsx';
 import ReusableTable from '../../../components/ReusableTable';
 import Modal from '../../../components/ui/modals';
 import { formatCurrency } from '../../../utils/formatters';

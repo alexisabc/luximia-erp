@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { getMetodosPago } from '../services/api';
+import { getMetodosPago } from '@/services/api';
 
 export default function MetodoPagoSelect({ name = 'metodo_pago', value, onChange, className = '' }) {
     const [metodos, setMetodos] = useState([]);

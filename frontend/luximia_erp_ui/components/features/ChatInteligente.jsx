@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { consultaInteligente } from '../services/api';
+import { consultaInteligente } from '@/services/api';
 import Image from 'next/image'; //
 
 // ### VERSIÓN CORREGIDA Y ROBUSTA ###

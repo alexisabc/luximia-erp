@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getPlanesPago, createPlanPago, getClientes, getUPEs } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';

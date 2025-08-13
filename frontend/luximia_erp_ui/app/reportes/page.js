@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { exportProyectosExcel, exportClientesExcel, exportUpesExcel, exportContratosExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ExportModal from '../../components/ExportModal';
 import { Download } from 'lucide-react';
 

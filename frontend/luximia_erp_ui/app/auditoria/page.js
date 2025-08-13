@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import ReusableTable from '../../components/ReusableTable';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { getAuditLogs, downloadAuditLogExcel } from '../../services/api';
 
 const COLUMNAS = [

@@ -1,59 +1,12 @@
 // components/layout/ThemeProvider.jsx
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
-const ThemeContext = createContext();
-
-export const useTheme = () => useContext(ThemeContext);
-
-export function ThemeProvider({ children, storageKey = 'luximia-erp-theme' }) {
-  const [theme, setTheme] = useState('system');
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      setTheme(stored);
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const root = document.documentElement;
-    let applied = theme;
-    if (theme === 'system') {
-      applied = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    if (applied === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    localStorage.setItem(storageKey, theme);
-  }, [theme, storageKey]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const root = document.documentElement;
-    const handleChange = () => {
-      if (theme === 'system') {
-        if (media.matches) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-      }
-    };
-    media.addEventListener('change', handleChange);
-    return () => media.removeEventListener('change', handleChange);
-  }, [theme]);
-
-
+export function ThemeProvider({ children }) {
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem>
       {children}
-    </ThemeContext.Provider>
+    </NextThemesProvider>
   );
 }

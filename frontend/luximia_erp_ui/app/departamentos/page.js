@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getDepartamentos, createDepartamento, updateDepartamento, deleteDepartamento, getInactiveDepartamentos, hardDeleteDepartamento } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal';
 import ConfirmationModal from '../../components/ConfirmationModal';

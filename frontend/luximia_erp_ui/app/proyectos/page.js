@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal'; // <-- Usa el FormModal
 import ExportModal from '../../components/ExportModal';
@@ -92,7 +92,7 @@ export default function ProyectosPage() {
     const [loading, setLoading] = useState(true);
     const [isPaginating, setIsPaginating] = useState(false);
     const [showInactive, setShowInactive] = useState(false);
-    
+
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
@@ -109,8 +109,8 @@ export default function ProyectosPage() {
         }
     }, [authTokens, pageData.results.length, showInactive]);
 
-    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize,fetchData]);
-    
+    useEffect(() => { if (pageSize > 0) { fetchData(1, pageSize); } }, [pageSize, fetchData]);
+
 
     const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
 
@@ -185,7 +185,7 @@ export default function ProyectosPage() {
             } else {
                 await createProyecto(formData);
             }
-            setIsFormModalOpen(false); 
+            setIsFormModalOpen(false);
             fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al guardar el proyecto.');

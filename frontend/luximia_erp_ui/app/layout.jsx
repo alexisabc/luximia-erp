@@ -1,11 +1,11 @@
-// app/layout.js
+// app/layout.jsx
 // ### YA NO LLEVA 'use client' ###
 
 import "./globals.css";
-import { AuthProvider } from "../context/AuthContext";
-import { SidebarProvider } from "../context/SidebarContext";
-import { ThemeProvider } from "../components/layout/ThemeProvider";
-import AppContent from "./AppContent"; // <-- Importa el nuevo componente
+import { AuthProvider } from "@/context/AuthContext";
+import { SidebarProvider } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import AppContent from "@/components/layout/AppContent";
 
 export const metadata = {
   title: 'Luximia ERP',

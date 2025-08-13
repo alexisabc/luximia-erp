@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Key } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';

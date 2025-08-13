@@ -1,4 +1,4 @@
-// app/error.js
+//app/_routes/error.jsx
 'use client';
 
 export default function Error({ error, reset }) {
