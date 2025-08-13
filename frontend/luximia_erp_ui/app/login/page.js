@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Key } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import apiClient from '../../services/api';
-import LoginAnimation from '../../components/LoginAnimation';
+import LoginAnimation from '../../components/ui/LoginAnimation';
 
 export default function LoginPage() {
     const { setAuthData } = useAuth();

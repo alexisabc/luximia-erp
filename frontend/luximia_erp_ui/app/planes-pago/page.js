@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import ReusableTable from '../../components/ReusableTable';
 import FormModal from '../../components/FormModal';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import Loader from '../../components/Loader';
+import Loader from '../../components/loaders/Loader';
 
 export default function PlanesPagoPage() {
     const { hasPermission } = useAuth();

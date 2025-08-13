@@ -6,8 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import ReusableTable from '../../components/ReusableTable';
 import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
 import Link from 'next/link';
-import Loader from '../../components/Loader';
-import Modal from '../../components/Modal';
+import Loader from '../../components/loaders/Loader';
+import Modal from '../../components/ui/modals';
 
 export default function PagosPage() {
     const { hasPermission } = useAuth();

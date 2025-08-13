@@ -1,7 +1,7 @@
-// components/FormModal.js
+//components/ui/modals/Form.jsx
 'use client';
 
-import Modal from './Modal';
+import Modal from '.';
 
 // El FormModal ahora es capaz de renderizar grupos de checkboxes
 export default function FormModal({
@@ -59,7 +59,7 @@ export default function FormModal({
                                         <label className="flex items-center space-x-2 cursor-pointer font-semibold">
                                             <input
                                                 type="checkbox"
-                                                checked={formData[field.name]?.length === field.groups.reduce((a,g) => a + g.options.length, 0) && field.groups.length > 0}
+                                                checked={formData[field.name]?.length === field.groups.reduce((a, g) => a + g.options.length, 0) && field.groups.length > 0}
                                                 onChange={(e) => handleSelectAll && handleSelectAll(field.name, e.target.checked, field.groups.flatMap(g => g.options))}
                                                 className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                             />

@@ -1,4 +1,4 @@
-// components/loaders/Bars.js
+//components/loaders/Bars.jsx
 export default function Bars({ width = 48, height = 24, className = "text-blue-600" }) {
     const barW = 4, gap = 3;
     return (

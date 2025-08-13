@@ -1,13 +1,13 @@
 // app/AppContent.js
 'use client';
 
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import ChatInteligente from "../components/ChatInteligente";
 import { useSidebar } from "../context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Loader from "../components/Loader";
+import Loader from "@/components/loaders/Loader";
 
 export default function AppContent({ children }) {
     // 1. Obtén 'loading' desde el contexto

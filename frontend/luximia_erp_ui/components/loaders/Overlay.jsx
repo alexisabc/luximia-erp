@@ -1,4 +1,4 @@
-// components/loaders/Overlay.js
+//components/loaders/Overlay.jsx
 import Spinner from "./Spinner";
 
 export default function Overlay({ show = false, children = null }) {

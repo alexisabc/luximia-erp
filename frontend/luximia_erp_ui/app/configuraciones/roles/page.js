@@ -9,7 +9,7 @@ import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import { translatePermission, translateModel } from '../../../utils/permissions';
-import Loader from '../../../components/Loader';
+import Loader from '../../../components/loaders/Loader';
 
 // --- Constantes de Configuración ---
 

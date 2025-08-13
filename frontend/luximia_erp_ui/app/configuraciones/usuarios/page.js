@@ -7,7 +7,7 @@ import { useAuth } from '../../../context/AuthContext';
 import ReusableTable from '../../../components/ReusableTable';
 import FormModal from '../../../components/FormModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
-import Loader from '../../../components/Loader';
+import Loader from '../../../components/loaders/Loader';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },

@@ -1,163 +1,122 @@
 // app/dashboard/page.js
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-// ### 1. Se elimina 'getUpeStatusChartData' ###
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getStrategicDashboardData, getAllProyectos } from '../../services/api';
-import { LineChart } from '@tremor/react';
-import Loader from '../../components/Loader';
-import FlujoCobranzaChart from '@/components/FlujoCobranzaChart';
 
-
-const KpiCard = ({ title, value }) => {
-  const numberValue = Number(value ?? 0);
-  return (
-    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</h3>
-      <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-        ${numberValue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </p>
-    </div>
-  );
-};
-
-const ChartCard = ({ title, children }) => (
-  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow h-full flex flex-col">
-    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{title}</h3>
-    <div className="flex-grow flex items-center justify-center h-64">
-      {children}
-    </div>
-  </div>
-);
+// Componentes de UI
+import Loader from '../../components/loaders/Loader';
+import KpiCard from '@/components/ui/KpiCard';
+import VentasChart from '@/components/charts/Ventas';
+import FlujoCobranzaChart from '@/components/charts/FlujoCobranza';
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher'; // Opcional: si quieres el botón aquí
 
 export default function DashboardPage() {
-  const [data, setData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [proyectos, setProyectos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true);
 
   // Estados de los filtros
   const [timeframe, setTimeframe] = useState('month');
   const [selectedProjects, setSelectedProjects] = useState('all');
-  const [morosidadRange, setMorosidadRange] = useState('30');
-  const [porCobrarRange, setPorCobrarRange] = useState('30');
 
+  // --- 1. Lógica para obtener los datos ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [dashboardRes, proyectosRes] = await Promise.all([
-        getStrategicDashboardData(timeframe, selectedProjects, morosidadRange, porCobrarRange),
-        getAllProyectos()
+        getStrategicDashboardData(timeframe, selectedProjects.toString()),
+        getAllProyectos(),
       ]);
 
-      setData(dashboardRes.data);
-
-      // DRF suele devolver { results: [...] }
-      const list = Array.isArray(proyectosRes.data)
-        ? proyectosRes.data
-        : (proyectosRes.data?.results ?? []);
-      setProyectos(list);
-
-      setData(dashboardRes.data);
-
+      setDashboardData(dashboardRes.data);
+      const projectList = proyectosRes.data?.results ?? proyectosRes.data ?? [];
+      setProyectos(projectList);
 
     } catch (error) {
-      console.error("Error al cargar datos del dashboard", error);
+      console.error("Error al cargar datos del dashboard:", error);
+      // Aquí podrías añadir un estado para mostrar un mensaje de error en la UI
     } finally {
       setLoading(false);
     }
-  }, [timeframe, selectedProjects, morosidadRange, porCobrarRange]);
+  }, [timeframe, selectedProjects]);
 
   useEffect(() => {
-    fetchData().then(() => setInitialLoad(false));
+    fetchData();
   }, [fetchData]);
 
-  const ventasChartData = (data?.chart?.labels || []).map((label, i) => ({
-    label,
-    Ventas: Number(data?.chart?.ventas?.[i] ?? 0),
-  }));
+  // --- 2. Transformación de datos para cada gráfica ---
+  const ventasChartData = useMemo(() => {
+    const labels = dashboardData?.chart?.labels ?? [];
+    const ventas = dashboardData?.chart?.ventas ?? [];
+    return labels.map((label, i) => ({
+      label,
+      Ventas: Number(ventas[i] ?? 0),
+    }));
+  }, [dashboardData]);
 
-  const valueFormatter = (number) =>
-    `$${Number(number).toLocaleString('es-MX', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+  const flujoChartData = useMemo(() => {
+    const labels = dashboardData?.chart?.labels ?? [];
+    const recuperado = dashboardData?.chart?.recuperado ?? [];
+    const programado = dashboardData?.chart?.programado ?? [];
+    return labels.map((label, i) => ({
+      label,
+      Cobrado: Number(recuperado[i] ?? 0),
+      'Por Cobrar': Number(programado[i] ?? 0),
+    }));
+  }, [dashboardData]);
 
-  if (loading && initialLoad) return <Loader className="p-8" />;
+
+  if (loading && !dashboardData) {
+    return <Loader className="p-8" />;
+  }
 
   return (
-    <div className="relative p-8 space-y-8">
-      {loading && !initialLoad && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-20">
-          <Loader size={80} overlay={false} />
+    <div className="relative p-4 sm:p-6 md:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
+      {/* --- Overlay de Carga --- */}
+      {loading && (
+        <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 flex items-center justify-center z-20">
+          <Loader size={80} />
         </div>
       )}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Dashboard Estratégico</h1>
-        {/* --- Filtros --- */}
+
+      {/* --- Encabezado y Filtros --- */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+          Dashboard Estratégico
+        </h1>
         <div className="flex items-center gap-4">
-          <select multiple value={selectedProjects === 'all' ? [] : selectedProjects} onChange={(e) => {
-            const values = Array.from(e.target.selectedOptions).map(o => o.value);
-            if (values.includes('all')) {
-              setSelectedProjects('all');
-            } else {
-              setSelectedProjects(values);
-            }
-          }} className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2">
+          {/* Aquí puedes mantener tus filtros como los tenías */}
+          <select
+            value={selectedProjects}
+            onChange={(e) => setSelectedProjects(e.target.value)}
+            className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2"
+          >
             <option value="all">Todos los Proyectos</option>
-            {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+            {proyectos.map((p) => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
           </select>
-          <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
-            <button onClick={() => setTimeframe('week')} className={`px-3 py-1 rounded-md ${timeframe === 'week' ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>Semanal</button>
-            <button onClick={() => setTimeframe('month')} className={`px-3 py-1 rounded-md ${timeframe === 'month' ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>Mensual</button>
-            <button onClick={() => setTimeframe('year')} className={`px-3 py-1 rounded-md ${timeframe === 'year' ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>Anual</button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Morosidad:</span>
-            <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
-              {['30', '60', '90', 'mas'].map(val => (
-                <button key={val} onClick={() => setMorosidadRange(val)} className={`px-2 py-1 rounded-md ${morosidadRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
-              ))}
-            </div>
-            <span className="text-sm ml-2">Por Cobrar:</span>
-            <div className="flex bg-gray-200 dark:bg-gray-700 rounded-md p-1">
-              {['30', '60', '90', 'mas'].map(val => (
-                <button key={val} onClick={() => setPorCobrarRange(val)} className={`px-2 py-1 rounded-md ${porCobrarRange === val ? 'bg-white dark:bg-gray-900 shadow' : ''}`}>{val === 'mas' ? '90+' : val}</button>
-              ))}
-            </div>
-          </div>
+          <ThemeSwitcher />
         </div>
       </div>
 
       {/* --- KPIs --- */}
-      {data && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          <KpiCard title="Total UPEs" value={data.kpis.upes_total} />
-          <KpiCard title="Total en Ventas" value={data.kpis.ventas} />
-          <KpiCard title="Total Recuperado (Cobrado)" value={data.kpis.recuperado} />
-          <KpiCard title="Monto por Cobrar" value={data.kpis.por_cobrar} />
-          <KpiCard title="Monto en Morosidad" value={data.kpis.vencido} />
+      {dashboardData?.kpis && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <KpiCard title="Total UPEs" value={dashboardData.kpis.upes_total} />
+          <KpiCard title="Total en Ventas" value={dashboardData.kpis.ventas} />
+          <KpiCard title="Total Recuperado" value={dashboardData.kpis.recuperado} />
+          <KpiCard title="Monto por Cobrar" value={dashboardData.kpis.por_cobrar} />
+          <KpiCard title="Monto en Morosidad" value={dashboardData.kpis.vencido} />
         </div>
       )}
 
       {/* --- Gráficas --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <ChartCard title="Ventas">
-          <LineChart
-            className="w-full"
-            data={ventasChartData}
-            index="label"
-            categories={["Ventas"]}
-            colors={["cyan"]}
-            valueFormatter={valueFormatter}
-            yAxisWidth={48}
-          />
-        </ChartCard>
-        <ChartCard title="Flujo (Cobrado / Por Cobrar)">
-          <FlujoCobranzaChart raw={data?.chart} />
-        </ChartCard>
+        <VentasChart data={ventasChartData} />
+        <FlujoCobranzaChart data={flujoChartData} />
       </div>
-
     </div>
   );
 }

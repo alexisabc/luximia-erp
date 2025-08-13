@@ -1,9 +1,9 @@
-// components/Sidebar.js
+// components/layout/Sidebar.jsx
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../context/AuthContext';
-import { useSidebar } from '../context/SidebarContext';
+import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from './ThemeSwitcher';
@@ -142,14 +142,14 @@ export default function Sidebar() {
                     <ul className="space-y-1">
                         {hasPermission('cxc.can_view_dashboard') ? (
                             <li>
-                                <Link href="/" className={getLinkClass('/')}> 
+                                <Link href="/" className={getLinkClass('/')}>
                                     <Home className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Dashboard</span>}
                                 </Link>
                             </li>
                         ) : (
                             <li>
-                                <Link href="/" className={getLinkClass('/')}> 
+                                <Link href="/" className={getLinkClass('/')}>
                                     <Home className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Inicio</span>}
                                 </Link>

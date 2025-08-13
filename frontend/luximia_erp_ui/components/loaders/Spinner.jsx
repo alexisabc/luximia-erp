@@ -1,4 +1,4 @@
-// components/loaders/Spinner.js
+//components/loaders/Spinner.jsx
 export default function Spinner({ size = 40, className = "text-blue-600" }) {
     const box = 24;
     return (

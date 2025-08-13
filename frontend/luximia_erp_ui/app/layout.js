@@ -4,7 +4,7 @@
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { SidebarProvider } from "../context/SidebarContext";
-import { ThemeProvider } from "../components/ThemeProvider";
+import { ThemeProvider } from "../components/layout/ThemeProvider";
 import AppContent from "./AppContent"; // <-- Importa el nuevo componente
 
 export const metadata = {

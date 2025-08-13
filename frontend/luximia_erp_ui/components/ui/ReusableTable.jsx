@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './ui/table';
-import Loader from './Loader';
+import Loader from './loaders/Loader';
 
 export default function ReusableTable({ data, columns, actions = {}, search = true, filterFunction }) {
     if (!data) {

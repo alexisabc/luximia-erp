@@ -1,4 +1,4 @@
-// components/Modal.js
+//components/ui/modals/Index.jsx
 'use client';
 
 export default function Modal({ isOpen, onClose, title, children }) {

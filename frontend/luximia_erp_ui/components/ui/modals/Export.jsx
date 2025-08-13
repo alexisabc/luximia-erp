@@ -1,6 +1,6 @@
-// components/ExportModal.js
+//components/ui/modals/Export.jsx
 import React from 'react';
-import Modal from './Modal';
+import Modal from '.';
 
 export default function ExportModal({ isOpen, onClose, columns, selectedColumns, onColumnChange, onDownload }) {
     return (

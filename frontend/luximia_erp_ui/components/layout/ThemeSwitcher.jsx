@@ -1,4 +1,4 @@
-// components/ThemeSwitcher.js
+// components/layout/ThemeSwitcher.jsx
 'use client';
 
 import { useTheme } from './ThemeProvider';

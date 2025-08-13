@@ -1,4 +1,4 @@
-// components/loaders/Dots.js
+//components/loaders/Dots.jsx
 export default function Dots({ size = 10, gap = 8, className = "text-blue-600" }) {
     const color = "currentColor";
     return (

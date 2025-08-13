@@ -1,9 +1,10 @@
+// components/layout/Navbar.jsx
 'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useSidebar } from '../context/SidebarContext';
-import { useAuth } from '../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
+import { useAuth } from '../../context/AuthContext';
 import ThemeSwitcher from './ThemeSwitcher';
 import { CircleUser, LogOut } from 'lucide-react';
 
@@ -31,7 +32,7 @@ export default function Navbar() {
                             <span className="sr-only">Open user menu</span>
                             <CircleUser className="w-8 h-8 text-gray-700 dark:text-gray-300" />
                         </button>
-                        <div className={`${open ? '' : 'hidden'} absolute right-0 top-12 z-50 my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600`}> 
+                        <div className={`${open ? '' : 'hidden'} absolute right-0 top-12 z-50 my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600`}>
                             <div className="px-4 py-3">
                                 {user && (
                                     <p className="text-sm text-gray-900 dark:text-white">{user.username}</p>
@@ -39,7 +40,7 @@ export default function Navbar() {
                             </div>
                             <ul className="py-1">
                                 <li>
-                                <Link href="/ajustes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">Ajustes</Link>
+                                    <Link href="/ajustes" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">Ajustes</Link>
                                 </li>
                                 <li>
                                     <ThemeSwitcher />

@@ -1,7 +1,7 @@
-// components/ConfirmationModal.js
+//components/ui/modals/Confirmation.jsx
 'use client';
 
-import Modal from './Modal';
+import Modal from '.';
 
 export default function ConfirmationModal({
     isOpen,

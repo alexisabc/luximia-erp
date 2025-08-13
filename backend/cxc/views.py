@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum
+from django.db.models import Sum, Count, F, DecimalField
+from django.db.models.functions import TruncMonth, TruncWeek, TruncDay, Coalesce
+from collections import defaultdict
+from datetime import timedelta
 from django.utils import timezone
-from datetime import datetime
+import calendar
 from decimal import Decimal
-
 
 from .models import (
     Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento,
@@ -119,33 +121,98 @@ class ContratoViewSet(BaseViewSet):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def strategic_dashboard(request):
-    # lee filtros opcionales (úsalos después en tu query real)
+    # --- 1. Read and process filters ---
     timeframe = request.query_params.get("timeframe", "month")
-    projects = request.query_params.get("projects", "all")
-    morosidad = request.query_params.get("morosidad", "30")
-    por_cobrar = request.query_params.get("por_cobrar", "30")
+    project_ids_str = request.query_params.get("projects", "all")
 
-    # TODO: reemplazar con cálculos reales
+    project_ids = []
+    if project_ids_str and project_ids_str != 'all':
+        try:
+            project_ids = [int(pid) for pid in project_ids_str.split(',')]
+        except (ValueError, TypeError):
+            project_ids = []
+
+    # --- 2. Apply filters to the base Querysets ---
+    contratos_base = Contrato.objects.filter(activo=True)
+    pagos_base = Pago.objects.filter(activo=True)
+
+    if project_ids:
+        contratos_base = contratos_base.filter(upe__proyecto_id__in=project_ids)
+        pagos_base = pagos_base.filter(contrato__upe__proyecto_id__in=project_ids)
+
+    # --- 3. Calculate KPIs ---
+    total_ventas = contratos_base.aggregate(
+        total=Coalesce(Sum('monto_mxn'), Decimal('0.0'), output_field=DecimalField())
+    )['total']
+    
+    total_recuperado = pagos_base.aggregate(
+        total=Coalesce(Sum('monto'), Decimal('0.0'), output_field=DecimalField())
+    )['total']
+
+    # Placeholder logic
+    total_vencido = Decimal('0.0') 
+    monto_por_cobrar = total_ventas - total_recuperado
+    
+    kpis = {
+        "upes_total": UPE.objects.filter(activo=True).count(),
+        "ventas": total_ventas,
+        "recuperado": total_recuperado,
+        "por_cobrar": monto_por_cobrar,
+        "vencido": total_vencido,
+    }
+
+    # --- 4. Prepare data for the Chart ---
+    if timeframe == "year":
+        trunc_func = TruncMonth
+        date_format_str = "%Y-%m"
+    elif timeframe == "week":
+        trunc_func = TruncDay
+        date_format_str = "Sem %U"
+    else:  # month (default)
+        trunc_func = TruncDay
+        date_format_str = "%d-%b"
+
+    ventas_por_periodo = (contratos_base
+                          .annotate(periodo=trunc_func('fecha')) # Correct: 'fecha' for Contrato
+                          .values('periodo')
+                          .annotate(total=Sum('monto_mxn'))
+                          .order_by('periodo'))
+
+    # FINAL CORRECTION: Using 'fecha_pago' for the Pago model
+    recuperado_por_periodo = (pagos_base
+                              .annotate(periodo=trunc_func('fecha_pago')) # Correct: 'fecha_pago' for Pago
+                              .values('periodo')
+                              .annotate(total=Sum('monto'))
+                              .order_by('periodo'))
+    
+    datos_combinados = defaultdict(lambda: {'ventas': Decimal('0.0'), 'recuperado': Decimal('0.0')})
+    
+    for v in ventas_por_periodo:
+        if v['periodo'] and v['total']:
+            label = v['periodo'].strftime(date_format_str)
+            datos_combinados[label]['ventas'] += v['total']
+
+    for r in recuperado_por_periodo:
+        if r['periodo'] and r['total']:
+            label = r['periodo'].strftime(date_format_str)
+            datos_combinados[label]['recuperado'] += r['total']
+
+    labels_ordenados = sorted(datos_combinados.keys())
+    
+    chart_data = {
+        "labels": labels_ordenados,
+        "ventas": [datos_combinados[label]['ventas'] for label in labels_ordenados],
+        "recuperado": [datos_combinados[label]['recuperado'] for label in labels_ordenados],
+        "programado": [],
+    }
+
+    # --- 5. Assemble the final response ---
     data = {
-        "kpis": {
-            "upes_total": 0,
-            "ventas": 0,
-            "recuperado": 0,
-            "por_cobrar": 0,
-            "vencido": 0,
-        },
-        "chart": {
-            "labels": [],
-            "ventas": [],
-            "recuperado": [],
-            "programado": [],
-        },
-        # si luego quieres devolver lo que el usuario filtró:
+        "kpis": kpis,
+        "chart": chart_data,
         "filters": {
             "timeframe": timeframe,
-            "projects": projects,
-            "morosidad": morosidad,
-            "por_cobrar": por_cobrar,
+            "projects": project_ids_str,
         },
     }
     return Response(data)
