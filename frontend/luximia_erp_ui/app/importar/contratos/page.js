@@ -1,4 +1,4 @@
-// app/importar/contratos/page.js
+// app/importar/contratos/page.jsx
 'use client';
 
 import React, { useState, useRef } from 'react';

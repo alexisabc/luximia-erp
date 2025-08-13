@@ -1,4 +1,4 @@
-// app/importar/upes/page.js
+// app/importar/upes/page.jsx
 'use client';
 
 import React, { useState, useRef } from 'react';

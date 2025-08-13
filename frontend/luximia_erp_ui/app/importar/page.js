@@ -1,4 +1,4 @@
-// app/importar/page.js
+// app/importar/page.jsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
