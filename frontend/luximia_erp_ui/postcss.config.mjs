@@ -1,10 +1,11 @@
-// postcss.config.js
+// luximia_erp_ui/postcss.config.js
 
 /** @type {import('postcss-load-config').Config} */
-const config = {
+const tailwindConfig = {
   plugins: {
-    '@tailwindcss/postcss': {},
-    'autoprefixer': {},
+    tailwindcss: {},
+    autoprefixer: {},
   },
 };
-export default config;
+
+export default tailwindConfig;

@@ -1,3 +1,4 @@
+//luximia_erp_ui/hooks/useResponsivePageSize.js
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 

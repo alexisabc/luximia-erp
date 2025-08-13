@@ -1,8 +1,10 @@
+#.gitignore
 # General y Secretos
 # Ignora todos los archivos de entorno excepto el de ejemplo
 .env
 .env*
 !/.env.example
+*.session.sql
 
 # Archivos de Log y del sistema operativo
 *.log

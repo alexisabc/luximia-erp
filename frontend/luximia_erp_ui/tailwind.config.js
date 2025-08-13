@@ -1,3 +1,4 @@
+//luximia_erp_ui/tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 const config = {
     darkMode: "class", // <-- Esta línea es crucial
