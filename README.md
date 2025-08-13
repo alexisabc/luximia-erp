@@ -33,10 +33,9 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 * **Migraciones Limpias:** Se depuraron migraciones y modelos duplicados para garantizar una base de datos consistente y escalable.
 
 ### 1.3. Stack Tecnológico
-* **Backend:** Python con **Django Rest Framework**.
-* **Frontend:** JavaScript con **Next.js** y **Tailwind CSS**.
+* **Backend:** Python 3.11 con **Django 5** y **Django Rest Framework**. Autenticación con **djangorestframework-simplejwt**, envíos de correo mediante **django-anymail**, y seguridad reforzada con **django-cors-headers** y **django-csp**. Los reportes se generan con **WeasyPrint** (PDF) y **XlsxWriter** (Excel), se soportan passkeys a través de **webauthn** y el procesamiento de datos se realiza con **Polars**.
+* **Frontend:** JavaScript con **Next.js 15**, **React 19** y **Tailwind CSS 4**. Consumo de API con **axios**, gráficas interactivas con **@tremor/react**, iconografía con **lucide-react** y autenticación sin contraseñas mediante **@simplewebauthn/browser**.
 * **Base de Datos:** PostgreSQL.
-* **Procesamiento de Datos:** **Polars** para la manipulación de datos en importaciones y exportaciones.
 * **Contenerización:** **Docker** y **Docker Compose**.
 * **Despliegue:** **Vercel** (Frontend) y **Render** (Backend, Base de Datos y Cron Jobs).
 
