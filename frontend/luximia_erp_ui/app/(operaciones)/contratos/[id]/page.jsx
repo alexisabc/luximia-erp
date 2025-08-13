@@ -9,7 +9,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import Modal from '@/components/ui/modals';
 import { formatCurrency } from '@/utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
-import Loader from '@/components/loaders/Spinner';
+import Overlay from '@/components/loaders/Overlay';
 import MetodoPagoSelect from '@/components/ui/MetodoPagoSelect';
 
 // Componente para las tarjetas de resumen
@@ -254,7 +254,7 @@ export default function ContratoDetallePage() {
         }
     ];
 
-    if (loading) return <Loader className="p-8" />;
+    if (loading) return <Overlay show />;
     if (error && !contrato) return <div className="p-8 text-red-500 bg-red-100 p-4 rounded-md">{error}</div>;
     if (!contrato) return <div className="p-8">No se encontró el contrato.</div>;
 

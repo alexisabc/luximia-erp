@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import Loader from '@/components/loaders/Spinner';
+import Overlay from '@/components/loaders/Overlay';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },
@@ -144,7 +144,7 @@ export default function UsuariosPage() {
     };
 
 
-    if (loading) return <Loader className="p-8" />;
+    if (loading) return <Overlay show />;
 
     return (
         <div className="p-8">
