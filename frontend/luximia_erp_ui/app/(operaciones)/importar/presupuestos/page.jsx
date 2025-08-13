@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarPresupuestos } from '../../../services/api';
+import { importarPresupuestos } from '@/services/api';
 
 export default function ImportarPresupuestosPage() {
   const [selectedFile, setSelectedFile] = useState(null);

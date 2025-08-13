@@ -3,13 +3,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 // 1. Importa todo lo necesario
-import { getGroups, getPermissions, createGroup, updateGroup, deleteGroup } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import ReusableTable from '../../../components/ReusableTable';
-import FormModal from '../../../components/FormModal';
-import ConfirmationModal from '../../../components/ConfirmationModal';
-import { translatePermission, translateModel } from '../../../utils/permissions';
-import Loader from '../../../components/loaders/Loader';
+import { getGroups, getPermissions, createGroup, updateGroup, deleteGroup } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import { translatePermission, translateModel } from '@/utils/permissions';
+import Loader from '@/components/loaders/Spinner';
 
 // --- Constantes de Configuración ---
 

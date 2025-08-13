@@ -9,12 +9,12 @@ import {
   getInactiveMonedas,
   hardDeleteMoneda,
   exportMonedasExcel
-} from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import ExportModal from '../../components/ExportModal';
+} from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ExportModal from '@/components/ui/modals/Export';
 import { Download } from 'lucide-react';
 
 const MONEDA_COLUMNAS_DISPLAY = [

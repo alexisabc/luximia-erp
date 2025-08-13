@@ -2,14 +2,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClientes, createCliente, updateCliente, deleteCliente, getInactiveClientes, hardDeleteCliente, exportClientesExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import Modal from '../../components/ui/modals';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import ReusableTable from '../../components/ReusableTable';
-import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import ExportModal from '../../components/ExportModal';
+import { getClientes, createCliente, updateCliente, deleteCliente, getInactiveClientes, hardDeleteCliente, exportClientesExcel } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import Modal from '@/components/ui/modals';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
+import ExportModal from '@/components/ui/modals/Export';
 import { Download } from 'lucide-react';
 
 

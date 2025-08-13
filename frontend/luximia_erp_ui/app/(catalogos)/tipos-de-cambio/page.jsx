@@ -2,10 +2,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getTiposDeCambio, actualizarTipoDeCambioHoy } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import { useResponsivePageSize } from '../../../hooks/useResponsivePageSize';
+import { getTiposDeCambio, actualizarTipoDeCambioHoy } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import { RefreshCcw } from 'lucide-react';
 
 export default function TiposDeCambioPage() {

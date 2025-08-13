@@ -12,11 +12,11 @@ import {
     getDepartamentos,
     getPuestos,
     getUsers,
-} from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import ReusableTable from '../../components/ReusableTable';
+} from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
 
 const EMPLEADO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => row.user_username },

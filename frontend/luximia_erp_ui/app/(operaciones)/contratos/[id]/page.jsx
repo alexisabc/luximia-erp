@@ -3,14 +3,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, descargarEstadoDeCuentaExcel } from '../../../../services/api';
-import { useAuth } from '../../../../context/AuthContext.jsx';
-import ReusableTable from '../../../components/ReusableTable';
-import Modal from '../../../../components/ui/modals';
-import { formatCurrency } from '../../../../utils/formatters';
+import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, descargarEstadoDeCuentaExcel } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import Modal from '@/components/ui/modals';
+import { formatCurrency } from '@/utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
-import Loader from '../../../components/loaders/Loader';
-import MetodoPagoSelect from '../../../../components/ui/MetodoPagoSelect';
+import Loader from '@/components/loaders/Spinner';
+import MetodoPagoSelect from '@/components/ui/MetodoPagoSelect';
 
 // Componente para las tarjetas de resumen
 const InfoCard = ({ title, value, isCurrency = false, currencySymbol = 'USD', color = 'text-gray-900 dark:text-white' }) => (

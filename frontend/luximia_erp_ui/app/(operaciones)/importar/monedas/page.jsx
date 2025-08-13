@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarMonedas } from '../../../services/api';
+import { importarMonedas } from '@/services/api';
 
 export default function ImportarMonedasPage() {
   const [selectedFile, setSelectedFile] = useState(null);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarProyectos } from '../../../services/api';
+import { importarProyectos } from '@/services/api';
 
 export default function ImportarProyectosPage() {
   const [selectedFile, setSelectedFile] = useState(null);

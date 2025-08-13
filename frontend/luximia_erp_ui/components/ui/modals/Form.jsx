@@ -1,7 +1,7 @@
 //components/ui/modals/Form.jsx
 'use client';
 
-import Modal from '.';
+import Modal from '@/components/ui/modals';
 
 // El FormModal ahora es capaz de renderizar grupos de checkboxes
 export default function FormModal({

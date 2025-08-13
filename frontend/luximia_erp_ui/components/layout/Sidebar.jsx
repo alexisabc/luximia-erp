@@ -2,11 +2,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { useSidebar } from '../../context/SidebarContext.jsx';
+import { useAuth } from '@/context/AuthContext';
+import { useSidebar } from '@/context/SidebarContext';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import ThemeSwitcher from './ThemeSwitcher';
+import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
 import {
     Home,
     Users,

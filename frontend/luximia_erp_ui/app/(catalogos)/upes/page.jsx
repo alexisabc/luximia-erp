@@ -2,13 +2,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import FormModal from '../../components/FormModal';
-import ExportModal from '../../components/ExportModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import ReusableTable from '../../components/ReusableTable';
-import { formatCurrency } from '../../utils/formatters';
+import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import FormModal from '@/components/ui/modals/Form';
+import ExportModal from '@/components/ui/modals/Export';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import { formatCurrency } from '@/utils/formatters';
 import { Download } from 'lucide-react';
 
 // ### 2. Define las columnas para la tabla y la exportación ###

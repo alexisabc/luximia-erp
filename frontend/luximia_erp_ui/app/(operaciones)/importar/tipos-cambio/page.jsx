@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarTiposCambio } from '../../../services/api';
+import { importarTiposCambio } from '@/services/api';
 
 export default function ImportarTiposCambioPage() {
   const [selectedFile, setSelectedFile] = useState(null);

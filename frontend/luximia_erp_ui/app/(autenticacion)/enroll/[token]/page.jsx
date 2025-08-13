@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import apiClient from '../../../../services/api';
+import apiClient from '@/services/api';
 
 export default function EnrollTokenPage() {
   const router = useRouter();

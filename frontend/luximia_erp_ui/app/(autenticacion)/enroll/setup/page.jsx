@@ -2,7 +2,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import apiClient from '../../../../services/api';
+import apiClient from '@/services/api';
 import { startRegistration } from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
 import { useRouter } from 'next/navigation';

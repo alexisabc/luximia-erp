@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPagos, createPago, getContratos, getMetodosPago } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
+import { getPagos, createPago, getContratos, getMetodosPago } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Link from 'next/link';
-import Loader from '../../components/loaders/Loader';
-import Modal from '../../components/ui/modals';
+import Loader from '@/components/loaders/Spinner';
+import Modal from '@/components/ui/modals';
 
 export default function PagosPage() {
     const { hasPermission } = useAuth();

@@ -2,15 +2,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '../../services/api';
-import { useAuth } from '../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import FormModal from '../../components/FormModal'; // <-- Usa el FormModal
-import ExportModal from '../../components/ExportModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
+import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form'; // <-- Usa el FormModal
+import ExportModal from '@/components/ui/modals/Export';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import { Download } from 'lucide-react';
-import { useResponsivePageSize } from '../../hooks/useResponsivePageSize';
-import { formatCurrency } from '../../utils/formatters';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
+import { formatCurrency } from '@/utils/formatters';
 
 
 const PROYECTO_COLUMNAS_DISPLAY = [

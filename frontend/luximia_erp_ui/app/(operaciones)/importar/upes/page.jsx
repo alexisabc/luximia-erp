@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarUPEs } from '../../../services/api';
+import { importarUPEs } from '@/services/api';
 
 export default function ImportarUPEsPage() {
     const [selectedFile, setSelectedFile] = useState(null);

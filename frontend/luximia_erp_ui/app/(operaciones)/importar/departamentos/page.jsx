@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarDepartamentos } from '../../../services/api';
+import { importarDepartamentos } from '@/services/api';
 
 export default function ImportarDepartamentosPage() {
   const [selectedFile, setSelectedFile] = useState(null);

@@ -2,8 +2,8 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import DashboardPage from '@/dashboard/page';
-import HomePage from '@/home/page';
+import DashboardPage from '@/app/(main)/dashboard/page';
+import HomePage from '@/app/(main)/home/page';
 import { useEffect, useState } from 'react';
 import Overlay from '@/components/loaders/Overlay';
 

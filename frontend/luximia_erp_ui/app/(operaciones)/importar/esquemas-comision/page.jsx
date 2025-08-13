@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { importarEsquemasComision } from '../../../services/api';
+import { importarEsquemasComision } from '@/services/api';
 
 export default function ImportarEsquemasComisionPage() {
   const [selectedFile, setSelectedFile] = useState(null);

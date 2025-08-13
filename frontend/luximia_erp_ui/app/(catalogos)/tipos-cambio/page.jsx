@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getTiposCambio, createTipoCambio, updateTipoCambio, deleteTipoCambio } from '../../../services/api';
-import { useAuth } from '../../../context/AuthContext.jsx';
-import ReusableTable from '../../components/ReusableTable';
-import FormModal from '../../components/FormModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
-import { useResponsivePageSize } from '../../../hooks/useResponsivePageSize';
+import { getTiposCambio, createTipoCambio, updateTipoCambio, deleteTipoCambio } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/ui/modals/Form';
+import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 
 const FORM_FIELDS = [
     { name: 'escenario', label: 'Escenario', required: true },
