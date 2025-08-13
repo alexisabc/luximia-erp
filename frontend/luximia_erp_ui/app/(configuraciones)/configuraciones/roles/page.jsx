@@ -9,7 +9,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import { translatePermission, translateModel } from '@/utils/permissions';
-import Loader from '@/components/loaders/Spinner';
+import Overlay from '@/components/loaders/Overlay';
 
 // --- Constantes de Configuración ---
 
@@ -151,7 +151,7 @@ export default function RolesPage() {
         }
     };
 
-    if (loading) return <Loader className="p-8" />;
+    if (loading) return <Overlay show />;
 
     return (
         <div className="p-8 h-full flex flex-col">

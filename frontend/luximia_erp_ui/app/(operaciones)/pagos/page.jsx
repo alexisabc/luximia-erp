@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Link from 'next/link';
-import Loader from '@/components/loaders/Spinner';
+import Overlay from '@/components/loaders/Overlay';
 import Modal from '@/components/ui/modals';
 
 export default function PagosPage() {
@@ -112,7 +112,7 @@ export default function PagosPage() {
     }
 
     if (loading && !isPaginating) {
-        return <Loader className="p-8" />;
+        return <Overlay show />;
     }
 
     return (
@@ -125,11 +125,7 @@ export default function PagosPage() {
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             <div ref={ref} className="flex-grow min-h-0 relative">
-                {isPaginating && (
-                    <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 flex items-center justify-center z-10">
-                        <Loader overlay={false} />
-                    </div>
-                )}
+                <Overlay show={isPaginating} />
                 <ReusableTable data={pageData.results} columns={columns} />
             </div>
             <div className="flex-shrink-0 flex justify-between items-center mt-4">

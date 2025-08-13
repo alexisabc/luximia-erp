@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getStrategicDashboardData, getAllProyectos } from '@/services/api';
 
 // Componentes de UI
-import Loader from '@/components/loaders/Spinner';
+import Overlay from '@/components/loaders/Overlay';
 import KpiCard from '@/components/ui/cards/Kpi';
 import VentasChart from '@/components/charts/Ventas';
 import FlujoCobranzaChart from '@/components/charts/FlujoCobranza';
@@ -68,17 +68,13 @@ export default function DashboardPage() {
 
 
   if (loading && !dashboardData) {
-    return <Loader className="p-8" />;
+    return <Overlay show />;
   }
 
   return (
     <div className="relative p-4 sm:p-6 md:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
       {/* --- Overlay de Carga --- */}
-      {loading && (
-        <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 flex items-center justify-center z-20">
-          <Loader size={80} />
-        </div>
-      )}
+      <Overlay show={loading} />
 
       {/* --- Encabezado y Filtros --- */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
