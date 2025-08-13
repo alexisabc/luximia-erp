@@ -1,4 +1,4 @@
-//app/enroll/[token]/page.js
+//app/enroll/[token]/page.jsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';

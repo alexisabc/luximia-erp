@@ -1,4 +1,4 @@
-//app/enroll/setup/page.js
+//app/enroll/setup/page.jsx
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';

@@ -1,4 +1,4 @@
-// app/login/page.js
+// app/login/page.jsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';

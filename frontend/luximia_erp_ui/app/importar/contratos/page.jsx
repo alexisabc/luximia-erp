@@ -1,10 +1,10 @@
-// app/importar/page.js
+// app/importar/contratos/page.jsx
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { importarDatosMasivos } from '../../services/api';
+import React, { useState, useRef } from 'react';
+import { importarContratos } from '../../../services/api';
 
-export default function ImportarPage() {
+export default function ImportarContratosPage() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadResponse, setUploadResponse] = useState(null);
@@ -14,20 +14,20 @@ export default function ImportarPage() {
 
     const handleDownloadTemplate = () => {
         const headers = [
-            'proyecto_nombre', 'upe_identificador', 'upe_valor_total', 'upe_moneda', 'upe_estado',
-            'cliente_nombre', 'cliente_email', 'cliente_telefono',
-            'contrato_fecha_venta',
+            'cliente_email',
+            'proyecto_nombre',
+            'upe_identificador',
+            'fecha_venta',
             'contrato_precio_pactado',
-            'contrato_moneda',
-            // ### NUEVOS CAMPOS AÑADIDOS ###
+            'moneda_pactada',
             'monto_enganche',
             'numero_mensualidades',
-            'tasa_interes_mensual' // Formato decimal, ej: 0.03 para 3%
+            'tasa_interes_mensual'
         ];
         const csvContent = "data:text/csv;charset=utf-8," + headers.join(',');
         const link = document.createElement('a');
         link.setAttribute('href', encodeURI(csvContent));
-        link.setAttribute('download', 'plantilla_importacion_masiva.csv');
+        link.setAttribute('download', 'plantilla_contratos.csv');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -53,7 +53,7 @@ export default function ImportarPage() {
         formData.append('file', selectedFile);
 
         try {
-            const response = await importarDatosMasivos(formData);
+            const response = await importarContratos(formData);
             setUploadResponse(response.data);
             setSelectedFile(null);
         } catch (err) {
@@ -65,12 +65,12 @@ export default function ImportarPage() {
 
     return (
         <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-8">Importación Masiva (General)</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-8">Importación Exclusiva de Contratos</h1>
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
                 <div className="flex justify-between items-center mb-4">
-                    <p className="text-gray-600 dark:text-gray-300">Sube un archivo <strong>.csv</strong> con la estructura completa.</p>
+                    <p className="text-gray-600 dark:text-gray-300">Sube un archivo <strong>.csv</strong> solo con datos de contratos.</p>
                     <button onClick={handleDownloadTemplate} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 text-sm rounded-lg">
-                        Descargar Plantilla Maestra
+                        Descargar Plantilla
                     </button>
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -83,7 +83,7 @@ export default function ImportarPage() {
                     </div>
                     <div className="mt-6">
                         <button type="submit" disabled={!selectedFile || isUploading} className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                            {isUploading ? 'Procesando...' : 'Subir y Procesar Archivo Completo'}
+                            {isUploading ? 'Procesando...' : 'Subir y Procesar Contratos'}
                         </button>
                     </div>
                 </form>
@@ -92,7 +92,10 @@ export default function ImportarPage() {
                     {uploadResponse && (
                         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                             <strong className="font-bold">{uploadResponse.mensaje}</strong>
-                            {/* Puedes añadir un desglose más detallado si tu API lo devuelve */}
+                            <div className="text-sm mt-2">
+                                <p>Nuevos Creados: {uploadResponse.contratos_creados}</p>
+                                <p>Existentes Actualizados: {uploadResponse.contratos_actualizados}</p>
+                            </div>
                         </div>
                     )}
                 </div>
