@@ -1,21 +1,40 @@
-// app/configuraciones/usuarios/page.jsx
+// app/(configuraciones)/configuraciones/usuarios/page.jsx
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser } from '@/services/api';
+import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser, resendInvite } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import Overlay from '@/components/loaders/Overlay';
+import { Key, ShieldCheck, Mail } from 'lucide-react';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },
-    { header: 'Nombre', render: (row) => `${row.first_name} ${row.last_name}` },
-    { header: 'Roles', render: (row) => row.groups.join(', ') },
-    { header: 'Estado', render: (row) => row.is_active ? <span className="text-green-500">Activo</span> : <span className="text-red-500">Inactivo</span> },
+    { header: 'Email', render: (row) => row.email },
+    {
+        header: 'Estado',
+        render: (row) => (
+            <div className="flex items-center gap-2">
+                {row.is_active ? (
+                    <span className="text-green-500 font-semibold">Activo</span>
+                ) : (
+                    <span className="text-red-500 font-semibold">Inactivo</span>
+                )}
+            </div>
+        )
+    },
+    {
+        header: 'Seguridad',
+        render: (row) => (
+            <div className="flex items-center gap-2">
+                {row.has_passkey && <span title="Passkey registrada"><Key className="text-blue-500" /></span>}
+                {row.has_totp && <span title="TOTP registrado"><ShieldCheck className="text-purple-500" /></span>}
+            </div>
+        )
+    }
 ];
-
 
 export default function UsuariosPage() {
     const { hasPermission } = useAuth();
@@ -32,12 +51,9 @@ export default function UsuariosPage() {
     const [showInactive, setShowInactive] = useState(false);
 
     const [formData, setFormData] = useState({
-        username: '',
         email: '',
-        password: '',
         first_name: '',
         last_name: '',
-        is_active: true,
         groups: []
     });
 
@@ -60,18 +76,21 @@ export default function UsuariosPage() {
     useEffect(() => { fetchData(); }, [fetchData]);
 
     const USER_FORM_FIELDS = [
-        { name: 'username', label: 'Username', required: true },
         { name: 'email', label: 'Email', type: 'email', required: true },
-        { name: 'password', label: `Contraseña (${editingUser ? 'Dejar en blanco para no cambiar' : 'Requerida'})`, type: 'password', required: !editingUser },
         { name: 'first_name', label: 'Nombre' },
         { name: 'last_name', label: 'Apellido' },
-        { name: 'groups', label: 'Roles (Grupos)', type: 'checkbox-group', options: groups.map(g => ({ value: g.id, label: g.name })) },
-        { name: 'is_active', label: '', type: 'checkbox', checkboxLabel: 'Usuario Activo' }
+        {
+            name: 'groups',
+            label: 'Roles (Grupos)',
+            type: 'checkbox-group',
+            // Verificamos si groups es un array antes de llamar a map()
+            options: Array.isArray(groups) ? groups.map(g => ({ value: g.id, label: g.name })) : []
+        },
     ];
 
     const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleMultiSelectChange = (fieldName, selectedId) => {
@@ -84,15 +103,25 @@ export default function UsuariosPage() {
 
     const openModalForCreate = () => {
         setEditingUser(null);
-        setFormData({ username: '', email: '', password: '', first_name: '', last_name: '', is_active: true, groups: [] });
+        setFormData({ email: '', first_name: '', last_name: '', groups: [] });
         setIsFormModalOpen(true);
     };
 
     const openModalForEdit = (user) => {
         setEditingUser(user);
         const userGroupIds = user.groups.map(groupName => groups.find(g => g.name === groupName)?.id).filter(Boolean);
-        setFormData({ ...user, password: '', groups: userGroupIds });
+        setFormData({ ...user, groups: userGroupIds });
         setIsFormModalOpen(true);
+    };
+
+    const handleReinvite = async (user) => {
+        try {
+            await resendInvite(user.id);
+            alert("Invitación reenviada con éxito.");
+        } catch (err) {
+            setError('Error al reenviar la invitación.');
+            console.error(err);
+        }
     };
 
     const handleDeleteClick = (userId) => {
@@ -103,7 +132,7 @@ export default function UsuariosPage() {
     const handleConfirmDelete = async () => {
         if (!itemToDelete) return;
         try {
-            await deleteUser(itemToDelete); // Necesitarás crear esta función en api.js
+            await deleteUser(itemToDelete);
             fetchData();
         } catch (err) {
             setError('Error al eliminar el usuario.');
@@ -124,16 +153,16 @@ export default function UsuariosPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const dataToSubmit = { ...formData };
-        if (!dataToSubmit.password) {
-            delete dataToSubmit.password;
-        }
-
         try {
             if (editingUser) {
-                await updateUser(editingUser.id, dataToSubmit);
+                await updateUser(editingUser.id, formData);
             } else {
-                await createUser(dataToSubmit);
+                await createUser({
+                    email: formData.email,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    groups: formData.groups
+                });
             }
             setIsFormModalOpen(false);
             fetchData();
@@ -142,7 +171,6 @@ export default function UsuariosPage() {
             console.error(err);
         }
     };
-
 
     if (loading) return <Overlay show />;
 
@@ -173,6 +201,14 @@ export default function UsuariosPage() {
                     onEdit: hasPermission('cxc.change_user') ? openModalForEdit : null,
                     onDelete: hasPermission('cxc.delete_user') ? handleDeleteClick : null,
                     onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
+                    customActions: [
+                        {
+                            label: 'Reenviar Invitación',
+                            onClick: handleReinvite,
+                            icon: <Mail />,
+                            shouldShow: (user) => !user.is_active
+                        }
+                    ]
                 }}
             />
 
@@ -185,7 +221,7 @@ export default function UsuariosPage() {
                 handleMultiSelectChange={handleMultiSelectChange}
                 onSubmit={handleSubmit}
                 fields={USER_FORM_FIELDS}
-                submitText="Guardar Usuario"
+                submitText="Enviar Invitación"
             />
 
             <ConfirmationModal

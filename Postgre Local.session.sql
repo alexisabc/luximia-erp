@@ -1,3 +1,1 @@
-SELECT * FROM cxc_contrato
-REINDEX SCHEMA public;
-ALTER DATABASE luximiadb REFRESH COLLATION VERSION;
+SELECT * FROM users_customuser_groups

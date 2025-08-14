@@ -14,9 +14,13 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core import signing
 from django.http import HttpRequest
 from django.db import transaction
+from django.core.mail import send_mail
+from datetime import timedelta
+from django.utils import timezone
 
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
@@ -53,20 +57,24 @@ from webauthn.helpers.structs import (
 from webauthn.helpers.exceptions import InvalidRegistrationResponse
 
 from .models import EnrollmentToken
-from .serializers import UserSerializer
+from .serializers import (
+    UserSerializer, 
+    GroupSerializer, 
+    PermissionSerializer
+)
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
+User = get_user_model()
 
 def _get_enrollment_user(request: HttpRequest):
     user_id = request.session.get("enrollment_user_id")
     if not user_id:
         return None
-    User = get_user_model()
+    
     try:
         return User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -77,7 +85,7 @@ def _get_login_user(request: HttpRequest):
     user_id = request.session.get("login_user_id")
     if not user_id:
         return None
-    User = get_user_model()
+    
     try:
         return User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -120,18 +128,135 @@ def _get_jwt_for_user(user) -> dict:
     }
 
 # ---------------------------------------------------------------------------
-# API de usuarios
+# Vistas de usuarios
 # ---------------------------------------------------------------------------
+class InviteUserView(APIView):
+    permission_classes = [permissions.IsAdminUser]
 
+    def _send_invite(self, user):
+        """Función interna para generar y enviar el token de invitación."""
+        EnrollmentToken.objects.filter(user=user).delete()
+        token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        expires_at = timezone.now() + timedelta(hours=24)
+        EnrollmentToken.objects.create(user=user, token_hash=token_hash, expires_at=expires_at)
+
+        domain = settings.FRONTEND_DOMAIN
+        protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
+        enroll_url = f"{protocol}://{domain}/enroll/{token}"
+
+        send_mail(
+            "Invitación a Luximia ERP",
+            (
+                "Has sido invitado a la plataforma Luximia ERP.\n\n"
+                f"Usa el siguiente enlace para completar tu registro: {enroll_url}\n\n"
+                "Este enlace expira en 24 horas."
+            ),
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+
+    def post(self, request, pk=None):
+        # Si se recibe un PK, es para reenviar una invitación
+        if pk:
+            try:
+                user = User.objects.get(pk=pk, is_active=False)
+            except User.DoesNotExist:
+                return Response({"detail": "Usuario no encontrado o ya activo"}, status=status.HTTP_404_NOT_FOUND)
+
+            self._send_invite(user)
+            return Response({"detail": "Invitación reenviada con éxito"}, status=status.HTTP_200_OK)
+            
+        # Si no se recibe un PK, es para crear un usuario nuevo
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            with transaction.atomic():
+                user, created = User.objects.get_or_create(
+                    email=email,
+                    defaults={'username': email, 'is_active': False}
+                )
+                self._send_invite(user)
+            
+            return Response({"detail": "Invitation sent successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserListView(generics.ListAPIView):
-    """Lista de usuarios activos."""
+    """Lista de usuarios. Permite filtrar por estado activo/inactivo."""
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        User = get_user_model()
-        return User.objects.filter(is_active=True)
+        # Asegúrate de ordenar el queryset para evitar la advertencia
+        queryset = User.objects.all().order_by('id')
+        is_active_param = self.request.query_params.get('is_active')
+
+        if is_active_param is not None:
+            is_active = is_active_param.lower() in ['true', '1']
+            queryset = queryset.filter(is_active=is_active)
+            
+        return queryset
+    
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Gestiona operaciones de obtención, actualización y soft delete de un usuario.
+    El método DELETE realiza una 'desactivación' (soft delete).
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def perform_destroy(self, instance):
+        """Realiza el soft delete en lugar del borrado permanente."""
+        instance.is_active = False
+        instance.save()
+
+
+class HardDeleteUserView(APIView):
+    """
+    Elimina un usuario de forma permanente.
+    Solo accesible para superusuarios.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, pk, format=None):
+        try:
+            user = User.objects.get(pk=pk)
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            raise Http404
+
+# ---------------------------------------------------------------------------
+# Vistas de Grupos y Permisos
+# ---------------------------------------------------------------------------
+
+class GroupListView(generics.ListCreateAPIView):
+    """Lista todos los grupos (roles) y permite crear uno nuevo."""
+    # Agrega .order_by('name') o .order_by('id') al queryset
+    queryset = Group.objects.all().order_by('name')
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Recupera, actualiza y elimina un grupo específico."""
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
+class PermissionListView(generics.ListAPIView):
+    """Lista todos los permisos disponibles."""
+    queryset = Permission.objects.all()
+    serializer_class = PermissionSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+
 
 # ---------------------------------------------------------------------------
 # Vistas de Inscripción (Enrollment)
@@ -329,23 +454,24 @@ class StartLoginView(APIView):
         if not email:
             return Response({"detail": "Email requerido"}, status=status.HTTP_400_BAD_REQUEST)
 
-        User = get_user_model()
+        
         try:
             user = User.objects.get(email=email, is_active=True)
         except User.DoesNotExist:
             return Response({"detail": "Usuario no encontrado o inactivo"}, status=status.HTTP_404_NOT_FOUND)
 
-        login_method = None
+        # Crear una lista de métodos de login disponibles
+        available_methods = []
         if user.passkey_credentials:
-            login_method = "passkey"
-        elif user.totp_secret:
-            login_method = "totp"
+            available_methods.append("passkey")
+        if user.totp_secret:
+            available_methods.append("totp")
 
-        if not login_method:
+        if not available_methods:
             return Response({"detail": "Ningún método de login configurado"}, status=status.HTTP_400_BAD_REQUEST)
 
         request.session["login_user_id"] = user.pk
-        return Response({"login_method": login_method})
+        return Response({"available_methods": available_methods}) # <-- Devolver una lista
 
 
 class PasskeyLoginChallengeView(APIView):
@@ -459,6 +585,13 @@ class VerifyTOTPLoginView(APIView):
 
 
 __all__ = [
+    "InviteUserView",
+    "UserListView",
+    "UserDetailView",
+    "HardDeleteUserView",
+    "GroupListView",
+    "GroupDetailView",
+    "PermissionListView",
     "EnrollmentValidationView",
     "PasskeyRegisterChallengeView",
     "PasskeyRegisterView",

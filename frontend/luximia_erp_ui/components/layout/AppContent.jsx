@@ -8,13 +8,22 @@ import { useSidebar } from "@/context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Overlay from '@/components/loaders/Overlay';
+import { useInactivityTimer } from '@/hooks/useInactivityTimer';
 
 export default function AppContent({ children }) {
     // 1. Obtén 'loading' desde el contexto
-    const { authTokens, hasPermission, loading } = useAuth();
+    const { authTokens, hasPermission, loading, logoutUser } = useAuth();
     const { isOpen } = useSidebar();
     const pathname = usePathname();
     const router = useRouter();
+
+    // Lógica para detectar la inactividad del usuario
+    const handleInactivity = () => {
+        if (authTokens) {
+            logoutUser();
+        }
+    };
+    useInactivityTimer(handleInactivity, 5 * 60 * 1000); // 5 minutos
 
     useEffect(() => {
         // 2. No hagas nada si el contexto aún está cargando la información inicial

@@ -12,7 +12,7 @@ from datetime import timedelta
 from django.utils import timezone
 import calendar
 from decimal import Decimal
-
+from .permissions import HasPermissionForAction
 from .models import (
     Banco, Proyecto, UPE, Cliente, Pago, Moneda, Departamento,
     Puesto, Empleado, MetodoPago, Presupuesto, Contrato, TipoCambio,
@@ -29,9 +29,9 @@ from .serializers import (
 
 class BaseViewSet(viewsets.ModelViewSet):
     """
-    ViewSet base que requiere que el usuario esté autenticado.
+    ViewSet base que requiere permisos de acción.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [HasPermissionForAction]
 
 
 class BancoViewSet(BaseViewSet):

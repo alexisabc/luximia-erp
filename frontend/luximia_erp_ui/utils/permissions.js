@@ -50,26 +50,27 @@ const permissionTranslations = {
   view_puesto: "Ver puesto",
 
   // Permisos para Plan de Pagos
-  add_plandepagos: "Añadir plan de pagos",
-  change_plandepagos: "Cambiar plan de pagos",
-  delete_plandepagos: "Eliminar plan de pagos",
-  view_plandepagos: "Ver plan de pagos",
+  add_planpago: "Añadir plan de pagos", // Corregido: plandepagos -> planpago
+  change_planpago: "Cambiar plan de pagos",
+  delete_planpago: "Eliminar plan de pagos",
+  view_planpago: "Ver plan de pagos",
 
   // Permisos para Tipo de Cambio
-  add_tipodecambio: "Añadir tipo de cambio",
-  change_tipodecambio: "Cambiar tipo de cambio",
-  delete_tipodecambio: "Eliminar tipo de cambio",
-  view_tipodecambio: "Ver tipo de cambio",
+  add_tipocambio: "Añadir tipo de cambio", // Corregido: tipodecambio -> tipocambio
+  change_tipocambio: "Cambiar tipo de cambio",
+  delete_tipocambio: "Eliminar tipo de cambio",
+  view_tipocambio: "Ver tipo de cambio",
 
   // Permisos para Usuarios y Grupos (Roles)
-  add_user: "Añadir usuario",
-  change_user: "Cambiar usuario",
-  delete_user: "Eliminar usuario",
-  view_user: "Ver usuario",
+  add_customuser: "Añadir usuario",      // <-- Importante: Django usa el nombre del modelo
+  change_customuser: "Cambiar usuario",
+  delete_customuser: "Eliminar usuario",
+  view_customuser: "Ver usuario",
   add_group: "Añadir rol",
   change_group: "Cambiar rol",
   delete_group: "Eliminar rol",
   view_group: "Ver rol",
+
   // Permisos Extras
   can_view_dashboard: "Ver dashboard",
   can_use_ai: "Usar IA",
@@ -79,9 +80,7 @@ const permissionTranslations = {
 };
 
 export const translatePermission = (permission) => {
-  // La función busca el 'codename' en nuestro diccionario.
-  // Si lo encuentra, devuelve la traducción.
-  // Si no, devuelve el 'name' original en inglés para no mostrar nada vacío.
+  // Ahora la función busca el 'codename' dentro del objeto de permiso
   return permissionTranslations[permission.codename] || permission.name;
 };
 
@@ -94,11 +93,9 @@ const modelTranslations = {
   upe: 'UPEs',
   contrato: 'Contratos',
   pago: 'Pagos',
-  departamento: 'Departamentos',
-  puesto: 'Puestos',
-  plandepagos: 'Plan de Pagos',
-  tipodecambio: 'Tipos de Cambio',
-  user: 'Usuarios',
+  planpago: 'Plan de Pagos',      // Corregido
+  tipocambio: 'Tipos de Cambio', // Corregido
+  customuser: 'Usuarios',         // <-- Importante: Django usa el nombre del modelo
   group: 'Roles',
 };
 

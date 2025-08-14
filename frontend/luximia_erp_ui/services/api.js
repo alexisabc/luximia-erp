@@ -5,22 +5,19 @@ import { jwtDecode } from 'jwt-decode';
 // --- Util ---
 const isServer = typeof window === 'undefined';
 
-// Base URL con /api al final
 const rawBase = isServer
   ? process.env.API_URL || 'http://backend:8000'
   : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Asegura un solo slash y agrega /api
 const baseURL = `${rawBase.replace(/\/+$/, '')}/api`;
 
-// Helper: lee cookie por nombre
 function getCookie(name) {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-// --- Cliente Axios principal ---
+// --- Cliente Axios principal (usar un solo cliente) ---
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
@@ -29,20 +26,16 @@ const apiClient = axios.create({
   xsrfHeaderName: 'X-CSRFToken',
 });
 
-// Inyecto CSRF y Authorization en cada request
 apiClient.interceptors.request.use(async (req) => {
-  // 1) CSRF (solo métodos no seguros)
   const method = (req.method || 'get').toLowerCase();
   const needsCSRF = !['get', 'head', 'options'].includes(method);
   if (needsCSRF) {
-    const csrftoken =
-      getCookie(apiClient.defaults.xsrfCookieName) || getCookie('csrftoken');
+    const csrftoken = getCookie(apiClient.defaults.xsrfCookieName) || getCookie('csrftoken');
     if (csrftoken) {
       req.headers[apiClient.defaults.xsrfHeaderName] = csrftoken;
     }
   }
 
-  // 2) JWT
   let authTokens = typeof window !== 'undefined' ? localStorage.getItem('authTokens') : null;
   authTokens = authTokens ? JSON.parse(authTokens) : null;
 
@@ -66,7 +59,6 @@ apiClient.interceptors.request.use(async (req) => {
   return req;
 });
 
-// Manejo de respuestas/errores
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -84,6 +76,24 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
+// ===================== Usuarios =====================
+export const getGroups = () => apiClient.get('/users/groups/');
+export const getPermissions = () => apiClient.get('/users/permissions/');
+export const createUser = (data) => apiClient.post('/users/invite/', data);
+export const updateUser = (id, data) => apiClient.patch(`/users/${id}/`, data);
+export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
+export const hardDeleteUser = (id) => apiClient.delete(`/users/${id}/hard/`);
+export const resendInvite = (userId) => apiClient.post(`/users/${userId}/resend-invite/`);
+export const getUser = (id) => apiClient.get(`/users/${id}/`);
+export const getUsers = () => apiClient.get('/users/');
+export const getInactiveUsers = () => apiClient.get('/users/?is_active=False');
+
+// ===================== Grupos/Roles =====================
+export const createGroup = (data) => apiClient.post('/users/groups/', data);
+export const updateGroup = (id, data) => apiClient.patch(`/users/groups/${id}/`, data);
+export const deleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
+export const hardDeleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
 
 // ===================== CXC (paginados) =====================
 export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
@@ -153,7 +163,6 @@ export const getInactiveEmpleados = () => apiClient.get('/cxc/empleados/inactivo
 export const hardDeleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/hard/`);
 export const exportEmpleadosExcel = (columns) => apiClient.post('/cxc/empleados/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarEmpleados = (formData) => apiClient.post('/cxc/empleados/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const getUsers = () => apiClient.get('/users/');
 
 // ===================== Vendedores =====================
 export const createVendedor = (data) => apiClient.post('/cxc/vendedores/', data);
@@ -226,7 +235,6 @@ export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) =>
 export const exportContratosExcel = (columns) =>
   apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
 
-
 // ===================== Pagos =====================
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (id, data) => apiClient.patch(`/cxc/pagos/${id}/`, data);
@@ -247,8 +255,7 @@ export const importarFormasPago = (formData) => apiClient.post('/cxc/formas-pago
 
 // ===================== Varios =====================
 export const importarDatosMasivos = (formData) => apiClient.post('/cxc/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const getUser = () => apiClient.get('/cxc/usuarios/me/');
-export const updateUser = (data) => apiClient.patch('/cxc/usuarios/me/', data);
+
 export const getAuditLogs = () => apiClient.get('/cxc/auditoria/');
 export const downloadAuditLogExcel = () => apiClient.get('/cxc/auditoria/exportar/', { responseType: 'blob' });
 

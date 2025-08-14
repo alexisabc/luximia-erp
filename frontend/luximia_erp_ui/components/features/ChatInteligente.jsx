@@ -126,6 +126,7 @@ export default function ChatInteligente() {
                     alt="Asistente IA"
                     width={40} // Ajusta el tamaño según necesites
                     height={40}
+                    style={{ height: 'auto' }}
                     className="rounded-full"
                 />
             </button>

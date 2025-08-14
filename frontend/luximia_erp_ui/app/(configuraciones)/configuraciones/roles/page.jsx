@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-// 1. Importa todo lo necesario
 import { getGroups, getPermissions, createGroup, updateGroup, deleteGroup } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
@@ -10,9 +9,9 @@ import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import { translatePermission, translateModel } from '@/utils/permissions';
 import Overlay from '@/components/loaders/Overlay';
+import { Trash } from 'lucide-react';
 
 // --- Constantes de Configuración ---
-
 const ROLES_COLUMNAS_DISPLAY = [
     { header: 'Nombre del Rol', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.name}</span> },
     { header: 'Permisos Asignados', render: (row) => `${row.permissions.length} permisos` },
@@ -26,11 +25,9 @@ export default function RolesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Estados para los modales
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-    // Estados para la gestión de datos
     const [formData, setFormData] = useState({ name: '', permissions: [] });
     const [editingGroup, setEditingGroup] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
@@ -48,7 +45,6 @@ export default function RolesPage() {
         }));
     };
 
-    // Define los campos del formulario dinámicamente
     const ROL_FORM_FIELDS = [
         { name: 'name', label: 'Nombre del Rol', required: true },
         {
@@ -113,6 +109,7 @@ export default function RolesPage() {
 
     const openModalForEdit = (group) => {
         setEditingGroup(group);
+        // Ahora se usa la propiedad `id` de los objetos de permiso en la lista
         const groupPermissionIds = group.permissions.map(p => p.id);
         setFormData({ name: group.name, permissions: groupPermissionIds });
         setIsFormModalOpen(true);
@@ -126,7 +123,7 @@ export default function RolesPage() {
     const handleConfirmDelete = async () => {
         if (!itemToDelete) return;
         try {
-            await deleteGroup(itemToDelete); // Necesitarás crear esta función en api.js
+            await deleteGroup(itemToDelete);
             fetchData();
         } catch (err) {
             setError('Error al eliminar el rol. Asegúrate de que no esté en uso.');
@@ -139,10 +136,14 @@ export default function RolesPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const dataToSubmit = {
+                ...formData,
+                permissions: formData.permissions.map(id => ({ id })) // Convierte los IDs a un formato que el serializer entienda
+            };
             if (editingGroup) {
-                await updateGroup(editingGroup.id, formData);
+                await updateGroup(editingGroup.id, dataToSubmit);
             } else {
-                await createGroup(formData);
+                await createGroup(dataToSubmit);
             }
             setIsFormModalOpen(false);
             fetchData();
@@ -195,9 +196,9 @@ export default function RolesPage() {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
-                title="Desactivar Rol"
-                message="¿Estás seguro de que deseas desactivar este Rol? Ya no aparecerá en las listas principales."
-                confirmText="Desactivar"
+                title="Eliminar Rol Permanentemente"
+                message="¡ADVERTENCIA! Esta acción eliminará el rol de forma permanente. ¿Estás seguro de que deseas continuar?"
+                confirmText="Eliminar"
             />
         </div>
     );

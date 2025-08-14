@@ -1,10 +1,10 @@
-// app/login/page.jsx
+// app/(autenticacion)/login/page.jsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Key } from 'lucide-react';
+import { User, Key, QrCode } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import apiClient from '@/services/api';
 import LoginAnimation from '@/components/ui/LoginAnimation';
@@ -17,7 +17,8 @@ export default function LoginPage() {
     // Estados del formulario
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
-    const [loginMethod, setLoginMethod] = useState(null); // 'passkey' | 'totp'
+    const [loginMethod, setLoginMethod] = useState(null); // 'passkey' | 'totp' | null
+    const [availableMethods, setAvailableMethods] = useState([]); // Métodos disponibles para el usuario
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -26,19 +27,15 @@ export default function LoginPage() {
     const [eyeTranslation, setEyeTranslation] = useState(0);
     const [hasInteracted, setHasInteracted] = useState(false);
     const inactivityTimerRef = useRef(null);
-
-    //Activación exitosa
     const [successMessage, setSuccessMessage] = useState('');
 
-    // Mensaje post-enrollment (opcional)
     useEffect(() => {
         if (search?.get('enrolled') === 'true') {
-            // feedback suave, sin meter otro estado
             setError(null);
+            setSuccessMessage('Cuenta activada correctamente, por favor inicia sesión.');
         }
     }, [search]);
 
-    // Inactividad → bored
     useEffect(() => {
         clearTimeout(inactivityTimerRef.current);
         if (animationState === 'idle' && hasInteracted) {
@@ -53,10 +50,17 @@ export default function LoginPage() {
         if (!hasInteracted) setHasInteracted(true);
     };
 
+    const startInactivityTimer = () => {
+        clearTimeout(inactivityTimerRef.current);
+        if (hasInteracted) {
+            inactivityTimerRef.current = setTimeout(() => setAnimationState('bored'), 3000);
+        }
+    };
+
     // ====== ENDPOINTS alineados al backend ======
     const startLoginEndpoint = '/users/login/start/';
     const passkeyChallengeEndpoint = '/users/passkey/login/challenge/';
-    const passkeyVerifyEndpoint = '/users/passkey/login/';              // <- ojo: no /verify/
+    const passkeyVerifyEndpoint = '/users/passkey/login/';
     const totpVerifyEndpoint = '/users/totp/login/verify/';
 
     // PASSKEY
@@ -65,16 +69,10 @@ export default function LoginPage() {
         setError(null);
         setAnimationState('authenticating');
         try {
-            // 1) Challenge
             const { data: options } = await apiClient.get(passkeyChallengeEndpoint);
             if (!options?.challenge) throw new Error('Challenge inválido del servidor');
-
-            // 2) WebAuthn
             const assertion = await startAuthentication({ optionsJSON: options });
-
-            // 3) Verificar en backend y obtener tokens
             const { data: tokens } = await apiClient.post(passkeyVerifyEndpoint, assertion);
-
             setAuthData(tokens);
             setAnimationState('success');
             setTimeout(() => router.push('/'), 1200);
@@ -91,7 +89,8 @@ export default function LoginPage() {
     };
 
     // TOTP
-    const handleTotpLogin = async () => {
+    const handleTotpLogin = async (e) => {
+        e.preventDefault();
         setIsLoading(true);
         setError(null);
         setAnimationState('authenticating');
@@ -109,40 +108,25 @@ export default function LoginPage() {
         }
     };
 
-    // SUBMIT: inicia el flujo
-    const handleSubmit = async (e) => {
+    // SUBMIT para el email, inicia el flujo
+    const handleEmailSubmit = async (e) => {
         e.preventDefault();
-        clearTimeout(inactivityTimerRef.current);
-        markAsInteracted();
         setIsLoading(true);
         setError(null);
-
         try {
-            if (!loginMethod) {
-                // 1) Iniciar login → backend decide método
-                const { data } = await apiClient.post(startLoginEndpoint, { email });
-                if (data.login_method === 'passkey') {
-                    setLoginMethod('passkey');
-                    await handlePasskeyLogin(); // disparamos inmediatamente
-                } else if (data.login_method === 'totp') {
-                    setLoginMethod('totp'); // mostramos campo OTP
-                    setAnimationState('idle');
-                } else {
-                    throw new Error('Método de inicio de sesión no soportado.');
-                }
-            } else if (loginMethod === 'totp') {
-                await handleTotpLogin();
+            const { data } = await apiClient.post(startLoginEndpoint, { email });
+            if (data.available_methods?.length > 0) {
+                setAvailableMethods(data.available_methods);
+            } else {
+                throw new Error('No hay métodos de login disponibles.');
             }
         } catch (err) {
             setError(err?.response?.data?.detail || err.message || 'Error durante el inicio de sesión.');
-            setAnimationState('error');
-            setTimeout(() => setAnimationState('idle'), 1400);
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Animación: foco/tecleo
     const handleFocus = (field) => {
         markAsInteracted();
         clearTimeout(inactivityTimerRef.current);
@@ -164,7 +148,6 @@ export default function LoginPage() {
         clearTimeout(inactivityTimerRef.current);
         if (animationState === 'bored') setAnimationState('idle');
         setEmail(e.target.value);
-
         const input = e.target;
         const selection = input.selectionStart || 0;
         const MAX = 10;
@@ -180,23 +163,17 @@ export default function LoginPage() {
         setOtp(e.target.value);
     };
 
-    const startInactivityTimer = () => {
-        clearTimeout(inactivityTimerRef.current);
-        if (hasInteracted) {
-            inactivityTimerRef.current = setTimeout(() => setAnimationState('bored'), 3000);
-        }
+    const handleBackToEmail = () => {
+        setLoginMethod(null);
+        setAvailableMethods([]);
+        setEmail('');
+        setError(null);
     };
 
-
-    const searchParams = useSearchParams();
-    useEffect(() => {
-        if (searchParams.get('enrolled') === 'true') {
-            setError(null);
-            // Opcional: mostrar mensaje de éxito
-            setSuccessMessage('Cuenta activada correctamente, por favor inicia sesión.');
-        }
-    }, [searchParams]);
-
+    const handleBackToMethodSelection = () => {
+        setLoginMethod(null);
+        setError(null);
+    };
 
     return (
         <div
@@ -218,8 +195,9 @@ export default function LoginPage() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {loginMethod !== 'totp' && (
+                {/* Sección 1: Ingreso de email */}
+                {availableMethods.length === 0 && loginMethod === null && (
+                    <form onSubmit={handleEmailSubmit} className="space-y-6">
                         <div>
                             <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">
                                 Correo electrónico
@@ -235,17 +213,68 @@ export default function LoginPage() {
                                     onChange={handleEmailChange}
                                     onFocus={() => handleFocus('email')}
                                     onBlur={handleBlur}
-                                    onKeyUp={handleEmailChange}
-                                    onClick={handleEmailChange}
                                     required
                                     className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
                                     placeholder="tu@correo.com"
                                 />
                             </div>
                         </div>
-                    )}
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg disabled:bg-gray-400 dark:disabled:bg-gray-600"
+                        >
+                            {isLoading ? 'Verificando...' : 'Continuar'}
+                        </button>
+                    </form>
+                )}
 
-                    {loginMethod === 'totp' && (
+                {/* Sección 2: Selección de método de autenticación */}
+                {availableMethods.length > 0 && loginMethod === null && (
+                    <div className="space-y-3">
+                        <p className="text-sm text-center text-gray-600 dark:text-gray-400 mb-4">
+                            ¿Cómo deseas iniciar sesión con **{email}**?
+                        </p>
+                        <div className="space-y-3">
+                            {availableMethods.includes('passkey') && (
+                                <button
+                                    type="button"
+                                    onClick={handlePasskeyLogin}
+                                    disabled={isLoading}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2 disabled:bg-gray-400 dark:disabled:bg-gray-600"
+                                >
+                                    <Key className="h-5 w-5" />
+                                    <span>Continuar con Passkey</span>
+                                </button>
+                            )}
+                            {availableMethods.includes('totp') && (
+                                <button
+                                    type="button"
+                                    onClick={() => setLoginMethod('totp')}
+                                    disabled={isLoading}
+                                    className="w-full bg-gray-700 hover:bg-gray-600 transition-colors text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2 disabled:bg-gray-500 dark:disabled:bg-gray-700"
+                                >
+                                    <QrCode className="h-5 w-5" />
+                                    <span>Continuar con TOTP</span>
+                                </button>
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleBackToEmail}
+                            className="w-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+                        >
+                            Cambiar email
+                        </button>
+                    </div>
+                )}
+
+                {/* Sección 3: Autenticación con TOTP */}
+                {loginMethod === 'totp' && (
+                    <form onSubmit={handleTotpLogin} className="space-y-6">
+                        <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                            Por favor, ingresa el código de verificación para **{email}**.
+                        </p>
                         <div>
                             <label className="block text-gray-600 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="otp">
                                 Código de verificación
@@ -260,8 +289,10 @@ export default function LoginPage() {
                                     inputMode="numeric"
                                     maxLength={6}
                                     value={otp}
-                                    onChange={handleOtpChange}
-                                    onFocus={() => handleFocus('otp')}
+                                    onChange={(e) => {
+                                        handleOtpChange(e);
+                                        handleFocus('otp');
+                                    }}
                                     onBlur={handleBlur}
                                     required
                                     className="block w-full pl-10 pr-4 py-2 text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 text-center tracking-widest"
@@ -269,45 +300,51 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
-                    )}
-
-                    {error && (
-                        <div className="bg-red-500/20 text-red-400 dark:text-red-300 p-3 rounded-lg text-center text-sm">
-                            {error}
+                        <div className="space-y-3">
+                            <button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg disabled:bg-gray-400 dark:disabled:bg-gray-600">
+                                {isLoading ? 'Verificando...' : 'Verificar'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleBackToMethodSelection}
+                                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+                            >
+                                Regresar
+                            </button>
                         </div>
-                    )}
+                    </form>
+                )}
 
+                {/* Sección 4: Autenticación con Passkey */}
+                {loginMethod === 'passkey' && (
                     <div className="space-y-3">
+                        <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                            Por favor, usa tu passkey para **{email}**.
+                        </p>
                         <button
-                            type="submit"
+                            type="button"
+                            onClick={handlePasskeyLogin}
                             disabled={isLoading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg disabled:bg-gray-400 dark:disabled:bg-gray-600"
+                            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2 disabled:bg-gray-400 dark:disabled:bg-gray-600"
                         >
-                            {isLoading ? 'Verificando...' : loginMethod === 'totp' ? 'Verificar' : 'Continuar'}
+                            <Key className="h-5 w-5" />
+                            <span>Reintentar passkey</span>
                         </button>
-
-                        {loginMethod === 'passkey' && (
-                            <button
-                                type="button"
-                                onClick={handlePasskeyLogin}
-                                disabled={isLoading}
-                                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-500"
-                            >
-                                Reintentar passkey
-                            </button>
-                        )}
-
-                        {loginMethod === 'totp' && (
-                            <button
-                                type="button"
-                                onClick={() => setLoginMethod(null)}
-                                className="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                            >
-                                Cambiar email
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={handleBackToMethodSelection}
+                            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+                        >
+                            Regresar
+                        </button>
                     </div>
-                </form>
+                )}
+
+                {error && (
+                    <div className="bg-red-500/20 text-red-400 dark:text-red-300 p-3 rounded-lg text-center text-sm">
+                        {error}
+                    </div>
+                )}
             </div>
         </div>
     );
