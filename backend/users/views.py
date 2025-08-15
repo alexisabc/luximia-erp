@@ -65,6 +65,14 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+
+class IsStaffOrSuperuser(permissions.BasePermission):
+    """Permite acceso a usuarios con is_staff o is_superuser."""
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and (user.is_staff or user.is_superuser))
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -131,7 +139,7 @@ def _get_jwt_for_user(user) -> dict:
 # Vistas de usuarios
 # ---------------------------------------------------------------------------
 class InviteUserView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def _send_invite(self, user):
         """Función interna para generar y enviar el token de invitación."""
@@ -208,7 +216,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def perform_destroy(self, instance):
         """Realiza el soft delete en lugar del borrado permanente."""
@@ -221,7 +229,7 @@ class HardDeleteUserView(APIView):
     Elimina un usuario de forma permanente.
     Solo accesible para superusuarios.
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
     def delete(self, request, pk, format=None):
         try:
@@ -240,21 +248,21 @@ class GroupListView(generics.ListCreateAPIView):
     # Agrega .order_by('name') o .order_by('id') al queryset
     queryset = Group.objects.all().order_by('name')
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
 
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Recupera, actualiza y elimina un grupo específico."""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
 
 class PermissionListView(generics.ListAPIView):
     """Lista todos los permisos disponibles."""
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsStaffOrSuperuser]
 
 
 
