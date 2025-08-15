@@ -19,7 +19,7 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile
     container_name: luximia-backend-local
-    command: bash run.sh
+    command: bash entrypoint.sh
     #command: tail -f /dev/null
     volumes:
       - ./backend:/app
