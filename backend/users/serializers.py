@@ -24,9 +24,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class PermissionSerializer(serializers.ModelSerializer):
+    content_type__model = serializers.CharField(source="content_type.model", read_only=True)
+
     class Meta:
         model = Permission
-        fields = ["id", "name", "codename", "content_type"]
+        fields = ["id", "name", "codename", "content_type__model"]
 
 
 class GroupSerializer(serializers.ModelSerializer):
