@@ -267,6 +267,8 @@ class GroupListView(generics.ListCreateAPIView):
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [IsStaffOrSuperuser]
+    # La lista de roles es corta, se devuelve completa sin paginación
+    pagination_class = None
 
 
 class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -283,6 +285,8 @@ class PermissionListView(generics.ListAPIView):
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
     permission_classes = [IsStaffOrSuperuser]
+    # Se necesita la lista completa de permisos para construir formularios
+    pagination_class = None
 
 
 # ---------------------------------------------------------------------------
