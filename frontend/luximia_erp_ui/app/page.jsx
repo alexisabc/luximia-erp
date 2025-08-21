@@ -1,4 +1,4 @@
-// app/page.jsxx
+// app/page.jsx
 'use client';
 
 import { useAuth } from '@/context/AuthContext';

@@ -78,7 +78,6 @@ apiClient.interceptors.response.use(
 export default apiClient;
 
 // ===================== Usuarios =====================
-export const getGroups = () => apiClient.get('/users/groups/');
 export const getPermissions = () => apiClient.get('/users/permissions/');
 export const createUser = (data) => apiClient.post('/users/invite/', data);
 export const updateUser = (id, data) => apiClient.patch(`/users/${id}/`, data);
@@ -90,10 +89,11 @@ export const getUsers = () => apiClient.get('/users/');
 export const getInactiveUsers = () => apiClient.get('/users/?is_active=False');
 
 // ===================== Grupos/Roles =====================
+export const getGroups = () => apiClient.get('/users/groups/');
 export const createGroup = (data) => apiClient.post('/users/groups/', data);
 export const updateGroup = (id, data) => apiClient.patch(`/users/groups/${id}/`, data);
 export const deleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
-export const hardDeleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
+
 
 // ===================== CXC (paginados) =====================
 export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);

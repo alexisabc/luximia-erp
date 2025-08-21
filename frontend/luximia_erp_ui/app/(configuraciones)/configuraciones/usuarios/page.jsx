@@ -61,6 +61,7 @@ export default function UsuariosPage() {
         setLoading(true);
         setError(null);
         try {
+            // Lógica corregida: Llama a getInactiveUsers() si se ha pedido, de lo contrario llama a getUsers() para traer a todos.
             const usersPromise = showInactive ? getInactiveUsers() : getUsers();
             const [usersRes, groupsRes] = await Promise.all([usersPromise, getGroups()]);
             setUsers(usersRes.data);
@@ -83,7 +84,6 @@ export default function UsuariosPage() {
             name: 'groups',
             label: 'Roles (Grupos)',
             type: 'checkbox-group',
-            // Verificamos si groups es un array antes de llamar a map()
             options: Array.isArray(groups) ? groups.map(g => ({ value: g.id, label: g.name })) : []
         },
     ];

@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.db import transaction
+from users.models import EnrollmentToken
 
 class Command(BaseCommand):
     help = "Asegura que el superusuario exista y genera un nuevo enlace de inscripción."

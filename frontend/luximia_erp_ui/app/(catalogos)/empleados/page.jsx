@@ -52,14 +52,15 @@ export default function EmpleadosPage() {
 
     const fetchOptions = useCallback(async () => {
         try {
+            // Aseguramos que la llamada a getUsers sea exitosa y devuelva un arreglo
             const [usersRes, deptRes, puestoRes] = await Promise.all([
                 getUsers(),
                 getDepartamentos(),
                 getPuestos(),
             ]);
-            setUsers(usersRes.data);
-            setDepartamentos(deptRes.data);
-            setPuestos(puestoRes.data);
+            setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
+            setDepartamentos(Array.isArray(deptRes.data) ? deptRes.data : []);
+            setPuestos(Array.isArray(puestoRes.data) ? puestoRes.data : []);
         } catch (err) {
             setError('No se pudieron cargar los catálogos.');
         }
@@ -139,21 +140,22 @@ export default function EmpleadosPage() {
             label: 'Usuario',
             type: 'select',
             required: true,
-            options: users.map((u) => ({ value: u.id, label: u.username })),
+            // Aquí se agrega la validación para asegurarse de que `users` es un array
+            options: Array.isArray(users) ? users.map((u) => ({ value: u.id, label: u.username })) : [],
         },
         {
             name: 'departamento',
             label: 'Departamento',
             type: 'select',
             required: true,
-            options: departamentos.map((d) => ({ value: d.id, label: d.nombre })),
+            options: Array.isArray(departamentos) ? departamentos.map((d) => ({ value: d.id, label: d.nombre })) : [],
         },
         {
             name: 'puesto',
             label: 'Puesto',
             type: 'select',
             required: true,
-            options: puestos.map((p) => ({ value: p.id, label: p.nombre })),
+            options: Array.isArray(puestos) ? puestos.map((p) => ({ value: p.id, label: p.nombre })) : [],
         },
     ];
 
@@ -237,8 +239,8 @@ export default function EmpleadosPage() {
                 onConfirm={handleConfirmDelete}
                 title="Desactivar Empleado"
                 message="¿Estás seguro de que deseas desactivar este empleado? Ya no aparecerá en las listas principales."
+                confirmText="Desactivar"
             />
         </div>
     );
 }
-
