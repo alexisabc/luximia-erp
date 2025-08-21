@@ -12,9 +12,13 @@ class CustomUser(AbstractUser):
 
     # Passkeys guardadas como JSON
     passkey_credentials = models.JSONField(default=list, blank=True)
+    # Proveedor de la passkey (ej. Nordpass)
+    passkey_provider = models.CharField(max_length=100, blank=True, null=True)
 
     # Secreto TOTP
     totp_secret = models.CharField(max_length=255, blank=True, null=True)
+    # Proveedor del generador de códigos TOTP (Authy, Google Authenticator, etc.)
+    totp_provider = models.CharField(max_length=100, blank=True, null=True)
 
     # Usuario inactivo hasta completar seguridad
     is_active = models.BooleanField(default=False)

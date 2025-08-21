@@ -7,6 +7,8 @@ from rest_framework import serializers
 class UserSerializer(serializers.ModelSerializer):
     has_passkey = serializers.SerializerMethodField()
     has_totp = serializers.SerializerMethodField()
+    passkey_provider = serializers.CharField(read_only=True)
+    totp_provider = serializers.CharField(read_only=True)
 
     # Serializa los nombres de los grupos para la tabla de usuarios
     groups = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name")
@@ -23,6 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
             "groups",
             "has_passkey",
             "has_totp",
+            "passkey_provider",
+            "totp_provider",
         ]
 
     def get_has_passkey(self, obj):

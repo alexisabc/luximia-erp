@@ -88,9 +88,10 @@ export const getUser = (id) => apiClient.get(`/users/${id}/`);
 export const getUsers = () => apiClient.get('/users/');
 export const getInactiveUsers = () => apiClient.get('/users/?is_active=False');
 export const listPasskeyCredentials = () => apiClient.get('/users/passkey/credentials/');
-export const resetPasskeys = () => apiClient.delete('/users/passkey/credentials/');
+export const resetPasskeys = () => apiClient.post('/users/passkey/reset/');
 export const startTotpReset = () => apiClient.post('/users/totp/reset/');
-export const verifyTotpReset = (code) => apiClient.post('/users/totp/reset/verify/', { code });
+export const verifyTotpReset = (code, provider) =>
+  apiClient.post('/users/totp/reset/verify/', { code, provider });
 
 // ===================== Grupos/Roles =====================
 export const getGroups = () => apiClient.get('/users/groups/');
