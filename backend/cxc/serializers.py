@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.admin.models import LogEntry
 from .models import (
     Banco,
     Proyecto,
@@ -18,7 +19,6 @@ from .models import (
     PlanPago,
     EsquemaComision,
 )
-
 
 
 class BancoSerializer(serializers.ModelSerializer):
@@ -133,3 +133,15 @@ class PagoSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class AuditLogSerializer(serializers.ModelSerializer):
+    """Serializer for Django admin LogEntry."""
+
+    user = serializers.CharField(source="user.get_username", default="-")
+    action = serializers.CharField(source="get_action_flag_display")
+    model_name = serializers.CharField(source="content_type.model")
+    timestamp = serializers.DateTimeField(source="action_time")
+    changes = serializers.CharField(source="change_message")
+
+    class Meta:
+        model = LogEntry
+        fields = ["user", "action", "model_name", "object_id", "timestamp", "changes"]

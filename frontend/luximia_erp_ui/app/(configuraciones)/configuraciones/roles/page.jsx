@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import { translatePermission, translateModel } from '@/utils/permissions';
+import { translatePermission, translateModel, shouldDisplayPermission } from '@/utils/permissions';
 import Overlay from '@/components/loaders/Overlay';
 import { Trash } from 'lucide-react';
 
@@ -35,6 +35,7 @@ export default function RolesPage() {
     const groupPermissions = (perms) => {
         const byModel = {};
         perms.forEach(p => {
+            if (!shouldDisplayPermission(p)) return;
             const model = p['content_type__model'];
             if (!byModel[model]) byModel[model] = [];
             byModel[model].push({ value: p.id, label: translatePermission(p) });
@@ -73,9 +74,11 @@ export default function RolesPage() {
                 permissions: g.permissions_data || [],
             }));
 
+            const permissionsData = permissionsRes.data.filter(shouldDisplayPermission);
+
             setGroups(groupsData);
-            setPermissions(permissionsRes.data);
-            setPermissionGroups(groupPermissions(permissionsRes.data));
+            setPermissions(permissionsData);
+            setPermissionGroups(groupPermissions(permissionsData));
         } catch (err) {
             setError('No se pudieron cargar los datos.');
         } finally {

@@ -61,6 +61,48 @@ const permissionTranslations = {
   delete_tipocambio: "Eliminar tipo de cambio",
   view_tipocambio: "Ver tipo de cambio",
 
+  // Permisos para Moneda
+  add_moneda: "Añadir moneda",
+  change_moneda: "Cambiar moneda",
+  delete_moneda: "Eliminar moneda",
+  view_moneda: "Ver moneda",
+
+  // Permisos para Banco
+  add_banco: "Añadir banco",
+  change_banco: "Cambiar banco",
+  delete_banco: "Eliminar banco",
+  view_banco: "Ver banco",
+
+  // Permisos para Método de Pago
+  add_metodopago: "Añadir método de pago",
+  change_metodopago: "Cambiar método de pago",
+  delete_metodopago: "Eliminar método de pago",
+  view_metodopago: "Ver método de pago",
+
+  // Permisos para Vendedor
+  add_vendedor: "Añadir vendedor",
+  change_vendedor: "Cambiar vendedor",
+  delete_vendedor: "Eliminar vendedor",
+  view_vendedor: "Ver vendedor",
+
+  // Permisos para Forma de Pago
+  add_formapago: "Añadir forma de pago",
+  change_formapago: "Cambiar forma de pago",
+  delete_formapago: "Eliminar forma de pago",
+  view_formapago: "Ver forma de pago",
+
+  // Permisos para Esquema de Comisión
+  add_esquemacomision: "Añadir esquema de comisión",
+  change_esquemacomision: "Cambiar esquema de comisión",
+  delete_esquemacomision: "Eliminar esquema de comisión",
+  view_esquemacomision: "Ver esquema de comisión",
+
+  // Permisos para Presupuesto
+  add_presupuesto: "Añadir presupuesto",
+  change_presupuesto: "Cambiar presupuesto",
+  delete_presupuesto: "Eliminar presupuesto",
+  view_presupuesto: "Ver presupuesto",
+
   // Permisos para Usuarios y Grupos (Roles)
   add_customuser: "Añadir usuario",      // <-- Importante: Django usa el nombre del modelo
   change_customuser: "Cambiar usuario",
@@ -93,10 +135,38 @@ const modelTranslations = {
   upe: 'UPEs',
   contrato: 'Contratos',
   pago: 'Pagos',
-  planpago: 'Plan de Pagos',      // Corregido
-  tipocambio: 'Tipos de Cambio', // Corregido
-  customuser: 'Usuarios',         // <-- Importante: Django usa el nombre del modelo
+  moneda: 'Monedas',
+  banco: 'Bancos',
+  metodopago: 'Métodos de Pago',
+  vendedor: 'Vendedores',
+  formapago: 'Formas de Pago',
+  planpago: 'Plan de Pagos',
+  tipocambio: 'Tipos de Cambio',
+  esquemacomision: 'Esquemas de Comisión',
+  presupuesto: 'Presupuestos',
+  customuser: 'Usuarios',
   group: 'Roles',
 };
 
 export const translateModel = (model) => modelTranslations[model] || model;
+
+// Modelos internos que no deben mostrarse en la interfaz
+export const EXCLUDED_MODELS = [
+  'logentry',
+  'permission',
+  'contenttype',
+  'blacklistedtoken',
+  'outstandingtoken',
+  'enrollmenttoken',
+  'session'
+];
+
+// Verifica si un permiso es visible para el usuario final
+export const shouldDisplayPermission = (permission) => {
+  const model = permission['content_type__model'];
+  const codenameModel = permission.codename?.split('_').pop();
+  return (
+    !EXCLUDED_MODELS.includes(model) &&
+    !EXCLUDED_MODELS.includes(codenameModel)
+  );
+};
