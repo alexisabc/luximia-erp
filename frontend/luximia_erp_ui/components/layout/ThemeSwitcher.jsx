@@ -11,11 +11,15 @@ export default function ThemeSwitcher({ className }) {
 
     useEffect(() => setMounted(true), []);
 
+    const baseClasses = className
+        ? `${className} flex items-center`
+        : 'w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center';
+
     // Evita mostrar un ícono incorrecto durante la renderización en el servidor
     if (!mounted) {
         return (
-            <button className={`${className || 'w-full px-4 py-2 text-sm'} flex items-center`}>
-                <Monitor className="h-5 w-5" />
+            <button className={baseClasses}>
+                <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                 <span className="ml-2">Auto</span>
             </button>
         );
@@ -42,11 +46,7 @@ export default function ThemeSwitcher({ className }) {
     const label = theme === 'system' ? 'Auto' : current === 'light' ? 'Claro' : 'Oscuro';
 
     return (
-        <button
-            onClick={cycleTheme}
-            className={`${className || 'w-full px-4 py-2 text-sm'} flex items-center`}
-            title="Cambiar tema"
-        >
+        <button onClick={cycleTheme} className={baseClasses} title="Cambiar tema">
             <span className="transition-transform duration-300" key={current}>
                 {icon}
             </span>
