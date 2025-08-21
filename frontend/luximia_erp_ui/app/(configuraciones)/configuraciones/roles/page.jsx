@@ -59,8 +59,21 @@ export default function RolesPage() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [groupsRes, permissionsRes] = await Promise.all([getGroups(), getPermissions()]);
-            setGroups(groupsRes.data);
+            const [groupsRes, permissionsRes] = await Promise.all([
+                getGroups(),
+                getPermissions(),
+            ]);
+
+            // La API devuelve los permisos de cada grupo en el campo
+            // `permissions_data`.  El resto del componente espera un
+            // arreglo `permissions`, así que normalizamos la respuesta
+            // para evitar errores al renderizar.
+            const groupsData = groupsRes.data.map((g) => ({
+                ...g,
+                permissions: g.permissions_data || [],
+            }));
+
+            setGroups(groupsData);
             setPermissions(permissionsRes.data);
             setPermissionGroups(groupPermissions(permissionsRes.data));
         } catch (err) {
@@ -138,7 +151,8 @@ export default function RolesPage() {
         try {
             const dataToSubmit = {
                 ...formData,
-                permissions: formData.permissions.map(id => ({ id })) // Convierte los IDs a un formato que el serializer entienda
+                // El backend espera una lista de IDs de permisos.
+                permissions: formData.permissions,
             };
             if (editingGroup) {
                 await updateGroup(editingGroup.id, dataToSubmit);
