@@ -59,10 +59,29 @@ export default function RolesPage() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [groupsRes, permissionsRes] = await Promise.all([getGroups(), getPermissions()]);
-            setGroups(groupsRes.data);
-            setPermissions(permissionsRes.data);
-            setPermissionGroups(groupPermissions(permissionsRes.data));
+            const [groupsRes, permissionsRes] = await Promise.all([
+                getGroups(),
+                getPermissions(),
+            ]);
+            const groupsRaw = Array.isArray(groupsRes.data)
+                ? groupsRes.data
+                : groupsRes.data?.results || [];
+            const permissionsRaw = Array.isArray(permissionsRes.data)
+                ? permissionsRes.data
+                : permissionsRes.data?.results || [];
+
+            // La API devuelve los permisos de cada grupo en el campo
+            // `permissions_data`.  El resto del componente espera un
+            // arreglo `permissions`, así que normalizamos la respuesta
+            // para evitar errores al renderizar.
+            const groupsData = groupsRaw.map((g) => ({
+                ...g,
+                permissions: g.permissions_data || [],
+            }));
+
+            setGroups(groupsData);
+            setPermissions(permissionsRaw);
+            setPermissionGroups(groupPermissions(permissionsRaw));
         } catch (err) {
             setError('No se pudieron cargar los datos.');
         } finally {
@@ -138,7 +157,8 @@ export default function RolesPage() {
         try {
             const dataToSubmit = {
                 ...formData,
-                permissions: formData.permissions.map(id => ({ id })) // Convierte los IDs a un formato que el serializer entienda
+                // El backend espera una lista de IDs de permisos.
+                permissions: formData.permissions,
             };
             if (editingGroup) {
                 await updateGroup(editingGroup.id, dataToSubmit);
