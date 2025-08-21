@@ -64,8 +64,16 @@ export default function UsuariosPage() {
             // Lógica corregida: Llama a getInactiveUsers() si se ha pedido, de lo contrario llama a getUsers() para traer a todos.
             const usersPromise = showInactive ? getInactiveUsers() : getUsers();
             const [usersRes, groupsRes] = await Promise.all([usersPromise, getGroups()]);
-            setUsers(usersRes.data);
-            setGroups(groupsRes.data);
+
+            const usersData = Array.isArray(usersRes.data)
+                ? usersRes.data
+                : usersRes.data?.results || [];
+            const groupsData = Array.isArray(groupsRes.data)
+                ? groupsRes.data
+                : groupsRes.data?.results || [];
+
+            setUsers(usersData);
+            setGroups(groupsData);
         } catch (err) {
             setError('No se pudieron cargar los datos.');
             console.error(err);
