@@ -120,3 +120,24 @@ class EnrollmentValidationViewTests(TestCase):
         )
         self.assertEqual(response2.status_code, 400)
         self.assertEqual(response2.json().get("detail"), "Token inválido")
+
+
+@override_settings(
+    DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
+)
+class PasskeyResetViewTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username="passuser", email="pass@example.com", password="pwd"
+        )
+        self.user.passkey_credentials = [{"id": "cred1", "provider": "Test"}]
+        self.user.passkey_provider = "Test"
+        self.user.save()
+        self.client.force_login(self.user)
+
+    def test_reset_clears_passkeys(self):
+        response = self.client.post("/api/users/passkey/reset/")
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.passkey_credentials, [])
+        self.assertIsNone(self.user.passkey_provider)

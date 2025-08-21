@@ -21,9 +21,11 @@ export default function AjustesPage() {
     const [profileImage, setProfileImage] = useState(null);
     const [message, setMessage] = useState('');
     const [passkeys, setPasskeys] = useState([]);
+    const [passkeyProvider, setPasskeyProvider] = useState('');
     const [hasTotp, setHasTotp] = useState(false);
     const [totpUri, setTotpUri] = useState('');
     const [totpCode, setTotpCode] = useState('');
+    const [totpProvider, setTotpProvider] = useState('');
 
     useEffect(() => {
         if (user) {
@@ -34,6 +36,8 @@ export default function AjustesPage() {
                 setLastName(res.data.last_name || '');
                 setEmail(res.data.email || '');
                 setHasTotp(res.data.has_totp);
+                setTotpProvider(res.data.totp_provider || '');
+                setPasskeyProvider(res.data.passkey_provider || '');
                 if (res.data.has_passkey) {
                     const creds = await listPasskeyCredentials();
                     setPasskeys(creds.data.credentials || []);
@@ -64,9 +68,11 @@ export default function AjustesPage() {
         try {
             const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
             const registration = await startRegistration({ optionsJSON: options });
-            await apiClient.post('/users/passkey/register/', registration);
+            const provider = prompt('Proveedor de la passkey (ej. Nordpass)') || '';
+            await apiClient.post('/users/passkey/register/', { ...registration, provider });
             const { data } = await listPasskeyCredentials();
             setPasskeys(data.credentials || []);
+            setPasskeyProvider(provider);
             setMessage('Passkey registrada');
         } catch {
             setMessage('Error al registrar Passkey');
@@ -76,15 +82,30 @@ export default function AjustesPage() {
     const handleReplacePasskey = async () => {
         try {
             await resetPasskeys();
+            setPasskeys([]);
+            setPasskeyProvider('');
             await handleRegisterPasskey();
         } catch {
             setMessage('Error al reemplazar Passkey');
         }
     };
 
+    const handleResetPasskey = async () => {
+        try {
+            await resetPasskeys();
+            setPasskeys([]);
+            setPasskeyProvider('');
+            setMessage('Passkey eliminada');
+        } catch {
+            setMessage('Error al eliminar Passkey');
+        }
+    };
+
     const startTotpSetup = async () => {
         setMessage('');
         try {
+            const provider = prompt('App TOTP (ej. Authy)') || '';
+            setTotpProvider(provider);
             const { data } = await startTotpReset();
             setTotpUri(data.otpauth_uri);
             setTotpCode('');
@@ -96,7 +117,7 @@ export default function AjustesPage() {
     const handleVerifyTotp = async (e) => {
         e.preventDefault();
         try {
-            await verifyTotpReset(totpCode);
+            await verifyTotpReset(totpCode, totpProvider);
             setHasTotp(true);
             setTotpUri('');
             setTotpCode('');
@@ -173,12 +194,12 @@ export default function AjustesPage() {
             </form>
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-lg font-semibold">Passkey</h2>
+                    <h2 className="text-lg font-semibold">Passkey {passkeyProvider && `(con ${passkeyProvider})`}</h2>
                     {passkeys.length > 0 ? (
                         <ul className="list-disc ml-6">
-                            {passkeys.map((p, i) => (
-                                <li key={i}>{p.id.slice(0, 10)}...</li>
-                            ))}
+                    {passkeys.map((p, i) => (
+                        <li key={i}>{p.id.slice(0, 10)}... {p.provider && `(${p.provider})`}</li>
+                    ))}
                         </ul>
                     ) : (
                         <p>No hay passkeys registradas</p>
@@ -186,14 +207,21 @@ export default function AjustesPage() {
                     <div className="flex gap-2 mt-2">
                         <button type="button" onClick={handleRegisterPasskey} className="px-3 py-1 bg-blue-600 text-white rounded">Registrar</button>
                         {passkeys.length > 0 && (
-                            <button type="button" onClick={handleReplacePasskey} className="px-3 py-1 bg-gray-600 text-white rounded">Reemplazar</button>
+                            <>
+                                <button type="button" onClick={handleReplacePasskey} className="px-3 py-1 bg-gray-600 text-white rounded">Reemplazar</button>
+                                <button type="button" onClick={handleResetPasskey} className="px-3 py-1 bg-red-600 text-white rounded">Eliminar</button>
+                            </>
                         )}
                     </div>
                 </div>
 
                 <div>
                     <h2 className="text-lg font-semibold">TOTP</h2>
-                    {hasTotp ? <p>Configurado</p> : <p>No configurado</p>}
+                    {hasTotp ? (
+                        <p>Configurado {totpProvider && `con ${totpProvider}`}</p>
+                    ) : (
+                        <p>No configurado</p>
+                    )}
                     {totpUri ? (
                         <form onSubmit={handleVerifyTotp} className="space-y-2 mt-2">
                             <div className="p-2 bg-white inline-block"><QRCode value={totpUri} /></div>
