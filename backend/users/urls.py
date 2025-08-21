@@ -12,8 +12,11 @@ from .views import (
     EnrollmentValidationView,
     PasskeyRegisterChallengeView,
     PasskeyRegisterView,
+    PasskeyCredentialView,
     TOTPSetupView,
     TOTPVerifyView,
+    TOTPResetView,
+    TOTPResetVerifyView,
     StartLoginView,
     PasskeyLoginChallengeView,
     PasskeyLoginView,
@@ -39,8 +42,11 @@ urlpatterns = [
     path("enrollment/validate/", EnrollmentValidationView.as_view(), name="enrollment-validate"),
     path("passkey/register/challenge/", PasskeyRegisterChallengeView.as_view(), name="passkey-register-challenge"),
     path("passkey/register/", PasskeyRegisterView.as_view(), name="passkey-register"),
+    path("passkey/credentials/", PasskeyCredentialView.as_view(), name="passkey-credentials"),
     path("totp/setup/", TOTPSetupView.as_view(), name="totp-setup"),
     path("totp/verify/", TOTPVerifyView.as_view(), name="totp-verify"),
+    path("totp/reset/", TOTPResetView.as_view(), name="totp-reset"),
+    path("totp/reset/verify/", TOTPResetVerifyView.as_view(), name="totp-reset-verify"),
 
     # --- Login (alineado al front) ---
     path("login/start/", StartLoginView.as_view(), name="login-start"),

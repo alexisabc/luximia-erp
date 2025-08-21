@@ -508,6 +508,51 @@ class TOTPVerifyView(APIView):
         return Response({"detail": "TOTP verificado y usuario activado"})
 
 
+class PasskeyCredentialView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request: HttpRequest) -> Response:
+        creds = request.user.passkey_credentials or []
+        return Response({"credentials": creds})
+
+    def delete(self, request: HttpRequest) -> Response:
+        request.user.passkey_credentials = []
+        request.user.save()
+        return Response({"detail": "Passkeys reiniciadas"})
+
+
+class TOTPResetView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: HttpRequest) -> Response:
+        secret = _generate_totp_secret()
+        request.user.totp_secret = signing.dumps(secret, salt="totp")
+        request.user.save()
+
+        issuer = getattr(settings, "TOTP_ISSUER", "Luximia ERP")
+        label = f"{issuer}:{request.user.email}"
+        otpauth_uri = f"otpauth://totp/{label}?secret={secret}&issuer={issuer}&digits=6"
+        return Response({"otpauth_uri": otpauth_uri})
+
+
+class TOTPResetVerifyView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: HttpRequest) -> Response:
+        code = request.data.get("code")
+        if not code or len(code) != 6:
+            return Response({"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            secret = signing.loads(request.user.totp_secret, salt="totp")
+        except Exception:
+            return Response({"detail": "TOTP no configurado"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not _verify_totp(secret, code):
+            return Response({"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"detail": "TOTP verificado"})
+
 # ---------------------------------------------------------------------------
 # Vistas de Inicio de Sesión (Login)
 # ---------------------------------------------------------------------------
