@@ -58,9 +58,20 @@ export default function EmpleadosPage() {
                 getDepartamentos(),
                 getPuestos(),
             ]);
-            setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-            setDepartamentos(Array.isArray(deptRes.data) ? deptRes.data : []);
-            setPuestos(Array.isArray(puestoRes.data) ? puestoRes.data : []);
+
+            const usersData = Array.isArray(usersRes.data)
+                ? usersRes.data
+                : usersRes.data?.results || [];
+            const deptData = Array.isArray(deptRes.data)
+                ? deptRes.data
+                : deptRes.data?.results || [];
+            const puestoData = Array.isArray(puestoRes.data)
+                ? puestoRes.data
+                : puestoRes.data?.results || [];
+
+            setUsers(usersData);
+            setDepartamentos(deptData);
+            setPuestos(puestoData);
         } catch (err) {
             setError('No se pudieron cargar los catálogos.');
         }
