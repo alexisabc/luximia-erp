@@ -63,19 +63,25 @@ export default function RolesPage() {
                 getGroups(),
                 getPermissions(),
             ]);
+            const groupsRaw = Array.isArray(groupsRes.data)
+                ? groupsRes.data
+                : groupsRes.data?.results || [];
+            const permissionsRaw = Array.isArray(permissionsRes.data)
+                ? permissionsRes.data
+                : permissionsRes.data?.results || [];
 
             // La API devuelve los permisos de cada grupo en el campo
             // `permissions_data`.  El resto del componente espera un
             // arreglo `permissions`, así que normalizamos la respuesta
             // para evitar errores al renderizar.
-            const groupsData = groupsRes.data.map((g) => ({
+            const groupsData = groupsRaw.map((g) => ({
                 ...g,
                 permissions: g.permissions_data || [],
             }));
 
             setGroups(groupsData);
-            setPermissions(permissionsRes.data);
-            setPermissionGroups(groupPermissions(permissionsRes.data));
+            setPermissions(permissionsRaw);
+            setPermissionGroups(groupPermissions(permissionsRaw));
         } catch (err) {
             setError('No se pudieron cargar los datos.');
         } finally {
