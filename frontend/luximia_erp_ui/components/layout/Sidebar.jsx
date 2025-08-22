@@ -28,8 +28,10 @@ import {
     CreditCard,
     ShieldCheck,
     FileSearch,
+    Folder,
     Menu,
     LogOut,
+    Wallet,
     ChevronRight,
 } from 'lucide-react';
 
@@ -51,6 +53,8 @@ export default function Sidebar() {
     const [isImportarOpen, setIsImportarOpen] = useState(false);
     const [isSeguridadOpen, setIsSeguridadOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isCatalogosOpen, setIsCatalogosOpen] = useState(false);
+    const [isFinanzasOpen, setIsFinanzasOpen] = useState(false);
 
     // Secciones activas por ruta
     const adminActive =
@@ -60,9 +64,32 @@ export default function Sidebar() {
         pathname.startsWith('/tipos-cambio') ||
         pathname.startsWith('/auditoria');
 
+    const catalogosActive = [
+        '/clientes',
+        '/puestos',
+        '/vendedores',
+        '/empleados',
+        '/proyectos',
+        '/departamentos',
+        '/bancos',
+        '/monedas',
+        '/upes',
+        '/contratos',
+    ].some((path) => pathname.startsWith(path));
+
+    const finanzasActive = [
+        '/pagos',
+        '/formas-pago',
+        '/planes-pago',
+        '/esquemas-comision',
+        '/reportes',
+    ].some((path) => pathname.startsWith(path));
+
     useEffect(() => {
         // Abrimos/cerramos acorde a la ruta
         setIsAdminOpen(adminActive);
+        setIsCatalogosOpen(catalogosActive);
+        setIsFinanzasOpen(finanzasActive);
         setIsGestionOpen(pathname.startsWith('/configuraciones'));
         setIsImportarOpen(pathname.startsWith('/importar'));
         setIsHerramientasOpen(
@@ -70,7 +97,7 @@ export default function Sidebar() {
         );
         setIsSeguridadOpen(pathname.startsWith('/auditoria'));
         setIsUserMenuOpen(false);
-    }, [pathname, adminActive]);
+    }, [pathname, adminActive, catalogosActive, finanzasActive]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -83,6 +110,8 @@ export default function Sidebar() {
     }, []);
 
     const handleAdminToggle = () => setIsAdminOpen((v) => !v);
+    const handleCatalogosToggle = () => setIsCatalogosOpen((v) => !v);
+    const handleFinanzasToggle = () => setIsFinanzasOpen((v) => !v);
     const handleUserToggle = () => setIsUserMenuOpen((v) => !v);
 
     const getLinkClass = (path, isSubmenu = false) => {
@@ -112,6 +141,25 @@ export default function Sidebar() {
         hasPermission('cxc.view_tipocambio') ||
         hasPermission('cxc.view_tipodecambio') ||
         hasPermission('cxc.can_view_auditlog');
+
+    const showCatalogosGroup =
+        hasPermission('cxc.view_cliente') ||
+        hasPermission('cxc.view_puesto') ||
+        hasPermission('cxc.view_vendedor') ||
+        hasPermission('cxc.view_empleado') ||
+        hasPermission('cxc.view_proyecto') ||
+        hasPermission('cxc.view_departamento') ||
+        hasPermission('cxc.view_banco') ||
+        hasPermission('cxc.view_moneda') ||
+        hasPermission('cxc.view_upe') ||
+        hasPermission('cxc.view_contrato');
+
+    const showFinanzasGroup =
+        hasPermission('cxc.view_pago') ||
+        hasPermission('cxc.view_formapago') ||
+        hasPermission('cxc.view_planpago') ||
+        hasPermission('cxc.view_esquemacomision') ||
+        hasPermission('cxc.can_export');
 
     // Cambiado: Ahora usa el nombre completo del usuario
     const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'Usuario';
@@ -162,150 +210,164 @@ export default function Sidebar() {
                         </li>
 
                         {/* Catálogos */}
-                        {isOpen && (
-                            <li className="pt-2 px-2 text-xs font-semibold uppercase text-gray-500">
-                                Catálogos
-                            </li>
-                        )}
-                        {hasPermission('cxc.view_cliente') && (
-                            <li>
-                                <Link href="/clientes" className={getLinkClass('/clientes')}>
-                                    <Users className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Clientes</span>}
-                                </Link>
-                            </li>
-                        )}
+                        {showCatalogosGroup && (
+                            <li className="pt-2">
+                                <button
+                                    onClick={handleCatalogosToggle}
+                                    className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''} ${catalogosActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
+                                >
+                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
+                                        <Folder className="h-5 w-5" />
+                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Catálogos</span>}
+                                    </div>
+                                    {isOpen && <ChevronIcon isOpen={isCatalogosOpen} />}
+                                </button>
 
-                        {hasPermission('cxc.view_puesto') && (
-                            <li>
-                                <Link href="/puestos" className={getLinkClass('/puestos')}>
-                                    <Briefcase className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Puestos</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_vendedor') && (
-                            <li>
-                                <Link href="/vendedores" className={getLinkClass('/vendedores')}>
-                                    <User className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Vendedores</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_empleado') && (
-                            <li>
-                                <Link href="/empleados" className={getLinkClass('/empleados')}>
-                                    <UserPlus className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Empleados</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_proyecto') && (
-                            <li>
-                                <Link href="/proyectos" className={getLinkClass('/proyectos')}>
-                                    <ClipboardList className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Proyectos</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_departamento') && (
-                            <li>
-                                <Link href="/departamentos" className={getLinkClass('/departamentos')}>
-                                    <Building className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Departamentos</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_banco') && (
-                            <li>
-                                <Link href="/bancos" className={getLinkClass('/bancos')}>
-                                    <Landmark className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Bancos</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_moneda') && (
-                            <li>
-                                <Link href="/monedas" className={getLinkClass('/monedas')}>
-                                    <Coins className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Monedas</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_upe') && (
-                            <li>
-                                <Link href="/upes" className={getLinkClass('/upes')}>
-                                    <FileSearch className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">UPEs</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_contrato') && (
-                            <li>
-                                <Link href="/contratos" className={getLinkClass('/contratos')}>
-                                    <FileText className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Contratos</span>}
-                                </Link>
+                                {isCatalogosOpen && (
+                                    <ul className="pl-4 mt-1 space-y-1">
+                                        {hasPermission('cxc.view_cliente') && (
+                                            <li>
+                                                <Link href="/clientes" className={getLinkClass('/clientes', true)}>
+                                                    <Users className="h-4 w-4" />
+                                                    <span className="ml-2">Clientes</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_puesto') && (
+                                            <li>
+                                                <Link href="/puestos" className={getLinkClass('/puestos', true)}>
+                                                    <Briefcase className="h-4 w-4" />
+                                                    <span className="ml-2">Puestos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_vendedor') && (
+                                            <li>
+                                                <Link href="/vendedores" className={getLinkClass('/vendedores', true)}>
+                                                    <User className="h-4 w-4" />
+                                                    <span className="ml-2">Vendedores</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_empleado') && (
+                                            <li>
+                                                <Link href="/empleados" className={getLinkClass('/empleados', true)}>
+                                                    <UserPlus className="h-4 w-4" />
+                                                    <span className="ml-2">Empleados</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_proyecto') && (
+                                            <li>
+                                                <Link href="/proyectos" className={getLinkClass('/proyectos', true)}>
+                                                    <ClipboardList className="h-4 w-4" />
+                                                    <span className="ml-2">Proyectos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_departamento') && (
+                                            <li>
+                                                <Link href="/departamentos" className={getLinkClass('/departamentos', true)}>
+                                                    <Building className="h-4 w-4" />
+                                                    <span className="ml-2">Departamentos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_banco') && (
+                                            <li>
+                                                <Link href="/bancos" className={getLinkClass('/bancos', true)}>
+                                                    <Landmark className="h-4 w-4" />
+                                                    <span className="ml-2">Bancos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_moneda') && (
+                                            <li>
+                                                <Link href="/monedas" className={getLinkClass('/monedas', true)}>
+                                                    <Coins className="h-4 w-4" />
+                                                    <span className="ml-2">Monedas</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_upe') && (
+                                            <li>
+                                                <Link href="/upes" className={getLinkClass('/upes', true)}>
+                                                    <FileSearch className="h-4 w-4" />
+                                                    <span className="ml-2">UPEs</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_contrato') && (
+                                            <li>
+                                                <Link href="/contratos" className={getLinkClass('/contratos', true)}>
+                                                    <FileText className="h-4 w-4" />
+                                                    <span className="ml-2">Contratos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                    </ul>
+                                )}
                             </li>
                         )}
 
                         {/* Finanzas */}
-                        {isOpen && (
-                            <li className="pt-2 px-2 text-xs font-semibold uppercase text-gray-500">
-                                Finanzas
-                            </li>
-                        )}
+                        {showFinanzasGroup && (
+                            <li className="pt-2">
+                                <button
+                                    onClick={handleFinanzasToggle}
+                                    className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''} ${finanzasActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
+                                >
+                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
+                                        <Wallet className="h-5 w-5" />
+                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Finanzas</span>}
+                                    </div>
+                                    {isOpen && <ChevronIcon isOpen={isFinanzasOpen} />}
+                                </button>
 
-                        {hasPermission('cxc.view_pago') && (
-                            <li>
-                                <Link href="/pagos" className={getLinkClass('/pagos')}>
-                                    <Banknote className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Pagos</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_formapago') && (
-                            <li>
-                                <Link href="/formas-pago" className={getLinkClass('/formas-pago')}>
-                                    <CreditCard className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Formas de Pago</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_planpago') && (
-                            <li>
-                                <Link href="/planes-pago" className={getLinkClass('/planes-pago')}>
-                                    <Calendar className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Planes de Pago</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.view_esquemacomision') && (
-                            <li>
-                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision')}>
-                                    <CircleDollarSign className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Esquemas</span>}
-                                </Link>
-                            </li>
-                        )}
-
-                        {hasPermission('cxc.can_export') && (
-                            <li>
-                                <Link href="/reportes" className={getLinkClass('/reportes')}>
-                                    <BarChart3 className="h-5 w-5" />
-                                    {isOpen && <span className="ml-2">Reportes</span>}
-                                </Link>
+                                {isFinanzasOpen && (
+                                    <ul className="pl-4 mt-1 space-y-1">
+                                        {hasPermission('cxc.view_pago') && (
+                                            <li>
+                                                <Link href="/pagos" className={getLinkClass('/pagos', true)}>
+                                                    <Banknote className="h-4 w-4" />
+                                                    <span className="ml-2">Pagos</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_formapago') && (
+                                            <li>
+                                                <Link href="/formas-pago" className={getLinkClass('/formas-pago', true)}>
+                                                    <CreditCard className="h-4 w-4" />
+                                                    <span className="ml-2">Formas de Pago</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_planpago') && (
+                                            <li>
+                                                <Link href="/planes-pago" className={getLinkClass('/planes-pago', true)}>
+                                                    <Calendar className="h-4 w-4" />
+                                                    <span className="ml-2">Planes de Pago</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.view_esquemacomision') && (
+                                            <li>
+                                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision', true)}>
+                                                    <CircleDollarSign className="h-4 w-4" />
+                                                    <span className="ml-2">Esquemas</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                        {hasPermission('cxc.can_export') && (
+                                            <li>
+                                                <Link href="/reportes" className={getLinkClass('/reportes', true)}>
+                                                    <BarChart3 className="h-4 w-4" />
+                                                    <span className="ml-2">Reportes</span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                    </ul>
+                                )}
                             </li>
                         )}
 
