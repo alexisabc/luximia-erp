@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
             setAuthTokens(tokens);
             // Corregido: Creamos un objeto de usuario explícito
             setUser({
+                user_id: decoded.user_id,
                 username: decoded.username,
                 email: decoded.email,
                 first_name: decoded.first_name, // <-- Extraemos y guardamos el nombre
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }) => {
                         setAuthTokens(parsed);
                         // Corregido: Guardamos el objeto de usuario completo
                         setUser({
+                            user_id: decoded.user_id,
                             username: decoded.username,
                             email: decoded.email,
                             first_name: decoded.first_name,
