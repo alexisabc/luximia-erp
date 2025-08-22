@@ -45,6 +45,7 @@ export default function Sidebar() {
     const isCollapsed = !isOpen;
     const pathname = usePathname();
     const sidebarRef = useRef(null);
+    const textClasses = 'ml-2 transition-all duration-300 overflow-hidden';
 
     // Toggles de grupos
     const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -175,7 +176,7 @@ export default function Sidebar() {
 
             <div
                 ref={sidebarRef}
-                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col overflow-hidden transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     } lg:translate-x-0 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
             >
                 {/* Header */}
@@ -188,24 +189,22 @@ export default function Sidebar() {
                         <span className="sr-only">Toggle sidebar</span>
                     </button>
                     {isOpen && (
-                        <Link href="/" className="ml-2">
+                        <Link href="/" className={textClasses}>
                             <img src="/logo-luximia.png" className="h-6" alt="Luximia" />
                         </Link>
                     )}
                 </div>
 
                 {/* NAV */}
-                <nav className={`flex-1 px-4 py-4 ${isCollapsed ? '' : 'overflow-y-auto'}`}>
+                <nav data-collapsed={!isOpen} className={`flex-1 px-4 py-4 transition-all duration-300 ${isCollapsed ? '' : 'overflow-y-auto'}`}>
                     <ul className="space-y-1">
                         {/* Inicio / Dashboard */}
                         <li>
                             <Link href="/" className={getLinkClass('/')}>
                                 <Home className="h-5 w-5" />
-                                {isOpen && (
-                                    <span className="ml-2">
+                                <span className={textClasses}>
                                         {hasPermission('cxc.can_view_dashboard') ? 'Dashboard' : 'Inicio'}
                                     </span>
-                                )}
                             </Link>
                         </li>
 
@@ -218,7 +217,7 @@ export default function Sidebar() {
                                 >
                                     <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                         <Folder className="h-5 w-5" />
-                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Catálogos</span>}
+                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Catálogos</span>
                                     </div>
                                     {isOpen && <ChevronIcon isOpen={isCatalogosOpen} />}
                                 </button>
@@ -229,7 +228,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/clientes" className={getLinkClass('/clientes', true)}>
                                                     <Users className="h-4 w-4" />
-                                                    <span className="ml-2">Clientes</span>
+                                                    <span className={textClasses}>Clientes</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -237,7 +236,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/puestos" className={getLinkClass('/puestos', true)}>
                                                     <Briefcase className="h-4 w-4" />
-                                                    <span className="ml-2">Puestos</span>
+                                                    <span className={textClasses}>Puestos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -245,7 +244,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/vendedores" className={getLinkClass('/vendedores', true)}>
                                                     <User className="h-4 w-4" />
-                                                    <span className="ml-2">Vendedores</span>
+                                                    <span className={textClasses}>Vendedores</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -253,7 +252,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/empleados" className={getLinkClass('/empleados', true)}>
                                                     <UserPlus className="h-4 w-4" />
-                                                    <span className="ml-2">Empleados</span>
+                                                    <span className={textClasses}>Empleados</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -261,7 +260,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/proyectos" className={getLinkClass('/proyectos', true)}>
                                                     <ClipboardList className="h-4 w-4" />
-                                                    <span className="ml-2">Proyectos</span>
+                                                    <span className={textClasses}>Proyectos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -269,7 +268,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/departamentos" className={getLinkClass('/departamentos', true)}>
                                                     <Building className="h-4 w-4" />
-                                                    <span className="ml-2">Departamentos</span>
+                                                    <span className={textClasses}>Departamentos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -277,7 +276,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/bancos" className={getLinkClass('/bancos', true)}>
                                                     <Landmark className="h-4 w-4" />
-                                                    <span className="ml-2">Bancos</span>
+                                                    <span className={textClasses}>Bancos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -285,7 +284,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/monedas" className={getLinkClass('/monedas', true)}>
                                                     <Coins className="h-4 w-4" />
-                                                    <span className="ml-2">Monedas</span>
+                                                    <span className={textClasses}>Monedas</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -293,7 +292,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/upes" className={getLinkClass('/upes', true)}>
                                                     <FileSearch className="h-4 w-4" />
-                                                    <span className="ml-2">UPEs</span>
+                                                    <span className={textClasses}>UPEs</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -301,7 +300,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/contratos" className={getLinkClass('/contratos', true)}>
                                                     <FileText className="h-4 w-4" />
-                                                    <span className="ml-2">Contratos</span>
+                                                    <span className={textClasses}>Contratos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -319,7 +318,7 @@ export default function Sidebar() {
                                 >
                                     <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                         <Wallet className="h-5 w-5" />
-                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Finanzas</span>}
+                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Finanzas</span>
                                     </div>
                                     {isOpen && <ChevronIcon isOpen={isFinanzasOpen} />}
                                 </button>
@@ -330,7 +329,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/pagos" className={getLinkClass('/pagos', true)}>
                                                     <Banknote className="h-4 w-4" />
-                                                    <span className="ml-2">Pagos</span>
+                                                    <span className={textClasses}>Pagos</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -338,7 +337,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/formas-pago" className={getLinkClass('/formas-pago', true)}>
                                                     <CreditCard className="h-4 w-4" />
-                                                    <span className="ml-2">Formas de Pago</span>
+                                                    <span className={textClasses}>Formas de Pago</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -346,7 +345,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/planes-pago" className={getLinkClass('/planes-pago', true)}>
                                                     <Calendar className="h-4 w-4" />
-                                                    <span className="ml-2">Planes de Pago</span>
+                                                    <span className={textClasses}>Planes de Pago</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -354,7 +353,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision', true)}>
                                                     <CircleDollarSign className="h-4 w-4" />
-                                                    <span className="ml-2">Esquemas</span>
+                                                    <span className={textClasses}>Esquemas</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -362,7 +361,7 @@ export default function Sidebar() {
                                             <li>
                                                 <Link href="/reportes" className={getLinkClass('/reportes', true)}>
                                                     <BarChart3 className="h-4 w-4" />
-                                                    <span className="ml-2">Reportes</span>
+                                                    <span className={textClasses}>Reportes</span>
                                                 </Link>
                                             </li>
                                         )}
@@ -381,7 +380,7 @@ export default function Sidebar() {
                                 >
                                     <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                         <Settings className="h-5 w-5" />
-                                        {isOpen && <span className="ml-2 text-sm font-semibold uppercase">Administración</span>}
+                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Administración</span>
                                     </div>
                                     {isOpen && <ChevronIcon isOpen={isAdminOpen} />}
                                 </button>
@@ -396,9 +395,9 @@ export default function Sidebar() {
                                                 >
                                                     <div className="flex items-center">
                                                         <Users className="h-5 w-5" />
-                                                        <span className="ml-2">Gestión de Usuarios</span>
+                                                        <span className={textClasses}>Gestión de Usuarios</span>
                                                     </div>
-                                                    <ChevronIcon isOpen={isGestionOpen} />
+                                                    {isOpen && <ChevronIcon isOpen={isGestionOpen} />}
                                                 </button>
                                                 {isGestionOpen && (
                                                     <ul className="pl-4 mt-1 space-y-1">
@@ -409,7 +408,7 @@ export default function Sidebar() {
                                                                     className={getLinkClass('/configuraciones/usuarios', true)}
                                                                 >
                                                                     <User className="h-4 w-4" />
-                                                                    <span className="ml-2">Usuarios</span>
+                                                                    <span className={textClasses}>Usuarios</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -420,7 +419,7 @@ export default function Sidebar() {
                                                                     className={getLinkClass('/configuraciones/roles', true)}
                                                                 >
                                                                     <Key className="h-4 w-4" />
-                                                                    <span className="ml-2">Roles y Permisos</span>
+                                                                    <span className={textClasses}>Roles y Permisos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -437,9 +436,9 @@ export default function Sidebar() {
                                                 >
                                                     <div className="flex items-center">
                                                         <Settings className="h-5 w-5" />
-                                                        <span className="ml-2">Herramientas</span>
+                                                        <span className={textClasses}>Herramientas</span>
                                                     </div>
-                                                    <ChevronIcon isOpen={isHerramientasOpen} />
+                                                    {isOpen && <ChevronIcon isOpen={isHerramientasOpen} />}
                                                 </button>
                                                 {isHerramientasOpen && (
                                                     <ul className="pl-4 mt-1 space-y-1">
@@ -447,7 +446,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar" className={getLinkClass('/importar', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Masivo (General)</span>
+                                                                    <span className={textClasses}>Masivo (General)</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -455,7 +454,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/clientes" className={getLinkClass('/importar/clientes', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Clientes</span>
+                                                                    <span className={textClasses}>Clientes</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -463,7 +462,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/bancos" className={getLinkClass('/importar/bancos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Bancos</span>
+                                                                    <span className={textClasses}>Bancos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -471,7 +470,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/monedas" className={getLinkClass('/importar/monedas', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Monedas</span>
+                                                                    <span className={textClasses}>Monedas</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -479,7 +478,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/formas-pago" className={getLinkClass('/importar/formas-pago', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Formas de Pago</span>
+                                                                    <span className={textClasses}>Formas de Pago</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -487,7 +486,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/upes" className={getLinkClass('/importar/upes', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">UPEs</span>
+                                                                    <span className={textClasses}>UPEs</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -495,7 +494,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/proyectos" className={getLinkClass('/importar/proyectos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Proyectos</span>
+                                                                    <span className={textClasses}>Proyectos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -503,7 +502,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/departamentos" className={getLinkClass('/importar/departamentos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Departamentos</span>
+                                                                    <span className={textClasses}>Departamentos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -511,7 +510,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/puestos" className={getLinkClass('/importar/puestos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Puestos</span>
+                                                                    <span className={textClasses}>Puestos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -519,7 +518,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/empleados" className={getLinkClass('/importar/empleados', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Empleados</span>
+                                                                    <span className={textClasses}>Empleados</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -527,7 +526,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/vendedores" className={getLinkClass('/importar/vendedores', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Vendedores</span>
+                                                                    <span className={textClasses}>Vendedores</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -535,7 +534,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/planes-pago" className={getLinkClass('/importar/planes-pago', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Planes de Pago</span>
+                                                                    <span className={textClasses}>Planes de Pago</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -543,7 +542,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/esquemas-comision" className={getLinkClass('/importar/esquemas-comision', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Esquemas de Comisión</span>
+                                                                    <span className={textClasses}>Esquemas de Comisión</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -551,7 +550,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/presupuestos" className={getLinkClass('/importar/presupuestos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Presupuestos</span>
+                                                                    <span className={textClasses}>Presupuestos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -559,7 +558,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/tipos-cambio" className={getLinkClass('/importar/tipos-cambio', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Tipos de Cambio</span>
+                                                                    <span className={textClasses}>Tipos de Cambio</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -567,7 +566,7 @@ export default function Sidebar() {
                                                             <li>
                                                                 <Link href="/importar/contratos" className={getLinkClass('/importar/contratos', true)}>
                                                                     <Upload className="h-4 w-4" />
-                                                                    <span className="ml-2">Contratos</span>
+                                                                    <span className={textClasses}>Contratos</span>
                                                                 </Link>
                                                             </li>
                                                         )}
@@ -583,16 +582,16 @@ export default function Sidebar() {
                                                 >
                                                     <div className="flex items-center">
                                                         <ShieldCheck className="h-5 w-5" />
-                                                        <span className="ml-2">Seguridad</span>
+                                                        <span className={textClasses}>Seguridad</span>
                                                     </div>
-                                                    <ChevronIcon isOpen={isSeguridadOpen} />
+                                                    {isOpen && <ChevronIcon isOpen={isSeguridadOpen} />}
                                                 </button>
                                                 {isSeguridadOpen && (
                                                     <ul className="pl-4 mt-1 space-y-1">
                                                         <li>
                                                             <Link href="/auditoria" className={getLinkClass('/auditoria', true)}>
                                                                 <FileSearch className="h-4 w-4" />
-                                                                <span className="ml-2">Registro de Auditoría</span>
+                                                                <span className={textClasses}>Registro de Auditoría</span>
                                                             </Link>
                                                         </li>
                                                     </ul>
@@ -607,6 +606,18 @@ export default function Sidebar() {
                     </ul>
                 </nav>
 
+            <style jsx>{`
+                nav span {
+                    transition: all 0.3s;
+                    display: inline-block;
+                }
+                nav[data-collapsed="true"] span {
+                    width: 0;
+                    opacity: 0;
+                    margin-left: 0;
+                }
+            `}</style>
+
                 {/* User footer */}
                 <div className="relative p-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="space-y-1">
@@ -617,7 +628,7 @@ export default function Sidebar() {
                         >
                             <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                 <img src={user?.avatar || '/icon-luximia.png'} alt="Usuario" className="h-6 w-6 rounded-full" />
-                                {isOpen && <span className="ml-2 text-sm">{fullName}</span>}
+                                <span className={`${textClasses} text-sm`}>{fullName}</span>
                             </div>
                             {isOpen && <ChevronIcon isOpen={isUserMenuOpen} />}
                         </button>
@@ -626,14 +637,14 @@ export default function Sidebar() {
                                 <ThemeSwitcher className="w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700" />
                                 <Link href="/ajustes" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                                     <Settings className="h-5 w-5" />
-                                    <span className="ml-2">Ajustes</span>
+                                    <span className={textClasses}>Ajustes</span>
                                 </Link>
                                 <button
                                     onClick={logoutUser}
                                     className="flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                     <LogOut className="h-5 w-5" />
-                                    <span className="ml-2">Cerrar sesión</span>
+                                    <span className={textClasses}>Cerrar sesión</span>
                                 </button>
                             </div>
                         )}
