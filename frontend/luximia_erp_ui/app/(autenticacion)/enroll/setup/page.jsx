@@ -26,7 +26,6 @@ function EnrollmentSetup() {
 
     const [qrUri, setQrUri] = useState('');
     const [totpCode, setTotpCode] = useState('');
-    const [totpProvider, setTotpProvider] = useState('');
 
     // --- Agregado: Referencia para el input de TOTP ---
     const totpInputRef = useRef(null);
@@ -37,8 +36,6 @@ function EnrollmentSetup() {
             try {
                 const { data } = await apiClient.post('/users/totp/setup/');
                 setQrUri(data.otpauth_uri);
-                const prov = prompt('App TOTP (ej. Authy)') || '';
-                setTotpProvider(prov);
 
                 // Mueve el foco al input una vez que el QR se ha cargado
                 if (totpInputRef.current) {
@@ -57,8 +54,7 @@ function EnrollmentSetup() {
             const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
             if (!options?.challenge) throw new Error('Respuesta inválida del servidor.');
             const registrationResponse = await startRegistration({ optionsJSON: options });
-            const provider = prompt('Proveedor de la passkey (ej. Nordpass)') || '';
-            await apiClient.post('/users/passkey/register/', { ...registrationResponse, provider });
+            await apiClient.post('/users/passkey/register/', registrationResponse);
             setStep(2);
         } catch (err) {
             if (err?.response) {
@@ -78,7 +74,7 @@ function EnrollmentSetup() {
         setIsProcessing(true);
         setError(null);
         try {
-            const { data } = await apiClient.post('/users/totp/verify/', { code: totpCode, provider: totpProvider });
+            const { data } = await apiClient.post('/users/totp/verify/', { code: totpCode });
             console.log('[ENROLL] TOTP verificado. Respuesta:', data);
             router.replace('/login?enrolled=true');
         } catch (err) {
