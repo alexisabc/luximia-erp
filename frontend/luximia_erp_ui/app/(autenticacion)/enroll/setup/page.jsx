@@ -1,7 +1,7 @@
 // app/(autenticacion)/enroll/setup/page.jsx
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react'; // <-- Importa useRef
 import apiClient from '@/services/api';
 import { startRegistration } from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
@@ -28,6 +28,9 @@ function EnrollmentSetup() {
     const [totpCode, setTotpCode] = useState('');
     const [totpProvider, setTotpProvider] = useState('');
 
+    // --- Agregado: Referencia para el input de TOTP ---
+    const totpInputRef = useRef(null);
+
     useEffect(() => {
         if (step !== 2) return;
         (async () => {
@@ -36,6 +39,11 @@ function EnrollmentSetup() {
                 setQrUri(data.otpauth_uri);
                 const prov = prompt('App TOTP (ej. Authy)') || '';
                 setTotpProvider(prov);
+
+                // Mueve el foco al input una vez que el QR se ha cargado
+                if (totpInputRef.current) {
+                    totpInputRef.current.focus();
+                }
             } catch (err) {
                 setError('No se pudo obtener el código QR.');
             }
@@ -118,19 +126,20 @@ function EnrollmentSetup() {
                             description="Escanea el código QR con tu app de autenticación (Google Authenticator, Authy, etc.)."
                         />
                         {qrUri ? (
-                            <div className="p-4 bg-white flex justify-center">
-                                <QRCode value={qrUri} />
+                            <div className="p-4 bg-white flex justify-center rounded-lg max-w-sm mx-auto">
+                                <QRCode value={qrUri} size={256} />
                             </div>
                         ) : (
                             <p className="text-center">Cargando código QR...</p>
                         )}
                         <input
+                            ref={totpInputRef} // <-- Agregado: asigna la referencia al input
                             type="text"
                             value={totpCode}
                             onChange={(e) => setTotpCode(e.target.value)}
                             maxLength={6}
                             className="border p-2 w-full text-center tracking-widest bg-gray-700 text-white rounded"
-                            placeholder="123456"
+                            placeholder="Ingresa el código de 6 dígitos generado por tu App"
                             required
                         />
                         <button

@@ -197,9 +197,9 @@ export default function AjustesPage() {
                     <h2 className="text-lg font-semibold">Passkey {passkeyProvider && `(con ${passkeyProvider})`}</h2>
                     {passkeys.length > 0 ? (
                         <ul className="list-disc ml-6">
-                    {passkeys.map((p, i) => (
-                        <li key={i}>{p.id.slice(0, 10)}... {p.provider && `(${p.provider})`}</li>
-                    ))}
+                            {passkeys.map((p, i) => (
+                                <li key={i}>{p.id.slice(0, 10)}... {p.provider && `(${p.provider})`}</li>
+                            ))}
                         </ul>
                     ) : (
                         <p>No hay passkeys registradas</p>

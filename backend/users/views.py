@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 import hashlib
 import hmac
 import json
@@ -121,13 +122,13 @@ def _verify_totp(secret: str, token: str, interval: int = 30, window: int = 1) -
 
 def _get_jwt_for_user(user) -> dict:
     refresh = RefreshToken.for_user(user)
-
     access_token = refresh.access_token
     access_token["username"] = user.username
     access_token["email"] = user.email
+    access_token["first_name"] = user.first_name
+    access_token["last_name"] = user.last_name
     access_token["is_superuser"] = user.is_superuser
     access_token["permissions"] = list(user.get_all_permissions())
-
     return {
         "refresh": str(refresh),
         "access": str(access_token),
@@ -557,20 +558,27 @@ class TOTPResetVerifyView(APIView):
     def post(self, request: HttpRequest) -> Response:
         code = request.data.get("code")
         if not code or len(code) != 6:
-            return Response({"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             secret = signing.loads(request.user.totp_secret, salt="totp")
         except Exception:
-            return Response({"detail": "TOTP no configurado"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "TOTP no configurado"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         if not _verify_totp(secret, code):
-            return Response({"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST
+            )
         provider = request.data.get("provider")
         if provider:
             request.user.totp_provider = provider
         request.user.save()
         return Response({"detail": "TOTP verificado"})
+
 
 # ---------------------------------------------------------------------------
 # Vistas de Inicio de Sesión (Login)

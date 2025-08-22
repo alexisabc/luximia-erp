@@ -29,6 +29,8 @@ export default function LoginPage() {
     const inactivityTimerRef = useRef(null);
     const [successMessage, setSuccessMessage] = useState('');
 
+    const otpInputRef = useRef(null);
+
     useEffect(() => {
         if (search?.get('enrolled') === 'true') {
             setError(null);
@@ -46,6 +48,12 @@ export default function LoginPage() {
         return () => clearTimeout(inactivityTimerRef.current);
     }, [animationState, hasInteracted]);
 
+    useEffect(() => {
+        if (loginMethod === 'totp' && otpInputRef.current) {
+            otpInputRef.current.focus();
+        }
+    }, [loginMethod]);
+
     const markAsInteracted = () => {
         if (!hasInteracted) setHasInteracted(true);
     };
@@ -57,13 +65,11 @@ export default function LoginPage() {
         }
     };
 
-    // ====== ENDPOINTS alineados al backend ======
     const startLoginEndpoint = '/users/login/start/';
     const passkeyChallengeEndpoint = '/users/passkey/login/challenge/';
     const passkeyVerifyEndpoint = '/users/passkey/login/';
     const totpVerifyEndpoint = '/users/totp/login/verify/';
 
-    // PASSKEY
     const handlePasskeyLogin = async () => {
         setIsLoading(true);
         setError(null);
@@ -88,7 +94,6 @@ export default function LoginPage() {
         }
     };
 
-    // TOTP
     const handleTotpLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -108,7 +113,6 @@ export default function LoginPage() {
         }
     };
 
-    // SUBMIT para el email, inicia el flujo
     const handleEmailSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
@@ -285,6 +289,7 @@ export default function LoginPage() {
                                 </div>
                                 <input
                                     id="otp"
+                                    ref={otpInputRef}
                                     type="text"
                                     inputMode="numeric"
                                     maxLength={6}
@@ -307,7 +312,7 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={handleBackToMethodSelection}
-                                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+                                className="w-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
                             >
                                 Regresar
                             </button>
@@ -333,7 +338,7 @@ export default function LoginPage() {
                         <button
                             type="button"
                             onClick={handleBackToMethodSelection}
-                            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
+                            className="w-full bg-gray-200 hover:bg-gray-300 transition-colors text-gray-800 px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300"
                         >
                             Regresar
                         </button>
@@ -341,7 +346,7 @@ export default function LoginPage() {
                 )}
 
                 {error && (
-                    <div className="bg-red-500/20 text-red-400 dark:text-red-300 p-3 rounded-lg text-center text-sm">
+                    <div className="bg-red-500/20 text-red-400 dark:text-red-300 p-3 rounded-lg text-center text-sm mt-3">
                         {error}
                     </div>
                 )}

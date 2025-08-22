@@ -1,7 +1,8 @@
 // context/AuthContext.js
 'use client';
 
-import { createContext, useState, useContext, useEffect, useMemo } from 'react';
+import { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
@@ -9,14 +10,47 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
+    const router = useRouter();
+
     const [authTokens, setAuthTokens] = useState(null);
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // indica si ya leímos localStorage
+    const [loading, setLoading] = useState(true);
+
+    const setAuthData = useCallback((tokens) => {
+        try {
+            const decoded = jwtDecode(tokens.access);
+            setAuthTokens(tokens);
+            // Corregido: Creamos un objeto de usuario explícito
+            setUser({
+                username: decoded.username,
+                email: decoded.email,
+                first_name: decoded.first_name, // <-- Extraemos y guardamos el nombre
+                last_name: decoded.last_name,   // <-- Extraemos y guardamos el apellido
+                is_superuser: decoded.is_superuser,
+                permissions: decoded.permissions,
+            });
+            localStorage.setItem('authTokens', JSON.stringify(tokens));
+        } catch {
+            setAuthTokens(null);
+            setUser(null);
+            localStorage.removeItem('authTokens');
+        }
+    }, []);
+
+    const logoutUser = useCallback(() => {
+        setAuthTokens(null);
+        setUser(null);
+        localStorage.removeItem('authTokens');
+        window.location.href = '/login';
+    }, []);
+
+    const hasPermission = useCallback((codename) => {
+        if (user?.is_superuser) return true;
+        return !!user?.permissions?.includes(codename);
+    }, [user]);
 
     useEffect(() => {
-        const start = Date.now();
-        let parsed = null;
-        try {
+        const loadAuth = async () => {
             const raw = localStorage.getItem('authTokens');
             if (raw) {
                 const parsed = JSON.parse(raw);
@@ -27,50 +61,23 @@ export const AuthProvider = ({ children }) => {
                         localStorage.removeItem('authTokens');
                     } else {
                         setAuthTokens(parsed);
-                        setUser(decoded);
+                        // Corregido: Guardamos el objeto de usuario completo
+                        setUser({
+                            username: decoded.username,
+                            email: decoded.email,
+                            first_name: decoded.first_name,
+                            last_name: decoded.last_name,
+                            is_superuser: decoded.is_superuser,
+                            permissions: decoded.permissions,
+                        });
                     }
                 }
             }
-        } catch {
-            // si algo falla, limpiamos
-            localStorage.removeItem('authTokens');
-            setAuthTokens(null);
-            setUser(null);
-        } finally {
-            // pequeño delay opcional (suave UX), o quítalo si quieres instantáneo
-            const elapsed = Date.now() - start;
-            const waitMs = Math.max(0, 300 - elapsed);
-            const t = setTimeout(() => setLoading(false), waitMs);
-            return () => clearTimeout(t);
-        }
+            setLoading(false);
+        };
+
+        loadAuth();
     }, []);
-
-    const setAuthData = (tokens) => {
-        try {
-            const decoded = jwtDecode(tokens.access);
-            setAuthTokens(tokens);
-            setUser(decoded);
-            localStorage.setItem('authTokens', JSON.stringify(tokens));
-        } catch {
-            // token inválido recibido
-            setAuthTokens(null);
-            setUser(null);
-            localStorage.removeItem('authTokens');
-        }
-    };
-
-    const logoutUser = () => {
-        setAuthTokens(null);
-        setUser(null);
-        localStorage.removeItem('authTokens');
-        localStorage.removeItem('luximia-erp-theme');
-        window.location.href = '/login';
-    };
-
-    const hasPermission = (codename) => {
-        if (user?.is_superuser) return true;
-        return !!user?.permissions?.includes(codename);
-    };
 
     const value = useMemo(() => ({
         user,
@@ -80,9 +87,8 @@ export const AuthProvider = ({ children }) => {
         logoutUser,
         hasPermission,
         isAuthenticated: !!authTokens,
-    }), [user, authTokens, loading]);
+    }), [user, authTokens, loading, setAuthData, logoutUser, hasPermission]);
 
-    // 🔸 Ya no mostramos loader aquí: dejamos que AppContent decida.
     return (
         <AuthContext.Provider value={value}>
             {children}
