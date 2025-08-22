@@ -161,7 +161,12 @@ export default function Sidebar() {
                             </Link>
                         </li>
 
-                        {/* CRUDs visibles por permisos */}
+                        {/* Catálogos */}
+                        {isOpen && (
+                            <li className="pt-2 px-2 text-xs font-semibold uppercase text-gray-500">
+                                Catálogos
+                            </li>
+                        )}
                         {hasPermission('cxc.view_cliente') && (
                             <li>
                                 <Link href="/clientes" className={getLinkClass('/clientes')}>
@@ -249,6 +254,13 @@ export default function Sidebar() {
                                     <FileText className="h-5 w-5" />
                                     {isOpen && <span className="ml-2">Contratos</span>}
                                 </Link>
+                            </li>
+                        )}
+
+                        {/* Finanzas */}
+                        {isOpen && (
+                            <li className="pt-2 px-2 text-xs font-semibold uppercase text-gray-500">
+                                Finanzas
                             </li>
                         )}
 
