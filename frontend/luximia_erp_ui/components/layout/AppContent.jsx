@@ -58,7 +58,7 @@ export default function AppContent({ children }) {
         <div className="min-h-screen">
             <Sidebar />
             <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'} p-4`}>
-                <div>
+                <div key={pathname} className="page-transition">
                     {children}
                 </div>
                 {hasPermission('cxc.can_use_ai') && <ChatInteligente />}
