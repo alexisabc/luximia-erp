@@ -405,12 +405,8 @@ class PasskeyRegisterView(APIView):
             )
 
         try:
-            # Extraemos proveedor si viene en la petición
-            payload = request.data.copy()
-            provider = payload.pop("provider", None)
-
             # ✅ convertir JSON del navegador a RegistrationCredential (dataclass)
-            credential = parse_registration_credential_json(payload)
+            credential = parse_registration_credential_json(request.data)
 
             verification = verify_registration_response(
                 credential=credential,
@@ -434,10 +430,6 @@ class PasskeyRegisterView(APIView):
                 .rstrip("="),
                 "sign_count": int(sign_count) if sign_count is not None else 0,
             }
-
-            if provider:
-                new_credential["provider"] = provider
-                user.passkey_provider = provider
 
             creds = user.passkey_credentials or []
             creds.append(new_credential)
@@ -511,9 +503,6 @@ class TOTPVerifyView(APIView):
         # Aquí está la lógica corregida
         if user.passkey_credentials and user.totp_secret:
             user.is_active = True
-        provider = request.data.get("provider")
-        if provider:
-            user.totp_provider = provider
         user.save()
 
         request.session.pop("enrollment_user_id", None)
@@ -573,9 +562,6 @@ class TOTPResetVerifyView(APIView):
             return Response(
                 {"detail": "Código inválido"}, status=status.HTTP_400_BAD_REQUEST
             )
-        provider = request.data.get("provider")
-        if provider:
-            request.user.totp_provider = provider
         request.user.save()
         return Response({"detail": "TOTP verificado"})
 

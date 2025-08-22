@@ -68,11 +68,10 @@ export default function AjustesPage() {
         try {
             const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
             const registration = await startRegistration({ optionsJSON: options });
-            const provider = prompt('Proveedor de la passkey (ej. Nordpass)') || '';
-            await apiClient.post('/users/passkey/register/', { ...registration, provider });
+            await apiClient.post('/users/passkey/register/', registration);
             const { data } = await listPasskeyCredentials();
             setPasskeys(data.credentials || []);
-            setPasskeyProvider(provider);
+            setPasskeyProvider('');
             setMessage('Passkey registrada');
         } catch {
             setMessage('Error al registrar Passkey');
@@ -104,11 +103,10 @@ export default function AjustesPage() {
     const startTotpSetup = async () => {
         setMessage('');
         try {
-            const provider = prompt('App TOTP (ej. Authy)') || '';
-            setTotpProvider(provider);
             const { data } = await startTotpReset();
             setTotpUri(data.otpauth_uri);
             setTotpCode('');
+            setTotpProvider('');
         } catch {
             setMessage('Error al iniciar TOTP');
         }
@@ -117,10 +115,11 @@ export default function AjustesPage() {
     const handleVerifyTotp = async (e) => {
         e.preventDefault();
         try {
-            await verifyTotpReset(totpCode, totpProvider);
+            await verifyTotpReset(totpCode);
             setHasTotp(true);
             setTotpUri('');
             setTotpCode('');
+            setTotpProvider('');
             setMessage('TOTP verificado');
         } catch {
             setMessage('Código TOTP inválido');
