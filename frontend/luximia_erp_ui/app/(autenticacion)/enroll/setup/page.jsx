@@ -90,8 +90,8 @@ function EnrollmentSetup() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-            <div className="p-8 border border-gray-700 rounded-lg w-full max-w-xl bg-gray-800 shadow-lg">
+        <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-gray-900 text-white">
+            <div className="w-full max-w-xl p-4 sm:p-6 md:p-8 border border-gray-700 rounded-lg bg-gray-800 shadow-lg">
                 {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
                 {/* Paso 1: Configurar Passkey */}

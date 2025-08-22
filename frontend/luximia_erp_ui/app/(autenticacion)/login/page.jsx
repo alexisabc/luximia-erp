@@ -181,12 +181,12 @@ export default function LoginPage() {
 
     return (
         <div
-            className="flex items-center justify-center min-h-screen bg-cover bg-center bg-gray-200 dark:bg-gray-900"
+            className="flex items-center justify-center min-h-screen p-4 sm:p-6 bg-cover bg-center bg-gray-200 dark:bg-gray-900"
             style={{ backgroundImage: 'url(/login-bg.png)' }}
         >
             <div className="absolute inset-0 bg-black opacity-60"></div>
 
-            <div className="relative z-10 p-8 max-w-sm w-full bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
+            <div className="relative z-10 w-full max-w-sm p-6 sm:p-8 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-2xl dark:bg-gray-800/80 dark:border-gray-700">
                 <div className="flex justify-center mb-6 h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-white dark:border-gray-600 shadow-lg bg-white">
                     <LoginAnimation state={animationState} eyeTranslation={eyeTranslation} />
                 </div>

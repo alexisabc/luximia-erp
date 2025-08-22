@@ -4,8 +4,8 @@
 export default function Error({ error, reset }) {
   // opcional: console.error(error);
   return (
-    <div className="min-h-screen grid place-items-center p-6">
-      <div className="max-w-md w-full bg-gray-800 text-white rounded-xl p-6">
+    <div className="min-h-screen grid place-items-center p-4 sm:p-6 md:p-8">
+      <div className="max-w-md w-full bg-gray-800 text-white rounded-xl p-4 sm:p-6">
         <h1 className="text-2xl font-bold mb-2">Algo salió mal</h1>
         <p className="text-gray-300 mb-4">
           Ocurrió un error inesperado. Intenta recargar la página.
