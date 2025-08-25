@@ -135,7 +135,7 @@ export default function ReportesPage() {
     const { hasPermission } = useAuth();
     const [selectedReport, setSelectedReport] = useState('');
     const [selectedColumns, setSelectedColumns] = useState({});
-    const [reportSearch, setReportSearch] = useState('');
+    const [reportInput, setReportInput] = useState('');
     const [previewData, setPreviewData] = useState([]);
     const [previewVisible, setPreviewVisible] = useState(false);
     const [previewSearch, setPreviewSearch] = useState('');
@@ -150,12 +150,11 @@ export default function ReportesPage() {
         return <div className="p-8">Sin permiso para exportar reportes.</div>;
     }
 
-    const filteredReports = Object.entries(REPORTES).filter(([_, rep]) =>
-        rep.label.toLowerCase().includes(reportSearch.toLowerCase()),
-    );
-
-    const handleSelectReport = (e) => {
-        const key = e.target.value;
+    const handleReportChange = (e) => {
+        const value = e.target.value;
+        setReportInput(value);
+        const match = Object.entries(REPORTES).find(([, rep]) => rep.label === value);
+        const key = match ? match[0] : '';
         setSelectedReport(key);
         if (key) {
             const cols = REPORTES[key].columns;
@@ -170,6 +169,10 @@ export default function ReportesPage() {
             setFilterField('');
             setFilterValue('');
             setDateFilter('');
+        } else {
+            setSelectedColumns({});
+            setPreviewData([]);
+            setPreviewVisible(false);
         }
     };
 
@@ -251,24 +254,18 @@ export default function ReportesPage() {
         <div className="p-8 h-full flex flex-col space-y-4">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200 mb-4">Reportes</h1>
             <input
+                list="report-options"
                 type="text"
-                placeholder="Buscar reporte..."
-                value={reportSearch}
-                onChange={(e) => setReportSearch(e.target.value)}
+                placeholder="Buscar y seleccionar reporte..."
+                value={reportInput}
+                onChange={handleReportChange}
                 className="px-3 py-2 border rounded-md max-w-sm dark:bg-gray-800 dark:border-gray-700"
             />
-            <select
-                value={selectedReport}
-                onChange={handleSelectReport}
-                className="px-3 py-2 border rounded-md max-w-sm dark:bg-gray-800 dark:border-gray-700"
-            >
-                <option value="">Seleccione reporte...</option>
-                {filteredReports.map(([key, rep]) => (
-                    <option key={key} value={key}>
-                        {rep.label}
-                    </option>
+            <datalist id="report-options">
+                {Object.entries(REPORTES).map(([key, rep]) => (
+                    <option key={key} value={rep.label} />
                 ))}
-            </select>
+            </datalist>
 
             {selectedReport && (
                 <>
