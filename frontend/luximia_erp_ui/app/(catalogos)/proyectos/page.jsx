@@ -2,13 +2,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form'; // <-- Usa el FormModal
 import ExportModal from '@/components/ui/modals/Export';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -239,6 +240,15 @@ export default function ProyectosPage() {
                             <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                                 + Nuevo Proyecto
                             </button>
+                        )}
+                        {hasPermission('cxc.add_proyecto') && (
+                            <Link
+                                href="/importar/proyectos"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </Link>
                         )}
                         <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
                             <Download className="h-6 w-6" />
