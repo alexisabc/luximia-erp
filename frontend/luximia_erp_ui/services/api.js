@@ -248,6 +248,12 @@ export const importarContratos = (formData) =>
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (id, data) => apiClient.patch(`/cxc/pagos/${id}/`, data);
 export const deletePago = (id) => apiClient.delete(`/cxc/pagos/${id}/`);
+export const exportPagosExcel = (columns) =>
+  apiClient.post('/cxc/pagos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarPagosHistoricos = (formData) =>
+  apiClient.post('/cxc/pagos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 // ===================== Métodos de Pago vs Formas de Pago =====================
 // Métodos de pago (catálogo "MetodoPago")
