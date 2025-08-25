@@ -117,17 +117,22 @@ export const importarRoles = (formData) =>
 
 
 // ===================== CXC (paginados) =====================
-export const getProyectos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/proyectos/?page=${page}&page_size=${pageSize}`);
-export const getClientes = (page = 1, pageSize = 15) => apiClient.get(`/cxc/clientes/?page=${page}&page_size=${pageSize}`);
-export const getUPEs = (page = 1, pageSize = 15) => apiClient.get(`/cxc/upes/?page=${page}&page_size=${pageSize}`);
+export const getProyectos = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/proyectos/', { params: { page, page_size: pageSize, ...filters } });
+export const getClientes = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/clientes/', { params: { page, page_size: pageSize, ...filters } });
+export const getUPEs = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/upes/', { params: { page, page_size: pageSize, ...filters } });
 export const getBancos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/bancos/?page=${page}&page_size=${pageSize}`);
 export const getMonedas = (page = 1, pageSize = 15) => apiClient.get(`/cxc/monedas/?page=${page}&page_size=${pageSize}`);
 export const getDepartamentos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/departamentos/?page=${page}&page_size=${pageSize}`);
 export const getPuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/puestos/?page=${page}&page_size=${pageSize}`);
 export const getEmpleados = (page = 1, pageSize = 15) => apiClient.get(`/cxc/empleados/?page=${page}&page_size=${pageSize}`);
 export const getVendedores = (page = 1, pageSize = 15) => apiClient.get(`/cxc/vendedores/?page=${page}&page_size=${pageSize}`);
-export const getPresupuestos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
-export const getContratos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/contratos/?page=${page}&page_size=${pageSize}`);
+export const getPresupuestos = (page = 1, pageSize = 15) =>
+  apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
+export const getContratos = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/contratos/', { params: { page, page_size: pageSize, ...filters } });
 export const getPagos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/pagos/?page=${page}&page_size=${pageSize}`);
 
 // ===================== Bancos =====================
@@ -154,7 +159,8 @@ export const updateCliente = (id, data) => apiClient.patch(`/cxc/clientes/${id}/
 export const deleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/`);
 export const getInactiveClientes = () => apiClient.get('/cxc/clientes/inactivos/');
 export const hardDeleteCliente = (id) => apiClient.delete(`/cxc/clientes/${id}/hard/`);
-export const exportClientesExcel = (columns) => apiClient.post('/cxc/clientes/exportar-excel/', { columns }, { responseType: 'blob' });
+export const exportClientesExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/clientes/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
 export const importarClientes = (formData) => apiClient.post('/cxc/clientes/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Departamentos =====================
@@ -200,7 +206,8 @@ export const updateProyecto = (id, data) => apiClient.patch(`/cxc/proyectos/${id
 export const deleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/`);
 export const getInactiveProyectos = () => apiClient.get('/cxc/proyectos/inactivos/');
 export const hardDeleteProyecto = (id) => apiClient.delete(`/cxc/proyectos/${id}/hard/`);
-export const exportProyectosExcel = (columns) => apiClient.post('/cxc/proyectos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const exportProyectosExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/proyectos/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
 export const importarProyectos = (formData) => apiClient.post('/cxc/proyectos/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getAllProyectos = () => apiClient.get('/cxc/proyectos/?page_size=1000');
 
@@ -210,7 +217,8 @@ export const updateUPE = (id, data) => apiClient.patch(`/cxc/upes/${id}/`, data)
 export const deleteUPE = (id) => apiClient.delete(`/cxc/upes/${id}/`);
 export const getInactiveUpes = () => apiClient.get('/cxc/upes/inactivos/');
 export const hardDeleteUpe = (id) => apiClient.delete(`/cxc/upes/${id}/hard/`);
-export const exportUpesExcel = (columns) => apiClient.post('/cxc/upes/exportar-excel/', { columns }, { responseType: 'blob' });
+export const exportUpesExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/upes/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
 export const importarUPEs = (formData) => apiClient.post('/cxc/upes/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Clientes-Proyectos-Presupuestos =====================
@@ -253,8 +261,11 @@ export const descargarEstadoDeCuentaPDF = (contratoId, columns) =>
   apiClient.post(`/cxc/contratos/${contratoId}/descargar-pdf/`, { columns }, { responseType: 'blob' });
 export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) =>
   apiClient.post(`/cxc/contratos/${contratoId}/descargar-excel/`, { plan_cols: planCols, pago_cols: pagoCols }, { responseType: 'blob' });
-export const exportContratosExcel = (columns) =>
-  apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const exportContratosExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/contratos/exportar-excel/', { columns }, {
+    params: filters,
+    responseType: 'blob',
+  });
 export const importarContratos = (formData) =>
   apiClient.post('/cxc/contratos/importar-excel/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
