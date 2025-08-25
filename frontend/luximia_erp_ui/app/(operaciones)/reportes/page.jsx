@@ -6,10 +6,14 @@ import {
     exportClientesExcel,
     exportUpesExcel,
     exportContratosExcel,
+    exportPlanesPagoExcel,
+    exportPagosExcel,
     getProyectos,
     getClientes,
     getUPEs,
     getContratos,
+    getPlanesPago,
+    getPagos,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import { Download, Eye } from 'lucide-react';
@@ -49,6 +53,32 @@ const CONTRATO_COLUMNAS_EXPORT = [
     { id: 'estado', label: 'Estado' },
 ];
 
+const PLANPAGO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'cliente', label: 'Cliente' },
+    { id: 'upe', label: 'UPE' },
+    { id: 'fecha_programada', label: 'Fecha Programada' },
+    { id: 'monto_programado', label: 'Monto Programado' },
+    { id: 'moneda', label: 'Moneda' },
+    { id: 'forma_pago', label: 'Forma de Pago' },
+];
+
+const PAGO_COLUMNAS_EXPORT = [
+    { id: 'fecha_pago', label: 'Fecha de Pago' },
+    { id: 'concepto', label: 'Concepto' },
+    { id: 'metodo_pago', label: 'Método' },
+    { id: 'ordenante', label: 'Ordenante' },
+    { id: 'monto_pagado', label: 'Monto Pagado' },
+    { id: 'moneda_pagada', label: 'Moneda' },
+    { id: 'tipo_cambio', label: 'Tipo de Cambio' },
+    { id: 'valor_mxn', label: 'Valor (MXN)' },
+    { id: 'banco_origen', label: 'Banco Origen' },
+    { id: 'num_cuenta_origen', label: 'Cuenta Origen' },
+    { id: 'banco_destino', label: 'Banco Destino' },
+    { id: 'cuenta_beneficiaria', label: 'Cuenta Beneficiaria' },
+    { id: 'comentarios', label: 'Comentarios' },
+];
+
 const REPORTES = {
     proyectos: {
         label: 'Proyectos',
@@ -78,6 +108,22 @@ const REPORTES = {
         fetch: getContratos,
         filename: 'reporte_contratos.xlsx',
         dateField: 'fecha_venta',
+    },
+    planes_pago: {
+        label: 'Planes de Pago',
+        columns: PLANPAGO_COLUMNAS_EXPORT,
+        fn: exportPlanesPagoExcel,
+        fetch: getPlanesPago,
+        filename: 'reporte_planes_pago.xlsx',
+        dateField: 'fecha_programada',
+    },
+    pagos: {
+        label: 'Pagos',
+        columns: PAGO_COLUMNAS_EXPORT,
+        fn: exportPagosExcel,
+        fetch: getPagos,
+        filename: 'reporte_pagos.xlsx',
+        dateField: 'fecha_pago',
     },
 };
 
