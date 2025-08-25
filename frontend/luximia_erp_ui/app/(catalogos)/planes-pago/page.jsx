@@ -1,12 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { getPlanesPago, createPlanPago, getClientes, getUPEs } from '@/services/api';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getPlanesPago, createPlanPago, getClientes, getUPEs, importarPlanesPago, exportPlanesPagoExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
+import ExportModal from '@/components/ui/modals/Export';
+import { Download, Upload } from 'lucide-react';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Overlay from '@/components/loaders/Overlay';
+
+const PLANPAGO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'cliente', label: 'Cliente' },
+    { id: 'upe', label: 'UPE' },
+    { id: 'fecha_programada', label: 'Fecha Programada' },
+    { id: 'monto_programado', label: 'Monto Programado' },
+    { id: 'moneda', label: 'Moneda' },
+    { id: 'forma_pago', label: 'Forma de Pago' },
+];
 
 export default function PlanesPagoPage() {
     const { hasPermission } = useAuth();
@@ -19,6 +31,13 @@ export default function PlanesPagoPage() {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [upes, setUpes] = useState([]);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const cols = {};
+        PLANPAGO_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
+        return cols;
+    });
+    const fileInputRef = useRef(null);
 
     const [formData, setFormData] = useState({
         cliente: '',
@@ -91,6 +110,52 @@ export default function PlanesPagoPage() {
         }
     };
 
+    const handleImportClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            await importarPlanesPago(formData);
+            fetchData(1, pageSize);
+        } catch (err) {
+            setError('No se pudieron importar los planes de pago.');
+        }
+    };
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = PLANPAGO_COLUMNAS_EXPORT
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+        try {
+            const response = await exportPlanesPagoExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_planes_pago.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
     const columns = [
         { header: 'Cliente', render: row => row.cliente_nombre },
         { header: 'UPE', render: row => row.upe_identificador },
@@ -150,11 +215,35 @@ export default function PlanesPagoPage() {
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Planes de Pago</h1>
-                {hasPermission('cxc.add_planpago') && (
-                    <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                        + Nuevo Plan
-                    </button>
-                )}
+                <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.add_planpago') && (
+                        <>
+                            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                            <button
+                                onClick={handleCreateClick}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                + Nuevo Plan
+                            </button>
+                            <button
+                                onClick={handleImportClick}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </button>
+                        </>
+                    )}
+                    {hasPermission('cxc.view_planpago') && (
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg"
+                            title="Exportar a Excel"
+                        >
+                            <Download className="h-6 w-6" />
+                        </button>
+                    )}
+                </div>
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             <div ref={ref} className="flex-grow min-h-0 relative">
@@ -193,6 +282,14 @@ export default function PlanesPagoPage() {
                 onFormChange={handleInputChange}
                 onSubmit={handleSubmit}
                 fields={formFields}
+            />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={PLANPAGO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
             />
         </div>
     );
