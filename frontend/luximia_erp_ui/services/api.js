@@ -239,6 +239,10 @@ export const descargarEstadoDeCuentaExcel = (contratoId, planCols, pagoCols) =>
   apiClient.post(`/cxc/contratos/${contratoId}/descargar-excel/`, { plan_cols: planCols, pago_cols: pagoCols }, { responseType: 'blob' });
 export const exportContratosExcel = (columns) =>
   apiClient.post('/cxc/contratos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarContratos = (formData) =>
+  apiClient.post('/cxc/contratos/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 // ===================== Pagos =====================
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
