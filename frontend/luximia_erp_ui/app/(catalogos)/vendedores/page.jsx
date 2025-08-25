@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { getVendedores, createVendedor, updateVendedor, deleteVendedor, getInactiveVendedores, hardDeleteVendedor, exportVendedoresExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download, Upload } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 const VENDEDOR_COLUMNAS_DISPLAY = [
     { header: 'Tipo', render: (row) => row.tipo },
@@ -176,42 +175,17 @@ export default function VendedoresPage() {
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Vendedores</h1>
-                <div className="flex items-center space-x-3">
-                    {hasPermission('cxc.can_view_inactive_records') && (
-                        <button
-                            onClick={() => setShowInactive(!showInactive)}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md"
-                        >
-                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
-                        </button>
-                    )}
-                    {hasPermission('cxc.add_vendedor') && (
-                        <button
-                            onClick={handleCreateClick}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                        >
-                            Nuevo Vendedor
-                        </button>
-                    )}
-                    {hasPermission('cxc.add_vendedor') && (
-                        <Link
-                            href="/importar/vendedores"
-                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                            title="Importar desde Excel"
-                        >
-                            <Upload className="h-6 w-6" />
-                        </Link>
-                    )}
-                    {hasPermission('cxc.view_vendedor') && (
-                        <button
-                            onClick={() => setIsExportModalOpen(true)}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                            title="Exportar a Excel"
-                        >
-                            <Download className="h-6 w-6" />
-                        </button>
-                    )}
-                </div>
+                <ActionButtons
+                    showInactive={showInactive}
+                    onToggleInactive={() => setShowInactive(!showInactive)}
+                    canToggleInactive={hasPermission('cxc.can_view_inactive_records')}
+                    onCreate={handleCreateClick}
+                    canCreate={hasPermission('cxc.add_vendedor')}
+                    importHref="/importar/vendedores"
+                    canImport={hasPermission('cxc.add_vendedor')}
+                    onExport={() => setIsExportModalOpen(true)}
+                    canExport={hasPermission('cxc.view_vendedor')}
+                />
             </div>
             {error && <p className="text-red-500 mb-4">{error}</p>}
             <div className="flex-1">

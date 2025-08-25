@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Overlay from '@/components/loaders/Overlay';
 import Modal from '@/components/ui/modals';
 import { formatCurrency } from '@/utils/formatters';
-import { Upload, Download } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 const PAGO_COLUMNAS_EXPORT = [
     { id: 'fecha_pago', label: 'Fecha de Pago' },
@@ -166,34 +166,14 @@ export default function PagosPage() {
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Pagos Registrados</h1>
-                <div className="flex items-center space-x-3">
-                    {hasPermission('cxc.add_pago') && (
-                        <button
-                            onClick={handleCreateClick}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
-                        >
-                            + Registrar Pago
-                        </button>
-                    )}
-                    {hasPermission('cxc.add_pago') && (
-                        <Link
-                            href="/importar/pagos"
-                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
-                            title="Importar desde Excel"
-                        >
-                            <Upload className="h-6 w-6" />
-                        </Link>
-                    )}
-                    {hasPermission('cxc.view_pago') && (
-                        <button
-                            onClick={handleExport}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg"
-                            title="Exportar a Excel"
-                        >
-                            <Download className="h-6 w-6" />
-                        </button>
-                    )}
-                </div>
+                <ActionButtons
+                    onCreate={handleCreateClick}
+                    canCreate={hasPermission('cxc.add_pago')}
+                    importHref="/importar/pagos"
+                    canImport={hasPermission('cxc.add_pago')}
+                    onExport={handleExport}
+                    canExport={hasPermission('cxc.view_pago')}
+                />
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             <div ref={ref} className="flex-grow min-h-0 relative">
