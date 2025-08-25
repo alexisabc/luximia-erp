@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { getContratos, exportContratosExcel } from '@/services/api';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import Loader from '@/components/loaders/Overlay'; // Usamos el Overlay para la carga
-import { Download, Upload } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 export default function ContratosPage() {
     const [contratos, setContratos] = useState([]);
@@ -75,22 +75,12 @@ export default function ContratosPage() {
         <div className="p-8">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Contratos</h1>
-                <div className="flex items-center space-x-3">
-                    <Link
-                        href="/importar/contratos"
-                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
-                        title="Importar desde Excel"
-                    >
-                        <Upload className="h-5 w-5" />
-                    </Link>
-                    <button
-                        onClick={handleExport}
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg"
-                        title="Exportar a Excel"
-                    >
-                        <Download className="h-5 w-5" />
-                    </button>
-                </div>
+                <ActionButtons
+                    importHref="/importar/contratos"
+                    canImport
+                    onExport={handleExport}
+                    canExport
+                />
             </div>
             <ReusableTable
                 data={contratos}

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import {
   getMonedas,
   createMoneda,
@@ -16,7 +15,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download, Upload } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 const MONEDA_COLUMNAS_DISPLAY = [
   { header: 'Código', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.codigo}</span> },
@@ -171,42 +170,17 @@ export default function MonedasPage() {
       <div className="flex-shrink-0">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Monedas</h1>
-          <div className="flex items-center space-x-3">
-            {hasPermission('cxc.can_view_inactive_records') && (
-              <button
-                onClick={() => setShowInactive(!showInactive)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                {showInactive ? 'Ver Activas' : 'Ver Inactivas'}
-              </button>
-            )}
-            {hasPermission('cxc.add_moneda') && (
-              <button
-                onClick={handleCreateClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                + Nueva Moneda
-              </button>
-            )}
-            {hasPermission('cxc.add_moneda') && (
-              <Link
-                href="/importar/monedas"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                title="Importar desde Excel"
-              >
-                <Upload className="h-6 w-6" />
-              </Link>
-            )}
-            {hasPermission('cxc.view_moneda') && (
-              <button
-                onClick={() => setIsExportModalOpen(true)}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                title="Exportar a Excel"
-              >
-                <Download className="h-6 w-6" />
-              </button>
-            )}
-          </div>
+          <ActionButtons
+            showInactive={showInactive}
+            onToggleInactive={() => setShowInactive(!showInactive)}
+            canToggleInactive={hasPermission('cxc.can_view_inactive_records')}
+            onCreate={handleCreateClick}
+            canCreate={hasPermission('cxc.add_moneda')}
+            importHref="/importar/monedas"
+            canImport={hasPermission('cxc.add_moneda')}
+            onExport={() => setIsExportModalOpen(true)}
+            canExport={hasPermission('cxc.view_moneda')}
+          />
         </div>
         {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
       </div>

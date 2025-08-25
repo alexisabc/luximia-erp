@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download, Upload } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Overlay from '@/components/loaders/Overlay';
 
@@ -217,32 +217,16 @@ export default function PlanesPagoPage() {
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Planes de Pago</h1>
                 <div className="flex items-center space-x-3">
                     {hasPermission('cxc.add_planpago') && (
-                        <>
-                            <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                            <button
-                                onClick={handleCreateClick}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
-                            >
-                                + Nuevo Plan
-                            </button>
-                            <button
-                                onClick={handleImportClick}
-                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
-                                title="Importar desde Excel"
-                            >
-                                <Upload className="h-6 w-6" />
-                            </button>
-                        </>
+                        <input ref={fileInputRef} type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
                     )}
-                    {hasPermission('cxc.view_planpago') && (
-                        <button
-                            onClick={() => setIsExportModalOpen(true)}
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg"
-                            title="Exportar a Excel"
-                        >
-                            <Download className="h-6 w-6" />
-                        </button>
-                    )}
+                    <ActionButtons
+                        onCreate={handleCreateClick}
+                        canCreate={hasPermission('cxc.add_planpago')}
+                        onImport={handleImportClick}
+                        canImport={hasPermission('cxc.add_planpago')}
+                        onExport={() => setIsExportModalOpen(true)}
+                        canExport={hasPermission('cxc.view_planpago')}
+                    />
                 </div>
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}

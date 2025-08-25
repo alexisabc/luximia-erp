@@ -20,7 +20,7 @@ import ExportModal from '@/components/ui/modals/Export';
 import ImportModal from '@/components/ui/modals/Import';
 import { translatePermission, translateModel, shouldDisplayPermission } from '@/utils/permissions';
 import Overlay from '@/components/loaders/Overlay';
-import { Upload, Download } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 // --- Constantes de Configuración ---
 const ROLES_COLUMNAS_DISPLAY = [
@@ -230,26 +230,17 @@ export default function RolesPage() {
         <div className="p-8 h-full flex flex-col">
         <div className="flex justify-between items-center mb-10">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Roles</h1>
-            <div className="flex items-center space-x-3">
-                {hasPermission('cxc.can_view_inactive_records') && (
-                    <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
-                        {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
-                    </button>
-                )}
-                {hasPermission('cxc.add_group') && (
-                    <>
-                        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            + Nuevo Rol
-                        </button>
-                        <button onClick={() => setIsImportModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg" title="Importar desde Excel">
-                            <Upload className="h-6 w-6" />
-                        </button>
-                    </>
-                )}
-                <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
-                    <Download className="h-6 w-6" />
-                </button>
-            </div>
+            <ActionButtons
+                showInactive={showInactive}
+                onToggleInactive={() => setShowInactive(!showInactive)}
+                canToggleInactive={hasPermission('cxc.can_view_inactive_records')}
+                onCreate={openModalForCreate}
+                canCreate={hasPermission('cxc.add_group')}
+                onImport={() => setIsImportModalOpen(true)}
+                canImport={hasPermission('cxc.add_group')}
+                onExport={() => setIsExportModalOpen(true)}
+                canExport
+            />
         </div>
 
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}

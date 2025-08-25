@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import {
   getFormasPago,
   createFormaPago,
@@ -16,7 +15,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download, Upload } from 'lucide-react';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 const COLUMNS_DISPLAY = [
   { header: 'Enganche (%)', render: (row) => row.enganche },
@@ -182,42 +181,17 @@ export default function FormasPagoPage() {
       <div className="flex-shrink-0">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Formas de Pago</h1>
-          <div className="flex items-center space-x-3">
-            {hasPermission('cxc.can_view_inactive_records') && (
-              <button
-                onClick={() => setShowInactive(!showInactive)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
-              </button>
-            )}
-            {hasPermission('cxc.add_formapago') && (
-              <button
-                onClick={handleCreateClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                + Nueva Forma
-              </button>
-            )}
-            {hasPermission('cxc.add_formapago') && (
-              <Link
-                href="/importar/formas-pago"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                title="Importar desde Excel"
-              >
-                <Upload className="h-6 w-6" />
-              </Link>
-            )}
-            {hasPermission('cxc.view_formapago') && (
-              <button
-                onClick={() => setIsExportModalOpen(true)}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
-                title="Exportar a Excel"
-              >
-                <Download className="h-6 w-6" />
-              </button>
-            )}
-          </div>
+          <ActionButtons
+            showInactive={showInactive}
+            onToggleInactive={() => setShowInactive(!showInactive)}
+            canToggleInactive={hasPermission('cxc.can_view_inactive_records')}
+            onCreate={handleCreateClick}
+            canCreate={hasPermission('cxc.add_formapago')}
+            importHref="/importar/formas-pago"
+            canImport={hasPermission('cxc.add_formapago')}
+            onExport={() => setIsExportModalOpen(true)}
+            canExport={hasPermission('cxc.view_formapago')}
+          />
         </div>
       </div>
 
