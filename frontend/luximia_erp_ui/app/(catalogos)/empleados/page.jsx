@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
     getEmpleados,
     createEmpleado,
@@ -12,16 +13,27 @@ import {
     getDepartamentos,
     getPuestos,
     getUsers,
+    exportEmpleadosExcel,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ExportModal from '@/components/ui/modals/Export';
+import { Download, Upload } from 'lucide-react';
 
 const EMPLEADO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => row.user_username },
     { header: 'Departamento', render: (row) => row.departamento_nombre },
     { header: 'Puesto', render: (row) => row.puesto_nombre },
+];
+
+const EMPLEADO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'user_username', label: 'Usuario' },
+    { id: 'departamento_nombre', label: 'Departamento' },
+    { id: 'puesto_nombre', label: 'Puesto' },
+    { id: 'activo', label: 'Estado' },
 ];
 
 export default function EmpleadosPage() {
@@ -39,6 +51,12 @@ export default function EmpleadosPage() {
     const [users, setUsers] = useState([]);
     const [departamentos, setDepartamentos] = useState([]);
     const [puestos, setPuestos] = useState([]);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const cols = {};
+        EMPLEADO_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
+        return cols;
+    });
 
     const fetchData = useCallback(async (page) => {
         try {
@@ -145,6 +163,30 @@ export default function EmpleadosPage() {
         }
     };
 
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = EMPLEADO_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+        try {
+            const response = await exportEmpleadosExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_empleados.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
     const EMPLEADO_FORM_FIELDS = [
         {
             name: 'user',
@@ -189,6 +231,24 @@ export default function EmpleadosPage() {
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
                         >
                             + Nuevo Empleado
+                        </button>
+                    )}
+                    {hasPermission('cxc.add_empleado') && (
+                        <Link
+                            href="/importar/empleados"
+                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                            title="Importar desde Excel"
+                        >
+                            <Upload className="h-6 w-6" />
+                        </Link>
+                    )}
+                    {hasPermission('cxc.view_empleado') && (
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                            title="Exportar a Excel"
+                        >
+                            <Download className="h-6 w-6" />
                         </button>
                     )}
                 </div>
@@ -251,6 +311,14 @@ export default function EmpleadosPage() {
                 title="Desactivar Empleado"
                 message="¿Estás seguro de que deseas desactivar este empleado? Ya no aparecerá en las listas principales."
                 confirmText="Desactivar"
+            />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={EMPLEADO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onChange={handleColumnChange}
+                onExport={handleExport}
             />
         </div>
     );

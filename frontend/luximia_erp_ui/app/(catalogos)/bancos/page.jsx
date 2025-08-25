@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   getBancos,
   createBanco,
@@ -15,7 +16,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 
 const BANCO_COLUMNAS_DISPLAY = [
   { header: 'Clave', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.clave}</span> },
@@ -182,6 +183,23 @@ export default function BancosPage() {
                 {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
               </button>
             )}
+            {hasPermission('cxc.add_banco') && (
+              <button
+                onClick={handleCreateClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                + Nuevo Banco
+              </button>
+            )}
+            {hasPermission('cxc.add_banco') && (
+              <Link
+                href="/importar/bancos"
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                title="Importar desde Excel"
+              >
+                <Upload className="h-6 w-6" />
+              </Link>
+            )}
             {hasPermission('cxc.view_banco') && (
               <button
                 onClick={() => setIsExportModalOpen(true)}
@@ -189,14 +207,6 @@ export default function BancosPage() {
                 title="Exportar a Excel"
               >
                 <Download className="h-6 w-6" />
-              </button>
-            )}
-            {hasPermission('cxc.add_banco') && (
-              <button
-                onClick={handleCreateClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                + Nuevo Banco
               </button>
             )}
           </div>

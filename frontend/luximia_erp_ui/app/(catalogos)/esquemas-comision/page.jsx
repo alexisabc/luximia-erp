@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getEsquemasComision, createEsquemaComision, updateEsquemaComision, deleteEsquemaComision, getInactiveEsquemasComision, hardDeleteEsquemaComision } from '@/services/api';
+import Link from 'next/link';
+import { getEsquemasComision, createEsquemaComision, updateEsquemaComision, deleteEsquemaComision, getInactiveEsquemasComision, hardDeleteEsquemaComision, exportEsquemasComisionExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ExportModal from '@/components/ui/modals/Export';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
+import { Download, Upload } from 'lucide-react';
 
 const ESQUEMA_COLUMNAS_DISPLAY = [
     { header: 'Esquema', render: (row) => <span className="text-gray-900 dark:text-white">{row.esquema}</span> },
@@ -20,6 +23,15 @@ const ESQUEMA_FORM_FIELDS = [
     { name: 'escenario', label: 'Escenario', required: true },
     { name: 'porcentaje', label: 'Porcentaje', type: 'number', required: true },
     { name: 'iva', label: 'IVA', type: 'number', required: true },
+];
+
+const ESQUEMA_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'esquema', label: 'Esquema' },
+    { id: 'escenario', label: 'Escenario' },
+    { id: 'porcentaje', label: 'Porcentaje' },
+    { id: 'iva', label: 'IVA' },
+    { id: 'activo', label: 'Estado' },
 ];
 
 export default function EsquemasComisionPage() {
@@ -38,6 +50,12 @@ export default function EsquemasComisionPage() {
     const [formData, setFormData] = useState({ esquema: '', escenario: '', porcentaje: '', iva: '' });
     const [editingItem, setEditingItem] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const cols = {};
+        ESQUEMA_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
+        return cols;
+    });
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
@@ -129,6 +147,30 @@ export default function EsquemasComisionPage() {
         }
     };
 
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = ESQUEMA_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+        try {
+            const response = await exportEsquemasComisionExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_esquemas_comision.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
     return (
         <div className="p-8 h-full flex flex-col">
             <div className="flex-shrink-0">
@@ -143,6 +185,24 @@ export default function EsquemasComisionPage() {
                         {hasPermission('cxc.add_esquemacomision') && (
                             <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                                 + Nuevo Esquema
+                            </button>
+                        )}
+                        {hasPermission('cxc.add_esquemacomision') && (
+                            <Link
+                                href="/importar/esquemas-comision"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </Link>
+                        )}
+                        {hasPermission('cxc.view_esquemacomision') && (
+                            <button
+                                onClick={() => setIsExportModalOpen(true)}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                                title="Exportar a Excel"
+                            >
+                                <Download className="h-6 w-6" />
                             </button>
                         )}
                     </div>
@@ -190,6 +250,14 @@ export default function EsquemasComisionPage() {
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="¿Estás seguro de eliminar este esquema?"
+            />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={ESQUEMA_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onChange={handleColumnChange}
+                onExport={handleExport}
             />
         </div>
     );

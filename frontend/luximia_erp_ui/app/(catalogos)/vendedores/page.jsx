@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getVendedores, createVendedor, updateVendedor, deleteVendedor, getInactiveVendedores, hardDeleteVendedor } from '@/services/api';
+import Link from 'next/link';
+import { getVendedores, createVendedor, updateVendedor, deleteVendedor, getInactiveVendedores, hardDeleteVendedor, exportVendedoresExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ExportModal from '@/components/ui/modals/Export';
+import { Download, Upload } from 'lucide-react';
 
 const VENDEDOR_COLUMNAS_DISPLAY = [
     { header: 'Tipo', render: (row) => row.tipo },
@@ -19,6 +22,15 @@ const VENDEDOR_FORM_FIELDS = [
     { name: 'nombre_completo', label: 'Nombre Completo', required: true },
     { name: 'email', label: 'Email', type: 'email' },
     { name: 'telefono', label: 'Teléfono', type: 'tel' },
+];
+
+const VENDEDOR_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'tipo', label: 'Tipo' },
+    { id: 'nombre_completo', label: 'Nombre Completo' },
+    { id: 'email', label: 'Email' },
+    { id: 'telefono', label: 'Teléfono' },
+    { id: 'activo', label: 'Estado' },
 ];
 
 export default function VendedoresPage() {
@@ -35,6 +47,12 @@ export default function VendedoresPage() {
     const [showInactive, setShowInactive] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isPaginating, setIsPaginating] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const cols = {};
+        VENDEDOR_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
+        return cols;
+    });
 
     const fetchData = useCallback(async (page, size) => {
         if (!authTokens || !size || size <= 0) return;
@@ -130,11 +148,43 @@ export default function VendedoresPage() {
         }
     };
 
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = VENDEDOR_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+        try {
+            const response = await exportVendedoresExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_vendedores.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
     return (
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Vendedores</h1>
                 <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.can_view_inactive_records') && (
+                        <button
+                            onClick={() => setShowInactive(!showInactive)}
+                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md"
+                        >
+                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                        </button>
+                    )}
                     {hasPermission('cxc.add_vendedor') && (
                         <button
                             onClick={handleCreateClick}
@@ -143,12 +193,22 @@ export default function VendedoresPage() {
                             Nuevo Vendedor
                         </button>
                     )}
-                    {hasPermission('cxc.can_view_inactive_records') && (
-                        <button
-                            onClick={() => setShowInactive(!showInactive)}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md"
+                    {hasPermission('cxc.add_vendedor') && (
+                        <Link
+                            href="/importar/vendedores"
+                            className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                            title="Importar desde Excel"
                         >
-                            {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
+                            <Upload className="h-6 w-6" />
+                        </Link>
+                    )}
+                    {hasPermission('cxc.view_vendedor') && (
+                        <button
+                            onClick={() => setIsExportModalOpen(true)}
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                            title="Exportar a Excel"
+                        >
+                            <Download className="h-6 w-6" />
                         </button>
                     )}
                 </div>
@@ -206,6 +266,14 @@ export default function VendedoresPage() {
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="¿Está seguro de eliminar este vendedor?"
+            />
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={VENDEDOR_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onChange={handleColumnChange}
+                onExport={handleExport}
             />
         </div>
     );
