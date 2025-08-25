@@ -1,14 +1,31 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getDepartamentos, createDepartamento, updateDepartamento, deleteDepartamento, getInactiveDepartamentos, hardDeleteDepartamento } from '@/services/api';
+import Link from 'next/link';
+import {
+    getDepartamentos,
+    createDepartamento,
+    updateDepartamento,
+    deleteDepartamento,
+    getInactiveDepartamentos,
+    hardDeleteDepartamento,
+    exportDepartamentosExcel
+} from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ExportModal from '@/components/ui/modals/Export';
+import { Download, Upload } from 'lucide-react';
 
 const DEPARTAMENTO_COLUMNAS_DISPLAY = [
     { header: 'Nombre', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.nombre}</span> },
+];
+
+const DEPARTAMENTO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'nombre', label: 'Nombre' },
+    { id: 'activo', label: 'Estado' },
 ];
 
 const DEPARTAMENTO_FORM_FIELDS = [
@@ -22,11 +39,17 @@ export default function DepartamentosPage() {
     const pageSize = 5;
     const [error, setError] = useState(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [formData, setFormData] = useState({ nombre: '' });
     const [editingDepartamento, setEditingDepartamento] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const cols = {};
+        DEPARTAMENTO_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
+        return cols;
+    });
     const [loading, setLoading] = useState(true);
     const [isPaginating, setIsPaginating] = useState(false);
 
@@ -109,6 +132,30 @@ export default function DepartamentosPage() {
         }
     };
 
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = DEPARTAMENTO_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+        try {
+            const response = await exportDepartamentosExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_departamentos.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
+    };
+
     return (
         <div className="p-8 h-full flex flex-col">
             <div className="flex-shrink-0">
@@ -123,6 +170,24 @@ export default function DepartamentosPage() {
                         {hasPermission('cxc.add_departamento') && (
                             <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
                                 + Nuevo Departamento
+                            </button>
+                        )}
+                        {hasPermission('cxc.add_departamento') && (
+                            <Link
+                                href="/importar/departamentos"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </Link>
+                        )}
+                        {hasPermission('cxc.view_departamento') && (
+                            <button
+                                onClick={() => setIsExportModalOpen(true)}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                                title="Exportar a Excel"
+                            >
+                                <Download className="h-6 w-6" />
                             </button>
                         )}
                     </div>
@@ -163,6 +228,15 @@ export default function DepartamentosPage() {
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}
                 message="¿Estás seguro de que deseas eliminar este departamento?"
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={DEPARTAMENTO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onChange={handleColumnChange}
+                onExport={handleExport}
             />
         </div>
     );

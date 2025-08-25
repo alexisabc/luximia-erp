@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import {
   getFormasPago,
   createFormaPago,
@@ -15,7 +16,7 @@ import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 
 const COLUMNS_DISPLAY = [
   { header: 'Enganche (%)', render: (row) => row.enganche },
@@ -190,6 +191,23 @@ export default function FormasPagoPage() {
                 {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
               </button>
             )}
+            {hasPermission('cxc.add_formapago') && (
+              <button
+                onClick={handleCreateClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                + Nueva Forma
+              </button>
+            )}
+            {hasPermission('cxc.add_formapago') && (
+              <Link
+                href="/importar/formas-pago"
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                title="Importar desde Excel"
+              >
+                <Upload className="h-6 w-6" />
+              </Link>
+            )}
             {hasPermission('cxc.view_formapago') && (
               <button
                 onClick={() => setIsExportModalOpen(true)}
@@ -197,14 +215,6 @@ export default function FormasPagoPage() {
                 title="Exportar a Excel"
               >
                 <Download className="h-6 w-6" />
-              </button>
-            )}
-            {hasPermission('cxc.add_formapago') && (
-              <button
-                onClick={handleCreateClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                + Nueva Forma
               </button>
             )}
           </div>
