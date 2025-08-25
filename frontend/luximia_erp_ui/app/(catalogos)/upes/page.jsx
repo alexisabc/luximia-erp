@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/ui/modals/Form';
@@ -9,7 +10,7 @@ import ExportModal from '@/components/ui/modals/Export';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import { formatCurrency } from '@/utils/formatters';
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 
 // ### 2. Define las columnas para la tabla y la exportación ###
 const UPE_COLUMNAS_DISPLAY = [
@@ -224,7 +225,18 @@ export default function UPEsPage() {
                             {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
                         </button>
                     )}
-                    {hasPermission('cxc.add_upe') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nueva UPE</button>}
+                    {hasPermission('cxc.add_upe') && (
+                        <>
+                            <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nueva UPE</button>
+                            <Link
+                                href="/importar/upes"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg transition-colors duration-200"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </Link>
+                        </>
+                    )}
                     <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><Download className="h-6 w-6" /></button>
                 </div>
             </div>
