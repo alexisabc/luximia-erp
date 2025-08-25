@@ -223,7 +223,7 @@ export default function Sidebar() {
                                 </button>
 
                                 {isCatalogosOpen && (
-                                    <ul className="pl-4 mt-1 space-y-1">
+                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                         {hasPermission('cxc.view_cliente') && (
                                             <li>
                                                 <Link href="/clientes" className={getLinkClass('/clientes', true)}>
@@ -324,7 +324,7 @@ export default function Sidebar() {
                                 </button>
 
                                 {isFinanzasOpen && (
-                                    <ul className="pl-4 mt-1 space-y-1">
+                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                         {hasPermission('cxc.view_pago') && (
                                             <li>
                                                 <Link href="/pagos" className={getLinkClass('/pagos', true)}>
@@ -386,7 +386,7 @@ export default function Sidebar() {
                                 </button>
 
                                 {isAdminOpen && (
-                                    <ul className="pl-4 mt-1 space-y-1">
+                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                         {canViewSettings && (
                                             <li>
                                                 <button
@@ -400,7 +400,7 @@ export default function Sidebar() {
                                                     {isOpen && <ChevronIcon isOpen={isGestionOpen} />}
                                                 </button>
                                                 {isGestionOpen && (
-                                                    <ul className="pl-4 mt-1 space-y-1">
+                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                                         {hasPermission('cxc.view_user') && (
                                                             <li>
                                                                 <Link
@@ -441,7 +441,7 @@ export default function Sidebar() {
                                                     {isOpen && <ChevronIcon isOpen={isHerramientasOpen} />}
                                                 </button>
                                                 {isHerramientasOpen && (
-                                                    <ul className="pl-4 mt-1 space-y-1">
+                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                                         {user?.is_superuser && (
                                                             <li>
                                                                 <Link href="/importar" className={getLinkClass('/importar', true)}>
@@ -587,7 +587,7 @@ export default function Sidebar() {
                                                     {isOpen && <ChevronIcon isOpen={isSeguridadOpen} />}
                                                 </button>
                                                 {isSeguridadOpen && (
-                                                    <ul className="pl-4 mt-1 space-y-1">
+                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
                                                         <li>
                                                             <Link href="/auditoria" className={getLinkClass('/auditoria', true)}>
                                                                 <FileSearch className="h-4 w-4" />
@@ -623,28 +623,33 @@ export default function Sidebar() {
                     <div className="space-y-1">
                         <button
                             onClick={handleUserToggle}
-                            className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''
-                                }`}
+                            className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''}`}
                         >
                             <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
                                 <img src={user?.avatar || '/icon-luximia.png'} alt="Usuario" className="h-6 w-6 rounded-full" />
-                                <span className={`${textClasses} text-sm`}>{fullName}</span>
+                                {!isCollapsed && <span className={`${textClasses} text-sm`}>{fullName}</span>}
                             </div>
                             {isOpen && <ChevronIcon isOpen={isUserMenuOpen} />}
                         </button>
                         {isUserMenuOpen && (
                             <div className="absolute left-0 bottom-full w-full mb-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 z-50">
-                                <ThemeSwitcher className="w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700" />
-                                <Link href="/ajustes" className="flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                                <ThemeSwitcher
+                                    className={`w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
+                                    showLabel={!isCollapsed}
+                                />
+                                <Link
+                                    href="/ajustes"
+                                    className={`flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
+                                >
                                     <Settings className="h-5 w-5" />
-                                    <span className={textClasses}>Ajustes</span>
+                                    {!isCollapsed && <span className={textClasses}>Ajustes</span>}
                                 </Link>
                                 <button
                                     onClick={logoutUser}
-                                    className="flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    className={`flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
                                 >
                                     <LogOut className="h-5 w-5" />
-                                    <span className={textClasses}>Cerrar sesión</span>
+                                    {!isCollapsed && <span className={textClasses}>Cerrar sesión</span>}
                                 </button>
                             </div>
                         )}

@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-export default function ThemeSwitcher({ className }) {
+export default function ThemeSwitcher({ className, showLabel = true }) {
     const { theme, resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -20,7 +20,7 @@ export default function ThemeSwitcher({ className }) {
         return (
             <button className={baseClasses}>
                 <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-                <span className="ml-2">Auto</span>
+                {showLabel && <span className="ml-2">Auto</span>}
             </button>
         );
     }
@@ -50,7 +50,7 @@ export default function ThemeSwitcher({ className }) {
             <span className="transition-transform duration-300" key={current}>
                 {icon}
             </span>
-            <span className="ml-2">{label}</span>
+            {showLabel && <span className="ml-2">{label}</span>}
         </button>
     );
 }
