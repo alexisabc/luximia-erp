@@ -133,7 +133,8 @@ export const getPresupuestos = (page = 1, pageSize = 15) =>
   apiClient.get(`/cxc/presupuestos/?page=${page}&page_size=${pageSize}`);
 export const getContratos = (page = 1, pageSize = 15, filters = {}) =>
   apiClient.get('/cxc/contratos/', { params: { page, page_size: pageSize, ...filters } });
-export const getPagos = (page = 1, pageSize = 15) => apiClient.get(`/cxc/pagos/?page=${page}&page_size=${pageSize}`);
+export const getPagos = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/pagos/', { params: { page, page_size: pageSize, ...filters } });
 
 // ===================== Bancos =====================
 export const createBanco = (data) => apiClient.post('/cxc/bancos/', data);
@@ -229,10 +230,13 @@ export const exportPresupuestosExcel = (columns) => apiClient.post('/cxc/presupu
 export const importarPresupuestos = (formData) => apiClient.post('/cxc/presupuestos/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Planes de Pago =====================
-export const getPlanesPago = (page = 1, pageSize = 15) => apiClient.get(`/cxc/planes-pago/?page=${page}&page_size=${pageSize}`)
+export const getPlanesPago = (page = 1, pageSize = 15, filters = {}) =>
+  apiClient.get('/cxc/planes-pago/', { params: { page, page_size: pageSize, ...filters } });
 export const createPlanPago = (data) => apiClient.post('/cxc/planes-pago/', data);
-export const exportPlanesPagoExcel = (columns) => apiClient.post('/cxc/planes-pago/exportar-excel/', { columns }, { responseType: 'blob' });
-export const importarPlanesPago = (formData) => apiClient.post('/cxc/planes-pago/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const exportPlanesPagoExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/planes-pago/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
+export const importarPlanesPago = (formData) =>
+  apiClient.post('/cxc/planes-pago/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 // ===================== Esquemas de Comisión =====================
 export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/cxc/esquemas-comision/?page=${page}&page_size=${pageSize}`);
@@ -275,8 +279,8 @@ export const importarContratos = (formData) =>
 export const createPago = (data) => apiClient.post('/cxc/pagos/', data);
 export const updatePago = (id, data) => apiClient.patch(`/cxc/pagos/${id}/`, data);
 export const deletePago = (id) => apiClient.delete(`/cxc/pagos/${id}/`);
-export const exportPagosExcel = (columns) =>
-  apiClient.post('/cxc/pagos/exportar-excel/', { columns }, { responseType: 'blob' });
+export const exportPagosExcel = (columns, filters = {}) =>
+  apiClient.post('/cxc/pagos/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
 export const importarPagosHistoricos = (formData) =>
   apiClient.post('/cxc/pagos/importar-excel/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
