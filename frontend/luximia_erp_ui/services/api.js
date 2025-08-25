@@ -92,12 +92,28 @@ export const resetPasskeys = () => apiClient.post('/users/passkey/reset/');
 export const startTotpReset = () => apiClient.post('/users/totp/reset/');
 export const verifyTotpReset = (code) =>
   apiClient.post('/users/totp/reset/verify/', { code });
+export const exportUsuariosExcel = (columns) =>
+  apiClient.post('/users/exportar-excel/', { columns }, { responseType: 'blob' });
+export const importarUsuarios = (formData) =>
+  apiClient.post('/users/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 // ===================== Grupos/Roles =====================
 export const getGroups = () => apiClient.get('/users/groups/');
 export const createGroup = (data) => apiClient.post('/users/groups/', data);
 export const updateGroup = (id, data) => apiClient.patch(`/users/groups/${id}/`, data);
 export const deleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
+export const getInactiveGroups = () =>
+  apiClient.get('/users/groups/?is_active=False');
+export const exportRolesExcel = (columns) =>
+  apiClient.post('/users/groups/exportar-excel/', { columns }, {
+    responseType: 'blob',
+  });
+export const importarRoles = (formData) =>
+  apiClient.post('/users/groups/importar-excel/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 
 // ===================== CXC (paginados) =====================

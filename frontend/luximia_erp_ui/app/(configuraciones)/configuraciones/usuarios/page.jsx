@@ -2,13 +2,26 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUsers, getGroups, createUser, updateUser, deleteUser, getInactiveUsers, hardDeleteUser, resendInvite } from '@/services/api';
+import {
+    getUsers,
+    getGroups,
+    createUser,
+    updateUser,
+    deleteUser,
+    getInactiveUsers,
+    hardDeleteUser,
+    resendInvite,
+    exportUsuariosExcel,
+    importarUsuarios,
+} from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ExportModal from '@/components/ui/modals/Export';
+import ImportModal from '@/components/ui/modals/Import';
 import Overlay from '@/components/loaders/Overlay';
-import { Key, ShieldCheck, Mail } from 'lucide-react';
+import { Key, ShieldCheck, Mail, Upload, Download } from 'lucide-react';
 
 const USUARIO_COLUMNAS_DISPLAY = [
     { header: 'Usuario', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.username}</span> },
@@ -36,6 +49,13 @@ const USUARIO_COLUMNAS_DISPLAY = [
     }
 ];
 
+const USUARIO_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'username', label: 'Usuario' },
+    { id: 'email', label: 'Email' },
+    { id: 'is_active', label: 'Estado' },
+];
+
 export default function UsuariosPage() {
     const { hasPermission } = useAuth();
     const [users, setUsers] = useState([]);
@@ -49,6 +69,13 @@ export default function UsuariosPage() {
     const [editingUser, setEditingUser] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        USUARIO_COLUMNAS_EXPORT.forEach(c => (allCols[c.id] = true));
+        return allCols;
+    });
 
     const [formData, setFormData] = useState({
         email: '',
@@ -107,6 +134,35 @@ export default function UsuariosPage() {
             ? currentSelection.filter(id => id !== selectedId)
             : [...currentSelection, selectedId];
         setFormData(prev => ({ ...prev, [fieldName]: newSelection }));
+    };
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = USUARIO_COLUMNAS_EXPORT
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+
+        try {
+            const response = await exportUsuariosExcel(columnsToExport);
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_usuarios.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
     };
 
     const openModalForCreate = () => {
@@ -193,10 +249,18 @@ export default function UsuariosPage() {
                         </button>
                     )}
                     {hasPermission('cxc.add_user') && (
-                        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                            + Nuevo Usuario
-                        </button>
+                        <>
+                            <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                + Nuevo Usuario
+                            </button>
+                            <button onClick={() => setIsImportModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg" title="Importar desde Excel">
+                                <Upload className="h-6 w-6" />
+                            </button>
+                        </>
                     )}
+                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
+                        <Download className="h-6 w-6" />
+                    </button>
                 </div>
             </div>
 
@@ -230,6 +294,22 @@ export default function UsuariosPage() {
                 onSubmit={handleSubmit}
                 fields={USER_FORM_FIELDS}
                 submitText="Enviar Invitación"
+            />
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={importarUsuarios}
+                onSuccess={() => fetchData()}
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={USUARIO_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
             />
 
             <ConfirmationModal
