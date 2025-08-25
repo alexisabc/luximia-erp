@@ -1,13 +1,31 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPagos, createPago, getContratos, getMetodosPago } from '@/services/api';
+import { getPagos, createPago, getContratos, getMetodosPago, exportPagosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Link from 'next/link';
 import Overlay from '@/components/loaders/Overlay';
 import Modal from '@/components/ui/modals';
+import { formatCurrency } from '@/utils/formatters';
+import { Upload, Download } from 'lucide-react';
+
+const PAGO_COLUMNAS_EXPORT = [
+    { id: 'fecha_pago', label: 'Fecha de Pago' },
+    { id: 'concepto', label: 'Concepto' },
+    { id: 'metodo_pago', label: 'Método' },
+    { id: 'ordenante', label: 'Ordenante' },
+    { id: 'monto_pagado', label: 'Monto Pagado' },
+    { id: 'moneda_pagada', label: 'Moneda' },
+    { id: 'tipo_cambio', label: 'Tipo de Cambio' },
+    { id: 'valor_mxn', label: 'Valor (MXN)' },
+    { id: 'banco_origen', label: 'Banco Origen' },
+    { id: 'num_cuenta_origen', label: 'Cuenta Origen' },
+    { id: 'banco_destino', label: 'Banco Destino' },
+    { id: 'cuenta_beneficiaria', label: 'Cuenta Beneficiaria' },
+    { id: 'comentarios', label: 'Comentarios' },
+];
 
 export default function PagosPage() {
     const { hasPermission } = useAuth();
@@ -63,6 +81,26 @@ export default function PagosPage() {
         const totalPages = pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1;
         if (newPage > 0 && newPage <= totalPages) {
             fetchData(newPage, pageSize, true);
+        }
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = PAGO_COLUMNAS_EXPORT.map(c => c.id);
+        try {
+            const response = await exportPagosExcel(columnsToExport);
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_pagos.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
         }
     };
 
@@ -128,9 +166,23 @@ export default function PagosPage() {
         <div className="p-8 h-full flex flex-col">
             <div className="flex justify-between items-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Pagos Registrados</h1>
-                {hasPermission('cxc.add_pago') && (
-                    <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Registrar Pago</button>
-                )}
+                <div className="flex items-center space-x-3">
+                    {hasPermission('cxc.add_pago') && (
+                        <Link href="/importar/pagos" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">
+                            Importar
+                        </Link>
+                    )}
+                    {hasPermission('cxc.view_pago') && (
+                        <button onClick={handleExport} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                            Exportar
+                        </button>
+                    )}
+                    {hasPermission('cxc.add_pago') && (
+                        <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                            + Registrar Pago
+                        </button>
+                    )}
+                </div>
             </div>
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             <div ref={ref} className="flex-grow min-h-0 relative">
