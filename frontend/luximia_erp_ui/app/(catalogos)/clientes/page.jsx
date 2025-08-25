@@ -2,15 +2,23 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getClientes, createCliente, updateCliente, deleteCliente, getInactiveClientes, hardDeleteCliente, exportClientesExcel } from '@/services/api';
+import {
+    getClientes,
+    createCliente,
+    updateCliente,
+    deleteCliente,
+    getInactiveClientes,
+    hardDeleteCliente,
+    exportClientesExcel,
+    importarClientes,
+} from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import Modal from '@/components/ui/modals';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
-import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import ExportModal from '@/components/ui/modals/Export';
-import { Download } from 'lucide-react';
+import ImportModal from '@/components/ui/modals/Import';
+import { Download, Upload } from 'lucide-react';
 
 
 const CLIENTE_COLUMNAS_DISPLAY = [
@@ -38,6 +46,7 @@ export default function ClientesPage() {
     const [error, setError] = useState(null);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [formData, setFormData] = useState({ nombre_completo: '', email: '', telefono: '' });
     const [editingCliente, setEditingCliente] = useState(null);
@@ -203,8 +212,30 @@ export default function ClientesPage() {
                             {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
                         </button>
                     )}
-                    {hasPermission('cxc.add_cliente') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Nuevo Cliente</button>}
-                    <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel"><Download className="h-6 w-6" /></button>
+                    {hasPermission('cxc.add_cliente') && (
+                        <>
+                            <button
+                                onClick={handleCreateClick}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                + Nuevo Cliente
+                            </button>
+                            <button
+                                onClick={() => setIsImportModalOpen(true)}
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg"
+                                title="Importar desde Excel"
+                            >
+                                <Upload className="h-6 w-6" />
+                            </button>
+                        </>
+                    )}
+                    <button
+                        onClick={() => setIsExportModalOpen(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg"
+                        title="Exportar a Excel"
+                    >
+                        <Download className="h-6 w-6" />
+                    </button>
                 </div>
             </div>
 
@@ -257,6 +288,13 @@ export default function ClientesPage() {
                 onSubmit={handleSubmit}
                 fields={CLIENTE_FORM_FIELDS}
                 submitText="Guardar Cliente"
+            />
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={importarClientes}
+                onSuccess={() => fetchData(currentPage, pageSize)}
             />
 
             <ExportModal
