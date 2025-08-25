@@ -2,19 +2,36 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getGroups, getPermissions, createGroup, updateGroup, deleteGroup } from '@/services/api';
+import {
+    getGroups,
+    getPermissions,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    getInactiveGroups,
+    exportRolesExcel,
+    importarRoles,
+} from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
 import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ExportModal from '@/components/ui/modals/Export';
+import ImportModal from '@/components/ui/modals/Import';
 import { translatePermission, translateModel, shouldDisplayPermission } from '@/utils/permissions';
 import Overlay from '@/components/loaders/Overlay';
-import { Trash } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 
 // --- Constantes de Configuración ---
 const ROLES_COLUMNAS_DISPLAY = [
     { header: 'Nombre del Rol', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.name}</span> },
     { header: 'Permisos Asignados', render: (row) => `${row.permissions.length} permisos` },
+];
+
+const ROLES_COLUMNAS_EXPORT = [
+    { id: 'id', label: 'ID' },
+    { id: 'name', label: 'Nombre del Rol' },
+    { id: 'permissions', label: 'Permisos' },
 ];
 
 export default function RolesPage() {
@@ -31,6 +48,14 @@ export default function RolesPage() {
     const [formData, setFormData] = useState({ name: '', permissions: [] });
     const [editingGroup, setEditingGroup] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [showInactive, setShowInactive] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [selectedColumns, setSelectedColumns] = useState(() => {
+        const allCols = {};
+        ROLES_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
+        return allCols;
+    });
 
     const groupPermissions = (perms) => {
         const byModel = {};
@@ -60,8 +85,9 @@ export default function RolesPage() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
+            const groupsPromise = showInactive ? getInactiveGroups() : getGroups();
             const [groupsRes, permissionsRes] = await Promise.all([
-                getGroups(),
+                groupsPromise,
                 getPermissions(),
             ]);
 
@@ -84,7 +110,7 @@ export default function RolesPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showInactive]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -115,6 +141,35 @@ export default function RolesPage() {
                 : current.filter(id => !values.includes(id));
             return { ...prev, [fieldName]: newValues };
         });
+    };
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = ROLES_COLUMNAS_EXPORT
+            .filter(c => selectedColumns[c.id])
+            .map(c => c.id);
+
+        try {
+            const response = await exportRolesExcel(columnsToExport);
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_roles.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+        } catch (err) {
+            setError('No se pudo exportar el archivo.');
+        }
     };
 
     const openModalForCreate = () => {
@@ -173,14 +228,29 @@ export default function RolesPage() {
 
     return (
         <div className="p-8 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-10">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Roles</h1>
-                {hasPermission('cxc.add_group') && (
-                    <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                        + Nuevo Rol
+        <div className="flex justify-between items-center mb-10">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Gestión de Roles</h1>
+            <div className="flex items-center space-x-3">
+                {hasPermission('cxc.can_view_inactive_records') && (
+                    <button onClick={() => setShowInactive(!showInactive)} className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                        {showInactive ? 'Ver Activos' : 'Ver Inactivos'}
                     </button>
                 )}
+                {hasPermission('cxc.add_group') && (
+                    <>
+                        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                            + Nuevo Rol
+                        </button>
+                        <button onClick={() => setIsImportModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-bold p-2 rounded-lg" title="Importar desde Excel">
+                            <Upload className="h-6 w-6" />
+                        </button>
+                    </>
+                )}
+                <button onClick={() => setIsExportModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white font-bold p-2 rounded-lg" title="Exportar a Excel">
+                    <Download className="h-6 w-6" />
+                </button>
             </div>
+        </div>
 
             {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
 
@@ -207,6 +277,22 @@ export default function RolesPage() {
                 onSubmit={handleSubmit}
                 fields={ROL_FORM_FIELDS}
                 submitText="Guardar Rol"
+            />
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={importarRoles}
+                onSuccess={() => fetchData()}
+            />
+
+            <ExportModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+                columns={ROLES_COLUMNAS_EXPORT}
+                selectedColumns={selectedColumns}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
             />
 
             <ConfirmationModal
