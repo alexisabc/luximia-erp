@@ -9,7 +9,6 @@ import Overlay from '@/components/loaders/Overlay';
 import KpiCard from '@/components/ui/cards/Kpi';
 import VentasChart from '@/components/charts/Ventas';
 import FlujoCobranzaChart from '@/components/charts/FlujoCobranza';
-import ThemeSwitcher from '@/components/layout/ThemeSwitcher'; // Opcional: si quieres el botón aquí
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -93,7 +92,6 @@ export default function DashboardPage() {
               <option key={p.id} value={p.id}>{p.nombre}</option>
             ))}
           </select>
-          <ThemeSwitcher />
         </div>
       </div>
 
