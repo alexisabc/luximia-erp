@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { getPlanesPago, createPlanPago, getClientes, getUPEs, importarPlanesPago, exportPlanesPagoExcel } from '@/services/api';
+import { getPlanesPago, createPlanPago, getClientes, getUPEs, importarPlanesPago, exportPlanesPagoExcel, getFormasPago, getMonedas } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import FormModal from '@/components/ui/modals/Form';
@@ -14,10 +14,10 @@ const PLANPAGO_COLUMNAS_EXPORT = [
     { id: 'id', label: 'ID' },
     { id: 'cliente', label: 'Cliente' },
     { id: 'upe', label: 'UPE' },
-    { id: 'fecha_programada', label: 'Fecha Programada' },
-    { id: 'monto_programado', label: 'Monto Programado' },
-    { id: 'moneda', label: 'Moneda' },
-    { id: 'forma_pago', label: 'Forma de Pago' },
+    { id: 'fecha_apartado', label: 'Fecha Apartado' },
+    { id: 'apartado_monto', label: 'Monto Apartado' },
+    { id: 'moneda_apartado', label: 'Moneda' },
+    { id: 'forma_pago_enganche', label: 'Forma de Pago' },
 ];
 
 export default function PlanesPagoPage() {
@@ -31,6 +31,8 @@ export default function PlanesPagoPage() {
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [upes, setUpes] = useState([]);
+    const [formasPago, setFormasPago] = useState([]);
+    const [monedas, setMonedas] = useState([]);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [selectedColumns, setSelectedColumns] = useState(() => {
         const cols = {};
@@ -52,14 +54,18 @@ export default function PlanesPagoPage() {
         if (!size) return;
         pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
         try {
-            const [planesRes, clientesRes, upesRes] = await Promise.all([
+            const [planesRes, clientesRes, upesRes, formasRes, monedasRes] = await Promise.all([
                 getPlanesPago(page, size),
                 getClientes(1, 1000),
                 getUPEs(1, 1000),
+                getFormasPago(),
+                getMonedas(1, 1000),
             ]);
             setPageData(planesRes.data);
             setClientes(clientesRes.data.results);
             setUpes(upesRes.data.results);
+            setFormasPago(formasRes.data.results || formasRes.data);
+            setMonedas(monedasRes.data.results || monedasRes.data);
             setCurrentPage(page);
         } catch (err) {
             setError('No se pudieron cargar los planes de pago.');
@@ -157,11 +163,33 @@ export default function PlanesPagoPage() {
     };
 
     const columns = [
-        { header: 'Cliente', render: row => row.cliente_nombre },
-        { header: 'UPE', render: row => row.upe_identificador },
-        { header: 'Fecha', render: row => new Date(row.fecha_programada + 'T00:00:00').toLocaleDateString('es-MX') },
-        { header: 'Monto', render: row => `${parseFloat(row.monto_programado).toLocaleString('es-MX', { minimumFractionDigits: 2 })} ${row.moneda}` },
-        { header: 'Forma Pago', render: row => row.forma_pago || '' },
+        {
+            header: 'Cliente',
+            render: row => clientes.find(c => c.id === row.cliente)?.nombre_completo || '',
+        },
+        {
+            header: 'UPE',
+            render: row => upes.find(u => u.id === row.upe)?.identificador || '',
+        },
+        {
+            header: 'Fecha',
+            render: row => row.fecha_apartado ? new Date(row.fecha_apartado + 'T00:00:00').toLocaleDateString('es-MX') : '',
+        },
+        {
+            header: 'Monto',
+            render: row => {
+                const moneda = monedas.find(m => m.id === row.moneda_apartado)?.codigo || '';
+                const monto = parseFloat(row.apartado_monto || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+                return `${monto} ${moneda}`;
+            },
+        },
+        {
+            header: 'Forma Pago',
+            render: row => {
+                const forma = formasPago.find(f => f.id === row.forma_pago_enganche);
+                return forma ? `${forma.enganche}%/${forma.mensualidades}%/${forma.meses}m/${forma.contra_entrega}%` : '';
+            },
+        },
     ];
 
     const formFields = [
