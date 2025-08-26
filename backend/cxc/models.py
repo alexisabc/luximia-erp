@@ -286,7 +286,7 @@ class DocumentEmbedding(models.Model):
     """Documento indexado para búsquedas semánticas."""
 
     content = models.TextField()
-    embedding = VectorField(dim=1536)
+    embedding = VectorField(dimensions=1536)
 
     def __str__(self):
         return self.content[:50]
