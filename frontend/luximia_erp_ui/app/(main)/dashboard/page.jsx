@@ -29,15 +29,16 @@ export default function DashboardPage() {
         getAllProyectos(),
       ]);
 
-      const labels = dashboardRes.data?.chart?.labels;
+      const dashboard = dashboardRes.data ?? {};
+      const labels = dashboard.chart?.labels;
       if (!labels || labels.length === 0) {
         setHasData(false);
-        console.error('Dashboard response missing chart labels:', dashboardRes);
+        console.warn('Dashboard response missing chart labels', dashboard);
       } else {
         setHasData(true);
       }
 
-      setDashboardData(dashboardRes.data);
+      setDashboardData(dashboard);
       const projectList = proyectosRes.data?.results ?? proyectosRes.data ?? [];
       setProyectos(projectList);
 
