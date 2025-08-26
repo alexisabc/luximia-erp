@@ -22,6 +22,7 @@ from .views import (
     EsquemaComisionViewSet,
     AuditLogViewSet,
     strategic_dashboard,
+    ConsultaInteligenteView,
 )
 
 router = DefaultRouter()
@@ -46,5 +47,6 @@ router.register(r"auditoria", AuditLogViewSet, basename="auditoria")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("consulta-inteligente/", ConsultaInteligenteView.as_view()),
     path("dashboard/strategic/", strategic_dashboard),
 ]

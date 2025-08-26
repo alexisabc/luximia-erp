@@ -1,6 +1,7 @@
 #backend/cxc/models.py
 from django.db import models
 from django.conf import settings
+from pgvector.django import VectorField
 
 
 class ModeloBaseActivo(models.Model):
@@ -279,3 +280,13 @@ class Pago(ModeloBaseActivo):
 
     def __str__(self):
         return f"{self.tipo_pago} - {self.monto}"
+
+
+class DocumentEmbedding(models.Model):
+    """Documento indexado para búsquedas semánticas."""
+
+    content = models.TextField()
+    embedding = VectorField(dim=1536)
+
+    def __str__(self):
+        return self.content[:50]

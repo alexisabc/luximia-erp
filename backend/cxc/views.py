@@ -17,7 +17,21 @@ from io import BytesIO
 import calendar
 import xlsxwriter
 from decimal import Decimal
+from openai import OpenAI, OpenAIError
+
+MAX_QUERY_TOKENS = 200
+MAX_RESPONSE_TOKENS = 300
+MAX_CONTEXT_TOKENS = 1000
+
+
+def _truncate_words(text: str, limit: int) -> str:
+    tokens = text.split()
+    if len(tokens) <= limit:
+        return text
+    return " ".join(tokens[:limit])
+
 from .permissions import HasPermissionForAction, CanViewAuditLog
+from .rag import retrieve_relevant
 from .models import (
     Banco,
     Proyecto,
@@ -188,6 +202,50 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
         )
         response["Content-Disposition"] = "attachment; filename=auditoria.xlsx"
         return response
+
+
+class ConsultaInteligenteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        consulta = request.data.get("consulta", "").strip()
+        if not consulta:
+            return Response({"detalle": "Consulta requerida"}, status=400)
+
+        consulta = _truncate_words(consulta, MAX_QUERY_TOKENS)
+
+        contextos = retrieve_relevant(consulta)
+        if not contextos:
+            return Response({"respuesta": "No tengo información al respecto."})
+
+        contexto_str = _truncate_words("\n".join(contextos), MAX_CONTEXT_TOKENS)
+
+        mensajes = [
+            {
+                "role": "system",
+                "content": (
+                    "Eres un asistente del sistema Luximia ERP. "
+                    "Responde solo con la información proporcionada en el contexto. "
+                    "Si no hay datos relevantes responde 'No tengo información al respecto.'"
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Contexto:\n{contexto_str}\n\nPregunta: {consulta}",
+            },
+        ]
+
+        client = OpenAI()
+        try:
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=mensajes,
+                max_output_tokens=MAX_RESPONSE_TOKENS,
+            )
+        except OpenAIError:
+            return Response({"detalle": "Error al contactar el modelo"}, status=500)
+        respuesta = completion.choices[0].message.content.strip()
+        return Response({"respuesta": respuesta})
 
 
 @api_view(["GET"])
