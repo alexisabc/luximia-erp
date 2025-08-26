@@ -267,8 +267,14 @@ def strategic_dashboard(request):
     pagos_base = Pago.objects.filter(activo=True)
 
     if project_ids:
-        contratos_base = contratos_base.filter(upe__proyecto_id__in=project_ids)
-        pagos_base = pagos_base.filter(contrato__upe__proyecto_id__in=project_ids)
+        # El modelo Contrato se vincula a Proyecto a través de presupuesto -> UPE -> proyecto
+        contratos_base = contratos_base.filter(
+            presupuesto__upe__proyecto__id__in=project_ids
+        )
+        # El modelo Pago se vincula a Proyecto mediante contrato -> presupuesto -> UPE -> proyecto
+        pagos_base = pagos_base.filter(
+            contrato__presupuesto__upe__proyecto__id__in=project_ids
+        )
 
     # --- 3. Calculate KPIs ---
     total_ventas = contratos_base.aggregate(
