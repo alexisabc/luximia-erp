@@ -110,7 +110,12 @@ export default function RolesPage() {
                 const permissionsData = permissionsRes.data.filter(shouldDisplayPermission);
 
                 setGroups(normalizedGroups);
-                setPageData(groupsResData);
+                setPageData({
+                    results: normalizedGroups,
+                    count: Array.isArray(groupsResData)
+                        ? normalizedGroups.length
+                        : groupsResData.count ?? normalizedGroups.length,
+                });
                 setPermissions(permissionsData);
                 setPermissionGroups(groupPermissions(permissionsData));
                 setCurrentPage(page);
