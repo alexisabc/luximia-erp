@@ -144,7 +144,8 @@ export default function ReportesPage() {
     const [showActiveFilter, setShowActiveFilter] = useState(false);
     const [filterField, setFilterField] = useState('');
     const [filterValue, setFilterValue] = useState('');
-    const [dateFilter, setDateFilter] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     if (!hasPermission('cxc.can_export')) {
         return <div className="p-8">Sin permiso para exportar reportes.</div>;
@@ -168,7 +169,8 @@ export default function ReportesPage() {
             setShowActiveFilter(false);
             setFilterField('');
             setFilterValue('');
-            setDateFilter('');
+            setStartDate('');
+            setEndDate('');
         } else {
             setSelectedColumns({});
             setPreviewData([]);
@@ -188,8 +190,9 @@ export default function ReportesPage() {
         try {
             const cfg = REPORTES[selectedReport];
             const filters = {};
-            if (dateFilter && cfg.dateField) {
-                filters[cfg.dateField] = dateFilter;
+            if (cfg.dateField) {
+                if (startDate) filters[`${cfg.dateField}__gte`] = startDate;
+                if (endDate) filters[`${cfg.dateField}__lte`] = endDate;
             }
             const res = await cfg.fetch(1, 50, filters);
             const data = res.data.results || res.data;
@@ -209,8 +212,9 @@ export default function ReportesPage() {
             .filter((c) => selectedColumns[c.id])
             .map((c) => c.id);
         const filters = {};
-        if (dateFilter && cfg.dateField) {
-            filters[cfg.dateField] = dateFilter;
+        if (cfg.dateField) {
+            if (startDate) filters[`${cfg.dateField}__gte`] = startDate;
+            if (endDate) filters[`${cfg.dateField}__lte`] = endDate;
         }
         try {
             const res = await cfg.fn(columnsToExport, filters);
@@ -270,12 +274,20 @@ export default function ReportesPage() {
             {selectedReport && (
                 <>
                     {REPORTES[selectedReport].dateField && (
-                        <input
-                            type="date"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                            className="px-3 py-2 border rounded-md max-w-sm dark:bg-gray-800 dark:border-gray-700"
-                        />
+                        <div className="flex space-x-2">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="px-3 py-2 border rounded-md max-w-sm dark:bg-gray-800 dark:border-gray-700"
+                            />
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="px-3 py-2 border rounded-md max-w-sm dark:bg-gray-800 dark:border-gray-700"
+                            />
+                        </div>
                     )}
 
                     <div className="flex items-center space-x-2 mt-2">
