@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'csp',  # django-csp para la política de seguridad de contenido
     'rest_framework_simplejwt.token_blacklist',
     'django_extensions',
+    'pgvector.django',
 ]
 
 MIDDLEWARE = [
