@@ -35,7 +35,7 @@ const ESQUEMA_COLUMNAS_EXPORT = [
 
 export default function EsquemasComisionPage() {
     const { hasPermission, authTokens } = useAuth();
-    const pageSize = useResponsivePageSize();
+    const { ref, pageSize } = useResponsivePageSize(57);
 
     const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [currentPage, setCurrentPage] = useState(1);
@@ -195,7 +195,7 @@ export default function EsquemasComisionPage() {
                 {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
             </div>
 
-            <div className="flex-grow min-h-0">
+            <div ref={ref} className="flex-grow min-h-0">
                 <ReusableTable
                     data={pageData.results}
                     columns={ESQUEMA_COLUMNAS_DISPLAY}

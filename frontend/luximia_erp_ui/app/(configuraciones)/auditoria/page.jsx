@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import { useAuth } from '@/context/AuthContext';
 import { getAuditLogs, downloadAuditLogExcel } from '@/services/api';
+import ActionButtons from '@/components/ui/ActionButtons';
 
 const COLUMNAS = [
   { header: 'Usuario', render: row => row.user || '-' },
@@ -48,7 +49,7 @@ export default function AuditoriaPage() {
     fetchLogs(newPage, pageSize, true);
   };
 
-  const handleDownload = async () => {
+  const handleExport = async () => {
     try {
       const res = await downloadAuditLogExcel();
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -70,7 +71,7 @@ export default function AuditoriaPage() {
     <div className="p-8 h-full flex flex-col">
       <div className="flex justify-between items-center mb-10">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Auditoría</h1>
-        <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Descargar Excel</button>
+        <ActionButtons onExport={handleExport} canExport={hasPermission('cxc.can_view_auditlog')} />
       </div>
       {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
       <div className="flex-grow min-h-0">
