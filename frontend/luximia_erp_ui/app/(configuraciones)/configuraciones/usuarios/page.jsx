@@ -60,8 +60,12 @@ const USUARIO_COLUMNAS_EXPORT = [
 export default function UsuariosPage() {
     const { hasPermission } = useAuth();
     const [users, setUsers] = useState([]);
+    const [pageData, setPageData] = useState({ results: [], count: 0 });
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
     const [error, setError] = useState(null);
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -85,32 +89,49 @@ export default function UsuariosPage() {
         groups: []
     });
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            // Lógica corregida: Llama a getInactiveUsers() si se ha pedido, de lo contrario llama a getUsers() para traer a todos.
-            const usersPromise = showInactive ? getInactiveUsers() : getUsers();
-            const [usersRes, groupsRes] = await Promise.all([usersPromise, getGroups()]);
+    const fetchData = useCallback(
+        async (page, size, isPageChange = false) => {
+            setError(null);
+            isPageChange ? setIsPaginating(true) : setLoading(true);
+            try {
+                const usersPromise = showInactive
+                    ? getInactiveUsers(page, size)
+                    : getUsers(page, size);
+                const [usersRes, groupsRes] = await Promise.all([
+                    usersPromise,
+                    getGroups(1, 1000),
+                ]);
 
-            const usersData = Array.isArray(usersRes.data)
-                ? usersRes.data
-                : usersRes.data?.results || [];
-            const groupsData = Array.isArray(groupsRes.data)
-                ? groupsRes.data
-                : groupsRes.data?.results || [];
+                const usersResData = usersRes.data;
+                const usersData = Array.isArray(usersResData)
+                    ? usersResData
+                    : usersResData.results || [];
+                const groupsData = Array.isArray(groupsRes.data)
+                    ? groupsRes.data
+                    : groupsRes.data?.results || [];
 
-            setUsers(usersData);
-            setGroups(groupsData);
-        } catch (err) {
-            setError('No se pudieron cargar los datos.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }, [showInactive]);
+                setUsers(usersData);
+                setPageData(usersResData);
+                setGroups(groupsData);
+                setCurrentPage(page);
+            } catch (err) {
+                setError('No se pudieron cargar los datos.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+                setIsPaginating(false);
+            }
+        },
+        [showInactive]
+    );
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        fetchData(1, pageSize);
+    }, [fetchData]);
+
+    const handlePageChange = (newPage) => {
+        fetchData(newPage, pageSize, true);
+    };
 
     const USER_FORM_FIELDS = [
         { name: 'email', label: 'Email', type: 'email', required: true },
@@ -198,7 +219,7 @@ export default function UsuariosPage() {
         if (!itemToDelete) return;
         try {
             await deleteUser(itemToDelete);
-            fetchData();
+            fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al eliminar el usuario.');
         } finally {
@@ -210,7 +231,7 @@ export default function UsuariosPage() {
     const handleHardDelete = async (userId) => {
         try {
             await hardDeleteUser(userId);
-            fetchData();
+            fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al eliminar definitivamente.');
         }
@@ -230,14 +251,14 @@ export default function UsuariosPage() {
                 });
             }
             setIsFormModalOpen(false);
-            fetchData();
+            fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al guardar el usuario.');
             console.error(err);
         }
     };
 
-    if (loading) return <Overlay show />;
+    if (loading && !isPaginating) return <Overlay show />;
 
     return (
         <div className="p-8">
@@ -274,6 +295,14 @@ export default function UsuariosPage() {
                         }
                     ]
                 }}
+                pagination={{
+                    currentPage,
+                    totalCount: pageData.count,
+                    pageSize,
+                    onPageChange: handlePageChange,
+                }}
+                loading={loading}
+                isPaginating={isPaginating}
             />
 
             <FormModal
@@ -292,7 +321,7 @@ export default function UsuariosPage() {
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarUsuarios}
-                onSuccess={() => fetchData()}
+                onSuccess={() => fetchData(currentPage, pageSize)}
             />
 
             <ExportModal

@@ -56,20 +56,25 @@ export default function EsquemasComisionPage() {
         return cols;
     });
 
-    const fetchData = useCallback(async (page, size) => {
-        if (!authTokens || !size || size <= 0) return;
-        pageData.results.length > 0 ? setIsPaginating(true) : setLoading(true);
-        try {
-            const res = showInactive ? await getInactiveEsquemasComision() : await getEsquemasComision(page, size);
-            setPageData(res.data);
-            setCurrentPage(page);
-        } catch (err) {
-            setError('No se pudieron cargar los esquemas.');
-        } finally {
-            setLoading(false);
-            setIsPaginating(false);
-        }
-    }, [authTokens, pageData.results.length, showInactive]);
+    const fetchData = useCallback(
+        async (page, size, isPageChange = false) => {
+            if (!authTokens || !size || size <= 0) return;
+            isPageChange ? setIsPaginating(true) : setLoading(true);
+            try {
+                const res = showInactive
+                    ? await getInactiveEsquemasComision(page, size)
+                    : await getEsquemasComision(page, size);
+                setPageData(res.data);
+                setCurrentPage(page);
+            } catch (err) {
+                setError('No se pudieron cargar los esquemas.');
+            } finally {
+                setLoading(false);
+                setIsPaginating(false);
+            }
+        },
+        [authTokens, showInactive]
+    );
 
     useEffect(() => {
         if (pageSize > 0) {
@@ -78,7 +83,7 @@ export default function EsquemasComisionPage() {
     }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => {
-        fetchData(newPage, pageSize);
+        fetchData(newPage, pageSize, true);
     };
 
     const handleInputChange = (e) => {

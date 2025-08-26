@@ -85,8 +85,12 @@ export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
 export const hardDeleteUser = (id) => apiClient.delete(`/users/${id}/hard/`);
 export const resendInvite = (userId) => apiClient.post(`/users/${userId}/resend-invite/`);
 export const getUser = (id) => apiClient.get(`/users/${id}/`);
-export const getUsers = () => apiClient.get('/users/');
-export const getInactiveUsers = () => apiClient.get('/users/?is_active=False');
+export const getUsers = (page = 1, pageSize = 15) =>
+  apiClient.get('/users/', { params: { page, page_size: pageSize } });
+export const getInactiveUsers = (page = 1, pageSize = 15) =>
+  apiClient.get('/users/', {
+    params: { page, page_size: pageSize, is_active: false },
+  });
 export const listPasskeyCredentials = () => apiClient.get('/users/passkey/credentials/');
 export const resetPasskeys = () => apiClient.post('/users/passkey/reset/');
 export const startTotpReset = () => apiClient.post('/users/totp/reset/');
@@ -100,12 +104,15 @@ export const importarUsuarios = (formData) =>
   });
 
 // ===================== Grupos/Roles =====================
-export const getGroups = () => apiClient.get('/users/groups/');
+export const getGroups = (page = 1, pageSize = 15) =>
+  apiClient.get('/users/groups/', { params: { page, page_size: pageSize } });
 export const createGroup = (data) => apiClient.post('/users/groups/', data);
 export const updateGroup = (id, data) => apiClient.patch(`/users/groups/${id}/`, data);
 export const deleteGroup = (id) => apiClient.delete(`/users/groups/${id}/`);
-export const getInactiveGroups = () =>
-  apiClient.get('/users/groups/?is_active=False');
+export const getInactiveGroups = (page = 1, pageSize = 15) =>
+  apiClient.get('/users/groups/', {
+    params: { page, page_size: pageSize, is_active: false },
+  });
 export const exportRolesExcel = (columns) =>
   apiClient.post('/users/groups/exportar-excel/', { columns }, {
     responseType: 'blob',
@@ -187,7 +194,10 @@ export const importarPuestos = (formData) => apiClient.post('/cxc/puestos/import
 export const createEmpleado = (data) => apiClient.post('/cxc/empleados/', data);
 export const updateEmpleado = (id, data) => apiClient.patch(`/cxc/empleados/${id}/`, data);
 export const deleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/`);
-export const getInactiveEmpleados = () => apiClient.get('/cxc/empleados/inactivos/');
+export const getInactiveEmpleados = (page = 1, pageSize = 15) =>
+  apiClient.get('/cxc/empleados/inactivos/', {
+    params: { page, page_size: pageSize },
+  });
 export const hardDeleteEmpleado = (id) => apiClient.delete(`/cxc/empleados/${id}/hard/`);
 export const exportEmpleadosExcel = (columns) => apiClient.post('/cxc/empleados/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarEmpleados = (formData) => apiClient.post('/cxc/empleados/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -243,7 +253,10 @@ export const getEsquemasComision = (page = 1, pageSize = 15) => apiClient.get(`/
 export const createEsquemaComision = (data) => apiClient.post('/cxc/esquemas-comision/', data);
 export const updateEsquemaComision = (id, data) => apiClient.patch(`/cxc/esquemas-comision/${id}/`, data);
 export const deleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/`);
-export const getInactiveEsquemasComision = () => apiClient.get('/cxc/esquemas-comision/inactivos/');
+export const getInactiveEsquemasComision = (page = 1, pageSize = 15) =>
+  apiClient.get('/cxc/esquemas-comision/inactivos/', {
+    params: { page, page_size: pageSize },
+  });
 export const hardDeleteEsquemaComision = (id) => apiClient.delete(`/cxc/esquemas-comision/${id}/hard/`);
 export const exportEsquemasComisionExcel = (columns) => apiClient.post('/cxc/esquemas-comision/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarEsquemasComision = (formData) => apiClient.post('/cxc/esquemas-comision/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -302,7 +315,8 @@ export const importarFormasPago = (formData) => apiClient.post('/cxc/formas-pago
 // ===================== Varios =====================
 export const importarDatosMasivos = (formData) => apiClient.post('/cxc/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
-export const getAuditLogs = () => apiClient.get('/cxc/auditoria/');
+export const getAuditLogs = (page = 1, pageSize = 15) =>
+  apiClient.get('/cxc/auditoria/', { params: { page, page_size: pageSize } });
 export const downloadAuditLogExcel = () => apiClient.get('/cxc/auditoria/exportar/', { responseType: 'blob' });
 
 // ===================== Dashboard =====================

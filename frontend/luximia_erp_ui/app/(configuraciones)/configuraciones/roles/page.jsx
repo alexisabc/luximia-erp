@@ -37,9 +37,13 @@ const ROLES_COLUMNAS_EXPORT = [
 export default function RolesPage() {
     const { hasPermission } = useAuth();
     const [groups, setGroups] = useState([]);
+    const [pageData, setPageData] = useState({ results: [], count: 0 });
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
     const [permissions, setPermissions] = useState([]);
     const [permissionGroups, setPermissionGroups] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
     const [error, setError] = useState(null);
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -82,37 +86,51 @@ export default function RolesPage() {
         },
     ];
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const groupsPromise = showInactive ? getInactiveGroups() : getGroups();
-            const [groupsRes, permissionsRes] = await Promise.all([
-                groupsPromise,
-                getPermissions(),
-            ]);
+    const fetchData = useCallback(
+        async (page, size, isPageChange = false) => {
+            isPageChange ? setIsPaginating(true) : setLoading(true);
+            try {
+                const groupsPromise = showInactive
+                    ? getInactiveGroups(page, size)
+                    : getGroups(page, size);
+                const [groupsRes, permissionsRes] = await Promise.all([
+                    groupsPromise,
+                    getPermissions(),
+                ]);
 
-            // La API devuelve los permisos de cada grupo en el campo
-            // `permissions_data`.  El resto del componente espera un
-            // arreglo `permissions`, así que normalizamos la respuesta
-            // para evitar errores al renderizar.
-            const groupsData = groupsRes.data.map((g) => ({
-                ...g,
-                permissions: g.permissions_data || [],
-            }));
+                const groupsResData = groupsRes.data;
+                const groupsData = Array.isArray(groupsResData)
+                    ? groupsResData
+                    : groupsResData.results || [];
+                const normalizedGroups = groupsData.map((g) => ({
+                    ...g,
+                    permissions: g.permissions_data || [],
+                }));
 
-            const permissionsData = permissionsRes.data.filter(shouldDisplayPermission);
+                const permissionsData = permissionsRes.data.filter(shouldDisplayPermission);
 
-            setGroups(groupsData);
-            setPermissions(permissionsData);
-            setPermissionGroups(groupPermissions(permissionsData));
-        } catch (err) {
-            setError('No se pudieron cargar los datos.');
-        } finally {
-            setLoading(false);
-        }
-    }, [showInactive]);
+                setGroups(normalizedGroups);
+                setPageData(groupsResData);
+                setPermissions(permissionsData);
+                setPermissionGroups(groupPermissions(permissionsData));
+                setCurrentPage(page);
+            } catch (err) {
+                setError('No se pudieron cargar los datos.');
+            } finally {
+                setLoading(false);
+                setIsPaginating(false);
+            }
+        },
+        [showInactive]
+    );
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    useEffect(() => {
+        fetchData(1, pageSize);
+    }, [fetchData]);
+
+    const handlePageChange = (newPage) => {
+        fetchData(newPage, pageSize, true);
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -195,7 +213,7 @@ export default function RolesPage() {
         if (!itemToDelete) return;
         try {
             await deleteGroup(itemToDelete);
-            fetchData();
+            fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al eliminar el rol. Asegúrate de que no esté en uso.');
         } finally {
@@ -218,13 +236,13 @@ export default function RolesPage() {
                 await createGroup(dataToSubmit);
             }
             setIsFormModalOpen(false);
-            fetchData();
+            fetchData(currentPage, pageSize);
         } catch (err) {
             setError('Error al guardar el rol.');
         }
     };
 
-    if (loading) return <Overlay show />;
+    if (loading && !isPaginating) return <Overlay show />;
 
     return (
         <div className="p-8 h-full flex flex-col">
@@ -253,6 +271,14 @@ export default function RolesPage() {
                         onEdit: hasPermission('cxc.change_group') ? openModalForEdit : null,
                         onDelete: hasPermission('cxc.delete_group') ? handleDeleteClick : null,
                     }}
+                    pagination={{
+                        currentPage,
+                        totalCount: pageData.count,
+                        pageSize,
+                        onPageChange: handlePageChange,
+                    }}
+                    loading={loading}
+                    isPaginating={isPaginating}
                 />
             </div>
 
@@ -274,7 +300,7 @@ export default function RolesPage() {
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarRoles}
-                onSuccess={() => fetchData()}
+                onSuccess={() => fetchData(currentPage, pageSize)}
             />
 
             <ExportModal

@@ -57,21 +57,33 @@ export default function EmpleadosPage() {
         return cols;
     });
 
-    const fetchData = useCallback(async (page) => {
-        try {
-            const res = showInactive ? await getInactiveEmpleados() : await getEmpleados(page, pageSize);
-            setPageData(res.data);
-            setCurrentPage(page);
-        } catch (err) {
-            setError('No se pudieron cargar los empleados.');
-        }
-    }, [showInactive, pageSize]);
+    const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
+
+    const fetchData = useCallback(
+        async (page, isPageChange = false) => {
+            isPageChange ? setIsPaginating(true) : setLoading(true);
+            try {
+                const res = showInactive
+                    ? await getInactiveEmpleados(page, pageSize)
+                    : await getEmpleados(page, pageSize);
+                setPageData(res.data);
+                setCurrentPage(page);
+            } catch (err) {
+                setError('No se pudieron cargar los empleados.');
+            } finally {
+                setLoading(false);
+                setIsPaginating(false);
+            }
+        },
+        [showInactive, pageSize]
+    );
 
     const fetchOptions = useCallback(async () => {
         try {
             // Aseguramos que la llamada a getUsers sea exitosa y devuelva un arreglo
             const [usersRes, deptRes, puestoRes] = await Promise.all([
-                getUsers(),
+                getUsers(1, 1000),
                 getDepartamentos(),
                 getPuestos(),
             ]);
@@ -100,7 +112,7 @@ export default function EmpleadosPage() {
     }, [fetchData, fetchOptions]);
 
     const handlePageChange = (newPage) => {
-        fetchData(newPage);
+        fetchData(newPage, true);
     };
 
     const handleInputChange = (e) => {
