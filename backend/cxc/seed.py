@@ -6,6 +6,7 @@ from faker import Faker
 import random
 from datetime import date, timedelta
 from django.db import transaction
+from django.contrib.auth import get_user_model
 
 # Configura Django para que el script pueda acceder a los modelos
 # Esto es necesario si ejecutas el script fuera de la shell de Django
@@ -15,7 +16,8 @@ from django.db import transaction
 from cxc.models import (
     ModeloBaseActivo, Moneda, Banco, MetodoPago, Proyecto, Cliente,
     Departamento, Puesto, Empleado, TipoCambio, Vendedor, FormaPago,
-    UPE, PlanPago, EsquemaComision, Presupuesto, Contrato, Pago
+    UPE, PlanPago, EsquemaComision, Presupuesto, Contrato, Pago,
+    DocumentEmbedding
 )
 
 fake = Faker('es_MX')
@@ -24,9 +26,9 @@ def clean_db():
     """Borra todos los datos de los modelos de forma segura."""
     print("Borrando datos existentes...")
     models_to_clean = [
-        Pago, Contrato, Presupuesto, PlanPago, UPE, FormaPago, Vendedor, 
-        TipoCambio, Empleado, Puesto, Departamento, Cliente, Proyecto, 
-        MetodoPago, Banco, Moneda
+        Pago, Contrato, Presupuesto, PlanPago, UPE, FormaPago, Vendedor,
+        TipoCambio, Empleado, Puesto, Departamento, Cliente, Proyecto,
+        MetodoPago, Banco, Moneda, DocumentEmbedding
     ]
     for model in reversed(models_to_clean):
         model.objects.all().delete()
@@ -76,7 +78,7 @@ def create_departamentos_puestos():
     ]
     return departamentos, puestos
 
-def create_tipos_cambio(moneda_usd):
+def create_tipos_cambio():
     """Crea tipos de cambio de prueba."""
     print("Creando tipos de cambio...")
     today = date.today()
@@ -145,24 +147,15 @@ def create_empleados(departamentos, puestos):
     """Crea empleados de prueba."""
     print("Creando empleados...")
     empleados = []
+    User = get_user_model()
     for i in range(5):
-        # Necesitas un usuario existente para el Empleado
-        # Aquí asumimos que ya tienes usuarios creados,
-        # o que puedes crearlos con 'from django.contrib.auth import get_user_model'
-        # y get_user_model().objects.create_user(...)
-        # Por ahora, solo usamos la relación OneToOne.
-        # Si no tienes usuarios, este paso fallará.
-        # Por simplicidad, solo crearemos un objeto Empleado sin usuario real.
-        # Si tienes el modelo User definido, cámbialo.
-        
-        # Ejemplo con un usuario
-        # from django.contrib.auth import get_user_model
-        # User = get_user_model()
-        # user, created = User.objects.get_or_create(username=f"empleado_{i}", email=f"empleado{i}@test.com")
-
+        user, _ = User.objects.get_or_create(
+            username=f"empleado_{i}",
+            defaults={"email": f"empleado{i}@test.com", "is_active": True}
+        )
         empleados.append(
             Empleado.objects.create(
-                user_id=1, # Reemplaza con un ID de usuario existente
+                user=user,
                 nombre_completo=fake.name(),
                 puesto=random.choice(puestos),
                 departamento=random.choice(departamentos)
@@ -217,6 +210,55 @@ def create_esquemas_comision():
     return esquemas
 
 
+def create_planes_pago(clientes, upes, formas_pago, monedas):
+    """Crea planes de pago de prueba."""
+    print("Creando planes de pago...")
+    planes = []
+    for _ in range(10):
+        cliente = random.choice(clientes)
+        upe = random.choice(upes)
+        moneda = random.choice(monedas)
+        forma_enganche = random.choice(formas_pago)
+        forma_mensualidades = random.choice(formas_pago)
+        forma_meses = random.choice(formas_pago)
+        forma_contra = random.choice(formas_pago)
+        planes.append(
+            PlanPago.objects.create(
+                cliente=cliente,
+                upe=upe,
+                apartado_monto=random.uniform(5000, 20000),
+                moneda_apartado=moneda,
+                fecha_apartado=date.today() - timedelta(days=random.randint(0, 30)),
+                forma_pago_enganche=forma_enganche,
+                monto_enganche=random.uniform(10000, 50000),
+                moneda_enganche=moneda,
+                fecha_enganche=date.today() - timedelta(days=random.randint(0, 30)),
+                forma_pago_mensualidades=forma_mensualidades,
+                monto_mensualidades=random.uniform(50000, 200000),
+                moneda_mensualidades=moneda,
+                forma_pago_meses=forma_meses,
+                meses=random.randint(6, 24),
+                monto_mensual=random.uniform(1000, 5000),
+                moneda_mensual=moneda,
+                forma_pago_contra_entrega=forma_contra,
+                monto_contra_entrega=random.uniform(50000, 150000),
+                moneda_contra_entrega=moneda,
+            )
+        )
+    return planes
+
+
+def create_document_embeddings():
+    """Crea embeddings de documentos de prueba."""
+    print("Creando document embeddings...")
+    embeddings = []
+    for _ in range(5):
+        content = fake.paragraph(nb_sentences=3)
+        vector = [random.uniform(-1, 1) for _ in range(1536)]
+        embeddings.append(DocumentEmbedding.objects.create(content=content, embedding=vector))
+    return embeddings
+
+
 def run():
     """Función principal para generar todos los datos de prueba."""
     with transaction.atomic():
@@ -227,15 +269,16 @@ def run():
         bancos = create_bancos()
         metodos_pago = create_metodos_pago()
         departamentos, puestos = create_departamentos_puestos()
-        moneda_mxn = Moneda.objects.get(codigo="MXN")
-        tipos_cambio = create_tipos_cambio(moneda_mxn)
+        tipos_cambio = create_tipos_cambio()
         proyectos = create_proyectos()
         clientes = create_clientes()
         vendedores = create_vendedores()
-        empleados = [] # create_empleados(departamentos, puestos) # Descomentar si tienes usuarios
+        empleados = create_empleados(departamentos, puestos)
         formas_pago = create_formas_pago()
         upes = create_upes(proyectos, monedas)
         esquemas_comision = create_esquemas_comision()
+        planes_pago = create_planes_pago(clientes, upes, formas_pago, monedas)
+        document_embeddings = create_document_embeddings()
         
         print("Creando Presupuestos, Contratos y Pagos...")
         for i in range(10):
