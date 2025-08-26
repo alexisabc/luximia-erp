@@ -108,7 +108,7 @@ export default function ContratoDetallePage() {
             setFormData(prev => ({
                 ...prev,
                 tipo_cambio: latestTipoCambio,
-                ordenante: res.data.cliente.nombre_completo,
+                ordenante: res.data.cliente?.nombre_completo || '',
                 concepto: 'ABONO',
                 moneda_pagada: 'USD',
                 fecha_pago: new Date().toISOString().split('T')[0],
@@ -253,7 +253,7 @@ export default function ContratoDetallePage() {
             <div className="flex justify-between items-center flex-shrink-0">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Estado de Cuenta</h1>
-                    <p className="text-lg text-gray-500 dark:text-gray-400">Contrato #{contrato.id} - {contrato.cliente.nombre_completo}</p>
+                    <p className="text-lg text-gray-500 dark:text-gray-400">Contrato #{contrato.id} - {contrato.cliente?.nombre_completo || 'Cliente no disponible'}</p>
                 </div>
                 <div className="flex items-center space-x-3">
                     {hasPermission('cxc.add_pago') && <button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">+ Registrar Pago</button>}
