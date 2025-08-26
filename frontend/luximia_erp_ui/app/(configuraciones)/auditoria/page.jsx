@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
 import { useAuth } from '@/context/AuthContext';
 import { getAuditLogs, downloadAuditLogExcel } from '@/services/api';
@@ -15,20 +15,38 @@ const COLUMNAS = [
 
 export default function AuditoriaPage() {
   const { hasPermission } = useAuth();
-  const [logs, setLogs] = useState([]);
+  const [pageData, setPageData] = useState({ results: [], count: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isPaginating, setIsPaginating] = useState(false);
 
-  useEffect(() => {
-    const fetchLogs = async () => {
+  const fetchLogs = useCallback(
+    async (page, size, isPageChange = false) => {
+      setError(null);
+      isPageChange ? setIsPaginating(true) : setLoading(true);
       try {
-        const res = await getAuditLogs();
-        setLogs(res.data);
+        const res = await getAuditLogs(page, size);
+        setPageData(res.data);
+        setCurrentPage(page);
       } catch (err) {
         setError('No se pudieron cargar los registros.');
+      } finally {
+        setLoading(false);
+        setIsPaginating(false);
       }
-    };
-    fetchLogs();
-  }, []);
+    },
+    []
+  );
+
+  useEffect(() => {
+    fetchLogs(1, pageSize);
+  }, [fetchLogs]);
+
+  const handlePageChange = (newPage) => {
+    fetchLogs(newPage, pageSize, true);
+  };
 
   const handleDownload = async () => {
     try {
@@ -56,7 +74,18 @@ export default function AuditoriaPage() {
       </div>
       {error && <p className="text-red-500 bg-red-100 p-4 rounded-md mb-4">{error}</p>}
       <div className="flex-grow min-h-0">
-        <ReusableTable data={logs} columns={COLUMNAS} />
+        <ReusableTable
+          data={pageData.results}
+          columns={COLUMNAS}
+          pagination={{
+            currentPage,
+            totalCount: pageData.count,
+            pageSize,
+            onPageChange: handlePageChange,
+          }}
+          loading={loading}
+          isPaginating={isPaginating}
+        />
       </div>
     </div>
   );

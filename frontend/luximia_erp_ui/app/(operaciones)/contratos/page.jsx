@@ -1,7 +1,7 @@
 // app/(operaciones)/contratos/page.jsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { getContratos, exportContratosExcel } from '@/services/api';
 import ReusableTable from '@/components/ui/tables/ReusableTable';
@@ -9,8 +9,11 @@ import Loader from '@/components/loaders/Overlay'; // Usamos el Overlay para la 
 import ActionButtons from '@/components/ui/ActionButtons';
 
 export default function ContratosPage() {
-    const [contratos, setContratos] = useState([]);
+    const [pageData, setPageData] = useState({ results: [], count: 0 });
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 5;
     const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
 
     // Definición de las columnas para ReusableTable
     const CONTRATOS_COLUMNAS = [
@@ -53,22 +56,29 @@ export default function ContratosPage() {
         }
     };
 
-    useEffect(() => {
-        async function fetchData() {
+    const fetchData = useCallback(
+        async (page, size, isPageChange = false) => {
+            isPageChange ? setIsPaginating(true) : setLoading(true);
             try {
-                const res = await getContratos(1, 100);
-                setContratos(res.data.results || res.data);
+                const res = await getContratos(page, size);
+                setPageData(res.data);
+                setCurrentPage(page);
             } catch (err) {
                 console.error('No se pudieron cargar los contratos', err);
             } finally {
                 setLoading(false);
+                setIsPaginating(false);
             }
-        }
-        fetchData();
-    }, []);
+        },
+        []
+    );
 
-    if (loading) {
-        return <Loader />;
+    useEffect(() => {
+        fetchData(1, pageSize);
+    }, [fetchData]);
+
+    if (loading && !isPaginating) {
+        return <Loader show />;
     }
 
     return (
@@ -83,9 +93,17 @@ export default function ContratosPage() {
                 />
             </div>
             <ReusableTable
-                data={contratos}
+                data={pageData.results}
                 columns={CONTRATOS_COLUMNAS}
                 search={true}
+                pagination={{
+                    currentPage,
+                    totalCount: pageData.count,
+                    pageSize,
+                    onPageChange: (p) => fetchData(p, pageSize, true),
+                }}
+                loading={loading}
+                isPaginating={isPaginating}
             />
         </div>
     );
