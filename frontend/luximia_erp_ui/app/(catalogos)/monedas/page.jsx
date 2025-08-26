@@ -194,10 +194,12 @@ export default function MonedasPage() {
             onDelete: hasPermission('cxc.delete_moneda') ? handleDeleteClick : null,
             onHardDelete: showInactive && hasPermission('cxc.delete_moneda') ? handleHardDelete : null
           }}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalCount={pageData.count}
-          onPageChange={handlePageChange}
+          pagination={{
+            currentPage,
+            totalCount: pageData.count,
+            pageSize,
+            onPageChange: handlePageChange,
+          }}
           loading={loading}
           isPaginating={isPaginating}
         />

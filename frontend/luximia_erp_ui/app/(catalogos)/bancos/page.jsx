@@ -197,10 +197,12 @@ export default function BancosPage() {
             onDelete: hasPermission('cxc.delete_banco') ? handleDeleteClick : null,
             onHardDelete: showInactive && hasPermission('cxc.delete_banco') ? handleHardDelete : null
           }}
-          pageSize={pageSize}
-          currentPage={currentPage}
-          totalCount={pageData.count}
-          onPageChange={handlePageChange}
+          pagination={{
+            currentPage,
+            totalCount: pageData.count,
+            pageSize,
+            onPageChange: handlePageChange,
+          }}
           loading={loading}
           isPaginating={isPaginating}
         />

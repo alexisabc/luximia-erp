@@ -6,12 +6,22 @@ import Link from 'next/link';
 import { Eye, SquarePen, Trash, XCircle } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/tables/shadcn-table-base';
 import Overlay from '@/components/loaders/Overlay';
+import Pagination from '@/components/ui/Pagination';
 
-export default function ReusableTable({ data, columns, actions = {}, search = true, filterFunction }) {
-    if (!data) {
-        return <Overlay className="p-8" overlay={false} />;
-    }
-
+export default function ReusableTable({
+    data = [],
+    columns,
+    actions = {},
+    search = true,
+    filterFunction,
+    pagination,
+    pageSize,
+    currentPage,
+    totalCount,
+    onPageChange,
+    loading = false,
+    isPaginating = false,
+}) {
     const [query, setQuery] = useState('');
 
     const defaultFilter = (row, q) =>
@@ -54,8 +64,14 @@ export default function ReusableTable({ data, columns, actions = {}, search = tr
         });
     }
 
+    const paginationProps =
+        pagination ||
+        (pageSize && currentPage != null && totalCount != null && onPageChange
+            ? { pageSize, currentPage, totalCount, onPageChange }
+            : null);
+
     return (
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
+        <div className="relative bg-white dark:bg-gray-800 shadow-lg rounded-xl">
             {search && (
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <input
@@ -99,6 +115,10 @@ export default function ReusableTable({ data, columns, actions = {}, search = tr
                     )}
                 </TableBody>
             </Table>
+            {paginationProps && (
+                <Pagination {...paginationProps} />
+            )}
+            <Overlay show={loading || isPaginating} />
         </div>
     );
 }
