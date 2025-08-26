@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [proyectos, setProyectos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hasData, setHasData] = useState(true);
 
   // Estados de los filtros
   const [timeframe, setTimeframe] = useState('month');
@@ -27,6 +28,14 @@ export default function DashboardPage() {
         getStrategicDashboardData(timeframe, selectedProjects.toString()),
         getAllProyectos(),
       ]);
+
+      const labels = dashboardRes.data?.chart?.labels;
+      if (!labels || labels.length === 0) {
+        setHasData(false);
+        console.error('Dashboard response missing chart labels:', dashboardRes);
+      } else {
+        setHasData(true);
+      }
 
       setDashboardData(dashboardRes.data);
       const projectList = proyectosRes.data?.results ?? proyectosRes.data ?? [];
@@ -107,10 +116,16 @@ export default function DashboardPage() {
       )}
 
       {/* --- Gráficas --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <VentasChart data={ventasChartData} />
-        <FlujoCobranzaChart data={flujoChartData} />
-      </div>
+      {hasData ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <VentasChart data={ventasChartData} />
+          <FlujoCobranzaChart data={flujoChartData} />
+        </div>
+      ) : (
+        <div className="p-4 text-center text-yellow-600 bg-yellow-100 rounded">
+          No hay datos disponibles para mostrar las gráficas.
+        </div>
+      )}
     </div>
   );
 }

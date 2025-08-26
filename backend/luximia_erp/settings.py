@@ -87,8 +87,9 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # La lógica revisa si DATABASE_URL existe (para Render) o usa las variables locales
 if 'DATABASE_URL' in os.environ and os.getenv('DATABASE_URL'):
     # Configuración para producción (Render, etc.)
+    ssl_require = os.getenv('DATABASE_SSL_REQUIRE', 'True') == 'True'
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=ssl_require)
     }
 else:
     # Configuración para desarrollo local con pool de conexiones
