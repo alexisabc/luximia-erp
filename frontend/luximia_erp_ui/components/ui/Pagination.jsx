@@ -1,11 +1,14 @@
 'use client';
 
 export default function Pagination({ currentPage, totalCount, pageSize, onPageChange }) {
-  const totalPages = pageSize > 0 ? Math.ceil(totalCount / pageSize) : 1;
+  const safeTotal = Number.isFinite(totalCount) ? totalCount : 0;
+  const safeSize = Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 1;
+  const totalPages = Math.max(1, Math.ceil(safeTotal / safeSize));
+
   return (
     <div className="flex-shrink-0 flex justify-between items-center p-4">
       <span className="text-sm text-gray-700 dark:text-gray-400">
-        Total: {totalCount} registros
+        Total: {safeTotal} registros
       </span>
       <div className="flex items-center space-x-2">
         <button

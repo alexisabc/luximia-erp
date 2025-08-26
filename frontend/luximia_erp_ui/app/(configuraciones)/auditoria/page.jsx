@@ -29,7 +29,10 @@ export default function AuditoriaPage() {
       isPageChange ? setIsPaginating(true) : setLoading(true);
       try {
         const res = await getAuditLogs(page, size);
-        setPageData(res.data);
+        const data = res.data;
+        const results = Array.isArray(data) ? data : data.results || [];
+        const count = Array.isArray(data) ? data.length : data.count ?? results.length;
+        setPageData({ results, count });
         setCurrentPage(page);
       } catch (err) {
         setError('No se pudieron cargar los registros.');
