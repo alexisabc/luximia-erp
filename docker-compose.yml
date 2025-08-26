@@ -1,8 +1,7 @@
-# docker-compose.yml
 services:
   ### SERVICIO PARA DB ###
   db:
-    image: postgres:17.5
+    image: ankane/pgvector:latest
     container_name: luximia-db-local
     environment:
       - POSTGRES_DB=luximiadb
