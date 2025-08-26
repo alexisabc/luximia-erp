@@ -1,5 +1,5 @@
 from django.db import migrations, models
-import pgvector.django
+from pgvector.django import VectorExtension, VectorField
 
 
 class Migration(migrations.Migration):
@@ -9,13 +9,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        pgvector.django.operations.VectorExtension(),
+        VectorExtension(),
         migrations.CreateModel(
             name='DocumentEmbedding',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('content', models.TextField()),
-                ('embedding', pgvector.django.fields.VectorField(dim=1536)),
+                ('embedding', VectorField(dimensions=1536)),
             ],
         ),
     ]

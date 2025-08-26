@@ -1,5 +1,5 @@
 from django.db import migrations
-import pgvector.django
+from pgvector.django import VectorField
 
 
 class Migration(migrations.Migration):
@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='documentembedding',
             name='embedding',
-            field=pgvector.django.fields.VectorField(dimensions=1536),
+            field=VectorField(dimensions=1536),
         ),
     ]
