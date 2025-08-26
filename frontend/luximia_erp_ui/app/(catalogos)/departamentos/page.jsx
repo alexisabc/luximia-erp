@@ -184,10 +184,12 @@ export default function DepartamentosPage() {
                         onDelete: hasPermission('cxc.delete_departamento') ? handleDeleteClick : null,
                         onHardDelete: showInactive && hasPermission('cxc.delete_departamento') ? handleHardDelete : null,
                     }}
-                    pageSize={pageSize}
-                    currentPage={currentPage}
-                    totalCount={pageData.count}
-                    onPageChange={handlePageChange}
+                    pagination={{
+                        currentPage,
+                        totalCount: pageData.count,
+                        pageSize,
+                        onPageChange: handlePageChange,
+                    }}
                     loading={loading}
                     isPaginating={isPaginating}
                 />

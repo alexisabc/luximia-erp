@@ -254,32 +254,15 @@ export default function ProyectosPage() {
                         onDelete: hasPermission('cxc.delete_proyecto') ? handleDeleteClick : null,
                         onHardDelete: hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
                     }}
+                    pagination={{
+                        currentPage,
+                        totalCount: pageData.count,
+                        pageSize,
+                        onPageChange: handlePageChange,
+                    }}
+                    loading={loading}
+                    isPaginating={isPaginating}
                 />
-            </div>
-
-            <div className="flex-shrink-0 flex justify-between items-center mt-4">
-                <span className="text-sm text-gray-700 dark:text-gray-400">
-                    Total: {pageData.count} registros
-                </span>
-                <div className="flex items-center space-x-2">
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={!pageData.previous}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                    >
-                        Anterior
-                    </button>
-                    <span className="text-sm text-gray-700 dark:text-gray-400">
-                        Página {currentPage} de {pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1}
-                    </span>
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={!pageData.next}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                    >
-                        Siguiente
-                    </button>
-                </div>
             </div>
 
             <FormModal

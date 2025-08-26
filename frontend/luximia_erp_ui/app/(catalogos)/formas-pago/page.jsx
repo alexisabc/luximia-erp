@@ -201,16 +201,19 @@ export default function FormasPagoPage() {
         <ReusableTable
           data={pageData.results}
           columns={COLUMNS_DISPLAY}
-          onEdit={hasPermission('cxc.change_formapago') ? handleEditClick : null}
-          onDelete={hasPermission('cxc.delete_formapago') ? handleDeleteClick : null}
-          currentPage={currentPage}
-          totalCount={pageData.count}
-          pageSize={pageSize}
-          onPageChange={handlePageChange}
+          actions={{
+            onEdit: hasPermission('cxc.change_formapago') ? handleEditClick : null,
+            onDelete: hasPermission('cxc.delete_formapago') ? handleDeleteClick : null,
+            onHardDelete: hasPermission('cxc.hard_delete') ? handleHardDelete : null,
+          }}
+          pagination={{
+            currentPage,
+            totalCount: pageData.count,
+            pageSize,
+            onPageChange: handlePageChange,
+          }}
           loading={loading}
           isPaginating={isPaginating}
-          showInactive={showInactive}
-          onHardDelete={hasPermission('cxc.hard_delete') ? handleHardDelete : null}
         />
       </div>
 

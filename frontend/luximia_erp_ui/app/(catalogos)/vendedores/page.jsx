@@ -189,41 +189,24 @@ export default function VendedoresPage() {
             </div>
             {error && <p className="text-red-500 mb-4">{error}</p>}
             <div className="flex-1">
-                {loading ? (
-                    <p>Cargando...</p>
-                ) : (
-                    <ReusableTable
-                        data={pageData.results}
-                        columns={VENDEDOR_COLUMNAS_DISPLAY}
-                        actions={{
-                            onEdit: hasPermission('cxc.change_vendedor') ? handleEditClick : null,
-                            onDelete: hasPermission('cxc.delete_vendedor') ? handleDeleteClick : null,
-                            onHardDelete: showInactive && hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
-                        }}
-                    />
-                )}
+                <ReusableTable
+                    data={pageData.results}
+                    columns={VENDEDOR_COLUMNAS_DISPLAY}
+                    actions={{
+                        onEdit: hasPermission('cxc.change_vendedor') ? handleEditClick : null,
+                        onDelete: hasPermission('cxc.delete_vendedor') ? handleDeleteClick : null,
+                        onHardDelete: showInactive && hasPermission('cxc.can_delete_permanently') ? handleHardDelete : null,
+                    }}
+                    pagination={{
+                        currentPage,
+                        totalCount: pageData.count,
+                        pageSize,
+                        onPageChange: handlePageChange,
+                    }}
+                    loading={loading}
+                    isPaginating={isPaginating}
+                />
             </div>
-            {!showInactive && (
-                <div className="flex items-center justify-between mt-4">
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={!pageData.previous || isPaginating}
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md disabled:opacity-50"
-                    >
-                        Anterior
-                    </button>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Página {currentPage} de {pageSize > 0 ? Math.ceil(pageData.count / pageSize) : 1}
-                    </span>
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={!pageData.next || isPaginating}
-                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md disabled:opacity-50"
-                    >
-                        Siguiente
-                    </button>
-                </div>
-            )}
 
             <FormModal
                 isOpen={isFormModalOpen}
