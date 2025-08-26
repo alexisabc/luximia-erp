@@ -337,13 +337,20 @@ def strategic_dashboard(request):
 
     labels_ordenados = sorted(datos_combinados.keys())
 
+    ventas_list = [datos_combinados[label]["ventas"] for label in labels_ordenados]
+    recuperado_list = [
+        datos_combinados[label]["recuperado"] for label in labels_ordenados
+    ]
+    programado_list = [
+        datos_combinados[label]["ventas"] - datos_combinados[label]["recuperado"]
+        for label in labels_ordenados
+    ]
+
     chart_data = {
         "labels": labels_ordenados,
-        "ventas": [datos_combinados[label]["ventas"] for label in labels_ordenados],
-        "recuperado": [
-            datos_combinados[label]["recuperado"] for label in labels_ordenados
-        ],
-        "programado": [],
+        "ventas": ventas_list,
+        "recuperado": recuperado_list,
+        "programado": programado_list,
     }
 
     # --- 5. Assemble the final response ---
