@@ -1,0 +1,10 @@
+Hola,
+
+Bienvenido a Luximia ERP. Has sido invitado a la plataforma.
+
+Completa tu registro con el siguiente enlace:
+{{ enroll_url }}
+
+Este enlace expira en 24 horas.
+
+¡Te esperamos!
