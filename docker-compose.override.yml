@@ -19,7 +19,7 @@ services:
     volumes:
       - ./frontend/luximia_erp_ui:/app # Hot-reloading para el código
       - /app/node_modules # Evita que node_modules local sobreescriba el del contenedor
-      - ./assets:/app/assets
+      - ./assets:/app/public/assets
     ports:
       - "3000:3000"
 

@@ -42,3 +42,14 @@ COPY assets /app/static/assets
 
 # Copia todo el código del backend
 COPY backend/ .
+
+# Recolecta los archivos estáticos dentro de la imagen
+# Pasamos una clave temporal solo para este comando
+RUN SECRET_KEY="dummy-key-for-build" python manage.py collectstatic --noinput
+
+# Expone el puerto que Gunicorn usará
+EXPOSE 8000
+
+# El comando para iniciar la aplicación en producción
+# Se adapta al puerto que Azure le asigne a través de la variable $PORT
+CMD ["gunicorn", "luximia_erp.wsgi:application", "--bind", "0.0.0.0:8000"]

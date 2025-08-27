@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run copy-assets && next dev",
-    "build": "npm run copy-assets && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "copy-assets": "cp -R ../../assets/* public/"
+    "dev": "next dev"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^11.0.0",
