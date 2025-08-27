@@ -7,10 +7,11 @@ import secrets
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.core.mail import send_mail
+from luximia_erp.emails import send_mail
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from django.db import transaction
+from django.template.loader import render_to_string
 from users.models import EnrollmentToken
 
 class Command(BaseCommand):
@@ -79,16 +80,20 @@ class Command(BaseCommand):
                 protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
                 enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
+                context = {"enroll_url": enroll_url}
+                plain_message = render_to_string(
+                    "users/welcome_invitation.txt", context
+                )
+                html_message = render_to_string(
+                    "users/welcome_invitation.html", context
+                )
                 send_mail(
                     "Invitación para Administrador de Luximia ERP",
-                    (
-                        "Has sido invitado para ser el superusuario de la plataforma Luximia ERP.\n\n"
-                        f"Usa el siguiente enlace para completar tu registro: {enroll_url}\n\n"
-                        "Este enlace expira en 24 horas."
-                    ),
+                    plain_message,
                     settings.DEFAULT_FROM_EMAIL,
                     [email],
                     fail_silently=False,
+                    html_message=html_message,
                 )
                 self.stdout.write(self.style.SUCCESS(
                     f"Invitación de superusuario enviada a {email}."))

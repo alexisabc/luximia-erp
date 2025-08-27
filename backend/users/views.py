@@ -19,9 +19,10 @@ from django.contrib.auth.models import Group, Permission
 from django.core import signing
 from django.http import HttpRequest, Http404
 from django.db import transaction
-from django.core.mail import send_mail
+from luximia_erp.emails import send_mail
 from datetime import timedelta
 from django.utils import timezone
+from django.template.loader import render_to_string
 
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
@@ -155,16 +156,20 @@ class InviteUserView(APIView):
         protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
         enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
+        context = {"enroll_url": enroll_url}
+        plain_message = render_to_string(
+            "users/welcome_invitation.txt", context
+        )
+        html_message = render_to_string(
+            "users/welcome_invitation.html", context
+        )
         send_mail(
             "Invitación a Luximia ERP",
-            (
-                "Has sido invitado a la plataforma Luximia ERP.\n\n"
-                f"Usa el siguiente enlace para completar tu registro: {enroll_url}\n\n"
-                "Este enlace expira en 24 horas."
-            ),
+            plain_message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=False,
+            html_message=html_message,
         )
 
     def post(self, request, pk=None):

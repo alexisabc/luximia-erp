@@ -214,9 +214,13 @@ if DEBUG:
     DEFAULT_FROM_EMAIL = os.getenv(
         'DEFAULT_FROM_EMAIL', 'desarrollo@luximia.local')
 else:
-    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
-    ANYMAIL = {"SENDGRID_API_KEY": os.getenv("SENDGRID_API_KEY")}
-    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+    AZURE_COMMUNICATION_CONNECTION_STRING = os.getenv(
+        "AZURE_COMMUNICATION_CONNECTION_STRING"
+    )
+    AZURE_COMMUNICATION_SENDER_ADDRESS = os.getenv(
+        "AZURE_COMMUNICATION_SENDER_ADDRESS"
+    )
+    DEFAULT_FROM_EMAIL = AZURE_COMMUNICATION_SENDER_ADDRESS
 
 
 # --- Django REST Framework y JWT ---
