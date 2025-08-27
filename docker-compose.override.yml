@@ -1,0 +1,32 @@
+# docker-compose.override.yml (Solo para Desarrollo Local)
+services:
+  db:
+    ports:
+      - "5432:5432" # Exponemos el puerto de la DB para conectarnos con un cliente local
+
+  backend:
+    command: bash entrypoint.sh # Comando de desarrollo
+    volumes:
+      - ./backend:/app # Hot-reloading para el código
+      - ./assets:/app/assets
+    ports:
+      - "8000:8000" # Mapeamos el puerto del servidor de desarrollo de Django
+    depends_on:
+      - mailhog # El backend depende de mailhog en desarrollo
+
+  frontend:
+    command: npm run dev # Comando para iniciar el servidor de desarrollo de Next.js
+    volumes:
+      - ./frontend/luximia_erp_ui:/app # Hot-reloading para el código
+      - /app/node_modules # Evita que node_modules local sobreescriba el del contenedor
+      - ./assets:/app/assets
+    ports:
+      - "3000:3000"
+
+  ### SERVICIO PARA CORREOS (SOLO DESARROLLO) ###
+  mailhog:
+    image: mailhog/mailhog
+    container_name: luximia-mailhog-local
+    ports:
+      - "1025:1025" # Puerto SMTP
+      - "8025:8025" # Interfaz web

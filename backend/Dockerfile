@@ -3,12 +3,12 @@
 FROM python:3.13-slim-bookworm
 
 # Variables de entorno estándar
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-# Configura las variables de entorno para el locale
-ENV LANG es_ES.UTF-8
-ENV LANGUAGE es_ES:es
-ENV LC_ALL es_ES.UTF-8
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    # Configura las variables de entorno para el locale
+    LANG="es_ES.UTF-8" \
+    LANGUAGE="es_ES:es" \
+    LC_ALL="es_ES.UTF-8"
 
 # Establece el directorio de trabajo
 WORKDIR /app

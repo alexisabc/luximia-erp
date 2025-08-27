@@ -1,0 +1,13 @@
+# docker-compose.prod.yml (Solo para Producción)
+services:
+  backend:
+    # Sobreescribe el comando para usar Gunicorn en producción
+    command: gunicorn --config backend/gunicorn_config.py backend.wsgi:application
+    ports:
+      - "8000:8000" # Expones el puerto de Gunicorn para que un proxy inverso (como Nginx) lo tome
+
+  frontend:
+    # Sobreescribe el comando para servir la build de producción de Next.js
+    command: npm start
+    ports:
+      - "3000:3000"

@@ -1,33 +1,25 @@
+# docker-compose.yml (Archivo Base)
 services:
   ### SERVICIO PARA DB ###
   db:
     image: ankane/pgvector:latest
-    container_name: luximia-db-local
+    container_name: luximia-db
     environment:
-      - POSTGRES_DB=luximiadb
-      - POSTGRES_USER=luximiauser
-      - POSTGRES_PASSWORD=luximiapass
-    ports:
-      - "5432:5432"
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    # El puerto se expondrá solo en desarrollo
 
   ### SERVICIO PARA EL BACKEND ###
   backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-    container_name: luximia-backend-local
-    command: bash entrypoint.sh
-    #command: tail -f /dev/null
-    volumes:
-      - ./backend:/app
-      - ./assets:/app/assets
-    ports:
-      - "8000:10000"
-    depends_on: # El backend ahora solo espera a que el contenedor de la db se inicie
+    container_name: luximia-backend
+    depends_on:
       - db
-      - mailhog
     env_file:
       - ./.env
 
@@ -36,25 +28,11 @@ services:
     build:
       context: ./frontend/luximia_erp_ui
       dockerfile: Dockerfile
-    container_name: luximia-frontend-local
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - ./assets:/assets
+    container_name: luximia-frontend
     depends_on:
       - backend
     env_file:
       - ./.env
-
-  ### SERVICIO PARA CORREOS ###
-  mailhog:
-    image: mailhog/mailhog
-    container_name: luximia-mailhog-local
-    ports:
-      - "1025:1025"
-      - "8025:8025"
 
 volumes:
   postgres_data:
