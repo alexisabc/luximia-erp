@@ -36,6 +36,8 @@ apiClient.interceptors.request.use(async (req) => {
     }
   }
 
+  req.headers['Ocp-Apim-Subscription-Key'] = process.env.NEXT_PUBLIC_AZURE_API_KEY;
+
   let authTokens = typeof window !== 'undefined' ? localStorage.getItem('authTokens') : null;
   authTokens = authTokens ? JSON.parse(authTokens) : null;
 
