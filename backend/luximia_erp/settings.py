@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "cxc.apps.CxcConfig",
     "users.apps.UsersConfig",
-    "corsheaders",
+    # "corsheaders",
     "csp",  # django-csp para la política de seguridad de contenido
     "rest_framework_simplejwt.token_blacklist",
     "django_extensions",
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    # "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "csp.middleware.CSPMiddleware",  # Middleware de django-csp
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -58,9 +58,9 @@ MIDDLEWARE = [
 
 
 # --- Configuración de CORS ---
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
-).split(",")
+# CORS_ALLOWED_ORIGINS = os.getenv(
+# "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+# ).split(",")
 CORS_ALLOW_CREDENTIALS = True
 
 # --- CSRF (importante incluso en dev cuando hay dominio/puerto distinto) ---
