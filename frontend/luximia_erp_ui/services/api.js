@@ -2,43 +2,41 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
-// --- Util ---
+// =================== Base URL ===================
+// En producción (SWA) define: NEXT_PUBLIC_API_URL = https://luximia-api-gateway.azure-api.net
+// Si tu API en APIM usa "API URL suffix = api", entonces define:
+//   NEXT_PUBLIC_API_SUFFIX = ''   (string vacío)
+// Si NO usas suffix en APIM, entonces usa:
+//   NEXT_PUBLIC_API_SUFFIX = '/api'
 const isServer = typeof window === 'undefined';
 
 const rawBase = isServer
-  ? process.env.API_URL || 'http://backend:8000'
-  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  ? (process.env.API_URL || 'http://backend:8000')               // para SSR/local si lo necesitas
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'); // en navegador (SWA)
 
-const baseURL = `${rawBase.replace(/\/+$/, '')}/api`;
+const suffix = (process.env.NEXT_PUBLIC_API_SUFFIX ?? '/api');    // '' o '/api'
+const baseURL = `${rawBase.replace(/\/+$/, '')}${suffix}`;        // concatena sin duplicar /
 
-function getCookie(name) {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-// --- Cliente Axios principal (usar un solo cliente) ---
+// =================== Cliente Axios ===================
+// Vamos con JWT (sin cookies/CSRF) para simplificar CORS.
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-  xsrfCookieName: 'csrftoken',
-  xsrfHeaderName: 'X-CSRFToken',
+  withCredentials: false,   // muy importante: no mandar cookies cross-site
 });
 
+// Cliente "naked" para refresh sin interceptores (evita loops)
+const naked = axios.create({ baseURL });
+
+// =================== Interceptor de request ===================
 apiClient.interceptors.request.use(async (req) => {
-  const method = (req.method || 'get').toLowerCase();
-  const needsCSRF = !['get', 'head', 'options'].includes(method);
-  if (needsCSRF) {
-    const csrftoken = getCookie(apiClient.defaults.xsrfCookieName) || getCookie('csrftoken');
-    if (csrftoken) {
-      req.headers[apiClient.defaults.xsrfHeaderName] = csrftoken;
-    }
+  // APIM subscription key (si tu API está en un Product con suscripción)
+  if (process.env.NEXT_PUBLIC_AZURE_API_KEY) {
+    req.headers['Ocp-Apim-Subscription-Key'] = process.env.NEXT_PUBLIC_AZURE_API_KEY;
   }
 
-  req.headers['Ocp-Apim-Subscription-Key'] = process.env.NEXT_PUBLIC_AZURE_API_KEY;
-
-  let authTokens = typeof window !== 'undefined' ? localStorage.getItem('authTokens') : null;
+  // JWT access/refresh desde localStorage
+  let authTokens = (typeof window !== 'undefined') ? localStorage.getItem('authTokens') : null;
   authTokens = authTokens ? JSON.parse(authTokens) : null;
 
   if (authTokens?.access) {
@@ -47,7 +45,8 @@ apiClient.interceptors.request.use(async (req) => {
       const isExpired = Date.now() >= payload.exp * 1000;
 
       if (isExpired && authTokens.refresh) {
-        const { data } = await apiClient.post('/users/token/refresh/', { refresh: authTokens.refresh });
+        // refresh con el cliente "naked" para no disparar este mismo interceptor
+        const { data } = await naked.post('/users/token/refresh/', { refresh: authTokens.refresh });
         localStorage.setItem('authTokens', JSON.stringify(data));
         req.headers.Authorization = `Bearer ${data.access}`;
       } else if (!isExpired) {
@@ -61,6 +60,7 @@ apiClient.interceptors.request.use(async (req) => {
   return req;
 });
 
+// =================== Interceptor de response ===================
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -78,6 +78,7 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
 
 // ===================== Usuarios =====================
 export const getPermissions = () => apiClient.get('/users/permissions/');
