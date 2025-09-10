@@ -60,22 +60,6 @@ apiClient.interceptors.request.use(async (req) => {
   return req;
 });
 
-// =================== Interceptor de response ===================
-apiClient.interceptors.response.use(
-  (res) => res,
-  (error) => {
-    const status = error?.response?.status;
-    if (typeof window !== 'undefined' && status) {
-      if (status === 401) {
-        localStorage.removeItem('authTokens');
-        window.location.href = '/login';
-      } else if (status === 403) {
-        window.location.href = '/unauthorized';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 export default apiClient;
 
