@@ -17,7 +17,8 @@ export default function DashboardPage() {
   const [hasData, setHasData] = useState(true);
 
   // Estados de los filtros
-  const [timeframe, setTimeframe] = useState('month');
+  // Por defecto a 'year' para asegurar datos visibles inicialmente
+  const [timeframe, setTimeframe] = useState('year');
   const [selectedProjects, setSelectedProjects] = useState('all');
 
   // --- 1. Lógica para obtener los datos ---
@@ -91,7 +92,18 @@ export default function DashboardPage() {
           Dashboard Estratégico
         </h1>
         <div className="flex items-center gap-4">
-          {/* Aquí puedes mantener tus filtros como los tenías */}
+          {/* Filtro de periodo */}
+          <select
+            value={timeframe}
+            onChange={(e) => setTimeframe(e.target.value)}
+            className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2"
+          >
+            <option value="month">Mes</option>
+            <option value="week">Semana</option>
+            <option value="year">Año</option>
+          </select>
+
+          {/* Filtro de proyecto */}
           <select
             value={selectedProjects}
             onChange={(e) => setSelectedProjects(e.target.value)}

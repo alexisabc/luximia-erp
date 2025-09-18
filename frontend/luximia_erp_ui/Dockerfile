@@ -1,26 +1,38 @@
 #Frontend/luximia_erp_ui/Dockerfile
-# Etapa 1: Base de desarrollo
-# Usamos una imagen ligera de Node.js con Alpine Linux
-FROM node:22-alpine
+# --- Etapa 1: Builder ---
+# En esta etapa construimos la aplicación de Next.js
+FROM node:22-alpine AS builder
 
-# Establecemos el directorio de trabajo dentro del contenedor
+# Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos primero package.json y package-lock.json para aprovechar el caché de Docker
-# Si estos archivos no cambian, Docker no volverá a instalar las dependencias
+# Copiamos los archivos de dependencias
 COPY package*.json ./
 
-# Instalamos las dependencias del proyecto
-RUN npm install 
-#--legacy-peer-deps
+# Instalamos las dependencias
+RUN npm install
 
-# Copiamos el resto del código del frontend
-# Esto se hace al final porque es lo que cambia más a menudo
+# Copiamos el resto del código fuente
 COPY . .
 
-# Exponemos el puerto 3000, que es el que usa Next.js por defecto en desarrollo
-EXPOSE 3000
+# Construimos la aplicación para producción
+# Esto creará una carpeta 'out' con los archivos estáticos optimizados
+RUN npm run build
 
-# El comando para iniciar el servidor de desarrollo de Next.js
-# Le decimos a npm que el directorio de trabajo real es la subcarpeta
-CMD cd luximia_erp_ui && npm run dev
+
+# --- Etapa 2: Production ---
+# En esta etapa, servimos los archivos construidos con un servidor NGINX
+FROM nginx:stable-alpine
+
+# Copiamos los archivos estáticos optimizados desde la etapa 'builder'
+# La carpeta de salida de Next.js es 'out'
+COPY --from=builder /app/out /usr/share/nginx/html
+
+# Copiamos nuestro archivo de configuración personalizado de NGINX
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exponemos el puerto 80, que es el puerto estándar para HTTP
+EXPOSE 80
+
+# El comando para iniciar el servidor NGINX
+CMD ["nginx", "-g", "daemon off;"]

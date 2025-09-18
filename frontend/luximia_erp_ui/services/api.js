@@ -30,8 +30,8 @@ const naked = axios.create({ baseURL });
 
 // =================== Interceptor de request ===================
 apiClient.interceptors.request.use(async (req) => {
-  // APIM subscription key (si tu API está en un Product con suscripción)
-  if (process.env.NEXT_PUBLIC_AZURE_API_KEY) {
+  // Solo añade la cabecera de APIM si estamos en producción Y la variable de entorno existe
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_AZURE_API_KEY) {
     req.headers['Ocp-Apim-Subscription-Key'] = process.env.NEXT_PUBLIC_AZURE_API_KEY;
   }
 

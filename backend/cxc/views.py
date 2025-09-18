@@ -302,8 +302,10 @@ def strategic_dashboard(request):
         trunc_func = TruncMonth
         date_format_str = "%Y-%m"
     elif timeframe == "week":
-        trunc_func = TruncDay
-        date_format_str = "Sem %U"
+        # Usar truncado por semana para agrupar correctamente
+        trunc_func = TruncWeek
+        # Etiquetas por semana ISO (año-semana)
+        date_format_str = "%G-W%V"
     else:  # month (default)
         trunc_func = TruncDay
         date_format_str = "%d-%b"
