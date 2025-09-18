@@ -4,6 +4,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# COMANDO DE DEPURACIÓN: Muestra el contenido del directorio actual
+RUN ls -la
+
 # Copia los archivos de dependencias
 COPY package*.json ./
 
