@@ -1,22 +1,19 @@
 #Frontend/luximia_erp_ui/Dockerfile
 # --- Etapa 1: Builder ---
-# En esta etapa construimos la aplicación de Next.js
 FROM node:22-alpine AS builder
 
-# Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos los archivos de dependencias
+# Copia los archivos de dependencias
 COPY package*.json ./
 
-# Instalamos las dependencias
+# Instala las dependencias
 RUN npm install
 
-# Copiamos el resto del código fuente
+# Copia el resto del código
 COPY . .
 
-# Construimos la aplicación para producción
-# Esto creará una carpeta 'out' con los archivos estáticos optimizados
+# Construye la aplicación
 RUN npm run build
 
 
