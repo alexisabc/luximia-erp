@@ -1,38 +1,23 @@
 #Frontend/luximia_erp_ui/Dockerfile
 # --- Etapa 1: Builder ---
 FROM node:22-alpine AS builder
-
 WORKDIR /app
-
-# COMANDO DE DEPURACIÓN: Muestra el contenido del directorio actual
-RUN ls -la
-
-# Copia los archivos de dependencias
 COPY package*.json ./
-
-# Instala las dependencias
 RUN npm install
-
-# Copia el resto del código
 COPY . .
-
-# Construye la aplicación
 RUN npm run build
 
-
 # --- Etapa 2: Production ---
-# En esta etapa, servimos los archivos construidos con un servidor NGINX
-FROM nginx:stable-alpine
+FROM node:22-alpine AS runner
+WORKDIR /app
 
-# Copiamos los archivos estáticos optimizados desde la etapa 'builder'
-# La carpeta de salida de Next.js es 'out'
-COPY --from=builder /app/out /usr/share/nginx/html
+# Copia los artefactos de construcción desde la etapa 'builder'
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-# Copiamos nuestro archivo de configuración personalizado de NGINX
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Expone el puerto que usa Next.js en producción
+EXPOSE 3000
 
-# Exponemos el puerto 80, que es el puerto estándar para HTTP
-EXPOSE 80
-
-# El comando para iniciar el servidor NGINX
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para iniciar el servidor de Next.js
+CMD ["node", "server.js"]
