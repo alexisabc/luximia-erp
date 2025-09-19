@@ -3,11 +3,8 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 // =================== Base URL ===================
-// En producción (SWA) define: NEXT_PUBLIC_API_URL = https://luximia-api-gateway.azure-api.net
-// Si tu API en APIM usa "API URL suffix = api", entonces define:
-//   NEXT_PUBLIC_API_SUFFIX = ''   (string vacío)
-// Si NO usas suffix en APIM, entonces usa:
-//   NEXT_PUBLIC_API_SUFFIX = '/api'
+// En producción define NEXT_PUBLIC_API_URL con el dominio público del backend.
+// Si tu reverse proxy ya incluye "/api", ajusta NEXT_PUBLIC_API_SUFFIX en consecuencia.
 const isServer = typeof window === 'undefined';
 
 const rawBase = isServer
@@ -30,11 +27,6 @@ const naked = axios.create({ baseURL });
 
 // =================== Interceptor de request ===================
 apiClient.interceptors.request.use(async (req) => {
-  // Solo añade la cabecera de APIM si estamos en producción Y la variable de entorno existe
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_AZURE_API_KEY) {
-    req.headers['Ocp-Apim-Subscription-Key'] = process.env.NEXT_PUBLIC_AZURE_API_KEY;
-  }
-
   // JWT access/refresh desde localStorage
   let authTokens = (typeof window !== 'undefined') ? localStorage.getItem('authTokens') : null;
   authTokens = authTokens ? JSON.parse(authTokens) : null;

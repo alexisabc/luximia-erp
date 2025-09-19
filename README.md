@@ -36,7 +36,7 @@ Desarrollar un sistema web interno para **Grupo Luximia** que centralice y autom
 
 ### 1.3. Stack Tecnológico
 
-- **Backend:** Python 3.11 con **Django 5** y **Django Rest Framework**. Autenticación con **djangorestframework-simplejwt**, envíos de correo mediante **Azure Communication Services**, y seguridad reforzada con **django-cors-headers** y **django-csp**. Los reportes se generan con **WeasyPrint** (PDF) y **XlsxWriter** (Excel), se soportan passkeys a través de **webauthn** y el procesamiento de datos se realiza con **Polars**.
+- **Backend:** Python 3.11 con **Django 5** y **Django Rest Framework**. Autenticación con **djangorestframework-simplejwt**, envíos de correo mediante la API de **Twilio SendGrid**, y almacenamiento de archivos en **Cloudflare R2** (compatible con S3), con seguridad reforzada gracias a **django-cors-headers** y **django-csp**. Los reportes se generan con **WeasyPrint** (PDF) y **XlsxWriter** (Excel), se soportan passkeys a través de **webauthn** y el procesamiento de datos se realiza con **Polars**.
 - **Frontend:** JavaScript con **Next.js 15**, **React 19** y **Tailwind CSS 4**. Consumo de API con **axios**, gráficas interactivas con **@tremor/react**, iconografía con **lucide-react** y autenticación sin contraseñas mediante **@simplewebauthn/browser**.
 - **Base de Datos:** PostgreSQL.
 - **Contenerización:** **Docker** y **Docker Compose**.

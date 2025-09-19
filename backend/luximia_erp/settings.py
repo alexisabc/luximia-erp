@@ -211,11 +211,12 @@ if DEBUG:
     EMAIL_USE_TLS = False
     DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "desarrollo@luximia.local")
 else:
-    AZURE_COMMUNICATION_CONNECTION_STRING = os.getenv(
-        "AZURE_COMMUNICATION_CONNECTION_STRING"
+    EMAIL_BACKEND = "luximia_erp.emails.SendGridEmailBackend"
+    DEFAULT_FROM_EMAIL = os.getenv(
+        "SENDGRID_FROM_EMAIL", os.getenv("DEFAULT_FROM_EMAIL", "noreply@luximia.app")
     )
-    AZURE_COMMUNICATION_SENDER_ADDRESS = os.getenv("AZURE_COMMUNICATION_SENDER_ADDRESS")
-    DEFAULT_FROM_EMAIL = AZURE_COMMUNICATION_SENDER_ADDRESS
+
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
 
 # --- Django REST Framework y JWT ---
@@ -256,15 +257,17 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": os.getenv("LOG_LEVEL", "INFO")},
 }
 
-# --- CONFIGURACIÓN DE AZURE BLOB STORAGE PARA ARCHIVOS ---
+# --- Configuración de almacenamiento S3 compatible (Cloudflare R2) ---
 
-# Le dice a Django que use Azure para todos los archivos subidos (ej. PDFs, imágenes de perfil)
-DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
-
-# Estas son las credenciales. Las pondremos en las variables de entorno de App Service.
-AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
-
-# El nombre del contenedor que creaste en el paso 1.5
-AZURE_CONTAINER = "documentos-pdf"
+if os.getenv("CLOUDFLARE_R2_BUCKET_NAME"):
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_ACCESS_KEY_ID = os.getenv("CLOUDFLARE_R2_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET_NAME")
+    AWS_S3_ENDPOINT_URL = os.getenv("CLOUDFLARE_R2_ENDPOINT_URL")
+    AWS_S3_REGION_NAME = os.getenv("CLOUDFLARE_R2_REGION", "auto")
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
+    AWS_S3_ADDRESSING_STYLE = os.getenv("CLOUDFLARE_R2_ADDRESSING_STYLE", "virtual")
+    AWS_DEFAULT_ACL = None
 
 APPEND_SLASH = False

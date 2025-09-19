@@ -51,5 +51,4 @@ RUN SECRET_KEY="dummy-key-for-build" python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # El comando para iniciar la aplicación en producción
-# Se adapta al puerto que Azure le asigne a través de la variable $PORT
 CMD ["gunicorn", "luximia_erp.wsgi:application", "--bind", "0.0.0.0:8000"]
