@@ -1,4 +1,4 @@
-Hola,
+Hola{% if display_name %} {{ display_name }}{% endif %},
 
 Bienvenido a Luximia ERP. Has sido invitado a la plataforma.
 

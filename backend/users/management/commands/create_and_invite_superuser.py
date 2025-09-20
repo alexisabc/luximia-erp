@@ -19,10 +19,20 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
+        first_name = os.getenv("DJANGO_SUPERUSER_FIRST_NAME", "").strip()
+        last_name = os.getenv("DJANGO_SUPERUSER_LAST_NAME", "").strip()
         if not email:
             self.stdout.write(self.style.WARNING(
                 "La variable de entorno DJANGO_SUPERUSER_EMAIL no está definida. Omitiendo."))
             return
+
+        if not first_name:
+            self.stdout.write(self.style.WARNING(
+                "La variable de entorno DJANGO_SUPERUSER_FIRST_NAME no está definida. Se utilizará un valor vacío."))
+
+        if not last_name:
+            self.stdout.write(self.style.WARNING(
+                "La variable de entorno DJANGO_SUPERUSER_LAST_NAME no está definida. Se utilizará un valor vacío."))
 
         User = get_user_model()
         
@@ -32,6 +42,8 @@ class Command(BaseCommand):
                 email=email,
                 defaults={
                     'username': email,
+                    'first_name': first_name,
+                    'last_name': last_name,
                     'is_staff': True,
                     'is_superuser': True,
                     'is_active': False
@@ -46,6 +58,19 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS(
                     f"El superusuario {email} ya existe."))
+
+            updated_fields = []
+            if first_name and user.first_name != first_name:
+                user.first_name = first_name
+                updated_fields.append('first_name')
+            if last_name and user.last_name != last_name:
+                user.last_name = last_name
+                updated_fields.append('last_name')
+
+            if updated_fields:
+                user.save(update_fields=updated_fields)
+                self.stdout.write(self.style.SUCCESS(
+                    f"Información del superusuario actualizada: {', '.join(updated_fields)}."))
 
             # --- Paso 2: Crear o recuperar el rol de Administradores y asignarle todos los permisos ---
             admin_group, created_group = Group.objects.get_or_create(name='Administradores')
@@ -80,7 +105,15 @@ class Command(BaseCommand):
                 protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
                 enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
-                context = {"enroll_url": enroll_url}
+                names = [value for value in [user.first_name or first_name, user.last_name or last_name] if value]
+                display_name = " ".join(names)
+
+                context = {
+                    "enroll_url": enroll_url,
+                    "display_name": display_name,
+                    "first_name": user.first_name or first_name,
+                    "last_name": user.last_name or last_name,
+                }
                 plain_message = render_to_string(
                     "users/welcome_invitation.txt", context
                 )

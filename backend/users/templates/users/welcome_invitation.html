@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <body>
-    <p>Hola,</p>
+    <p>Hola{% if display_name %} {{ display_name }}{% endif %},</p>
     <p>Bienvenido a Luximia ERP. Has sido invitado a la plataforma.</p>
     <p>Para completar tu registro, haz clic en el siguiente enlace:</p>
     <p><a href="{{ enroll_url }}">Completar registro</a></p>
