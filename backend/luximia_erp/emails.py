@@ -5,7 +5,7 @@ from base64 import b64encode
 from typing import Sequence
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
@@ -120,7 +120,8 @@ def send_mail(
     **kwargs,
 ) -> int:
     # Mantiene compatibilidad con la firma original de Django.
-    backend = SendGridEmailBackend(fail_silently=fail_silently)
+    # Usa el backend configurado en settings (MailHog en dev, SendGrid en prod).
+    backend = get_connection(fail_silently=fail_silently)
     email = EmailMultiAlternatives(
         subject=subject,
         body=message,

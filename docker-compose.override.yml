@@ -15,7 +15,7 @@ services:
       - mailhog # El backend depende de mailhog en desarrollo
 
   frontend:
-    command: npm run dev # Comando para iniciar el servidor de desarrollo de Next.js
+    command: sh -c "npm install && npm run dev" # Garantiza dependencias antes de iniciar Next.js
     volumes:
       - ./frontend/luximia_erp_ui:/app # Hot-reloading para el código
       - /app/node_modules # Evita que node_modules local sobreescriba el del contenedor
