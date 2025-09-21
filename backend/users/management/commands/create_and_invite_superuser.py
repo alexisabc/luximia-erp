@@ -8,9 +8,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from luximia_erp.emails import send_mail
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
-from django.db import transaction
+from django.db import connections, transaction
+from django.db.migrations.executor import MigrationExecutor
+from django.db.utils import OperationalError, ProgrammingError
 from django.template.loader import render_to_string
 from users.models import EnrollmentToken
 
@@ -35,7 +38,8 @@ class Command(BaseCommand):
                 "La variable de entorno DJANGO_SUPERUSER_LAST_NAME no está definida. Se utilizará un valor vacío."))
 
         User = get_user_model()
-        
+        self._ensure_migrations()
+
         with transaction.atomic():
             # --- Paso 1: Crear o recuperar el superusuario ---
             user, created = User.objects.get_or_create(
@@ -140,3 +144,16 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS(
                     "El superusuario ya está activo. No se requiere enviar invitación."))
+
+    def _ensure_migrations(self):
+        """Aplica migraciones pendientes antes de acceder a la base de datos."""
+        connection = connections["default"]
+        try:
+            executor = MigrationExecutor(connection)
+            plan = executor.migration_plan(executor.loader.graph.leaf_nodes())
+        except (OperationalError, ProgrammingError):
+            plan = True
+
+        if plan:
+            self.stdout.write("Aplicando migraciones pendientes antes de crear el superusuario...")
+            call_command("migrate", interactive=False)
