@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -79,6 +80,37 @@ class CreateAndInviteSuperuserTests(TestCase):
 
         self.assertEqual(CustomUser.objects.count(), 0)
         self.assertEqual(EnrollmentToken.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(DEVELOPMENT_MODE=False)
+    def test_raises_error_if_email_not_sent_in_production(self):
+        """Asegura que en producción se lance un error si el correo no se envía."""
+        email = "admin@example.com"
+        with patch.dict(os.environ, {"DJANGO_SUPERUSER_EMAIL": email}):
+            with patch(
+                "users.management.commands.create_and_invite_superuser.send_mail",
+                return_value=0,
+            ):
+                with self.assertRaises(CommandError):
+                    call_command("create_and_invite_superuser")
+
+        self.assertEqual(CustomUser.objects.count(), 0)
+        self.assertEqual(EnrollmentToken.objects.count(), 0)
+
+    @override_settings(DEVELOPMENT_MODE=True)
+    def test_allows_missing_email_delivery_in_development(self):
+        """En desarrollo solo muestra advertencia cuando no se envía correo."""
+        email = "admin@example.com"
+        with patch.dict(os.environ, {"DJANGO_SUPERUSER_EMAIL": email}):
+            with patch(
+                "users.management.commands.create_and_invite_superuser.send_mail",
+                return_value=0,
+            ):
+                call_command("create_and_invite_superuser")
+
+        user = CustomUser.objects.get(email=email)
+        self.assertFalse(user.is_active)
+        self.assertEqual(EnrollmentToken.objects.filter(user=user).count(), 1)
         self.assertEqual(len(mail.outbox), 0)
 
 

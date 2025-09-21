@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from base64 import b64encode
 from typing import Sequence
@@ -26,6 +27,7 @@ class SendGridEmailBackend(BaseEmailBackend):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.api_key = getattr(settings, "SENDGRID_API_KEY", os.getenv("SENDGRID_API_KEY"))
+        self.logger = logging.getLogger(__name__)
 
     def send_messages(self, email_messages):
         if not email_messages:
@@ -49,9 +51,21 @@ class SendGridEmailBackend(BaseEmailBackend):
                 raise
 
             try:
-                client.send(mail)
+                response = client.send(mail)
+                status_code = getattr(response, "status_code", "unknown")
+                self.logger.info(
+                    "SendGrid envió correo '%s' a %s (status %s)",
+                    message.subject,
+                    list(message.to or []),
+                    status_code,
+                )
                 sent_count += 1
             except Exception:
+                self.logger.exception(
+                    "Error al enviar correo '%s' a %s via SendGrid",
+                    message.subject,
+                    list(message.to or []),
+                )
                 if not self.fail_silently:
                     raise
 

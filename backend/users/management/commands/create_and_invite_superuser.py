@@ -120,7 +120,7 @@ class Command(BaseCommand):
                 html_message = render_to_string(
                     "users/welcome_invitation.html", context
                 )
-                send_mail(
+                emails_sent = send_mail(
                     "Invitación para Administrador de Luximia ERP",
                     plain_message,
                     settings.DEFAULT_FROM_EMAIL,
@@ -128,8 +128,15 @@ class Command(BaseCommand):
                     fail_silently=False,
                     html_message=html_message,
                 )
-                self.stdout.write(self.style.SUCCESS(
-                    f"Invitación de superusuario enviada a {email}."))
+                if emails_sent <= 0:
+                    error_message = "No se pudo enviar la invitación del superusuario."
+                    if settings.DEVELOPMENT_MODE:
+                        self.stdout.write(self.style.WARNING(error_message))
+                    else:
+                        raise CommandError(error_message)
+                else:
+                    self.stdout.write(self.style.SUCCESS(
+                        f"Invitación de superusuario enviada a {email}."))
             else:
                 self.stdout.write(self.style.SUCCESS(
                     "El superusuario ya está activo. No se requiere enviar invitación."))
