@@ -2,7 +2,7 @@
 services:
   ### SERVICIO PARA DB ###
   db:
-    image: ankane/pgvector:latest
+    image: pgvector/pgvector:pg17
     container_name: luximia-db
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
