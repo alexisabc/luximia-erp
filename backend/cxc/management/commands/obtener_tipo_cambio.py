@@ -1,75 +1,71 @@
-# backend/cxc/management/commands/obtener_tipo_cambio.py
+"""Comando para consultar y actualizar el tipo de cambio de Banxico."""
 
-import requests
-import os
-from datetime import date, datetime  # <--- Importa 'date'
-from decimal import Decimal
-from django.core.management.base import BaseCommand
-from cxc.models import TipoDeCambio
+from __future__ import annotations
+
+from datetime import date, datetime, timedelta
+
+from django.core.management.base import BaseCommand, CommandError
+
+from cxc.utils import sincronizar_tipo_cambio_banxico
 
 
 class Command(BaseCommand):
-    help = 'Obtiene el tipo de cambio del DOF para una fecha específica desde Banxico.'
+    help = (
+        "Consulta la API del Banxico y registra el tipo de cambio del DOF para "
+        "el escenario BANXICO. Se puede ejecutar periódicamente (por ejemplo, cron)."
+    )
 
-    # ### CAMBIO 1: Permitimos pasar una fecha como argumento ###
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:
         parser.add_argument(
-            '--fecha',
+            "--fecha",
             type=str,
-            help='Fecha para obtener el TC en formato YYYY-MM-DD. Si no se especifica, usa la fecha de hoy.'
+            help=(
+                "Fecha objetivo en formato YYYY-MM-DD. Si no se proporciona, "
+                "se usa la fecha actual y, de no haber dato publicado, se "
+                "busca el día hábil previo."
+            ),
         )
 
-    def handle(self, *args, **options):
-        self.stdout.write(
-            "Iniciando la obtención del tipo de cambio de Banxico...")
+    def handle(self, *args, **options) -> None:
+        fecha_opcional = options.get("fecha")
+        fecha_base = self._parse_fecha(fecha_opcional)
 
-        # ### CAMBIO 2: Usamos la fecha del argumento o la de hoy ###
-        fecha_a_consultar_str = options['fecha'] or date.today().strftime(
-            '%Y-%m-%d')
-        self.stdout.write(
-            f"Consultando tipo de cambio para la fecha: {fecha_a_consultar_str}")
+        max_reintentos = 5 if fecha_opcional is None else 0
 
-        token = os.getenv('BANXICO_TOKEN')
-        if not token:
-            # ... (código de error de token sin cambios)
-            self.stdout.write(self.style.ERROR(
-                "El BANXICO_TOKEN no está configurado."))
-            return
+        for offset in range(max_reintentos + 1):
+            fecha_en_turno = fecha_base - timedelta(days=offset)
+            resultado = sincronizar_tipo_cambio_banxico(fecha_en_turno)
 
-        # ### CAMBIO 3: Nueva URL para pedir una fecha específica ###
-        id_serie_dof = 'SF60653'
-        url = f'https://www.banxico.org.mx/SieAPIRest/service/v1/series/{id_serie_dof}/datos/{fecha_a_consultar_str}/{fecha_a_consultar_str}?token={token}'
+            if resultado.get("success"):
+                if offset > 0:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            "La fecha solicitada no tenía dato disponible; "
+                            f"se usó {fecha_en_turno:%Y-%m-%d}."
+                        )
+                    )
 
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-
-            # Verificamos si la respuesta contiene datos
-            datos_serie = data['bmx']['series'][0]['datos']
-            if not datos_serie:
-                self.stdout.write(self.style.WARNING(
-                    f"No se encontró un tipo de cambio para la fecha {fecha_a_consultar_str}. Es posible que sea un día no hábil."))
+                self.stdout.write(self.style.SUCCESS(resultado["message"]))
                 return
 
-            serie_data = datos_serie[0]
-            fecha_str = serie_data['fecha']
-            valor_str = serie_data['dato']
+            if resultado.get("code") == "no_data" and offset < max_reintentos:
+                self.stdout.write(self.style.WARNING(resultado["message"]))
+                continue
 
-            fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
-            valor_decimal = Decimal(valor_str)
+            raise CommandError(resultado.get("message", "Error desconocido al obtener el tipo de cambio."))
 
-            tipo_de_cambio, created = TipoDeCambio.objects.update_or_create(
-                fecha=fecha_obj,
-                defaults={'valor': valor_decimal}
-            )
+        raise CommandError(
+            "No se encontró un tipo de cambio publicado en los últimos "
+            f"{max_reintentos + 1} días."
+        )
 
-            if created:
-                self.stdout.write(self.style.SUCCESS(
-                    f"Se guardó un nuevo tipo de cambio para {fecha_str}: {valor_str}"))
-            else:
-                self.stdout.write(self.style.SUCCESS(
-                    f"Se actualizó el tipo de cambio para {fecha_str}: {valor_str}"))
+    def _parse_fecha(self, fecha_opcional: str | None) -> date:
+        if not fecha_opcional:
+            return date.today()
 
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Ocurrió un error: {e}"))
+        try:
+            return datetime.strptime(fecha_opcional, "%Y-%m-%d").date()
+        except ValueError as exc:
+            raise CommandError(
+                "El formato de fecha debe ser YYYY-MM-DD"
+            ) from exc
