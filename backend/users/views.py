@@ -60,6 +60,7 @@ from webauthn.helpers.exceptions import InvalidRegistrationResponse
 
 from .models import EnrollmentToken
 from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
+from .utils import build_enrollment_email_context
 
 logger = logging.getLogger(__name__)
 
@@ -156,12 +157,19 @@ class InviteUserView(APIView):
         protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
         enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
-        context = {"enroll_url": enroll_url}
+        context = build_enrollment_email_context(
+            enroll_url,
+            user=user,
+            extra_context={
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            },
+        )
         plain_message = render_to_string(
             "users/welcome_invitation.txt", context
         )
         html_message = render_to_string(
-            "users/welcome_invitation.html", context
+            "users/enrollment_email.html", context
         )
         send_mail(
             "Invitación a Luximia ERP",

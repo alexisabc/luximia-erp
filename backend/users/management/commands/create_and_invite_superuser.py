@@ -16,6 +16,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.db.utils import OperationalError, ProgrammingError
 from django.template.loader import render_to_string
 from users.models import EnrollmentToken
+from users.utils import build_enrollment_email_context
 
 class Command(BaseCommand):
     help = "Asegura que el superusuario exista y genera un nuevo enlace de inscripción."
@@ -109,20 +110,19 @@ class Command(BaseCommand):
                 protocol = "https" if not settings.DEVELOPMENT_MODE else "http"
                 enroll_url = f"{protocol}://{domain}/enroll/{token}"
 
-                names = [value for value in [user.first_name or first_name, user.last_name or last_name] if value]
-                display_name = " ".join(names)
-
-                context = {
-                    "enroll_url": enroll_url,
-                    "display_name": display_name,
-                    "first_name": user.first_name or first_name,
-                    "last_name": user.last_name or last_name,
-                }
+                context = build_enrollment_email_context(
+                    enroll_url,
+                    user=user,
+                    extra_context={
+                        "first_name": user.first_name or first_name,
+                        "last_name": user.last_name or last_name,
+                    },
+                )
                 plain_message = render_to_string(
                     "users/welcome_invitation.txt", context
                 )
                 html_message = render_to_string(
-                    "users/welcome_invitation.html", context
+                    "users/enrollment_email.html", context
                 )
                 emails_sent = send_mail(
                     "Invitación para Administrador de Luximia ERP",

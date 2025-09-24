@@ -1,10 +1,10 @@
 Hola{% if display_name %} {{ display_name }}{% endif %},
 
-Bienvenido a Luximia ERP. Has sido invitado a la plataforma.
+Bienvenido a {{ company_name|default:"Luximia ERP" }}. Has sido invitado a la plataforma.
 
 Completa tu registro con el siguiente enlace:
 {{ enroll_url }}
 
-Este enlace expira en 24 horas.
+Este enlace vence en {{ link_validity|default:"24 horas" }}.
 
 ¡Te esperamos!
