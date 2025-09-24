@@ -2,17 +2,58 @@
 
 from __future__ import annotations
 
+import os
+from urllib.parse import urljoin
 from typing import Any, Dict, Optional
 
 from django.conf import settings
+from django.templatetags.static import static
 from django.utils import timezone
 
 
+def _get_assets_base_url() -> str:
+    """Return the base URL for assets used in transactional emails."""
+
+    configured = getattr(settings, "EMAIL_ASSETS_BASE_URL", None) or os.getenv(
+        "EMAIL_ASSETS_BASE_URL"
+    )
+    if configured:
+        base_url = configured
+    elif getattr(settings, "DEVELOPMENT_MODE", False):
+        base_url = (
+            os.getenv("EMAIL_ASSETS_BASE_URL_DEV")
+            or os.getenv("BACKEND_BASE_URL")
+            or "http://localhost:8000/"
+        )
+    else:
+        domain = (
+            getattr(settings, "EMAIL_ASSETS_DOMAIN", None)
+            or os.getenv("EMAIL_ASSETS_DOMAIN")
+            or getattr(settings, "FRONTEND_DOMAIN", None)
+            or "luximia.app"
+        )
+        if domain.startswith("http://") or domain.startswith("https://"):
+            base_url = domain
+        else:
+            protocol = os.getenv("EMAIL_ASSETS_PROTOCOL") or "https"
+            base_url = f"{protocol}://{domain}"
+
+    if not base_url.endswith("/"):
+        base_url = f"{base_url}/"
+
+    return base_url
+
+
 def _resolve_logo_url() -> str:
-    protocol = "https" if not getattr(settings, "DEVELOPMENT_MODE", False) else "http"
-    domain = getattr(settings, "FRONTEND_DOMAIN", "localhost:3000")
-    fallback = f"{protocol}://{domain}/static/logo-luximia.png"
-    return getattr(settings, "EMAIL_LOGO_URL", fallback)
+    """Resolve the absolute URL for the logo used in enrollment emails."""
+
+    env_logo_url = getattr(settings, "EMAIL_LOGO_URL", None) or os.getenv("EMAIL_LOGO_URL")
+    if env_logo_url:
+        return env_logo_url
+
+    static_path = static("logo-luximia.png").lstrip("/")
+    base_url = _get_assets_base_url()
+    return urljoin(base_url, static_path)
 
 
 def build_enrollment_email_context(
