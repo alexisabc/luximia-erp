@@ -374,19 +374,21 @@ class PasskeyRegisterChallengeView(APIView):
         attachment = (
             AuthenticatorAttachment.PLATFORM
             if settings.PASSKEY_STRICT_UV
-            else None  # AuthenticatorAttachment.CROSS_PLATFORM
+            else None
         )
 
         options = generate_registration_options(
             rp_id=rp_id,
             rp_name=rp_name,
+            # ✨ CAMBIO CLAVE: Añadimos el user_id, que es obligatorio.
+            # Lo convertimos a string y luego a bytes, un formato estable y seguro.
+            user_id=str(user.id).encode("utf-8"),
             user_name=user.email,
             user_display_name=user.get_full_name() or user.email,
             authenticator_selection=AuthenticatorSelectionCriteria(
                 user_verification=uv_mode,
                 authenticator_attachment=attachment,
-                resident_key=ResidentKeyRequirement.REQUIRED,  # ← clave para passkeys
-                # ← legacy flag, ayuda a algunos gestores
+                resident_key=ResidentKeyRequirement.REQUIRED,
                 require_resident_key=True,
             ),
             attestation=AttestationConveyancePreference.NONE,
