@@ -19,6 +19,7 @@ DEBUG = DEVELOPMENT_MODE
 # --- Dominios y Hosts ---
 FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", "localhost:3000")  # p.ej. localhost:3000
 # Añade 0.0.0.0 para Docker/WSL y el host de tu backend si usas otro nombre
+ROOT_DOMAIN = os.getenv("ROOT_DOMAIN")  # p.ej. tudominio.com
 if DEBUG:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 else:
@@ -168,11 +169,25 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 # --- Cookies de sesión ---
+# Las cookies deben ser seguras (solo HTTPS) en producción
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-# Para que el navegador envíe cookies en cross-site (frontend:3000 -> backend:8000)
+
+# Define el dominio de la cookie solo en producción para permitir subdominios.
+# En desarrollo, no se establece para que funcione correctamente con 'localhost'.
+if not DEBUG and ROOT_DOMAIN:
+    SESSION_COOKIE_DOMAIN = f".{ROOT_DOMAIN}"
+    CSRF_COOKIE_DOMAIN = f".{ROOT_DOMAIN}"
+
+# 'SameSite=None' es necesario en producción para enviar cookies entre
+# el frontend y el backend (que son orígenes distintos).
+# Requiere que la cookie sea segura (Secure=True).
+# En desarrollo, 'Lax' es un valor predeterminado seguro y funcional.
 SESSION_COOKIE_SAMESITE = "None" if not DEBUG else "Lax"
+
+# Evita que JavaScript acceda a la cookie de sesión (medida de seguridad)
 SESSION_COOKIE_HTTPONLY = True
+
 
 # --- Configuración para Passkeys (WebAuthn) ---
 PASSKEY_STRICT_UV = os.getenv("PASSKEY_STRICT_UV", "True") == "True"
