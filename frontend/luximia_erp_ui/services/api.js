@@ -9,8 +9,10 @@ const rawBase = isServer
   ? (process.env.API_URL || 'http://backend:8000')
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
-const suffix = (process.env.NEXT_PUBLIC_API_SUFFIX ?? '/api');
-const baseURL = `${rawBase.replace(/\/+$/, '')}${suffix}`;
+// ✨ CAMBIO: Eliminamos la lógica del 'suffix' para un control total
+// desde la variable de entorno. Simplemente usa la URL base y le
+// quita cualquier slash (/) al final para evitar duplicados.
+const baseURL = rawBase.replace(/\/+$/, '');
 
 // ✨ CAMBIO: Configuración global de Axios para manejar CSRF con Django
 // Esto le dice a Axios que busque una cookie llamada 'csrftoken' y la ponga
