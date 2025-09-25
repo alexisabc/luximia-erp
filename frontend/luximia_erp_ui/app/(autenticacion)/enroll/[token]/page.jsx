@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import apiClient from '@/services/api';
+// ✨ CAMBIO: Importamos la función específica en lugar del cliente genérico
+import { validateEnrollmentToken } from '@/services/api';
 
 export default function EnrollTokenPage() {
   const router = useRouter();
@@ -22,12 +23,11 @@ export default function EnrollTokenPage() {
 
     (async () => {
       try {
-        await apiClient.post('/users/enrollment/validate/', { token });
-        // ✅ token consumido; seguimos sin token
+        // ✨ CAMBIO: Usamos la función del servicio de API
+        await validateEnrollmentToken(token);
         router.replace('/enroll/setup');
       } catch (err) {
-        setError('Este enlace de inscripción no es válido o ha expirado.');
-        // (opcional) console.error(err?.response?.data || err);
+        setError(err.response?.data?.detail || 'Este enlace de inscripción no es válido o ha expirado.');
       }
     })();
   }, [token, router]);

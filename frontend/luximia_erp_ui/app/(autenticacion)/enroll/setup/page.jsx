@@ -1,12 +1,19 @@
 // app/(autenticacion)/enroll/setup/page.jsx
 'use client';
 
-import { Suspense, useEffect, useState, useRef } from 'react'; // <-- Importa useRef
-import apiClient from '@/services/api';
+import { Suspense, useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { startRegistration } from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
-import { useRouter } from 'next/navigation';
 import { Key, QrCode } from 'lucide-react';
+
+// ✨ CAMBIO: Importamos todas las funciones necesarias de nuestro servicio
+import {
+    getPasskeyRegisterChallenge,
+    verifyPasskeyRegistration,
+    setupTotp,
+    verifyTotp,
+} from '@/services/api';
 
 // Nuevo componente para mostrar el progreso
 const StepIndicator = ({ currentStep, totalSteps, title, description }) => (
@@ -19,30 +26,23 @@ const StepIndicator = ({ currentStep, totalSteps, title, description }) => (
 
 function EnrollmentSetup() {
     const router = useRouter();
-
-    const [step, setStep] = useState(1); // 1: Passkey, 2: TOTP, 3: Finalizado
+    const [step, setStep] = useState(1);
     const [error, setError] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
-
     const [qrUri, setQrUri] = useState('');
     const [totpCode, setTotpCode] = useState('');
-
-    // --- Agregado: Referencia para el input de TOTP ---
     const totpInputRef = useRef(null);
 
     useEffect(() => {
         if (step !== 2) return;
         (async () => {
             try {
-                const { data } = await apiClient.post('/users/totp/setup/');
+                // ✨ CAMBIO: Usamos la función de la API
+                const { data } = await setupTotp();
                 setQrUri(data.otpauth_uri);
-
-                // Mueve el foco al input una vez que el QR se ha cargado
-                if (totpInputRef.current) {
-                    totpInputRef.current.focus();
-                }
+                totpInputRef.current?.focus();
             } catch (err) {
-                setError('No se pudo obtener el código QR.');
+                setError(err.response?.data?.detail || 'No se pudo obtener el código QR.');
             }
         })();
     }, [step]);
@@ -51,18 +51,20 @@ function EnrollmentSetup() {
         setIsProcessing(true);
         setError(null);
         try {
-            const { data: options } = await apiClient.get('/users/passkey/register/challenge/');
-            if (!options?.challenge) throw new Error('Respuesta inválida del servidor.');
-            const registrationResponse = await startRegistration({ optionsJSON: options });
-            await apiClient.post('/users/passkey/register/', registrationResponse);
-            setStep(2);
+            // ✨ CAMBIO: Lógica refactorizada para usar el servicio de API
+            // 1. Obtener el desafío
+            const { data: options } = await getPasskeyRegisterChallenge();
+
+            // 2. Usar la librería del navegador para que el usuario cree la credencial
+            const registrationResponse = await startRegistration(options);
+
+            // 3. Enviar la respuesta para verificación y registro
+            await verifyPasskeyRegistration(registrationResponse);
+
+            setStep(2); // Avanzar al siguiente paso
         } catch (err) {
-            if (err?.response) {
-                const detail = err.response.data?.detail || 'Fallo en el registro.';
-                setError(`Error del servidor: ${detail}`);
-            } else {
-                setError(err.name === 'AbortError' ? 'Registro de passkey cancelado.' : 'Error al registrar la passkey.');
-            }
+            const errorMessage = err.response?.data?.detail || err.message || 'Error al registrar la passkey.';
+            setError(err.name === 'AbortError' ? 'Registro de passkey cancelado.' : errorMessage);
         } finally {
             setIsProcessing(false);
         }
@@ -70,16 +72,14 @@ function EnrollmentSetup() {
 
     const handleVerifyTotp = async (e) => {
         e.preventDefault();
-        if (isProcessing) return;
         setIsProcessing(true);
         setError(null);
         try {
-            const { data } = await apiClient.post('/users/totp/verify/', { code: totpCode });
-            console.log('[ENROLL] TOTP verificado. Respuesta:', data);
+            // ✨ CAMBIO: Usamos la función de la API
+            await verifyTotp(totpCode);
             router.replace('/login?enrolled=true');
         } catch (err) {
-            const msg = err?.response?.data?.detail || 'Código TOTP inválido.';
-            setError(msg);
+            setError(err.response?.data?.detail || 'Código TOTP inválido.');
         } finally {
             setIsProcessing(false);
         }
@@ -154,7 +154,7 @@ function EnrollmentSetup() {
 
 export default function EnrollSetupPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Cargando...</div>}>
+        <Suspense fallback={<div>Cargando...</div>}>
             <EnrollmentSetup />
         </Suspense>
     );

@@ -3,31 +3,34 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
 // =================== Base URL ===================
-// En producción define NEXT_PUBLIC_API_URL con el dominio público del backend.
-// Si tu reverse proxy ya incluye "/api", ajusta NEXT_PUBLIC_API_SUFFIX en consecuencia.
 const isServer = typeof window === 'undefined';
 
 const rawBase = isServer
-  ? (process.env.API_URL || 'http://backend:8000')               // para SSR/local si lo necesitas
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'); // en navegador (SWA)
+  ? (process.env.API_URL || 'http://backend:8000')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
-const suffix = (process.env.NEXT_PUBLIC_API_SUFFIX ?? '/api');    // '' o '/api'
-const baseURL = `${rawBase.replace(/\/+$/, '')}${suffix}`;        // concatena sin duplicar /
+const suffix = (process.env.NEXT_PUBLIC_API_SUFFIX ?? '/api');
+const baseURL = `${rawBase.replace(/\/+$/, '')}${suffix}`;
+
+// ✨ CAMBIO: Configuración global de Axios para manejar CSRF con Django
+// Esto le dice a Axios que busque una cookie llamada 'csrftoken' y la ponga
+// en la cabecera 'X-CSRFToken' en las peticiones que lo requieran (como POST).
+axios.defaults.xsrfCookieName = 'csrftoken';
+axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 
 // =================== Cliente Axios ===================
-// Vamos con JWT (sin cookies/CSRF) para simplificar CORS.
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,   // muy importante: no mandar cookies cross-site
+  withCredentials: true, // Correcto! Esto ES NECESARIO para enviar cookies (sessionid, csrftoken) cross-site.
 });
 
 // Cliente "naked" para refresh sin interceptores (evita loops)
 const naked = axios.create({ baseURL });
 
 // =================== Interceptor de request ===================
+// (Tu interceptor de JWT no necesita cambios, está perfecto)
 apiClient.interceptors.request.use(async (req) => {
-  // JWT access/refresh desde localStorage
   let authTokens = (typeof window !== 'undefined') ? localStorage.getItem('authTokens') : null;
   authTokens = authTokens ? JSON.parse(authTokens) : null;
 
@@ -37,7 +40,6 @@ apiClient.interceptors.request.use(async (req) => {
       const isExpired = Date.now() >= payload.exp * 1000;
 
       if (isExpired && authTokens.refresh) {
-        // refresh con el cliente "naked" para no disparar este mismo interceptor
         const { data } = await naked.post('/users/token/refresh/', { refresh: authTokens.refresh });
         localStorage.setItem('authTokens', JSON.stringify(data));
         req.headers.Authorization = `Bearer ${data.access}`;
@@ -53,6 +55,7 @@ apiClient.interceptors.request.use(async (req) => {
 });
 
 // =================== Interceptor de response ===================
+// (Tu interceptor de response está bien)
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -62,7 +65,9 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('authTokens');
         window.location.href = '/login';
       } else if (status === 403) {
-        window.location.href = '/unauthorized';
+        // Podríamos querer un manejo más granular que una simple redirección
+        console.error("Acceso prohibido (403). Podría ser un problema de permisos o CSRF.");
+        // window.location.href = '/unauthorized';
       }
     }
     return Promise.reject(error);
@@ -70,6 +75,27 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
+// ===================== Autenticación / Enrolamiento =====================
+// Paso 1 del enrolamiento: Validar el token del correo
+export const validateEnrollmentToken = (token) =>
+  apiClient.post('/users/enrollment/validate/', { token });
+
+// Paso 2: Obtener el desafío para crear la passkey
+export const getPasskeyRegisterChallenge = () =>
+  apiClient.get('/users/enrollment/passkey-challenge/');
+
+// ✨ CAMBIO: Esta función ahora solo envía la respuesta de la passkey para ser verificada.
+// La creación (startRegistration) se hará en el componente.
+export const verifyPasskeyRegistration = (registrationResponse) =>
+  apiClient.post('/users/enrollment/passkey-register/', registrationResponse);
+
+// Paso 3: Obtener el QR para la configuración de TOTP
+export const setupTotp = () => apiClient.post('/users/enrollment/totp-setup/');
+
+// Paso 4: Verificar el código TOTP para activar la cuenta
+export const verifyTotp = (code) =>
+  apiClient.post('/users/enrollment/totp-verify/', { code });
 
 
 // ===================== Usuarios =====================
