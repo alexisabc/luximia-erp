@@ -41,12 +41,18 @@ urlpatterns = [
 
     # --- Enrollment ---
     path("enrollment/validate/", EnrollmentValidationView.as_view(), name="enrollment-validate"),
-    path("passkey/register/challenge/", PasskeyRegisterChallengeView.as_view(), name="passkey-register-challenge"),
-    path("passkey/register/", PasskeyRegisterView.as_view(), name="passkey-register"),
+    
+    # ✨ CAMBIO: Ajusta esta ruta para que coincida con el frontend
+    path("enrollment/passkey-challenge/", PasskeyRegisterChallengeView.as_view(), name="passkey-register-challenge"),
+    
+    # También ajustemos las otras rutas de registro para mantener la consistencia
+    path("enrollment/passkey-register/", PasskeyRegisterView.as_view(), name="passkey-register"),
+    path("enrollment/totp-setup/", TOTPSetupView.as_view(), name="totp-setup"),
+    path("enrollment/totp-verify/", TOTPVerifyView.as_view(), name="totp-verify"),
+
+    # --- Rutas de gestión de credenciales (estas están bien como están) ---
     path("passkey/credentials/", PasskeyCredentialView.as_view(), name="passkey-credentials"),
     path("passkey/reset/", PasskeyResetView.as_view(), name="passkey-reset"),
-    path("totp/setup/", TOTPSetupView.as_view(), name="totp-setup"),
-    path("totp/verify/", TOTPVerifyView.as_view(), name="totp-verify"),
     path("totp/reset/", TOTPResetView.as_view(), name="totp-reset"),
     path("totp/reset/verify/", TOTPResetVerifyView.as_view(), name="totp-reset-verify"),
 
