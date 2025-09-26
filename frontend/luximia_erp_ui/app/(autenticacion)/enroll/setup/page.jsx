@@ -58,17 +58,18 @@ function EnrollmentSetup() {
 
             // ✨ LA SOLUCIÓN FINAL ESTÁ AQUÍ ✨
             // Purificamos el objeto 'data' para asegurar compatibilidad.
-            const options = JSON.parse(JSON.stringify(challengeResponse.data));
+            const rawOptions = JSON.parse(JSON.stringify(challengeResponse.data));
+            const optionsJSON = rawOptions?.publicKey ?? rawOptions;
 
-            console.log("Paso 3: Objeto 'options' purificado:", options);
+            console.log("Paso 3: Objeto 'optionsJSON' normalizado:", optionsJSON);
 
-            if (!options || !options.challenge) {
+            if (!optionsJSON || !optionsJSON.challenge) {
                 throw new Error("La respuesta del servidor no contiene un 'challenge' válido.");
             }
 
             console.log("Paso 4: El desafío es válido. Llamando a startRegistration...");
 
-            const registrationResponse = await startRegistration(options);
+            const registrationResponse = await startRegistration({ optionsJSON });
             console.log("Paso 5: El navegador generó la credencial:", registrationResponse);
 
             await verifyPasskeyRegistration(registrationResponse);
