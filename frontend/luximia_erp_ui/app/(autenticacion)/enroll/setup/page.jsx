@@ -53,36 +53,28 @@ function EnrollmentSetup() {
         console.log("Paso 1: Iniciando registro de passkey...");
 
         try {
-            // --- Obtener desafío ---
-            // No usamos destructuring para poder inspeccionar el objeto completo
             const challengeResponse = await getPasskeyRegisterChallenge();
-            console.log("Paso 2: Respuesta completa de la API (Axios):", challengeResponse);
+            console.log("Paso 2: Respuesta de la API (Axios):", challengeResponse);
 
-            const options = challengeResponse.data;
-            console.log("Paso 3: Objeto 'options' extraído de response.data:", options);
+            // ✨ LA SOLUCIÓN FINAL ESTÁ AQUÍ ✨
+            // Purificamos el objeto 'data' para asegurar compatibilidad.
+            const options = JSON.parse(JSON.stringify(challengeResponse.data));
 
-            // Verificación explícita para asegurarnos de que 'options' es un objeto válido
-            if (!options || typeof options !== 'object') {
-                throw new Error("La respuesta de la API no contiene un objeto 'data' válido.");
+            console.log("Paso 3: Objeto 'options' purificado:", options);
+
+            if (!options || !options.challenge) {
+                throw new Error("La respuesta del servidor no contiene un 'challenge' válido.");
             }
 
-            // Esta es la verificación que está fallando. Si llegamos aquí, 'options' existe pero no tiene 'challenge'.
-            if (!options.challenge) {
-                console.error("CRÍTICO: El objeto 'options' recibido no tiene la propiedad 'challenge'. Objeto completo:", options);
-                throw new Error("Respuesta del servidor inválida: falta la propiedad 'challenge'.");
-            }
+            console.log("Paso 4: El desafío es válido. Llamando a startRegistration...");
 
-            console.log("Paso 4: El desafío (challenge) es válido. Llamando a la función startRegistration...");
-
-            // --- Interactuar con el navegador ---
             const registrationResponse = await startRegistration(options);
-            console.log("Paso 5: El navegador generó la credencial exitosamente:", registrationResponse);
+            console.log("Paso 5: El navegador generó la credencial:", registrationResponse);
 
-            // --- Verificar con el backend ---
             await verifyPasskeyRegistration(registrationResponse);
             console.log("Paso 6: El backend verificó la credencial con éxito.");
 
-            setStep(2); // Avanzar al siguiente paso (TOTP)
+            setStep(2);
 
         } catch (err) {
             console.error("ERROR FINAL: Se ha producido un error en el flujo.", err);
