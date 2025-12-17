@@ -1,4 +1,3 @@
-// components/layout/Sidebar.jsx
 'use client';
 
 import Link from 'next/link';
@@ -7,37 +6,221 @@ import { useSidebar } from '@/context/SidebarContext';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
+import EmpresaSelector from '@/components/layout/EmpresaSelector';
 import {
     Home,
     Users,
-    ClipboardList,
     Building,
     FileText,
     Banknote,
     Landmark,
-    Calendar,
     BarChart3,
     Settings,
     Briefcase,
-    User,
-    UserPlus,
-    Key,
-    Upload,
-    CircleDollarSign,
-    Coins,
-    CreditCard,
     ShieldCheck,
-    FileSearch,
-    Folder,
     Menu,
     LogOut,
     Wallet,
     ChevronRight,
+    Scale,
+    Gavel,
+    FileSearch,
+    Monitor,
+    LayoutDashboard,
+    PieChart,
+    Briefcase as BriefcaseIcon,
+    HardHat,
+    CircleDollarSign,
+    CreditCard,
+    Calendar,
+    UserCheck,
+    ScrollText,
+    ShoppingCart,
 } from 'lucide-react';
 
-const ChevronIcon = ({ isOpen }) => (
-    <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} />
+const ChevronIcon = ({ isOpen, className = '' }) => (
+    <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${isOpen ? 'rotate-90' : ''} ${className}`} />
 );
+
+// --- NAVIGATION STRUCTURE ---
+const MENU_STRUCTURE = [
+    {
+        key: 'auditoria',
+        label: 'Auditoría',
+        icon: FileSearch,
+        permission: 'auditoria.view_auditlog',
+        items: [
+            {
+                label: 'Seguimiento',
+                items: [
+                    { label: 'Bitácora de Cambios', path: '/auditoria', permission: 'auditoria.view_auditlog' }
+                ]
+            }
+        ]
+    },
+    {
+        key: 'contabilidad',
+        label: 'Contabilidad',
+        icon: FileText,
+        permission: 'contabilidad.view_cliente',
+        items: [
+            {
+                label: 'Cuentas',
+                items: [
+                    { label: 'Clientes (CxC)', path: '/contabilidad/clientes', permission: 'contabilidad.view_cliente' },
+                    { label: 'Proveedores (CxP)', path: '/contabilidad/proveedores' },
+                ]
+            },
+            {
+                label: 'Fiscal',
+                items: [
+                    { label: 'Facturación', path: '/contabilidad/facturacion' },
+                ]
+            },
+            {
+                label: 'Operaciones',
+                items: [
+                    { label: 'Monedas', path: '/contabilidad/monedas', permission: 'contabilidad.view_moneda' },
+                    { label: 'Proyectos', path: '/contabilidad/proyectos', permission: 'contabilidad.view_proyecto' },
+                    { label: 'UPEs', path: '/contabilidad/upes', permission: 'contabilidad.view_upe' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'direccion',
+        label: 'Dirección',
+        icon: LayoutDashboard,
+        permission: 'users.view_dashboard',
+        items: [
+            {
+                label: 'Estratégico',
+                items: [
+                    { label: 'Dashboard', path: '/direccion/dashboard', permission: 'users.view_dashboard' },
+                    { label: 'KPIs', path: '/direccion/kpis' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'juridico',
+        label: 'Jurídico',
+        icon: Scale,
+        permission: 'contabilidad.view_contrato',
+        items: [
+            {
+                label: 'Gestión Legal',
+                items: [
+                    { label: 'Contratos', path: '/juridico/contratos', permission: 'contabilidad.view_contrato' },
+                    { label: 'Expedientes', path: '/juridico/expedientes' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'rrhh',
+        label: 'RRHH',
+        icon: Users,
+        permission: 'rrhh.view_empleado', // Base permission for module
+        items: [
+            {
+                label: 'Administración',
+                items: [
+                    { label: 'Esquemas Comisión', path: '/rrhh/esquemas-comision', permission: 'contabilidad.view_esquemacomision' },
+                    { label: 'Expedientes', path: '/rrhh/expedientes' },
+                    { label: 'Nómina', path: '/rrhh/nominas' },
+                ]
+            },
+            {
+                label: 'Gestión de Personal',
+                items: [
+                    { label: 'Ausencias', path: '/rrhh/ausencias' },
+                    { label: 'Departamentos', path: '/rrhh/departamentos', permission: 'rrhh.view_departamento' },
+                    { label: 'Empleados', path: '/rrhh/empleados', permission: 'rrhh.view_empleado' },
+                    { label: 'Organigrama', path: '/rrhh/organigrama' },
+                    { label: 'Puestos', path: '/rrhh/puestos', permission: 'rrhh.view_puesto' },
+                    { label: 'Vendedores', path: '/rrhh/vendedores', permission: 'contabilidad.view_vendedor' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'pos',
+        label: 'Punto de Venta',
+        icon: ShoppingCart,
+        permission: 'pos.view_venta',
+        items: [
+            {
+                label: 'Operación',
+                items: [
+                    { label: 'Terminal PV', path: '/pos/terminal', permission: 'pos.add_venta' },
+                    { label: 'Historial Ventas', path: '/pos/ventas', permission: 'pos.view_venta' },
+                ]
+            },
+            {
+                label: 'Administración',
+                items: [
+                    { label: 'Cajas y Turnos', path: '/pos/turnos', permission: 'pos.view_turno' },
+                    { label: 'Productos', path: '/pos/productos', permission: 'pos.view_producto' },
+                    { label: 'Cuentas Clientes', path: '/pos/cuentas', permission: 'pos.view_cuentacliente' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'sistemas',
+        label: 'Sistemas',
+        icon: Monitor,
+        permission: 'users.view_customuser',
+        items: [
+            {
+                label: 'Gestión IT',
+                items: [
+                    { label: 'Inventario', path: '/sistemas/inventario', permission: 'sistemas.view_activoit' },
+                    { label: 'Generar Responsiva', path: '/sistemas/responsivas/nuevo', permission: 'sistemas.add_asignacionequipo' },
+                ]
+            },
+            {
+                label: 'Herramientas',
+                items: [
+                    { label: 'Importar Datos', path: '/sistemas/importar', permission: 'contabilidad.add_pago' },
+                    { label: 'Exportar Datos', path: '/sistemas/exportar', permission: 'contabilidad.view_contrato' },
+                ]
+            },
+            {
+                label: 'Seguridad y Acceso',
+                items: [
+                    { label: 'Bitácora de Eventos', path: '/auditoria', permission: 'auditoria.view_auditlog' },
+                    { label: 'Roles y Permisos', path: '/sistemas/roles', permission: 'auth.view_group' },
+                    { label: 'Usuarios', path: '/sistemas/usuarios', permission: 'users.view_customuser' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'tesoreria',
+        label: 'Tesorería',
+        icon: Wallet,
+        permission: 'contabilidad.view_banco',
+        items: [
+            {
+                label: 'Egresos',
+                items: [
+                    { label: 'Cajas Chicas', path: '/tesoreria/cajas' },
+                ]
+            },
+            {
+                label: 'Gestión de Fondos',
+                items: [
+                    { label: 'Bancos', path: '/tesoreria/bancos', permission: 'contabilidad.view_banco' },
+                    { label: 'Formas de Pago', path: '/tesoreria/formas-pago', permission: 'contabilidad.view_formapago' },
+                    { label: 'Pagos', path: '/tesoreria/pagos', permission: 'contabilidad.view_pago' },
+                    { label: 'Planes de Pago', path: '/tesoreria/planes-pago', permission: 'contabilidad.view_planpago' },
+                ]
+            }
+        ]
+    }
+];
 
 export default function Sidebar() {
     const { user, logoutUser, hasPermission } = useAuth();
@@ -45,61 +228,26 @@ export default function Sidebar() {
     const isCollapsed = !isOpen;
     const pathname = usePathname();
     const sidebarRef = useRef(null);
-    const textClasses = 'ml-2 transition-all duration-300 overflow-hidden';
 
-    // Toggles de grupos
-    const [isAdminOpen, setIsAdminOpen] = useState(false);
-    const [isGestionOpen, setIsGestionOpen] = useState(false);
-    const [isHerramientasOpen, setIsHerramientasOpen] = useState(false);
-    const [isImportarOpen, setIsImportarOpen] = useState(false);
-    const [isSeguridadOpen, setIsSeguridadOpen] = useState(false);
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const [isCatalogosOpen, setIsCatalogosOpen] = useState(false);
-    const [isFinanzasOpen, setIsFinanzasOpen] = useState(false);
+    // State for expanded modules (Level 1)
+    const [expandedModules, setExpandedModules] = useState({});
 
-    // Secciones activas por ruta
-    const adminActive =
-        pathname.startsWith('/configuraciones') ||
-        pathname.startsWith('/importar') ||
-        pathname.startsWith('/tipos-de-cambio') ||
-        pathname.startsWith('/tipos-cambio') ||
-        pathname.startsWith('/auditoria');
-
-    const catalogosActive = [
-        '/clientes',
-        '/puestos',
-        '/vendedores',
-        '/empleados',
-        '/proyectos',
-        '/departamentos',
-        '/bancos',
-        '/monedas',
-        '/upes',
-        '/contratos',
-    ].some((path) => pathname.startsWith(path));
-
-    const finanzasActive = [
-        '/pagos',
-        '/formas-pago',
-        '/planes-pago',
-        '/esquemas-comision',
-        '/reportes',
-    ].some((path) => pathname.startsWith(path));
-
+    // Auto-expand based on active route
     useEffect(() => {
-        // Abrimos/cerramos acorde a la ruta
-        setIsAdminOpen(adminActive);
-        setIsCatalogosOpen(catalogosActive);
-        setIsFinanzasOpen(finanzasActive);
-        setIsGestionOpen(pathname.startsWith('/configuraciones'));
-        setIsImportarOpen(pathname.startsWith('/importar'));
-        setIsHerramientasOpen(
-            pathname.startsWith('/importar') || pathname.startsWith('/tipos-de-cambio') || pathname.startsWith('/tipos-cambio')
-        );
-        setIsSeguridadOpen(pathname.startsWith('/auditoria'));
-        setIsUserMenuOpen(false);
-    }, [pathname, adminActive, catalogosActive, finanzasActive]);
+        const newExpanded = {};
+        MENU_STRUCTURE.forEach(module => {
+            const hasActiveChild = module.items.some(sub =>
+                sub.items?.some(link => pathname.startsWith(link.path.split('?')[0]))
+            );
+            if (hasActiveChild) {
+                newExpanded[module.key] = true;
+            }
+        });
+        setExpandedModules(prev => ({ ...prev, ...newExpanded }));
+    }, [pathname]);
 
+    // Close user menu on outside click
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
@@ -110,430 +258,188 @@ export default function Sidebar() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleAdminToggle = () => setIsAdminOpen((v) => !v);
-    const handleCatalogosToggle = () => setIsCatalogosOpen((v) => !v);
-    const handleFinanzasToggle = () => setIsFinanzasOpen((v) => !v);
-    const handleUserToggle = () => setIsUserMenuOpen((v) => !v);
-
-    const getLinkClass = (path, isSubmenu = false) => {
-        const base = isSubmenu
-            ? `flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 ${isCollapsed ? 'justify-center' : ''
-            }`
-            : `flex items-center p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white text-gray-800 dark:text-gray-200 ${isCollapsed ? 'justify-center' : ''
-            }`;
-
-        const active =
-            (path === '/' ? pathname === '/' : pathname.startsWith(path)) &&
-            path !== '' &&
-            path !== null;
-
-        const activeClass = isSubmenu
-            ? 'bg-gray-200 dark:bg-gray-700 font-semibold text-blue-600 dark:text-white'
-            : 'bg-blue-600 text-white dark:bg-blue-700 font-semibold';
-
-        return `${base} ${active ? activeClass : ''}`;
+    const toggleModule = (key) => {
+        if (isCollapsed) toggleSidebar();
+        setExpandedModules(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    const canViewSettings = hasPermission('cxc.view_user') || hasPermission('cxc.view_group');
-    const canImportData = user?.is_superuser || hasPermission('cxc.add_pago');
-    const showAdminGroup =
-        canViewSettings ||
-        canImportData ||
-        hasPermission('cxc.view_tipocambio') ||
-        hasPermission('cxc.view_tipodecambio') ||
-        hasPermission('cxc.can_view_auditlog');
+    // Helper permission check
+    const checkPermission = (perm) => {
+        if (!perm) return true;
+        return hasPermission(perm);
+    };
 
-    const showCatalogosGroup =
-        hasPermission('cxc.view_cliente') ||
-        hasPermission('cxc.view_puesto') ||
-        hasPermission('cxc.view_vendedor') ||
-        hasPermission('cxc.view_empleado') ||
-        hasPermission('cxc.view_proyecto') ||
-        hasPermission('cxc.view_departamento') ||
-        hasPermission('cxc.view_banco') ||
-        hasPermission('cxc.view_moneda') ||
-        hasPermission('cxc.view_upe') ||
-        hasPermission('cxc.view_contrato');
-
-    const showFinanzasGroup =
-        hasPermission('cxc.view_pago') ||
-        hasPermission('cxc.view_formapago') ||
-        hasPermission('cxc.view_planpago') ||
-        hasPermission('cxc.view_esquemacomision') ||
-        hasPermission('cxc.can_export');
-
-    // Cambiado: Ahora usa el nombre completo del usuario
     const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'Usuario';
 
     return (
         <>
-            {/* Overlay en móvil */}
+            {/* Overlay Mobile */}
             <div
-                className={`fixed inset-0 bg-black/60 z-30 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                    }`}
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={toggleSidebar}
             />
 
-            <div
+            <aside
                 ref={sidebarRef}
-                className={`fixed inset-y-0 left-0 z-40 bg-white text-gray-800 border-r border-gray-200 dark:bg-gray-800 dark:text-white dark:border-gray-700 flex flex-col overflow-hidden transition-all duration-300 ease-in-out w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'
-                    } lg:translate-x-0 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
+                className={`fixed inset-y-0 left-0 z-40 flex flex-col whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 shadow-2xl
+                    ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 ${isCollapsed ? 'lg:w-20' : 'lg:w-[17rem]'}`}
             >
                 {/* Header */}
-                <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={toggleSidebar}
-                        className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
-                    >
-                        <Menu className="h-6 w-6" />
-                        <span className="sr-only">Toggle sidebar</span>
-                    </button>
+                <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'} p-4 mb-2`}>
                     {isOpen && (
-                        <Link href="/" className={textClasses}>
-                            <img src="/logo-luximia.png" className="h-6" alt="Luximia" />
+                        <Link href="/" className="flex items-center gap-3 transition-opacity duration-300">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
+                                L
+                            </div>
+                            <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                                LUXIMIA
+                            </span>
                         </Link>
                     )}
+                    <button
+                        onClick={toggleSidebar}
+                        className={`rounded-lg transition-all duration-200 flex items-center justify-center 
+                            ${isOpen
+                                ? 'p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'
+                                : 'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:scale-105'
+                            }`}
+                    >
+                        {isOpen ? <Menu className="h-5 w-5" /> : 'L'}
+                    </button>
                 </div>
 
-                {/* NAV */}
-                <nav data-collapsed={!isOpen} className={`flex-1 px-4 py-4 transition-all duration-300 ${isCollapsed ? '' : 'overflow-y-auto'}`}>
-                    <ul className="space-y-1">
-                        {/* Inicio / Dashboard */}
-                        <li>
-                            <Link href="/" className={getLinkClass('/')}>
-                                <Home className="h-5 w-5" />
-                                <span className={textClasses}>
-                                        {hasPermission('cxc.can_view_dashboard') ? 'Dashboard' : 'Inicio'}
-                                    </span>
+                {/* Empresa Selector */}
+                <div className="flex-none px-4 mb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <EmpresaSelector />
+                </div>
+
+                {/* Navigation */}
+                <nav className={`flex-1 px-3 py-2 space-y-1 transition-all duration-500 min-h-0 ${isCollapsed ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'}`}>
+
+                    {/* Dashboard */}
+                    {checkPermission('users.view_dashboard') && (
+                        <div className="mb-2">
+                            <Link href="/" className={`flex items-center p-2.5 rounded-xl text-sm transition-all duration-300 group ${pathname === '/' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'}`}>
+                                <Home className={`h-5 w-5 ${isCollapsed ? 'mx-auto' : ''}`} />
+                                <span className={`ml-3 transition-opacity duration-300 ${isCollapsed ? 'hidden' : 'block'}`}>Inicio</span>
                             </Link>
-                        </li>
+                        </div>
+                    )}
 
-                        {/* Catálogos */}
-                        {showCatalogosGroup && (
-                            <li className="pt-2">
+                    {/* Modules Recursive */}
+                    {MENU_STRUCTURE.map((module) => {
+                        if (!checkPermission(module.permission) && !module.items.some(sub => sub.items?.some(i => checkPermission(i.permission)))) {
+                            return null;
+                        }
+
+                        const isExpanded = expandedModules[module.key];
+                        const isActiveModule = module.items.some(sub => sub.items?.some(link => pathname.startsWith(link.path.split('?')[0])));
+
+                        return (
+                            <div key={module.key} className="py-1">
                                 <button
-                                    onClick={handleCatalogosToggle}
-                                    className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''} ${catalogosActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
+                                    onClick={() => toggleModule(module.key)}
+                                    className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all duration-200
+                                        ${isActiveModule || isExpanded
+                                            ? 'text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10 font-semibold'
+                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'}`}
                                 >
                                     <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                                        <Folder className="h-5 w-5" />
-                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Catálogos</span>
+                                        <module.icon className={`h-5 w-5 ${isCollapsed ? 'mx-auto' : ''}`} />
+                                        <span className={`ml-3 transition-opacity duration-300 ${isCollapsed ? 'hidden' : 'block'}`}>{module.label}</span>
                                     </div>
-                                    {isOpen && <ChevronIcon isOpen={isCatalogosOpen} />}
+                                    {isOpen && <ChevronIcon isOpen={isExpanded} />}
                                 </button>
 
-                                {isCatalogosOpen && (
-                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                        {hasPermission('cxc.view_cliente') && (
-                                            <li>
-                                                <Link href="/clientes" className={getLinkClass('/clientes', true)}>
-                                                    <Users className="h-4 w-4" />
-                                                    <span className={textClasses}>Clientes</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_puesto') && (
-                                            <li>
-                                                <Link href="/puestos" className={getLinkClass('/puestos', true)}>
-                                                    <Briefcase className="h-4 w-4" />
-                                                    <span className={textClasses}>Puestos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_vendedor') && (
-                                            <li>
-                                                <Link href="/vendedores" className={getLinkClass('/vendedores', true)}>
-                                                    <User className="h-4 w-4" />
-                                                    <span className={textClasses}>Vendedores</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_empleado') && (
-                                            <li>
-                                                <Link href="/empleados" className={getLinkClass('/empleados', true)}>
-                                                    <UserPlus className="h-4 w-4" />
-                                                    <span className={textClasses}>Empleados</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_proyecto') && (
-                                            <li>
-                                                <Link href="/proyectos" className={getLinkClass('/proyectos', true)}>
-                                                    <ClipboardList className="h-4 w-4" />
-                                                    <span className={textClasses}>Proyectos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_departamento') && (
-                                            <li>
-                                                <Link href="/departamentos" className={getLinkClass('/departamentos', true)}>
-                                                    <Building className="h-4 w-4" />
-                                                    <span className={textClasses}>Departamentos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_banco') && (
-                                            <li>
-                                                <Link href="/bancos" className={getLinkClass('/bancos', true)}>
-                                                    <Landmark className="h-4 w-4" />
-                                                    <span className={textClasses}>Bancos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_moneda') && (
-                                            <li>
-                                                <Link href="/monedas" className={getLinkClass('/monedas', true)}>
-                                                    <Coins className="h-4 w-4" />
-                                                    <span className={textClasses}>Monedas</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_upe') && (
-                                            <li>
-                                                <Link href="/upes" className={getLinkClass('/upes', true)}>
-                                                    <FileSearch className="h-4 w-4" />
-                                                    <span className={textClasses}>UPEs</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_contrato') && (
-                                            <li>
-                                                <Link href="/contratos" className={getLinkClass('/contratos', true)}>
-                                                    <FileText className="h-4 w-4" />
-                                                    <span className={textClasses}>Contratos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                    </ul>
-                                )}
-                            </li>
-                        )}
+                                {/* Submodules */}
+                                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && isOpen ? 'max-h-[1000px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
+                                    <div className="ml-1 space-y-2 relative">
+                                        <div className="absolute left-3.5 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800" />
+                                        {module.items.map((submodule, idx) => (
+                                            <div key={idx} className="pl-6 relative">
+                                                {/* Dot indicator for connection */}
 
-                        {/* Finanzas */}
-                        {showFinanzasGroup && (
-                            <li className="pt-2">
-                                <button
-                                    onClick={handleFinanzasToggle}
-                                    className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''} ${finanzasActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
-                                >
-                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                                        <Wallet className="h-5 w-5" />
-                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Finanzas</span>
-                                    </div>
-                                    {isOpen && <ChevronIcon isOpen={isFinanzasOpen} />}
-                                </button>
+                                                <h4 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 mt-2 px-2">
+                                                    {submodule.label}
+                                                </h4>
 
-                                {isFinanzasOpen && (
-                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                        {hasPermission('cxc.view_pago') && (
-                                            <li>
-                                                <Link href="/pagos" className={getLinkClass('/pagos', true)}>
-                                                    <Banknote className="h-4 w-4" />
-                                                    <span className={textClasses}>Pagos</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_formapago') && (
-                                            <li>
-                                                <Link href="/formas-pago" className={getLinkClass('/formas-pago', true)}>
-                                                    <CreditCard className="h-4 w-4" />
-                                                    <span className={textClasses}>Formas de Pago</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_planpago') && (
-                                            <li>
-                                                <Link href="/planes-pago" className={getLinkClass('/planes-pago', true)}>
-                                                    <Calendar className="h-4 w-4" />
-                                                    <span className={textClasses}>Planes de Pago</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.view_esquemacomision') && (
-                                            <li>
-                                                <Link href="/esquemas-comision" className={getLinkClass('/esquemas-comision', true)}>
-                                                    <CircleDollarSign className="h-4 w-4" />
-                                                    <span className={textClasses}>Esquemas</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.can_export') && (
-                                            <li>
-                                                <Link href="/reportes" className={getLinkClass('/reportes', true)}>
-                                                    <BarChart3 className="h-4 w-4" />
-                                                    <span className={textClasses}>Reportes</span>
-                                                </Link>
-                                            </li>
-                                        )}
-                                    </ul>
-                                )}
-                            </li>
-                        )}
+                                                <ul className="space-y-0.5">
+                                                    {submodule.items.map((link, lIdx) => {
+                                                        if (!checkPermission(link.permission)) return null;
+                                                        const cleanPath = link.path.split('?')[0];
+                                                        const isActiveLink = pathname.startsWith(cleanPath);
 
-                        {/* ADMINISTRACIÓN */}
-                        {showAdminGroup && (
-                            <li className="pt-2">
-                                <button
-                                    onClick={handleAdminToggle}
-                                    className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''
-                                        } ${adminActive ? 'bg-blue-600 text-white dark:bg-blue-700 font-semibold' : ''}`}
-                                >
-                                    <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                                        <Settings className="h-5 w-5" />
-                                        <span className={`${textClasses} text-sm font-semibold uppercase`}>Administración</span>
-                                    </div>
-                                    {isOpen && <ChevronIcon isOpen={isAdminOpen} />}
-                                </button>
-
-                                {isAdminOpen && (
-                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                        {canViewSettings && (
-                                            <li>
-                                                <button
-                                                    onClick={() => setIsGestionOpen((v) => !v)}
-                                                    className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <Users className="h-5 w-5" />
-                                                        <span className={textClasses}>Gestión de Usuarios</span>
-                                                    </div>
-                                                    {isOpen && <ChevronIcon isOpen={isGestionOpen} />}
-                                                </button>
-                                                {isGestionOpen && (
-                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                                        {hasPermission('cxc.view_user') && (
-                                                            <li>
+                                                        return (
+                                                            <li key={lIdx}>
                                                                 <Link
-                                                                    href="/configuraciones/usuarios"
-                                                                    className={getLinkClass('/configuraciones/usuarios', true)}
+                                                                    href={link.path}
+                                                                    className={`flex items-center p-2 rounded-lg text-sm transition-all duration-200
+                                                                        ${isActiveLink
+                                                                            ? 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                                                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:translate-x-1'}`}
                                                                 >
-                                                                    <User className="h-4 w-4" />
-                                                                    <span className={textClasses}>Usuarios</span>
+                                                                    {isActiveLink ? <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2" /> : <div className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 mr-2" />}
+                                                                    {link.label}
                                                                 </Link>
                                                             </li>
-                                                        )}
-                                                        {hasPermission('cxc.view_group') && (
-                                                            <li>
-                                                                <Link
-                                                                    href="/configuraciones/roles"
-                                                                    className={getLinkClass('/configuraciones/roles', true)}
-                                                                >
-                                                                    <Key className="h-4 w-4" />
-                                                                    <span className={textClasses}>Roles y Permisos</span>
-                                                                </Link>
-                                                            </li>
-                                                        )}
-                                                    </ul>
-                                                )}
-                                            </li>
-                                        )}
-
-                                        {canImportData && (
-                                            <li>
-                                                <button
-                                                    onClick={() => setIsHerramientasOpen((v) => !v)}
-                                                    className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <Settings className="h-5 w-5" />
-                                                        <span className={textClasses}>Herramientas</span>
-                                                    </div>
-                                                    {isOpen && <ChevronIcon isOpen={isHerramientasOpen} />}
-                                                </button>
-                                                {isHerramientasOpen && (
-                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                                        <li>
-                                                            <Link href="/importar" className={getLinkClass('/importar', true)}>
-                                                                <Upload className="h-4 w-4" />
-                                                                <span className={textClasses}>Importar</span>
-                                                            </Link>
-                                                        </li>
-                                                    </ul>
-                                                )}
-                                            </li>
-                                        )}
-                                        {hasPermission('cxc.can_view_auditlog') && (
-                                            <li>
-                                                <button
-                                                    onClick={() => setIsSeguridadOpen((v) => !v)}
-                                                    className="w-full flex justify-between items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <ShieldCheck className="h-5 w-5" />
-                                                        <span className={textClasses}>Seguridad</span>
-                                                    </div>
-                                                    {isOpen && <ChevronIcon isOpen={isSeguridadOpen} />}
-                                                </button>
-                                                {isSeguridadOpen && (
-                                                    <ul className={`${isCollapsed ? 'pl-0' : 'pl-4'} mt-1 space-y-1`}>
-                                                        <li>
-                                                            <Link href="/auditoria" className={getLinkClass('/auditoria', true)}>
-                                                                <FileSearch className="h-4 w-4" />
-                                                                <span className={textClasses}>Registro de Auditoría</span>
-                                                            </Link>
-                                                        </li>
-                                                    </ul>
-                                                )}
-                                            </li>
-                                        )}
-
-                                    </ul>
-                                )}
-                            </li>
-                        )}
-                    </ul>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </nav>
 
-            <style jsx>{`
-                nav span {
-                    transition: all 0.3s;
-                    display: inline-block;
-                }
-                nav[data-collapsed="true"] span {
-                    width: 0;
-                    opacity: 0;
-                    margin-left: 0;
-                }
-            `}</style>
-
-                {/* User footer */}
-                <div className="relative p-4 border-t border-gray-200 dark:border-gray-700">
+                {/* User Footer */}
+                <div className="relative p-4 border-t border-gray-200/50 dark:border-gray-800/50 bg-gray-50/50 dark:bg-black/20 backdrop-blur-sm">
                     <div className="space-y-1">
                         <button
-                            onClick={handleUserToggle}
-                            className={`w-full flex items-center justify-between p-2 rounded-md hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-600 dark:hover:text-white ${isCollapsed ? 'justify-center' : ''}`}
+                            onClick={() => setIsUserMenuOpen(v => !v)}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm transition-all duration-200 ${isCollapsed ? 'justify-center' : ''}`}
                         >
-                            <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
-                                <img src={user?.avatar || '/icon-luximia.png'} alt="Usuario" className="h-6 w-6 rounded-full" />
-                                {!isCollapsed && <span className={`${textClasses} text-sm`}>{fullName}</span>}
+                            <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center w-full' : ''}`}>
+                                <div className="relative">
+                                    <img src={user?.avatar || '/icon-luximia.png'} alt="Usuario" className="h-9 w-9 rounded-full object-cover ring-2 ring-white dark:ring-gray-700 shadow-sm" />
+                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                                </div>
+                                {!isCollapsed && (
+                                    <div className="flex flex-col items-start overflow-hidden">
+                                        <span className={`text-sm font-semibold text-gray-700 dark:text-gray-200 truncate max-w-[140px]`}>{fullName}</span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[140px]">Conectado</span>
+                                    </div>
+                                )}
                             </div>
                             {isOpen && <ChevronIcon isOpen={isUserMenuOpen} />}
                         </button>
+
                         {isUserMenuOpen && (
-                            <div className="absolute left-0 bottom-full w-full mb-2 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg space-y-1 z-50">
-                                <ThemeSwitcher
-                                    className={`w-full p-2 text-sm text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
-                                    showLabel={!isCollapsed}
-                                />
+                            <div className={`${isCollapsed ? 'fixed left-20 bottom-4 w-60 z-50 ml-2' : 'absolute left-0 bottom-full w-full mb-2 z-50'} bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl p-1.5 rounded-2xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200`}>
+                                <ThemeSwitcher className={`w-full p-2.5 rounded-xl text-sm flex items-center text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50 transition-colors`} showLabel={true} />
                                 <Link
-                                    href="/ajustes"
-                                    className={`flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
+                                    href="/perfil"
+                                    className="flex items-center w-full p-2.5 text-sm text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                                    onClick={() => setIsUserMenuOpen(false)}
                                 >
-                                    <Settings className="h-5 w-5" />
-                                    {!isCollapsed && <span className={textClasses}>Ajustes</span>}
+                                    <Settings className="h-4 w-4 mr-3" />
+                                    <span>Mi Perfil & Seguridad</span>
                                 </Link>
                                 <button
                                     onClick={logoutUser}
-                                    className={`flex items-center w-full p-2 text-red-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 ${isCollapsed ? 'justify-center' : ''}`}
+                                    className={`flex items-center w-full p-2.5 text-sm text-red-600 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors`}
                                 >
-                                    <LogOut className="h-5 w-5" />
-                                    {!isCollapsed && <span className={textClasses}>Cerrar sesión</span>}
+                                    <LogOut className="h-4 w-4 mr-3" />
+                                    <span>Cerrar sesión</span>
                                 </button>
                             </div>
                         )}
                     </div>
                 </div>
-            </div>
+            </aside>
         </>
     );
 }

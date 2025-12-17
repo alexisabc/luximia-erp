@@ -1,194 +1,166 @@
 <!DOCTYPE html>
 <html lang="es">
-  {% now "Y" as current_year_default %}
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invitación a {{ company_name|default:'Luximia ERP' }}</title>
-  </head>
-  <body
-    style="
-      margin: 0;
-      padding: 0;
-      background-color: #f4f7f6;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-        Helvetica, Arial, sans-serif;
-    "
-  >
-    <table
-      role="presentation"
-      cellpadding="0"
-      cellspacing="0"
-      border="0"
-      style="width: 100%; border-collapse: collapse; background-color: #f4f7f6"
-    >
-      <tr>
-        <td align="center" style="padding: 20px">
-          <div
-            style="
-              display: none;
-              font-size: 1px;
-              line-height: 1px;
-              max-height: 0px;
-              max-width: 0px;
-              opacity: 0;
-              overflow: hidden;
-            "
-          >
-            Completa tu registro para empezar a colaborar.
-          </div>
 
-          <table
-            role="presentation"
-            cellpadding="0"
-            cellspacing="0"
-            border="0"
-            style="
-              width: 100%;
-              max-width: 600px;
-              border-collapse: collapse;
-              background-color: #ffffff;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            "
-          >
-            <tr>
-              <td
-                align="center"
-                style="
-                  background-color: #0f172a;
-                  padding: 24px 20px;
-                  border-top-left-radius: 8px;
-                  border-top-right-radius: 8px;
-                "
-              >
-                <img
-                  src="{{ logo_url|default:'URL_DEL_LOGO_POR_DEFECTO' }}"
-                  alt="{{ company_name|default:'Luximia ERP' }} Logo"
-                  style="
-                    max-width: 150px;
-                    width: 100%;
-                    height: auto;
-                    display: block;
-                  "
-                />
-              </td>
-            </tr>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invitación a {{ company_name|default:'Luximia ERP' }}</title>
+  <!-- Import Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset specific for email clients */
+    body,
+    table,
+    td,
+    a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
 
-            <tr>
-              <td style="padding: 40px 30px 20px 30px">
-                <h1
-                  style="
-                    margin: 0;
-                    font-size: 24px;
-                    line-height: 32px;
-                    color: #1e293b;
-                    font-weight: 600;
-                  "
-                >
-                  Hola, {{ display_name }},
-                </h1>
-                <p
-                  style="
-                    margin: 20px 0 0;
-                    font-size: 16px;
-                    line-height: 26px;
-                    color: #475569;
-                  "
-                >
-                  Has sido invitado a unirte a la plataforma
-                  <strong style="color: #0f172a"
-                    >{{ company_name|default:'Luximia ERP' }}</strong
-                  >. Para completar tu registro y establecer tu contraseña, por
-                  favor haz clic en el siguiente botón.
-                </p>
-              </td>
-            </tr>
+    img {
+      -ms-interpolation-mode: bicubic;
+    }
 
-            <tr>
-              <td align="center" style="padding: 10px 30px 30px 30px">
-                <a
-                  href="{{ enroll_url }}"
-                  style="
-                    display: inline-block;
-                    padding: 14px 28px;
-                    background-color: #2563eb;
-                    color: #ffffff;
-                    text-decoration: none;
-                    font-size: 16px;
-                    font-weight: 600;
-                    border-radius: 6px;
-                    border: 1px solid #2563eb;
-                  "
-                >
-                  Crear mi cuenta
-                </a>
-              </td>
-            </tr>
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .email-body {
+        background-color: #1e293b !important;
+      }
 
-            <tr>
-              <td
-                style="
-                  padding: 0 30px 40px 30px;
-                  border-bottom: 1px solid #e2e8f0;
-                "
-              >
-                <p
-                  style="
-                    margin: 0;
-                    font-size: 14px;
-                    line-height: 22px;
-                    color: #64748b;
-                  "
-                >
-                  Este enlace de invitación es válido por **{{
-                  link_validity|default:'24 horas' }}**.
-                </p>
-                <p
-                  style="
-                    margin: 10px 0 0;
-                    font-size: 12px;
-                    line-height: 18px;
-                    color: #94a3b8;
-                  "
-                >
-                  Si el botón no funciona, copia y pega esta URL en tu
-                  navegador:<br />
-                  <a
-                    href="{{ enroll_url }}"
-                    style="
-                      color: #2563eb;
-                      text-decoration: underline;
-                      word-break: break-all;
-                    "
-                    >{{ enroll_url }}</a
-                  >
-                </p>
-              </td>
-            </tr>
+      .email-card {
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
+      }
 
-            <tr>
-              <td align="center" style="padding: 30px">
-                <p
-                  style="
-                    margin: 0;
-                    font-size: 12px;
-                    line-height: 20px;
-                    color: #94a3b8;
-                  "
-                >
-                  Recibes este correo porque un administrador te ha invitado a
-                  unirte a {{ company_name|default:'Luximia ERP' }}.<br />
-                  &copy; {{ current_year|default:current_year_default }} {{
-                  company_name|default:'Luximia ERP' }}. Todos los derechos
-                  reservados.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
+      .email-text {
+        color: #cbd5e1 !important;
+      }
+
+      .email-heading {
+        color: #f1f5f9 !important;
+      }
+
+      .footer-text {
+        color: #64748b !important;
+      }
+    }
+  </style>
+  <!--[if mso]>
+  <style>
+    table, td {
+      border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+  </style>
+  <![endif]-->
+</head>
+
+<body
+  style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+
+  <!-- Hidden Preheader -->
+  <div
+    style="display: none; font-size: 1px; color: #f8fafc; line-height: 1px; font-family: 'Inter', sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">
+    Has sido invitado a colaborar en {{ company_name|default:'Luximia ERP' }}. Configura tu cuenta ahora.
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+    style="width: 100%; border-collapse: collapse; background-color: #f8fafc;" class="email-body">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <!-- Main Card -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+          style="width: 100%; max-width: 540px; border-collapse: separate; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); overflow: hidden;"
+          class="email-card">
+
+          <!-- Header with Logo -->
+          <tr>
+            <td align="center"
+              style="padding: 40px 0 32px 0; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+              <img src="{{ logo_url|default:'https://via.placeholder.com/150x50/0f172a/ffffff?text=LUXIMIA' }}"
+                alt="{{ company_name|default:'Luximia ERP' }}"
+                style="max-width: 180px; width: auto; height: auto; display: block; border: 0;" />
+            </td>
+          </tr>
+
+          <!-- Content Area -->
+          <tr>
+            <td style="padding: 40px 48px;">
+              <h1
+                style="margin: 0 0 24px; font-size: 24px; line-height: 32px; color: #0f172a; font-weight: 700; letter-spacing: -0.025em; text-align: center;"
+                class="email-heading">
+                ¡Hola, {{ display_name }}! 👋
+              </h1>
+
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 26px; color: #475569; text-align: center;"
+                class="email-text">
+                Te damos la bienvenida a <strong>{{ company_name|default:'Luximia ERP' }}</strong>.
+              </p>
+              <p style="margin: 0 0 32px; font-size: 16px; line-height: 26px; color: #475569; text-align: center;"
+                class="email-text">
+                Se ha creado una cuenta para ti. Para comenzar a utilizar la plataforma, por favor confirma tu correo y
+                establece tu contraseña haciendo clic en el botón de abajo.
+              </p>
+
+              <!-- CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%;">
+                <tr>
+                  <td align="center">
+                    <a href="{{ enroll_url }}" target="_blank"
+                      style="display: inline-block; padding: 16px 36px; background-color: #2563eb; background-image: linear-gradient(to right, #2563eb, #3b82f6); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s ease;">
+                      Completar Registro
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 32px 0 0; font-size: 14px; line-height: 22px; color: #64748b; text-align: center;"
+                class="email-text">
+                Este enlace de invitación caducará en <strong>{{ link_validity|default:'24 horas' }}</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 48px;">
+              <div style="height: 1px; background-color: #e2e8f0; line-height: 1px;">&nbsp;</div>
+            </td>
+          </tr>
+
+          <!-- Footer Section inside Card -->
+          <tr>
+            <td style="padding: 32px 48px; background-color: #fafbfc;">
+              <p
+                style="margin: 0; font-size: 12px; line-height: 20px; color: #94a3b8; text-align: center; word-break: break-all;">
+                Si tienes problemas con el botón, copia y pega el siguiente enlace en tu navegador:
+                <br />
+                <a href="{{ enroll_url }}" style="color: #64748b; text-decoration: underline;">{{ enroll_url }}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Global Footer -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 540px;">
+          <tr>
+            <td align="center" style="padding: 24px 0;">
+              <p style="margin: 0; font-size: 12px; line-height: 18px; color: #94a3b8;" class="footer-text">
+                © {% now "Y" %} {{ company_name|default:'Luximia ERP' }}. Todos los derechos reservados.
+                <br>
+                Has recibido este correo porque fuiste invitado por un administrador.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+
 </html>

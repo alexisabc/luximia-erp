@@ -1,43 +1,97 @@
-#.gitignore
-# General y Secretos
-# Ignora todos los archivos de entorno excepto el de ejemplo
-.env
-.env*
-!/.env.example
-*.session.sql
-
-# Archivos de Log y del sistema operativo
-*.log
-*.pem
+# ==============================================================================
+# GENERAL & OS
+# ==============================================================================
 .DS_Store
-.vscode/
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ==============================================================================
+# SECRETS & ENVIRONMENT
+# ==============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+*.pem
+*.key
+*.p12
+
+# ==============================================================================
+# IDE & TOOLS
+# ==============================================================================
 .idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.obsidian/
 
-# Backend - Django / Python
-backend/__pycache__/
-backend/venv/
-*.pyc
+# ==============================================================================
+# PYTHON / DJANGO (BACKEND)
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# Data & Media
 db.sqlite3
-staticfiles/
-media/
+db.sqlite3-journal
+backend/media/
+backend/staticfiles/
 
-# Frontend - Next.js / Node
-frontend/luximia_erp_ui/node_modules/
-frontend/luximia_erp_ui/.next/
-frontend/luximia_erp_ui/out/
-frontend/luximia_erp_ui/build/
-frontend/luximia_erp_ui/coverage/
-frontend/luximia_erp_ui/.pnp
-frontend/luximia_erp_ui/.pnp.*
-frontend/luximia_erp_ui/.yarn/*
-!frontend/luximia_erp_ui/.yarn/patches
-!frontend/luximia_erp_ui/.yarn/plugins
-!frontend/luximia_erp_ui/.yarn/releases
-!frontend/luximia_erp_ui/.yarn/versions
-frontend/luximia_erp_ui/npm-debug.log*
-frontend/luximia_erp_ui/yarn-debug.log*
-frontend/luximia_erp_ui/yarn-error.log*
-frontend/luximia_erp_ui/.pnpm-debug.log*
-frontend/luximia_erp_ui/.vercel/
-frontend/luximia_erp_ui/*.tsbuildinfo
-frontend/luximia_erp_ui/next-env.d.ts
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==============================================================================
+# NODE / NEXT.JS (FRONTEND)
+# ==============================================================================
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Next.js
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# NPM / Yarn / PNPM logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ==============================================================================
+# DOCKER & DATABASE
+# ==============================================================================
+docker-compose.override.yml
+.docker/
+postgres_data/
+*.session.sql
+*.sql
+*.sql.gz
+
+# ==============================================================================
+# PROJECT SPECIFIC
+# ==============================================================================
+# Temporary or helper scripts
+frontend_permissions_fix.py

@@ -1,36 +1,74 @@
-# Archivo: .dockerignore
-
-# Git
-.git
+# Git & Version Control
+.git/
 .gitignore
+.gitattributes
 
 # Docker
-Dockerfile
+docker-compose*.yml
+Dockerfile*
 .dockerignore
-docker-compose.yml
 
-# Python / Django
-__pycache__/
-venv/
-.venv/
-*.pyc
-*.pyo
-
-# Node.js / Next.js
-node_modules/
-.next/
-npm-debug.log
-yarn-error.log
-
-# Archivos de entorno y secretos
+# Environment Variables & Secrets
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
 !.env.example
 
-# Configuración de editores
-.vscode/
+# IDEs & Editors
 .idea/
-
-# Archivos de sistema operativo
+.vscode/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
+
+# --- BACKEND (Python/Django) ---
+# Compilados y Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.env/
+
+# Distribución e Instalación
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Archivos estáticos y medios (generados/subidos localmente no deben ir a la imagen)
+backend/staticfiles/
+backend/media/
+backend/*.sqlite3
+
+# Logs
+*.log
+backend/logs/
+
+# --- FRONTEND (Node/Next.js) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# Next.js build output
+.next/
+out/
+
+# --- DOCUMENTATION & MISC ---
+Luximia_Docs/
+README.md
+*.md

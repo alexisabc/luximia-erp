@@ -1,14 +1,21 @@
 #Frontend/luximia_erp_ui/Dockerfile
 # --- Etapa 1: Builder ---
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
+
+# ** SOLUCIÓN A LA CORRUPCIÓN DE DEPENDENCIAS **
+# Limpia cualquier rastro de instalaciones anteriores para evitar el error de react.development.js
+RUN rm -rf node_modules package-lock.json
+
+# Instala las dependencias LIMPIDAMENTE
 RUN npm install
+
 COPY . .
 RUN npm run build
 
 # --- Etapa 2: Production ---
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 # Copia los artefactos de construcción desde la etapa 'builder'

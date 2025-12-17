@@ -1,6 +1,6 @@
 # backend/Dockerfile
 
-FROM python:3.13-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 # Variables de entorno estándar
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -37,8 +37,8 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copia la carpeta global de assets
-COPY assets /app/static/assets
+# Copia la carpeta global de assets a /app/assets (Para que coincida con STATICFILES_DIRS)
+COPY assets /app/assets
 
 # Copia todo el código del backend
 COPY backend/ .
@@ -47,8 +47,15 @@ COPY backend/ .
 # Pasamos una clave temporal solo para este comando
 RUN SECRET_KEY="dummy-key-for-build" python manage.py collectstatic --noinput
 
+# Copia el script de entrada y dale permisos de ejecución
+COPY backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Expone el puerto que Gunicorn usará
 EXPOSE 8000
 
-# El comando para iniciar la aplicación en producción
+# Usamos el script como punto de entrada
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# El comando por defecto (se pasará como argumento $@ al entrypoint)
 CMD ["gunicorn", "luximia_erp.wsgi:application", "--bind", "0.0.0.0:8000"]

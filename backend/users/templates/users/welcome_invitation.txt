@@ -1,10 +1,13 @@
-Hola{% if display_name %} {{ display_name }}{% endif %},
+¡Hola, {{ display_name }}!
 
-Bienvenido a {{ company_name|default:"Luximia ERP" }}. Has sido invitado a la plataforma.
+Te damos la bienvenida a {{ company_name|default:"Luximia ERP" }}.
 
-Completa tu registro con el siguiente enlace:
+Se ha creado una cuenta para ti. Para comenzar a utilizar la plataforma, por favor confirma tu correo y establece tu contraseña utilizando el siguiente enlace:
+
 {{ enroll_url }}
 
-Este enlace vence en {{ link_validity|default:"24 horas" }}.
+Este enlace de invitación caducará en {{ link_validity|default:"24 horas" }}.
 
-¡Te esperamos!
+Si tienes alguna pregunta, contacta a tu administrador.
+
+© {% now "Y" %} {{ company_name|default:"Luximia ERP" }}. Todos los derechos reservados.

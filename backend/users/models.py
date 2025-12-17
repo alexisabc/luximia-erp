@@ -3,9 +3,10 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from core.models import BaseModel, register_audit
 
 
-class CustomUser(AbstractUser):
+class CustomUser(AbstractUser, BaseModel):
     """Base custom user model for passwordless authentication."""
     # Permitir auth sin password tradicional
     password = models.CharField(max_length=128, blank=True, null=True)
@@ -23,14 +24,47 @@ class CustomUser(AbstractUser):
     # Usuario inactivo hasta completar seguridad
     is_active = models.BooleanField(default=False)
 
+    # Multi-empresa
+    empresa_principal = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.PROTECT,
+        related_name='usuarios_principales',
+        null=True,
+        blank=True,
+        help_text="Empresa por defecto al iniciar sesión"
+    )
+    empresas_acceso = models.ManyToManyField(
+        'core.Empresa',
+        related_name='usuarios_con_acceso',
+        blank=True,
+        help_text="Empresas a las que tiene acceso este usuario"
+    )
+    
+    ultima_empresa_activa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.SET_NULL,
+        related_name='usuarios_activos',
+        null=True,
+        blank=True,
+        help_text="Última empresa seleccionada por el usuario"
+    )
 
-class EnrollmentToken(models.Model):
+    class Meta:
+        permissions = [
+            ("view_dashboard", "Can view dashboard"),
+            ("view_inactive_users", "Can view inactive users"),
+            ("hard_delete_customuser", "Can hard delete custom users"),
+            ("view_consolidado", "Can view consolidated reports across companies"),
+        ]
+
+
+class EnrollmentToken(BaseModel):
     """One-time enrollment token for activating new accounts."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="enrollment_tokens"
     )
     token_hash = models.CharField(max_length=64, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at inherited from BaseModel
     expires_at = models.DateTimeField()
 
     def is_expired(self) -> bool:
@@ -38,3 +72,7 @@ class EnrollmentToken(models.Model):
 
     def __str__(self) -> str:
         return f"Enrollment token for {self.user_id}"
+
+# Auditoría
+register_audit(CustomUser)
+register_audit(EnrollmentToken)

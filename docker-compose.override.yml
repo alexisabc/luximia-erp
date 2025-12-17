@@ -1,32 +1,74 @@
-# docker-compose.override.yml (Solo para Desarrollo Local)
 services:
+  # ==============================================================================
+  # 1. DATABASE (Local Dev Config)
+  # ==============================================================================
   db:
+    container_name: luximia-db
     ports:
-      - "5432:5432" # Exponemos el puerto de la DB para conectarnos con un cliente local
+      - "5432:5432"
 
+  # ==============================================================================
+  # 2. BACKEND API (Local Dev Config)
+  # ==============================================================================
   backend:
-    command: bash entrypoint.sh # Comando de desarrollo
-    volumes:
-      - ./backend:/app # Hot-reloading para el código
-      - ./assets:/app/assets
+    container_name: luximia-backend
     ports:
-      - "8000:8000" # Mapeamos el puerto del servidor de desarrollo de Django
-    depends_on:
-      - mailhog # El backend depende de mailhog en desarrollo
-
-  frontend:
-    command: sh -c "npm install && npm run dev" # Garantiza dependencias antes de iniciar Next.js
+      - "8000:8000"
     volumes:
-      - ./frontend/luximia_erp_ui:/app # Hot-reloading para el código
-      - /app/node_modules # Evita que node_modules local sobreescriba el del contenedor
-      - ./assets:/app/public/assets
+      # Montamos el código local para Hot-Reload
+      - ./backend:/app
+      - ./assets:/app/assets
+      # Prevenimos conflictos
+      # Ahora usamos volumenes nombrados para identificarlos
+      - backend_pycache:/app/__pycache__
+      - backend_internal_pycache:/app/backend/__pycache__
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # ==============================================================================
+  # 3. FRONTEND UI (Local Dev Config)
+  # ==============================================================================
+  frontend:
+    container_name: luximia-frontend
+    build:
+      target: builder
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend/luximia_erp_ui:/app
+      # Volumenes nombrados para dependencias y cache
+      - frontend_node_modules:/app/node_modules
+      - frontend_next_cache:/app/.next
+    command: npm run dev
 
-  ### SERVICIO PARA CORREOS (SOLO DESARROLLO) ###
+  # ==============================================================================
+  # 4. HERRAMIENTAS ADICIONALES
+  # ==============================================================================
   mailhog:
     image: mailhog/mailhog
-    container_name: luximia-mailhog-local
+    container_name: luximia-mailhog
     ports:
-      - "1025:1025" # Puerto SMTP
-      - "8025:8025" # Interfaz web
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: luximia-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    logging:
+      driver: "none"
+
+# Definimos los volúmenes para que aparezcan con nombre en Docker Desktop
+volumes:
+  backend_pycache:
+  backend_internal_pycache:
+  frontend_node_modules:
+  frontend_next_cache:

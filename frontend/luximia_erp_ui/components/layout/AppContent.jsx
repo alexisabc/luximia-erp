@@ -2,13 +2,15 @@
 'use client';
 
 import Sidebar from "@/components/layout/Sidebar";
+import MobileHeader from "@/components/layout/MobileHeader";
 import { useAuth } from "@/context/AuthContext";
 import ChatInteligente from "@/components/features/ChatInteligente";
 import { useSidebar } from "@/context/SidebarContext";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Overlay from '@/components/loaders/Overlay';
-import { useInactivityTimer } from '@/hooks/useInactivityTimer';
+import SessionTimeout from '@/components/common/SessionTimeout';
+import { EmpresaProvider } from '@/context/EmpresaContext';
 
 export default function AppContent({ children }) {
     // 1. Obtén 'loading' desde el contexto
@@ -16,14 +18,6 @@ export default function AppContent({ children }) {
     const { isOpen } = useSidebar();
     const pathname = usePathname();
     const router = useRouter();
-
-    // Lógica para detectar la inactividad del usuario
-    const handleInactivity = () => {
-        if (authTokens) {
-            logoutUser();
-        }
-    };
-    useInactivityTimer(handleInactivity, 5 * 60 * 1000); // 5 minutos
 
     useEffect(() => {
         // 2. No hagas nada si el contexto aún está cargando la información inicial
@@ -55,14 +49,18 @@ export default function AppContent({ children }) {
 
     // Si todo está bien, muestra la aplicación principal
     return (
-        <div className="min-h-screen">
-            <Sidebar />
-            <main className={`transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-900 ${isOpen ? 'lg:ml-64' : 'lg:ml-20'} p-4`}>
-                <div key={pathname} className="page-transition">
-                    {children}
-                </div>
-                {hasPermission('cxc.can_use_ai') && <ChatInteligente />}
-            </main>
-        </div>
+        <EmpresaProvider>
+            <div className="min-h-screen">
+                <SessionTimeout /> {/* <-- Componente de manejo de sesión */}
+                <Sidebar />
+                <MobileHeader />
+                <main className={`transition-all duration-300 ease-in-out ${isOpen ? 'lg:ml-64' : 'lg:ml-20'} p-4`}>
+                    <div key={pathname} className="page-transition">
+                        {children}
+                    </div>
+                    {hasPermission('contabilidad.can_use_ai') && <ChatInteligente />}
+                </main>
+            </div>
+        </EmpresaProvider>
     );
 }

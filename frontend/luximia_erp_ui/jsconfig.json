@@ -1,7 +1,15 @@
 {
   "compilerOptions": {
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "tailwind.config.js"
+  ]
 }

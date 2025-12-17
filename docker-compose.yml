@@ -1,38 +1,51 @@
-# docker-compose.yml (Archivo Base)
 services:
-  ### SERVICIO PARA DB ###
+  # ==============================================================================
+  # 1. DATABASE
+  # ==============================================================================
   db:
     image: pgvector/pgvector:pg17
-    container_name: luximia-db
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    # El puerto se expondrá solo en desarrollo
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  ### SERVICIO PARA EL BACKEND ###
+  # ==============================================================================
+  # 2. BACKEND API
+  # ==============================================================================
   backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
-    container_name: luximia-backend
+    restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - ./.env
-
-  ### SERVICIO PARA EL FRONTEND ###
+    # En producción, usamos el CMD del Dockerfile (gunicorn) por defecto
+    # command: ... (Ya no es necesario sobrescribir nada)
+    # ==============================================================================
+    # 3. FRONTEND UI
+    # ==============================================================================
   frontend:
     build:
       context: ./frontend/luximia_erp_ui
       dockerfile: Dockerfile
-    container_name: luximia-frontend
+      target: runner # En producción usamos la imagen optimizada 'runner'
+    restart: always
     depends_on:
       - backend
     env_file:
       - ./.env
+    # En producción, usamos el CMD del Dockerfile (node server.js)
 
 volumes:
   postgres_data:

@@ -1,41 +1,59 @@
-//luximia_erp_ui/hooks/useResponsivePageSize.js
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
-export function useResponsivePageSize(rowHeight) {
+/**
+ * Hook para calcular dinámicamente cuántas filas caben en un contenedor.
+ * Utiliza ResizeObserver para reaccionar a cambios en el tamaño del contenedor específico.
+ * 
+ * @param {number} rowHeight - Altura estimada de cada fila en píxeles (default: 50).
+ * @param {number} minPageSize - Mínimo número de registros a mostrar (default: 5).
+ * @returns {object} { ref, pageSize }
+ */
+export function useResponsivePageSize(rowHeight = 50, minPageSize = 5) {
     const ref = useRef(null);
     const [pageSize, setPageSize] = useState(10);
 
-    const calculatePageSize = useCallback(() => {
-        if (ref.current) {
-            const containerHeight = ref.current.clientHeight;
-            const newPageSize = Math.floor(containerHeight / rowHeight);
-            setPageSize(Math.max(1, newPageSize));
+    // Debounce para evitar renders excesivos durante redimensionamiento rápido
+    const timeoutRef = useRef(null);
+
+    const updatePageSize = useCallback((entries) => {
+        if (!Array.isArray(entries) || !entries.length) return;
+
+        const entry = entries[0];
+        // Usamos contentRect para obtener la altura exacta disponible del contenido
+        const height = entry.contentRect.height;
+
+        if (height > 0) {
+            // Cancelar update pendiente anterior
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+            // Pequeño delay (debounce) para suavidad
+            timeoutRef.current = setTimeout(() => {
+                const newPageSize = Math.floor(height / rowHeight);
+                // Aseguramos un mínimo razonable para no romper la UI
+                setPageSize(Math.max(minPageSize, newPageSize));
+            }, 50);
         }
-    }, [rowHeight]);
+    }, [rowHeight, minPageSize]);
 
     useEffect(() => {
-        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-        // Guardamos el elemento actual del ref en una variable local.
         const element = ref.current;
+        if (!element) return;
 
-        // Creamos el observador que llamará a nuestra función de cálculo.
-        const resizeObserver = new ResizeObserver(calculatePageSize);
+        const resizeObserver = new ResizeObserver(updatePageSize);
+        resizeObserver.observe(element);
 
-        if (element) {
-            // Calculamos el tamaño inicial y empezamos a observar.
-            calculatePageSize();
-            resizeObserver.observe(element);
+        // Cálculo inicial inmediato si ya hay dimensiones
+        if (element.clientHeight) {
+            const newPageSize = Math.floor(element.clientHeight / rowHeight);
+            setPageSize(Math.max(minPageSize, newPageSize));
         }
 
-        // La función de limpieza ahora usa la variable local 'element',
-        // que es una referencia segura al elemento que empezamos a observar.
         return () => {
-            if (element) {
-                resizeObserver.unobserve(element);
-            }
+            resizeObserver.disconnect();
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, [calculatePageSize]);
+    }, [updatePageSize, rowHeight, minPageSize]);
 
     return { ref, pageSize };
 }

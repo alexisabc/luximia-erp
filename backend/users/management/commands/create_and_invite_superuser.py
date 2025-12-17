@@ -5,9 +5,6 @@ import os
 import secrets
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
-from luximia_erp.emails import send_mail
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
@@ -15,13 +12,17 @@ from django.db import connections, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.utils import OperationalError, ProgrammingError
 from django.template.loader import render_to_string
-from users.models import EnrollmentToken
-from users.utils import build_enrollment_email_context
 
 class Command(BaseCommand):
     help = "Asegura que el superusuario exista y genera un nuevo enlace de inscripción."
 
     def handle(self, *args, **options):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group, Permission
+        from luximia_erp.emails import send_mail
+        from users.models import EnrollmentToken
+        from users.utils import build_enrollment_email_context
+
         email = os.getenv("DJANGO_SUPERUSER_EMAIL")
         first_name = os.getenv("DJANGO_SUPERUSER_FIRST_NAME", "").strip()
         last_name = os.getenv("DJANGO_SUPERUSER_LAST_NAME", "").strip()

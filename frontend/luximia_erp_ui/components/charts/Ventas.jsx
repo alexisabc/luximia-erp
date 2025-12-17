@@ -1,46 +1,93 @@
 // components/VentasChart.jsx
 'use client';
 
-import { Card, Title, LineChart } from '@tremor/react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer
+} from 'recharts';
 
-// Una función útil para formatear los números como moneda local (MXN)
+// Función para formatear los números como moneda local (MXN)
 const valueFormatter = (number) =>
     `$${new Intl.NumberFormat('es-MX').format(number).toString()}`;
+
+// Componente Tooltip personalizado para Recharts
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const value = payload[0].value;
+        const formattedValue = valueFormatter(value);
+        return (
+            <div className="p-2 border rounded-md shadow-lg bg-white/80 backdrop-blur-md border-gray-200">
+                <p className="text-sm font-semibold text-gray-700">{label}</p>
+                <p className="text-sm text-cyan-600">
+                    Ventas: {formattedValue}
+                </p>
+            </div>
+        );
+    }
+    return null;
+};
 
 /**
  * Muestra una gráfica lineal de las ventas a lo largo del tiempo.
  * @param {{ data: any[] }} props
- * @prop {Array} data - Arreglo de datos para la gráfica.
- * Ejemplo: [{ "label": "Ene 25", "Ventas": 98745 }, ...]
+ * @prop {Array} data - Arreglo de datos para la gráfica. Ejemplo: [{ "label": "Ene 25", "Ventas": 98745 }, ...]
  */
 export default function VentasChart({ data }) {
-    // Si no hay datos, muestra un mensaje amigable.
+
     if (!data || data.length === 0) {
         return (
-            <Card>
-                <Title>Ventas</Title>
-                <div className="flex items-center justify-center h-full pt-6">
-                    <p className="text-tremor-content dark:text-dark-tremor-content">
+            <Card className="h-full">
+                <CardHeader>
+                    <CardTitle>Ventas</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-48">
+                    <p className="text-gray-500">
                         No hay datos de ventas para mostrar.
                     </p>
-                </div>
+                </CardContent>
             </Card>
         );
     }
 
     return (
         <Card>
-            <Title>Ventas</Title>
-            <LineChart
-                className="mt-6"
-                data={data}
-                index="label" // La propiedad del objeto que va en el eje X (las fechas/periodos)
-                categories={['Ventas']} // La propiedad del objeto con los valores del eje Y
-                colors={['cyan']} // El color de la línea de la gráfica
-                valueFormatter={valueFormatter} // La función que formatea los números del tooltip
-                yAxisWidth={60}
-                showLegend={false}
-            />
+            <CardHeader>
+                <CardTitle>Ventas</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+
+                        {/* Rejilla y Ejes */}
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                        <XAxis dataKey="label" stroke="#888888" fontSize={12} />
+                        <YAxis
+                            stroke="#888888"
+                            fontSize={12}
+                            tickFormatter={valueFormatter}
+                            width={60}
+                        />
+
+                        {/* Tooltip */}
+                        <Tooltip content={<CustomTooltip />} />
+
+                        {/* Línea de datos */}
+                        <Line
+                            type="monotone"
+                            dataKey="Ventas"
+                            stroke="#06b6d4" // Tailwind: cian
+                            strokeWidth={2}
+                            activeDot={{ r: 6 }}
+                        />
+                    </LineChart>
+                </ResponsiveContainer>
+            </CardContent>
         </Card>
     );
 }

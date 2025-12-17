@@ -13,16 +13,22 @@ export const SidebarProvider = ({ children }) => {
     // ### CAMBIO: El estado ahora depende del tamaño de la pantalla ###
     const [isOpen, setIsOpen] = useState(true);
 
-    // Efecto para ajustar el estado del sidebar en la carga inicial
     useEffect(() => {
-        // En pantallas pequeñas, el sidebar empieza cerrado.
-        if (window.innerWidth < 1024) {
+        // Recuperar estado previo del localStorage para mantener consistencia al recargar
+        const stored = localStorage.getItem('sidebar_open_state');
+        if (stored !== null) {
+            setIsOpen(stored === 'true');
+        } else if (window.innerWidth < 1024) {
             setIsOpen(false);
         }
     }, []);
 
     const toggleSidebar = () => {
-        setIsOpen(!isOpen);
+        setIsOpen(prev => {
+            const newState = !prev;
+            localStorage.setItem('sidebar_open_state', String(newState));
+            return newState;
+        });
     };
 
     return (

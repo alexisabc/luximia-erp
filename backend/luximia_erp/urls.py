@@ -10,8 +10,16 @@ urlpatterns = [
 
     # ✨ CAMBIO: Eliminamos el prefijo 'api/' de las rutas.
     # El subdominio api.alexisabc.dev ya se encarga de dirigir aquí.
-    path('cxc/', include('cxc.urls')),
+    path('core/', include('core.urls')),
+    path('contabilidad/', include('contabilidad.urls')),
+    path('rrhh/', include('rrhh.urls')),
+    path('auditoria/', include('auditoria.urls')),
+    path('sistemas/', include('sistemas.urls')), # Placeholder
+    path('tesoreria/', include('tesoreria.urls')), # Placeholder
+    path('juridico/', include('juridico.urls')), # Placeholder
     path('users/', include('users.urls')),
+    path('ia/', include('ia.urls')),
+    path('pos/', include('pos.urls')),
 
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

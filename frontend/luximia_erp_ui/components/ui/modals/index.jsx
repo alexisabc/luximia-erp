@@ -1,27 +1,45 @@
-//components/ui/modals/Index.jsx
 'use client';
 
-export default function Modal({ isOpen, onClose, title, children }) {
-    if (!isOpen) return null;
+import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+export default function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-2xl" }) {
+    const [show, setShow] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsVisible(true);
+            setTimeout(() => setShow(true), 10);
+        } else {
+            setShow(false);
+            setTimeout(() => setIsVisible(false), 300);
+        }
+    }, [isOpen]);
+
+    if (!isVisible) return null;
 
     return (
-        // Fondo oscuro semitransparente
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            {/* Contenedor del modal */}
-            {/* ### CAMBIO: de max-w-md a max-w-4xl y añadido dark:bg-gray-800 ### */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-4xl">
-                {/* Encabezado del modal */}
-                <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${show ? 'bg-black/60 backdrop-blur-sm' : 'bg-transparent pointer-events-none'}`}>
+            <div
+                className={`w-full ${maxWidth} bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50 shadow-2xl rounded-2xl transform transition-all duration-300 ease-out ${show ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100/50 dark:border-gray-800/50">
+                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                        {title}
+                    </h3>
                     <button
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     >
-                        &times; {/* Este es el caracter de una 'X' para cerrar */}
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
-                {/* Contenido del modal (aquí irá nuestro formulario) */}
-                <div>
+
+                {/* Content */}
+                <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
                     {children}
                 </div>
             </div>

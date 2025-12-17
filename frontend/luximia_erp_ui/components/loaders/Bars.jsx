@@ -1,37 +1,46 @@
-//components/loaders/Bars.jsx
-export default function Bars({ width = 48, height = 24, className = "text-blue-600" }) {
-    const barW = 4, gap = 3;
+export default function Bars({ width = 40, height = 40, className = "" }) {
     return (
         <svg
             className={`overflow-visible ${className}`}
             width={width}
             height={height}
-            viewBox="0 0 32 24"
+            viewBox="0 0 24 24"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
         >
+            <defs>
+                <linearGradient id="bars-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="currentColor" stopOpacity="0.3" />
+                </linearGradient>
+            </defs>
             {[0, 1, 2, 3].map((i) => (
                 <rect
                     key={i}
-                    x={i * (barW + gap)}
-                    y="4"
-                    width={barW}
-                    height="16"
-                    rx="2"
-                    fill="currentColor"
+                    x={4 + (i * 5)}
+                    y="10"
+                    width="3"
+                    height="8"
+                    rx="1.5"
+                    fill="url(#bars-gradient)"
                 >
                     <animate
-                        attributeName="y"
-                        values="10;4;10"
-                        dur="0.9s"
+                        attributeName="height"
+                        values="4;14;4"
+                        dur="1s"
                         repeatCount="indefinite"
-                        begin={`${i * 0.1}s`}
+                        begin={`${i * 0.15}s`}
+                        calcMode="spline"
+                        keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"
                     />
                     <animate
-                        attributeName="height"
-                        values="4;16;4"
-                        dur="0.9s"
+                        attributeName="y"
+                        values="10;5;10"
+                        dur="1s"
                         repeatCount="indefinite"
-                        begin={`${i * 0.1}s`}
+                        begin={`${i * 0.15}s`}
+                        calcMode="spline"
+                        keySplines="0.45 0 0.55 1; 0.45 0 0.55 1"
                     />
                 </rect>
             ))}
