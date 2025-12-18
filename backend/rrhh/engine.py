@@ -1,11 +1,14 @@
 from decimal import Decimal
 from typing import List, Optional, Tuple, Any, Dict
+import datetime
+from datetime import date
 from django.db.models import Sum
 
 from .models import (
     Empleado, Nomina, ReciboNomina, ConceptoNomina, 
     TablaISR, RenglonTablaISR, ConfiguracionEconomica, 
-    DetalleReciboItem, EmpleadoCreditoInfonavit
+    EmpleadoCreditoInfonavit, SubsidioEmpleo, RenglonSubsidio,
+    DetalleReciboItem
 )
 from .models_nomina import TipoConcepto, ClasificacionFiscal
 
@@ -19,123 +22,304 @@ class PayrollCalculator:
     Soporta:
     - ISR (Llamando tablas dinámicas)
     - IMSS (Cuotas Obrero-Patronales simplificadas)
-    - Subsidio al Empleo
+    - Subsidio al Empleo (Lógica ISR vs Subsidio)
     - Salario Diario Integrado
+    - Créditos Infonavit
     """
 
     def __init__(self, anio: int = 2025):
         self.anio = anio
         self.config_economica = ConfiguracionEconomica.objects.filter(anio=anio, activo=True).last()
-        if not self.config_economica:
-            # Fallback o Error crítico
-            raise ValueError(f"No hay configuración económica activa para el año {anio}")
-
-    def calcular_recibo(self, nomina: Nomina, empleado: Empleado) -> ReciboNomina:
+        # No bloqueamos si falta configuración económica para permitir uso parcial (dev), 
+        # pero loggearemos advertencia si fuéramos prod.
+        
+    def calcular_recibo(self, nomina: Nomina, empleado: Empleado, dias_pagados: Optional[Any] = None) -> ReciboNomina:
         """
         Calcula un recibo individual, genera los detalles y guarda.
-        NO commitea transacción, eso debe hacerlo la capa superior.
+        Auto-detecta tipo de nómina por descripción ('AGUINALDO', 'FINIQUITO') si es Extraordinaria.
+        Permite override de dias_pagados para ajustes manuales.
         """
-        
-        # 1. Obtener Datos Laborales Vigentes
+        # 1. Obtener Datos Laborales
         laborales = getattr(empleado, 'datos_laborales', None)
         if not laborales:
             raise ValueError(f"Empleado {empleado} sin datos laborales.")
+        
+        # 2. Routing de Estrategia
+        if nomina.tipo == 'EXTRAORDINARIA':
+            desc = nomina.descripcion.upper()
+            if 'AGUINALDO' in desc:
+                return self._calcular_aguinaldo_recibo(nomina, empleado)
+            elif 'FINIQUITO' in desc or 'LIQUIDACION' in desc or 'LIQUIDACIÓN' in desc:
+                es_despido = 'LIQUID' in desc
+                return self._calcular_finiquito_recibo(nomina, empleado, es_despido)
+            else:
+                # Extraordinaria genérica (PTU, etc - pendiente)
+                pass
 
-        dias_pagados = Decimal('15.0') if nomina.tipo == 'ORDINARIA' else Decimal('0.0') # Simplificación MVP
+        # ----------------------------------------
+        # Lógica ORDINARIA (Sueldo + Prestaciones)
+        # ----------------------------------------
+        dias_base = Decimal('15.0') if nomina.tipo == 'ORDINARIA' else Decimal('0.0')
         if laborales.periodicidad_pago == 'SEMANAL':
-            dias_pagados = Decimal('7.0')
+            dias_base = Decimal('7.0')
+            
+        # Override
+        if dias_pagados is not None:
+            dias_pagados = Decimal(str(dias_pagados))
+        else:
+            dias_pagados = dias_base
 
-        # 2. Calcular Percepciones Fijas (Sueldo)
+
         sueldo_diario = laborales.salario_diario
         sueldo_total = sueldo_diario * dias_pagados
+        sbc = laborales.salario_diario_integrado
         
-        # 3. Crear Estructura de Recibo
         recibo = ReciboNomina(
             nomina=nomina,
             empleado=empleado,
             salario_diario=sueldo_diario,
-            sbc=laborales.salario_diario_integrado,
-            antiguedad_dias=0, # TODO: Calcular vs fecha_ingreso
-            dias_pagados=dias_pagados,
-            subtotal=0,
-            impuestos_retenidos=0,
-            imss_retenido=0,
-            descuentos=0,
-            neto=0
+            sbc=sbc,
+            dias_pagados=dias_pagados
         )
         recibo.save() 
-        # Guardamos preliminarmente para poder atar los DetalleReciboItem. 
-        # (Idealmente haríamos bulk_create al final, pero paso a paso por claridad)
-
+        
         total_gravado = Decimal('0.0')
         total_exento = Decimal('0.0')
         total_deducciones = Decimal('0.0')
+        otros_pagos = Decimal('0.0')
 
-        # --- A. AGREGAR SUELDO ---
-        concepto_sueldo = self._get_concepto_confiable(ClasificacionFiscal.SUELDO)
-        self._add_item(recibo, concepto_sueldo, sueldo_total, gravado=True)
-        total_gravado += sueldo_total
+        # [A] Sueldo
+        if dias_pagados > 0:
+            concepto_sueldo = self._get_concepto_confiable(ClasificacionFiscal.SUELDO)
+            self._add_item(recibo, concepto_sueldo, sueldo_total, gravado=True)
+            total_gravado += sueldo_total
 
-        # --- B. CALCULAR ISR ---
-        isr_retenido = self._calcular_isr(total_gravado, nomina.fecha_fin.year, periodo='QUINCENAL') # Parametrizar periodo
-        if isr_retenido > 0:
-            concepto_isr = self._get_concepto_confiable(ClasificacionFiscal.ISR, tipo=TipoConcepto.DEDUCCION)
-            self._add_item(recibo, concepto_isr, isr_retenido)
-            total_deducciones += isr_retenido
-
-        # --- C. CALCULAR IMSS ---
-        # Fórmula simplificada de cuota obrera (aprox 2.375% - 2.7% dependiendo sbc exedente)
-        # Para MVP usaremos un factor fijo configurable o simple lógica.
-        imss_obrero = self._calcular_imss_obrero(laborales.salario_diario_integrado, dias_pagados)
-        if imss_obrero > 0:
-            concepto_imss = self._get_concepto_confiable(ClasificacionFiscal.IMSS, tipo=TipoConcepto.DEDUCCION)
-            self._add_item(recibo, concepto_imss, imss_obrero)
-            total_deducciones += imss_obrero
-
-        # --- D. OTROS DESCUENTOS (INFONAVIT) ---
-        creditos = EmpleadoCreditoInfonavit.objects.filter(empleado=empleado, activo=True)
-        for credito in creditos:
-            monto = Decimal('0.0')
-            if credito.tipo_descuento == 'CUOTA_FIJA':
-                monto = credito.monto_o_porcentaje
-            elif credito.tipo_descuento == 'PORCENTAJE':
-                monto = sueldo_total * (credito.monto_o_porcentaje / 100)
+        # [B] ISR/Subsidio
+        isr_bruto = self._calcular_isr(total_gravado, self.anio, periodo=nomina.tipo)
+        subsidio_bruto = self._calcular_subsidio(total_gravado, self.anio)
+        
+        isr_a_retener = Decimal('0.0')
+        subsidio_a_entregar = Decimal('0.0')
+        
+        if isr_bruto > subsidio_bruto:
+            isr_a_retener = isr_bruto - subsidio_bruto
+        else:
+            subsidio_a_entregar = subsidio_bruto - isr_bruto
+        
+        if isr_a_retener > 0:
+            c_isr = self._get_concepto_confiable(ClasificacionFiscal.ISR, TipoConcepto.DEDUCCION)
+            self._add_item(recibo, c_isr, isr_a_retener)
+            total_deducciones += isr_a_retener
             
-            # Buscar concepto genérico de descuento Infonavit o crear uno on-the-fly?
-            # Por ahora usaremos un placeholder o asumimos que existe.
-            # concepto_infonavit = ...
-            # self._add_item(recibo, concepto_infonavit, monto)
-            # total_deducciones += monto
-            pass
+        if subsidio_a_entregar > 0:
+            c_sub = self._get_concepto_confiable(ClasificacionFiscal.SUBSIDIO_EMPLEO, TipoConcepto.OTRO_PAGO)
+            self._add_item(recibo, c_sub, subsidio_a_entregar)
+            otros_pagos += subsidio_a_entregar
 
-        # 4. Actualizar Totales del Recibo
+        # [C] IMSS
+        imss = self._calcular_imss_obrero(sbc, dias_pagados)
+        if imss > 0:
+            c_imss = self._get_concepto_confiable(ClasificacionFiscal.SEGURIDAD_SOCIAL, TipoConcepto.DEDUCCION)
+            self._add_item(recibo, c_imss, imss)
+            total_deducciones += imss
+
+        # [D] Infonavit
+        creditos = EmpleadoCreditoInfonavit.objects.filter(empleado=empleado)
+        for credito in creditos:
+            monto_infonavit = Decimal('0.0')
+            if credito.tipo_descuento == 'CUOTA_FIJA':
+                div = Decimal('2.0') if nomina.tipo == 'QUINCENAL' else Decimal('4.0')
+                monto_infonavit = credito.monto_o_porcentaje / div
+            elif credito.tipo_descuento == 'PORCENTAJE':
+                monto_infonavit = (sbc * dias_pagados) * (credito.monto_o_porcentaje / 100)
+            
+            if monto_infonavit > 0:
+                c_info = self._get_concepto_confiable(ClasificacionFiscal.PAGO_CREDITO_VIVIENDA, TipoConcepto.DEDUCCION)
+                desc = f"INFONAVIT {credito.descripcion or ''}".strip()
+                DetalleReciboItem.objects.create(
+                    recibo=recibo, concepto=c_info, nombre_concepto=desc, clave_sat=c_info.clave_sat,
+                    monto_gravado=0, monto_exento=0, monto_total=monto_infonavit
+                )
+                total_deducciones += monto_infonavit
+
+        # Finalizar
         recibo.subtotal = total_gravado + total_exento
-        recibo.impuestos_retenidos = isr_retenido
-        recibo.imss_retenido = imss_obrero
+        recibo.impuestos_retenidos = isr_a_retener
+        recibo.imss_retenido = imss
         recibo.descuentos = total_deducciones
-        recibo.neto = recibo.subtotal - total_deducciones
+        recibo.neto = (recibo.subtotal + otros_pagos) - total_deducciones
         recibo.save()
-
         return recibo
+
+    # -----------------------------------------------------------------------
+    # MÉTODOS ESPECIALIZADOS (AGUINALDO, FINIQUITO, VACACIONES)
+    # -----------------------------------------------------------------------
+
+    def _calcular_aguinaldo_recibo(self, nomina: Nomina, empleado: Empleado) -> ReciboNomina:
+        """Cálculo específico de Aguinaldo Anual."""
+        laborales = empleado.datos_laborales
+        fecha_ingreso = laborales.fecha_ingreso
+        fecha_fin_anio = datetime.date(self.anio, 12, 31)
+        
+        # Días trabajados en el año
+        # Si ingresó antes de este año, son 365. Si no, desde ingreso.
+        inicio_computo = max(fecha_ingreso, datetime.date(self.anio, 1, 1))
+        dias_trabajados = (fecha_fin_anio - inicio_computo).days + 1
+        
+        # Proporción
+        dias_base = 365
+        proporcion = Decimal(dias_trabajados) / Decimal(dias_base)
+        dias_a_pagar = Decimal('15.0') * proporcion # Ley mínima 15 días
+        
+        monto_aguinaldo = laborales.salario_diario * dias_a_pagar
+        
+        # Exención (30 UMAS)
+        exencion_tope = Decimal('30.0') * self.config_economica.valor_uma
+        monto_exento = min(monto_aguinaldo, exencion_tope)
+        monto_gravado = monto_aguinaldo - monto_exento
+        
+        # Crear Recibo
+        recibo = ReciboNomina(
+            nomina=nomina, empleado=empleado,
+            salario_diario=laborales.salario_diario, sbc=laborales.salario_diario_integrado,
+            dias_pagados=dias_a_pagar
+        )
+        recibo.save()
+        
+        c_agui = self._get_concepto_confiable(ClasificacionFiscal.GRATIFICACION_ANUAL)
+        self._add_item_split(recibo, c_agui, monto_gravado, monto_exento)
+        
+        # ISR (Reglamento Art 174 opción o Ley 96 normal?)
+        # Para simplificar MVP usamos Ley 96 normal sobre el gravado.
+        isr = self._calcular_isr(monto_gravado, self.anio, periodo='ANUAL') # O MENSUAL?
+        # NOTA: El aguinaldo suele usar cálculo especial o sumarse al mes. 
+        # Si es nómina EXTRAORDINARIA pura, tabla mensual a veces aplica simple sobre el monto.
+        
+        if isr > 0:
+            c_isr = self._get_concepto_confiable(ClasificacionFiscal.ISR, TipoConcepto.DEDUCCION)
+            self._add_item(recibo, c_isr, isr)
+        
+        recibo.subtotal = monto_aguinaldo
+        recibo.impuestos_retenidos = isr
+        recibo.descuentos = isr
+        recibo.neto = monto_aguinaldo - isr
+        recibo.save()
+        return recibo
+
+    def _calcular_finiquito_recibo(self, nomina: Nomina, empleado: Empleado, es_despido: bool) -> ReciboNomina:
+        laborales = empleado.datos_laborales
+        # Asumimos fecha de baja es Hoy o fecha fin nómina
+        fecha_baja = nomina.fecha_fin
+        
+        # 1. Aguinaldo Proporcional
+        inicio_anio = datetime.date(fecha_baja.year, 1, 1)
+        inicio_computo = max(laborales.fecha_ingreso, inicio_anio)
+        dias_trab_anio = (fecha_baja - inicio_computo).days + 1
+        prop_anio = Decimal(dias_trab_anio) / Decimal('365')
+        monto_aguinaldo = (laborales.salario_diario * Decimal('15')) * prop_anio
+        
+        exento_ag = min(monto_aguinaldo, Decimal('30') * self.config_economica.valor_uma)
+        gravado_ag = monto_aguinaldo - exento_ag
+        
+        # 2. Vacaciones Pendientes (Simplificado: 7 días estándar pendientes)
+        # TODO: Llevar récord real de vacaciones
+        dias_vac_pendientes = Decimal('6.0') * prop_anio # Proporcional de 1er año
+        monto_vac = laborales.salario_diario * dias_vac_pendientes
+        # Vacaciones gravan 100%
+        
+        # 3. Prima Vacacional (25% de Vacaciones)
+        monto_pv = monto_vac * Decimal('0.25')
+        exento_pv = min(monto_pv, Decimal('15') * self.config_economica.valor_uma)
+        gravado_pv = monto_pv - exento_pv
+        
+        recibo = ReciboNomina(
+            nomina=nomina, empleado=empleado,
+            salario_diario=laborales.salario_diario, sbc=laborales.salario_diario_integrado,
+            dias_pagados=Decimal('0')
+        )
+        recibo.save()
+        
+        # Add Conceptos
+        c_ag = self._get_concepto_confiable(ClasificacionFiscal.GRATIFICACION_ANUAL)
+        self._add_item_split(recibo, c_ag, gravado_ag, exento_ag)
+        
+        c_vac = self._get_concepto_confiable("001") # Vacaciones suele ir como Sueldo o concepto propio "Vacaciones a tiempo" no hay clave sat especifica unica, usa 001 dias vacaciones
+        self._add_item(recibo, c_vac, monto_vac, gravado=True) # Vacaciones gravan 100%
+        
+        c_pv = self._get_concepto_confiable(ClasificacionFiscal.PRIMA_VACACIONAL)
+        self._add_item_split(recibo, c_pv, gravado_pv, exento_pv)
+        
+        total_gravado_finiquito = gravado_ag + monto_vac + gravado_pv
+        
+        # LIQUIDACION (Indeminzaciones)
+        if es_despido:
+            # A. 3 Meses Constitución
+            indem_3m = laborales.salario_diario_integrado * Decimal('90')
+            
+            # B. 20 Días por año
+            antiguedad_anios = Decimal((fecha_baja - laborales.fecha_ingreso).days) / Decimal('365')
+            indem_20d = (laborales.salario_diario_integrado * Decimal('20')) * antiguedad_anios
+            
+            # C. Prima Antigüedad (12 días/año, topado 2xSM)
+            sm_topado = self.config_economica.salario_minimo_general * Decimal('2')
+            salario_base_prim = min(laborales.salario_diario, sm_topado) 
+            prima_antig = (salario_base_prim * Decimal('12')) * antiguedad_anios
+            
+            total_indem = indem_3m + indem_20d + prima_antig
+            
+            # Exención: 90 UMA por año de servicio
+            anios_completos = int(antiguedad_anios) 
+            if (antiguedad_anios - anios_completos) > 0.5: # Fracción > 6 meses cuenta como año
+                anios_completos += 1
+            
+            exento_indem = (Decimal('90') * self.config_economica.valor_uma) * Decimal(anios_completos)
+            exento_indem = min(total_indem, exento_indem)
+            gravado_indem = total_indem - exento_indem
+            
+            c_indem = self._get_concepto_confiable(ClasificacionFiscal.INDEMNIZACIONES)
+            self._add_item_split(recibo, c_indem, gravado_indem, exento_indem)
+            
+            c_prima_ant = self._get_concepto_confiable(ClasificacionFiscal.PRIMA_ANTIGUEDAD)
+            # Desglosar solo visualmente si se quiere, por ahora todo en Indemnizaciones o separado
+            
+            total_gravado_finiquito += gravado_indem
+
+        # ISR Final (Aprox Mensual)
+        isr = self._calcular_isr(total_gravado_finiquito, self.anio, 'MENSUAL')
+        if isr > 0:
+             c_isr = self._get_concepto_confiable(ClasificacionFiscal.ISR, TipoConcepto.DEDUCCION)
+             self._add_item(recibo, c_isr, isr)
+
+        # Totales
+        recibo.subtotal = total_gravado_finiquito + exento_ag + exento_pv + (exento_indem if es_despido else 0)
+        recibo.impuestos_retenidos = isr
+        recibo.descuentos = isr
+        recibo.neto = recibo.subtotal - isr
+        recibo.save()
+        return recibo
+
+    def _add_item_split(self, recibo, concepto, gravado, exento):
+        DetalleReciboItem.objects.create(
+            recibo=recibo, concepto=concepto, nombre_concepto=concepto.nombre, clave_sat=concepto.clave_sat,
+            monto_gravado=gravado, monto_exento=exento, monto_total=gravado + exento
+        )
+
 
     def _calcular_isr(self, base_gravable: Decimal, anio: int, periodo: str = 'QUINCENAL') -> Decimal:
         """
-        Busca la tabla correspondiente y aplica la lógica de rangos.
-        ISR = ((Base - LimiteInf) * %Excedente) + CuotaFija
+        Calcula el ISR Bruto (sin restar subsidio) según tablas.
         """
         tabla = TablaISR.objects.filter(anio_vigencia=anio, tipo_periodo=periodo).first()
         if not tabla:
-            # Fallback a Mensual / 2 ? O error.
             return Decimal('0.0')
 
-        # Buscar el renglón donde encaja la base
         renglon = RenglonTablaISR.objects.filter(
             tabla=tabla, 
             limite_inferior__lte=base_gravable
         ).order_by('-limite_inferior').first()
 
         if not renglon:
-            return Decimal('0.0') # Salario bajo exento (o error en tabla)
+            return Decimal('0.0')
 
         excedente = base_gravable - renglon.limite_inferior
         impuesto_marginal = excedente * (renglon.porcentaje_excedente / 100)
@@ -143,39 +327,52 @@ class PayrollCalculator:
         
         return isr_calculado.quantize(Decimal('0.01'))
 
+    def _calcular_subsidio(self, base_gravable: Decimal, anio: int) -> Decimal:
+        """
+        Obtiene el subsidio para el empleo correspondiente a la base.
+        """
+        tabla = SubsidioEmpleo.objects.filter(anio_vigencia=anio).first()
+        if not tabla:
+            return Decimal('0.0')
+
+        # Buscar donde el ingreso sea MENOR o IGUAL al 'ingreso_hasta'
+        # Ordenamos por ingreso_hasta ascendente y tomamos el primero que cumpla
+        # base <= ingreso_hasta
+        renglon = RenglonSubsidio.objects.filter(
+            tabla=tabla,
+            ingreso_hasta__gte=base_gravable
+        ).order_by('ingreso_hasta').first()
+
+        if not renglon:
+            # Si supera el último renglón, subsidio es 0
+            return Decimal('0.0')
+            
+        return renglon.monto_subsidio.quantize(Decimal('0.01'))
+
     def _calcular_imss_obrero(self, sbc: Decimal, dias: Decimal) -> Decimal:
         """
         Cálculo aproximado de cuotas obreras IMSS.
-        En producción real, esto requiere desglosar por rama (Enfermedad y Maternidad, Invalidez y Vida, Cesantía y Vejez).
         """
-        # UMA viene de self.config_economica
-        valor_uma = self.config_economica.valor_uma
-        
-        # Excedente (Para Enfermedad y Maternidad - Gastos Médicos 0.40% sobre excedente de 3 UMAS)
         sbc_total = sbc * dias
-        
-        # Simplificación: 2.375% global sobre SBC (Aproximación para salarios medios)
-        # Esto debe refinarse con las 4 ramas exactas de la ley.
+        # 2.7% aprox global. Se podría refinar con self.config_economica
         factor = Decimal('0.027') 
         return (sbc_total * factor).quantize(Decimal('0.01'))
 
     def _get_concepto_confiable(self, clave_fiscal: str, tipo=TipoConcepto.PERCEPCION) -> ConceptoNomina:
-        """
-        Busca un concepto por su clave agrupada SAT o crea uno genérico si falla.
-        Critico para no detener la nómina por configuración faltante.
-        """
         concepto = ConceptoNomina.objects.filter(clave_sat=clave_fiscal, tipo=tipo).first()
         if not concepto:
-            # Crear stub si no existe (First-run experience)
+            # Stub de emergencia
+            nombre_stub = f"Concepto {clave_fiscal}"
             concepto = ConceptoNomina.objects.create(
-                codigo=clave_fiscal, 
-                nombre=f"Concepto Automático {clave_fiscal}",
+                codigo=clave_fiscal[:20], 
+                nombre=nombre_stub,
                 clave_sat=clave_fiscal,
                 tipo=tipo
             )
         return concepto
 
     def _add_item(self, recibo: ReciboNomina, concepto: ConceptoNomina, monto: Decimal, gravado: bool = False):
+        monto = monto.quantize(Decimal('0.01'))
         DetalleReciboItem.objects.create(
             recibo=recibo,
             concepto=concepto,

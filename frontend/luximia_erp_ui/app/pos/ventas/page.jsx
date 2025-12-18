@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import moment from 'moment';
 
 import { getVentas, cancelarVenta } from '@/services/pos';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ReusableTable from '@/components/tables/ReusableTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {

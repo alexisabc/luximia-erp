@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import FormModal from '@/components/ui/modals/Form';
-import ExportModal from '@/components/ui/modals/Export';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ExportModal from '@/components/modals/Export';
+import ConfirmationModal from '@/components/modals/Confirmation';
+import ReusableTable from '@/components/tables/ReusableTable';
 import { formatCurrency } from '@/utils/formatters';
 import ActionButtons from '@/components/common/ActionButtons';
 

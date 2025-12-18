@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getPlanesPago, createPlanPago, getClientes, getUPEs, importarPlanesPago, exportPlanesPagoExcel, getFormasPago, getMonedas } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
-import FormModal from '@/components/ui/modals/Form';
-import ExportModal from '@/components/ui/modals/Export';
+import ReusableTable from '@/components/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ExportModal from '@/components/modals/Export';
 import ActionButtons from '@/components/common/ActionButtons';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Overlay from '@/components/loaders/Overlay';

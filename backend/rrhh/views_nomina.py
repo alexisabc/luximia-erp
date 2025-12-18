@@ -1,5 +1,6 @@
-from rest_framework import viewsets, status, permissions, decorators
+from rest_framework import viewsets, status, permissions, decorators, parsers
 from rest_framework.response import Response
+import traceback
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Sum
@@ -21,7 +22,7 @@ class NominaViewSet(viewsets.ModelViewSet):
             return NominaDetailSerializer
         return NominaSerializer
 
-    @decorators.action(detail=True, methods=['post'], url_path='calcular')
+    @decorators.action(detail=True, methods=['post'], url_path='calcular', permission_classes=[permissions.IsAuthenticated])
     def calcular_nomina(self, request, pk=None):
         """
         Ejecuta el motor de cálculo de nómina para esta nómina específica.
@@ -83,7 +84,7 @@ class NominaViewSet(viewsets.ModelViewSet):
                 nomina.save()
 
         except Exception as e:
-             return Response({"detail": f"Error crítico transaccional: {str(e)}"}, status=500)
+             return Response({"detail": f"Error crítico transaccional: {str(e)} \n{traceback.format_exc()}"}, status=500)
 
         return Response({
             "detail": "Cálculo finalizado.",
@@ -95,7 +96,7 @@ class NominaViewSet(viewsets.ModelViewSet):
             }
         })
 
-    @decorators.action(detail=True, methods=['post'])
+    @decorators.action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def cerrar(self, request, pk=None):
         """Bloquea la nómina para evitar cambios futuros."""
         nomina = self.get_object()
@@ -104,4 +105,190 @@ class NominaViewSet(viewsets.ModelViewSet):
         
         nomina.estado = 'TIMBRADA' # O 'CERRADA' si el timbrado es un proceso externo
         nomina.save()
+
         return Response({"detail": "Nómina cerrada exitosamente."})
+
+    @decorators.action(
+        detail=False, 
+        methods=['post'], 
+        url_path='importar-pagadora', 
+        parser_classes=[parsers.MultiPartParser, parsers.FormParser],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def importar_pagadora(self, request):
+        """
+        Importa una nómina histórica desde un archivo Excel.
+        """
+        archivo = request.FILES.get('file')
+        anio = int(request.data.get('anio', 2025))
+        dry_run = request.data.get('dry_run', 'false').lower() == 'true'
+
+        if not archivo:
+            return Response({"detail": "No se proporcionó archivo."}, status=400)
+
+        valid_extensions = ['.xlsx', '.xlsm', '.xls']
+        if not any(archivo.name.lower().endswith(ext) for ext in valid_extensions):
+             return Response({"detail": "Formato inválido. Debe ser Excel (.xlsx, .xlsm, .xls)"}, status=400)
+
+        try:
+            from .services import NominaImporter
+            importer = NominaImporter(stdout=None) # No stdout needed for web request, maybe logger later
+            results = importer.process_file(archivo, anio=anio, dry_run=dry_run)
+            return Response({"detail": "Proceso completado", "results": results})
+        except Exception as e:
+            return Response({"detail": str(e)}, status=500)
+
+
+
+class ReciboNominaViewSet(viewsets.ModelViewSet):
+    queryset = ReciboNomina.objects.all()
+    serializer_class = ReciboNominaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @decorators.action(detail=True, methods=['post'], url_path='recalcular')
+    def recalcular(self, request, pk=None):
+        recibo = self.get_object()
+        nomina = recibo.nomina
+        empleado = recibo.empleado
+        
+        dias_pagados = request.data.get('dias_pagados')
+        
+        recibo.delete()
+        
+        from .engine import PayrollCalculator
+        calculator = PayrollCalculator(anio=nomina.fecha_fin.year)
+        
+        # Pass dias_pagados to calculate if possible, or patch after.
+        new_recibo = calculator.calcular_recibo(nomina, empleado, dias_pagados=dias_pagados)
+        
+        self._update_grand_totals(nomina)
+        
+        return Response({"detail": "Recibo recalculado."})
+    
+    # ... (skipping generic methods, defined below)
+
+    @decorators.action(detail=True, methods=['post'], url_path='agregar-concepto')
+    def agregar_concepto(self, request, pk=None):
+        recibo = self.get_object()
+        concepto_id = request.data.get('concepto_id')
+        monto = request.data.get('monto')
+        
+        from .models import ConceptoNomina, DetalleReciboItem
+        concepto = get_object_or_404(ConceptoNomina, id=concepto_id)
+        
+        DetalleReciboItem.objects.create(
+            recibo=recibo,
+            concepto=concepto,
+            nombre_concepto=concepto.nombre,
+            clave_sat=concepto.clave_sat,
+            monto_gravado=monto, 
+            monto_exento=0,
+            monto_total=monto
+        )
+        
+        self._actualizar_totales(recibo)
+        return Response({"detail": "Concepto agregado"})
+
+    @decorators.action(detail=True, methods=['delete'], url_path='eliminar-concepto/(?P<item_id>[^/.]+)')
+    def eliminar_concepto(self, request, pk=None, item_id=None):
+        recibo = self.get_object()
+        from .models import DetalleReciboItem
+        item = get_object_or_404(DetalleReciboItem, id=item_id, recibo=recibo)
+        item.delete()
+        
+        self._actualizar_totales(recibo)
+        return Response({"detail": "Concepto eliminado"})
+
+    def _actualizar_totales(self, recibo):
+        detalles = recibo.detalles.select_related('concepto').all()
+        
+        subtotal = sum(d.monto_total for d in detalles if d.concepto.tipo == 'PERCEPCION')
+        deducciones = sum(d.monto_total for d in detalles if d.concepto.tipo == 'DEDUCCION')
+        otros = sum(d.monto_total for d in detalles if d.concepto.tipo == 'OTRO_PAGO')
+        
+        recibo.subtotal = subtotal
+        recibo.descuentos = deducciones 
+        recibo.neto = (subtotal + otros) - deducciones
+        recibo.save()
+        
+        self._update_grand_totals(recibo.nomina)
+
+    def _update_grand_totals(self, nomina):
+        totales = ReciboNomina.objects.filter(nomina=nomina).aggregate(
+            sum_per=Sum('subtotal'), sum_ded=Sum('descuentos'), sum_net=Sum('neto')
+        )
+        nomina.total_percepciones = totales['sum_per'] or 0
+        nomina.total_deducciones = totales['sum_ded'] or 0
+        nomina.total_neto = totales['sum_net'] or 0
+        nomina.save()
+
+
+
+class ConceptoNominaViewSet(viewsets.ReadOnlyModelViewSet):
+    from .models import ConceptoNomina
+    from .serializers_nomina import ConceptoNominaSerializer
+    
+    queryset = ConceptoNomina.objects.all().order_by('tipo', 'codigo')
+    serializer_class = ConceptoNominaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class HistoricoNominaViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Vista de solo lectura para visualizar la tabla centralizada de nómina histórica.
+    """
+    from .models import NominaCentralizada
+    from .serializers_nomina import NominaCentralizadaSerializer
+
+    queryset = NominaCentralizada.objects.all().order_by('-fecha_carga', 'periodo', 'nombre')
+    serializer_class = NominaCentralizadaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['empresa', 'periodo', 'nombre', 'codigo']
+
+    @decorators.action(detail=False, methods=['get'], url_path='exportar-excel')
+    def exportar_excel(self, request):
+        """Exporta el histórico filtrado a Excel."""
+        import openpyxl
+        from django.http import HttpResponse
+
+        # Filtrar queryset con los mismos filtros de la vista
+        qs = self.filter_queryset(self.get_queryset())
+        
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Histórico Nómina"
+
+        # Headers
+        headers = [
+            'Esquema', 'Tipo', 'Periodo', 'Empresa', 'Código', 'Nombre', 'Depto', 'Puesto',
+            'Neto Mensual', 'SDO', 'Días', 'Sueldo', 'Vacaciones', 'Prima Vacacional', 'Aguinaldo',
+            'Retroactivo', 'Subsidio', 'Total Percepciones', 'ISR', 'IMSS', 'Préstamo', 'Infonavit',
+            'Total Deducciones', 'Neto', 'ISN', 'Previo Costo Social', 'Total Carga Social',
+            'Total Nómina', 'Nóminas y Costos Tributario', 'Comisión', 'Sub-Total', 'IVA', 'Total Facturación'
+        ]
+        ws.append(headers)
+
+        for item in qs:
+            ws.append([
+                item.esquema, item.tipo, item.periodo, item.empresa, item.codigo, item.nombre, item.departamento, item.puesto,
+                item.neto_mensual, item.sueldo_diario, item.dias_trabajados, item.sueldo, 
+                item.vacaciones, item.prima_vacacional, item.aguinaldo,
+                item.retroactivo, item.subsidio, item.total_percepciones, item.isr, item.imss, item.prestamo, item.infonavit,
+                item.total_deducciones, item.neto, item.isn, item.previo_costo_social, item.total_carga_social,
+                item.total_nomina, item.nominas_y_costos, item.comision, item.sub_total, item.iva, item.total_facturacion
+            ])
+            
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="historico_nomina.xlsx"'
+        wb.save(response)
+        return response
+
+    @decorators.action(detail=False, methods=['delete'], url_path='borrar-todo')
+    def borrar_todo(self, request):
+        """Elimina registros del histórico. Permite filtrar."""
+        qs = self.filter_queryset(self.get_queryset())
+        count = qs.count()
+        qs.delete()
+        return Response({"detail": f"Se eliminaron {count} registros del histórico."})
+

@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getPagos, createPago, getContratos, getMetodosPago, exportPagosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ReusableTable from '@/components/tables/ReusableTable';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Link from 'next/link';
 import Overlay from '@/components/loaders/Overlay';
-import Modal from '@/components/ui/modals';
+import Modal from '@/components/modals';
 import { formatCurrency } from '@/utils/formatters';
 import ActionButtons from '@/components/common/ActionButtons';
 

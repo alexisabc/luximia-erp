@@ -13,11 +13,11 @@ import {
     importarClientes,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import FormModal from '@/components/ui/modals/Form';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
-import ExportModal from '@/components/ui/modals/Export';
-import ImportModal from '@/components/ui/modals/Import';
+import FormModal from '@/components/modals/Form';
+import ConfirmationModal from '@/components/modals/Confirmation';
+import ReusableTable from '@/components/tables/ReusableTable';
+import ExportModal from '@/components/modals/Export';
+import ImportModal from '@/components/modals/Import';
 import ActionButtons from '@/components/common/ActionButtons';
 
 

@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getTiposCambio, createTipoCambio, updateTipoCambio, deleteTipoCambio } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
-import FormModal from '@/components/ui/modals/Form';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ReusableTable from '@/components/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ConfirmationModal from '@/components/modals/Confirmation';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 
 const FORM_FIELDS = [

@@ -2,13 +2,18 @@ from rest_framework import serializers
 from .models import (
     Nomina, ReciboNomina, DetalleReciboItem, 
     ConceptoNomina, TablaISR, ConfiguracionEconomica,
-    Empleado
+    Empleado, NominaCentralizada, PeriodoNomina
 )
 from .serializers import EmpleadoSerializer
 
 # ---------------------------------------------------------------------------
 # Serializers de Configuración
 # ---------------------------------------------------------------------------
+
+class PeriodoNominaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PeriodoNomina
+        fields = '__all__'
 
 class ConfiguracionEconomicaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,6 +23,11 @@ class ConfiguracionEconomicaSerializer(serializers.ModelSerializer):
 class ConceptoNominaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConceptoNomina
+        fields = '__all__'
+
+class NominaCentralizadaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NominaCentralizada
         fields = '__all__'
 
 # ---------------------------------------------------------------------------
@@ -53,7 +63,7 @@ class NominaSerializer(serializers.ModelSerializer):
         model = Nomina
         fields = [
             'id', 'descripcion', 'fecha_inicio', 'fecha_fin', 'fecha_pago', 
-            'tipo', 'estado', 'total_neto', 'created_at'
+            'tipo', 'estado', 'total_neto', 'razon_social', 'created_at'
         ]
 
 class NominaDetailSerializer(NominaSerializer):

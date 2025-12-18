@@ -5,10 +5,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, descargarEstadoDeCuentaExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
-import FormModal from '@/components/ui/modals/Form'; // Asumo que tienes un FormModal
-import ConfirmationModal from '@/components/ui/modals/Confirmation'; // Asumo que tienes este modal
-import ExportModal from '@/components/ui/modals/Export'; // Asumo que tienes este modal
+import ReusableTable from '@/components/tables/ReusableTable';
+import FormModal from '@/components/modals/Form'; // Asumo que tienes un FormModal
+import ConfirmationModal from '@/components/modals/Confirmation'; // Asumo que tienes este modal
+import ExportModal from '@/components/modals/Export'; // Asumo que tienes este modal
 import { formatCurrency } from '@/utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
 import Overlay from '@/components/loaders/Overlay';

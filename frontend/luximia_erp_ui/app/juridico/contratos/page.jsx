@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { getContratos, exportContratosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ReusableTable from '@/components/tables/ReusableTable';
 import Loader from '@/components/loaders/Overlay'; // Usamos el Overlay para la carga
 import ActionButtons from '@/components/common/ActionButtons';
 import { formatCurrency } from '@/utils/formatters';

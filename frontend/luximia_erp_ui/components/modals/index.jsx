@@ -20,26 +20,27 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "ma
     if (!isVisible) return null;
 
     return (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${show ? 'bg-black/60 backdrop-blur-sm' : 'bg-transparent pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[100] grid place-items-center p-4 transition-all duration-300 ${show ? 'bg-black/60 backdrop-blur-sm' : 'bg-transparent pointer-events-none'}`}>
             <div
-                className={`w-full ${maxWidth} bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50 shadow-2xl rounded-2xl transform transition-all duration-300 ease-out ${show ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}`}
+                className={`w-full ${maxWidth} bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50 shadow-2xl rounded-2xl transform transition-all duration-300 ease-out flex flex-col max-h-[80dvh] overflow-hidden m-auto ${show ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100/50 dark:border-gray-800/50">
+                {/* Header */}
+                <div className="flex-shrink-0 flex items-center justify-between px-6 py-5 border-b border-gray-100/50 dark:border-gray-800/50">
                     <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
                         {title}
                     </h3>
                     <button
                         onClick={onClose}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-0">
                     {children}
                 </div>
             </div>

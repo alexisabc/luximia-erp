@@ -1,6 +1,6 @@
 'use client';
 
-import Modal from '@/components/ui/modals';
+import Modal from '@/components/modals';
 import { AlertCircle } from 'lucide-react';
 
 export default function ConfirmationModal({
@@ -38,8 +38,8 @@ export default function ConfirmationModal({
                     <button
                         onClick={onConfirm}
                         className={`px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg transition-all duration-200 ${type === 'danger'
-                                ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/25'
-                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25'
+                            ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/25'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25'
                             }`}
                     >
                         {confirmText}

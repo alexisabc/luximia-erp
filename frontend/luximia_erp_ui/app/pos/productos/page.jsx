@@ -5,9 +5,9 @@ import {
     getProductosPOS, createProducto, updateProducto, deleteProducto
 } from '@/services/pos';
 import { useAuth } from '@/context/AuthContext';
-import FormModal from '@/components/ui/modals/Form';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ConfirmationModal from '@/components/modals/Confirmation';
+import ReusableTable from '@/components/tables/ReusableTable';
 import ActionButtons from '@/components/common/ActionButtons';
 import { Badge } from '@/components/ui/badge';
 

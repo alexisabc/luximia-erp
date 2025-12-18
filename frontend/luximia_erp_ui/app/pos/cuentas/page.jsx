@@ -6,8 +6,8 @@ import {
     getCuentasClientes, abonarCuenta, getTurnoActivo
 } from '@/services/pos';
 import { useAuth } from '@/context/AuthContext';
-import FormModal from '@/components/ui/modals/Form';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ReusableTable from '@/components/tables/ReusableTable';
 import { DollarSign, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

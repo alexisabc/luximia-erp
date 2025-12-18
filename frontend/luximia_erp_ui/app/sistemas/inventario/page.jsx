@@ -8,7 +8,7 @@ import {
 import { toast } from 'sonner';
 
 import { getActivosIT } from '@/services/sistemas';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ReusableTable from '@/components/tables/ReusableTable';
 import ActionButtons from '@/components/common/ActionButtons';
 import { Badge } from '@/components/ui/badge';
 

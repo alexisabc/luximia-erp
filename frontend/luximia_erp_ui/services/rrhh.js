@@ -28,7 +28,7 @@ export const deleteEmpleado = (id) => apiClient.delete(`/rrhh/empleados/${id}/`)
 export const getInactiveEmpleados = (page = 1, pageSize = 15) => apiClient.get('/rrhh/empleados/inactivos/', { params: { page, page_size: pageSize } });
 export const hardDeleteEmpleado = (id) => apiClient.delete(`/rrhh/empleados/${id}/hard/`);
 export const exportEmpleadosExcel = (columns) => apiClient.post('/rrhh/empleados/exportar-excel/', { columns }, { responseType: 'blob' });
-export const importEmpleados = (formData) => apiClient.post('/rrhh/empleados/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const importarEmpleados = (formData) => apiClient.post('/rrhh/empleados/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 
 export const getOrganigrama = () => apiClient.get('/rrhh/empleados/organigrama/');
 
@@ -58,8 +58,24 @@ export const getNominaById = (id) => apiClient.get(`/rrhh/nominas/${id}/`);
 export const updateNomina = (id, data) => apiClient.patch(`/rrhh/nominas/${id}/`, data);
 export const deleteNomina = (id) => apiClient.delete(`/rrhh/nominas/${id}/`);
 export const calcularNomina = (id, data = {}) => apiClient.post(`/rrhh/nominas/${id}/calcular/`, data);
+export const importarNominaPagadora = (formData) => apiClient.post('/rrhh/nominas/importar-pagadora/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 // ===================== RRHH / Otros =====================
 export const getAllRazonesSociales = () => apiClient.get('/rrhh/razones-sociales/');
+export const getHistoricoNomina = (page = 1, pageSize = 20, filters = {}) => apiClient.get('/rrhh/historico-nomina/', { params: { page, page_size: pageSize, ...filters } });
+export const exportarHistoricoNominaExcel = (filters = {}) => apiClient.get('/rrhh/historico-nomina/exportar-excel/', { params: filters, responseType: 'blob' });
+export const borrarHistoricoNomina = (filters = {}) => apiClient.delete('/rrhh/historico-nomina/borrar-todo/', { params: filters });
+
 
 export const cerrarNomina = (id) => apiClient.post(`/rrhh/nominas/${id}/cerrar/`);
 
+export const getPeriodos = (params = {}) => apiClient.get('/rrhh/periodos-nomina/', { params });
+export const generarPeriodos = (anio) => apiClient.post('/rrhh/periodos-nomina/generar/', { anio });
+export const updatePeriodo = (id, data) => apiClient.patch(`/rrhh/periodos-nomina/${id}/`, data);
+
+
+export const updateRecibo = (id, data) => apiClient.patch(`/rrhh/recibos-nomina/${id}/`, data);
+export const recalcularRecibo = (id, data = {}) => apiClient.post(`/rrhh/recibos-nomina/${id}/recalcular/`, data);
+export const addConceptoRecibo = (id, data) => apiClient.post(`/rrhh/recibos-nomina/${id}/agregar-concepto/`, data);
+export const deleteConceptoRecibo = (reciboId, itemId) => apiClient.delete(`/rrhh/recibos-nomina/${reciboId}/eliminar-concepto/${itemId}/`);
+// Need endpoint for concepts list?
+export const getConceptos = (params = {}) => apiClient.get('/rrhh/conceptos-nomina/', { params });

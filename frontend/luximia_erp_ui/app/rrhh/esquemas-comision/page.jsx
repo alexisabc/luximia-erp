@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getEsquemasComision, createEsquemaComision, updateEsquemaComision, deleteEsquemaComision, getInactiveEsquemasComision, hardDeleteEsquemaComision, exportEsquemasComisionExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
-import FormModal from '@/components/ui/modals/Form';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
-import ExportModal from '@/components/ui/modals/Export';
+import ReusableTable from '@/components/tables/ReusableTable';
+import FormModal from '@/components/modals/Form';
+import ConfirmationModal from '@/components/modals/Confirmation';
+import ExportModal from '@/components/modals/Export';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import ActionButtons from '@/components/common/ActionButtons';
 

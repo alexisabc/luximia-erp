@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAuditLogs, downloadAuditLogExcel } from '@/services/api';
-import ReusableTable from '@/components/ui/tables/ReusableTable';
+import ReusableTable from '@/components/tables/ReusableTable';
 import ActionButtons from '@/components/common/ActionButtons';
 import { Badge } from "@/components/ui/badge";
 import { Clock, ShieldAlert } from 'lucide-react';

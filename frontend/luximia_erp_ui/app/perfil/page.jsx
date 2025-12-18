@@ -14,7 +14,7 @@ import apiClient, {
 import { startRegistration } from '@simplewebauthn/browser';
 import QRCode from 'react-qr-code';
 import { Card } from '@/components/ui/Card';
-import ConfirmationModal from '@/components/ui/modals/Confirmation';
+import ConfirmationModal from '@/components/modals/Confirmation';
 import { Key, Smartphone, Save, RefreshCw, User, Lock, Mail, ShieldCheck } from 'lucide-react';
 
 export default function ProfilePage() {

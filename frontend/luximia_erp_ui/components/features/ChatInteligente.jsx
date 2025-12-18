@@ -145,18 +145,18 @@ export default function ChatInteligente() {
                     ${isOpen ? 'bg-gray-200 dark:bg-gray-800 rotate-90 scale-90' : 'bg-white dark:bg-gray-800 hover:scale-110'}`}
                 aria-label={isOpen ? "Cerrar chat" : "Abrir chat inteligente"}
             >
-                <div className={`relative p-2 rounded-full overflow-hidden ${isOpen ? '' : 'ring-4 ring-blue-500/20'}`}>
+                <div className={`relative p-2 rounded-full overflow-hidden ${isOpen ? '' : 'ring-4 ring-indigo-500/30 shadow-lg shadow-indigo-500/20'}`}>
                     <Image
-                        src="/icon-luximia-ia.png"
+                        src="/icon-luximia-ia-new.png"
                         alt="Asistente IA"
                         width={48}
                         height={48}
-                        className="rounded-full w-12 h-12 object-cover"
+                        className="rounded-full w-12 h-12 object-cover hover:scale-105 transition-transform duration-300"
                     />
                     {!isOpen && (
                         <span className="absolute top-0 right-0 flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500 border border-white dark:border-gray-900"></span>
                         </span>
                     )}
                 </div>

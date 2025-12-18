@@ -6,7 +6,7 @@ import { getStrategicDashboardData, getAllProyectos } from '@/services/api';
 
 // Componentes de UI
 import Overlay from '@/components/loaders/Overlay';
-import KpiCard from '@/components/ui/cards/Kpi';
+import KpiCard from '@/components/cards/Kpi';
 import VentasChart from '@/components/charts/Ventas';
 import FlujoCobranzaChart from '@/components/charts/FlujoCobranza';
 
