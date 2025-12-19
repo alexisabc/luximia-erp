@@ -16,6 +16,10 @@ from .models import (
     FormaPago,
     PlanPago,
     EsquemaComision,
+    CuentaContable,
+    CentroCostos,
+    Poliza,
+    DetallePoliza,
 )
 
 
@@ -394,3 +398,29 @@ class PagoSerializer(serializers.ModelSerializer):
 
     def get_banco_destino_nombre(self, obj):
         return obj.banco_destino.nombre_corto if obj.banco_destino else None
+
+# --- Serializers Contables ---
+
+class CuentaContableSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CuentaContable
+        fields = '__all__'
+
+class CentroCostosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CentroCostos
+        fields = '__all__'
+
+class DetallePolizaSerializer(serializers.ModelSerializer):
+    cuenta_nombre = serializers.ReadOnlyField(source='cuenta.nombre')
+    
+    class Meta:
+        model = DetallePoliza
+        fields = '__all__'
+
+class PolizaSerializer(serializers.ModelSerializer):
+    detalles = DetallePolizaSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Poliza
+        fields = '__all__'

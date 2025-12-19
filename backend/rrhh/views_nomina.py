@@ -115,28 +115,59 @@ class NominaViewSet(viewsets.ModelViewSet):
         parser_classes=[parsers.MultiPartParser, parsers.FormParser],
         permission_classes=[permissions.IsAuthenticated]
     )
+
     def importar_pagadora(self, request):
         """
-        Importa una nómina histórica desde un archivo Excel.
+        Importa nóminas históricas desde múltiples archivos Excel.
         """
-        archivo = request.FILES.get('file')
+        # Support both 'files' (for multiple) and 'file' (legacy/single) keys
+        archivos = request.FILES.getlist('files')
+        if not archivos:
+            single_file = request.FILES.get('file')
+            if single_file:
+                archivos = [single_file]
+                
         anio = int(request.data.get('anio', 2025))
         dry_run = request.data.get('dry_run', 'false').lower() == 'true'
 
-        if not archivo:
-            return Response({"detail": "No se proporcionó archivo."}, status=400)
+        if not archivos:
+            return Response({"detail": "No se proporcionaron archivos."}, status=400)
 
         valid_extensions = ['.xlsx', '.xlsm', '.xls']
-        if not any(archivo.name.lower().endswith(ext) for ext in valid_extensions):
-             return Response({"detail": "Formato inválido. Debe ser Excel (.xlsx, .xlsm, .xls)"}, status=400)
+        # Validate all files first? Or process valid ones? Let's process valid ones.
+        
+        from .services import NominaImporter
+        importer = NominaImporter(stdout=None) 
+        
+        combined_results = []
+        errors = []
 
-        try:
-            from .services import NominaImporter
-            importer = NominaImporter(stdout=None) # No stdout needed for web request, maybe logger later
-            results = importer.process_file(archivo, anio=anio, dry_run=dry_run)
-            return Response({"detail": "Proceso completado", "results": results})
-        except Exception as e:
-            return Response({"detail": str(e)}, status=500)
+        for archivo in archivos:
+            if not any(archivo.name.lower().endswith(ext) for ext in valid_extensions):
+                errors.append(f"Archivo ignorado (formato inválido): {archivo.name}")
+                continue
+
+            try:
+                # importer.process_file now returns {'file': name, 'sheets': [...]}
+                file_results = importer.process_file(archivo, anio=anio, dry_run=dry_run)
+                combined_results.append(file_results)
+                    
+            except Exception as e:
+                errors.append(f"Error procesando {archivo.name}: {str(e)}")
+
+        if not combined_results and errors:
+             return Response({
+                 "detail": "Errores al procesar archivos.", 
+                 "results": [],
+                 "global_errors": errors
+             }, status=status.HTTP_200_OK)
+
+        # If we have some results, return them even if there were some errors
+        return Response({
+            "detail": "Proceso completado", 
+            "results": combined_results,
+            "global_errors": errors
+        })
 
 
 

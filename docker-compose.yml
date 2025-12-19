@@ -37,7 +37,7 @@ services:
     # ==============================================================================
   frontend:
     build:
-      context: ./frontend/luximia_erp_ui
+      context: ./frontend/erp_ui
       dockerfile: Dockerfile
       target: runner # En producción usamos la imagen optimizada 'runner'
     restart: always

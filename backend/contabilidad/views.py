@@ -28,7 +28,12 @@ from .models import (
     Vendedor,
     FormaPago,
     PlanPago,
+    PlanPago,
     EsquemaComision,
+    CuentaContable,
+    CentroCostos,
+    Poliza,
+    DetallePoliza,
 )
 
 from .serializers import (
@@ -46,6 +51,10 @@ from .serializers import (
     FormaPagoSerializer,
     PlanPagoSerializer,
     EsquemaComisionSerializer,
+    CuentaContableSerializer,
+    CentroCostosSerializer,
+    PolizaSerializer,
+    DetallePolizaSerializer,
 )
 
 
@@ -156,6 +165,23 @@ class ContratoViewSet(ContabilidadBaseViewSet):
 
 
 
+
+
+class CuentaContableViewSet(ContabilidadBaseViewSet):
+    queryset = CuentaContable.objects.all().order_by("codigo")
+    serializer_class = CuentaContableSerializer
+
+class CentroCostosViewSet(ContabilidadBaseViewSet):
+    queryset = CentroCostos.objects.all().order_by("codigo")
+    serializer_class = CentroCostosSerializer
+
+class PolizaViewSet(ContabilidadBaseViewSet):
+    queryset = Poliza.objects.all().order_by("-fecha", "-numero")
+    serializer_class = PolizaSerializer
+
+class DetallePolizaViewSet(ContabilidadBaseViewSet):
+    queryset = DetallePoliza.objects.all()
+    serializer_class = DetallePolizaSerializer
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

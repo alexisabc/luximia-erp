@@ -93,7 +93,7 @@ class NominaImporter:
              return best_row
         return None, None
 
-    def process_sheet_centralized(self, ws, sheet_name, anio, dry_run):
+    def process_sheet_centralized(self, ws, sheet_name, anio, dry_run, file_name=""):
         header_row_idx, headers = self.find_header_row(ws)
         if not header_row_idx:
             return {'sheet': sheet_name, 'status': 'skipped', 'reason': 'No headers found'}
@@ -332,15 +332,29 @@ class NominaImporter:
                 if candidates:
                     val_deduc = max(candidates)
 
+            # Detectar periodo desde el nombre del archivo
+            import re
+            periodo_val = '1'
+            if file_name:
+                # 1. Buscar numero al inicio "20. Fiscal..."
+                match_start = re.match(r'^(\d+)[\.\s_-]', file_name)
+                if match_start:
+                    periodo_val = match_start.group(1)
+                else:
+                    # 2. Buscar patrones "SEM 20", "QNA 20" inside
+                    match_txt = re.search(r'(?:SEM|QNA|PERIODO|NOMINA)[\s\._-]*(\d+)', file_name, re.IGNORECASE)
+                    if match_txt:
+                        periodo_val = match_txt.group(1)
+
             # Extraer datos
             data = {
                 'esquema': 'FISCAL',
                 'tipo': 'QUINCENAL',
-                'periodo': '1', # Hardcoded por ahora según request
+                'periodo': periodo_val, 
                 'empresa': sheet_name,
                 'nombre': nombre_val,
                 # Metadata de auditoría
-                'archivo_origen': 'Carga Masiva' 
+                'archivo_origen': file_name   
             }
 
             for field, col_idx in field_indices.items():
@@ -404,7 +418,7 @@ class NominaImporter:
                 )
                 
                 processed_count += 1
-                created_records.append(f"{data['nombre']} ({data['empresa']})")
+                created_records.append(f"{data['nombre']}")
                 
             except Exception as e:
                 errors.append(f"Error guardando {data['nombre']}: {str(e)}")
@@ -423,12 +437,11 @@ class NominaImporter:
         except Exception as e:
             self.log(f"Error al abrir Excel: {e}")
             raise e
-
-        # Ya no necesitamos empleados_db para este modo "single table dump" si no hacemos matching
-        # El usuario pidió "guardar la información de manera centralizada en 1 sola tabla"
-        # No mencionó vincular con Empleado model existente, solo "historico"
         
-        results = []
+        # Obtener nombre del archivo si es posible
+        file_name = getattr(file_path_or_obj, 'name', 'Desconocido')
+        
+        sheet_results = []
 
         with transaction.atomic():
             for sheet_name in wb.sheetnames:
@@ -445,10 +458,13 @@ class NominaImporter:
                 ws = wb[sheet_name]
                 
                 # USAR NUEVO MÉTODO
-                summary = self.process_sheet_centralized(ws, sheet_name, anio, dry_run)
-                results.append(summary)
+                summary = self.process_sheet_centralized(ws, sheet_name, anio, dry_run, file_name=file_name)
+                sheet_results.append(summary)
 
             if dry_run:
                 transaction.set_rollback(True)
         
-        return results
+        return {
+            'file': file_name,
+            'sheets': sheet_results
+        }

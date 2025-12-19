@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from django.contrib.auth import get_user_model
         from django.contrib.auth.models import Group, Permission
-        from luximia_erp.emails import send_mail
+        from config.emails import send_mail
         from users.models import EnrollmentToken
         from users.utils import build_enrollment_email_context
 

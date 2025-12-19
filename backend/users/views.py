@@ -19,7 +19,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core import signing
 from django.http import HttpRequest, Http404
 from django.db import transaction
-from luximia_erp.emails import send_mail
+from config.emails import send_mail
 from datetime import timedelta
 from django.utils import timezone
 from django.template.loader import render_to_string
