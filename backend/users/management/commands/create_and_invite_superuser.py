@@ -125,23 +125,30 @@ class Command(BaseCommand):
                 html_message = render_to_string(
                     "users/enrollment_email.html", context
                 )
-                emails_sent = send_mail(
-                    "Invitación para Administrador de Luximia ERP",
-                    plain_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    fail_silently=False,
-                    html_message=html_message,
-                )
-                if emails_sent <= 0:
-                    error_message = "No se pudo enviar la invitación del superusuario."
-                    if settings.DEVELOPMENT_MODE:
-                        self.stdout.write(self.style.WARNING(error_message))
+                try:
+                    emails_sent = send_mail(
+                        "Invitación para Administrador de Luximia ERP",
+                        plain_message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        fail_silently=False,
+                        html_message=html_message,
+                    )
+                    if emails_sent > 0:
+                         self.stdout.write(self.style.SUCCESS(
+                            f"Invitación de superusuario enviada a {email}."))
                     else:
-                        raise CommandError(error_message)
-                else:
-                    self.stdout.write(self.style.SUCCESS(
-                        f"Invitación de superusuario enviada a {email}."))
+                        raise Exception("SendGrid reportó 0 correos enviados")
+
+                except Exception as e:
+                    # SEGURIDAD: No imprimir el token en logs.
+                    self.stdout.write(self.style.ERROR(f"❌ FALLÓ EL ENVÍO DE CORREO: {str(e)}"))
+                    self.stdout.write(self.style.WARNING(
+                        "⚠️  El superusuario existe pero el correo falló. "
+                        "Usa 'python manage.py get_enrollment_link' via SSH/Consola para obtener el link seguro."
+                    ))
+                    # No lanzamos raise para no romper el boot del contenedor, pero avisamos.
+                    pass
             else:
                 self.stdout.write(self.style.SUCCESS(
                     "El superusuario ya está activo. No se requiere enviar invitación."))
