@@ -29,17 +29,16 @@ python manage.py migrate ia --noinput
 python manage.py migrate --noinput
 
 # 2. Tareas específicas de desarrollo
-# Verifica si la variable DEVELOPMENT_MODE es "True" (definida en settings.py/.env)
 if [ "$DEVELOPMENT_MODE" = "True" ]; then
     echo "🛠️  Modo Desarrollo detectado."
-    
     # Opcional: Recopilar estáticos en dev si hace falta (normalmente runserver lo maneja)
     # python manage.py collectstatic --noinput
-
-    echo "👤 Asegurando superusuario..."
-    # Usamos un try/catch simple o ignoramos error si ya existe
-    python manage.py create_and_invite_superuser || echo "⚠️  No se pudo crear/invitar superusuario (¿ya existe?)"
 fi
+
+# 3. Asegurar Superusuario (Ejecutar en Dev y Prod)
+echo "👤 Asegurando superusuario..."
+# Usamos un try/catch simple o ignoramos error si ya existe o falla el correo
+python manage.py create_and_invite_superuser || echo "⚠️  No se pudo crear/invitar superusuario (¿ya existe o error SMTP?)"
 
 # 3. Ejecutar el comando pasado al contenedor (CMD)
 # Esto permite que el mismo entrypoint sirva para 'runserver', 'gunicorn', 'celery', etc.
