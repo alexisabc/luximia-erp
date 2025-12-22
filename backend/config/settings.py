@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "juridico.apps.JuridicoConfig",
     "compras.apps.ComprasConfig",
     "users.apps.UsersConfig",
+    "notifications.apps.NotificationsConfig",
     "corsheaders",
     "csp",  # django-csp para la política de seguridad de contenido
     "rest_framework_simplejwt.token_blacklist",

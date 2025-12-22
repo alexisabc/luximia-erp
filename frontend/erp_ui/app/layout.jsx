@@ -18,6 +18,8 @@ export const metadata = {
   description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Sistema de Gestión Integral',
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="es" suppressHydrationWarning>
@@ -28,6 +30,7 @@ export default function RootLayout({ children }) {
               <AppContent>
                 {children}
               </AppContent>
+              <Toaster richColors position="top-right" />
             </SidebarProvider>
           </AuthProvider>
         </ThemeProvider>

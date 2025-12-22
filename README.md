@@ -1,15 +1,15 @@
-# Luximia ERP - Documentación del Proyecto
+# Sistema ERP - Documentación del Proyecto
 
 - **Versión:** 2.6
-- **Fecha de última actualización:** 15 de diciembre de 2025
-- **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Grupo Luximia**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
+- **Fecha de última actualización:** 22 de diciembre de 2025
+- **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
 
 ---
 
 ## 1. Visión General del Proyecto
 
 ### 1.1. Objetivo
-Centralizar y optimizar las operaciones de Grupo Luximia, abarcando desde la gestión contable y financiera hasta Recursos Humanos, Jurídico y Dirección Estratégica.
+Centralizar y optimizar las operaciones empresariales, abarcando desde la gestión contable y financiera hasta Recursos Humanos, Jurídico y Dirección Estratégica.
 
 ### 1.2. Módulos Principales
 El sistema está estructurado en módulos interconectados, accesibles según roles y permisos:
@@ -33,60 +33,75 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
     *   Gestión de Usuarios, Roles y Permisos granulares.
     *   Importación/Exportación masiva de datos (Excel).
 
-### 1.3. Características Destacadas
-- **🔐 Seguridad de Vanguardia:**
-    - Autenticación biométrica con **Passkeys** (FIDO2/WebAuthn).
-    - Doble factor de autenticación (2FA) mediante **TOTP** (Google Authenticator/Authy).
-    - *Soft Delete*: Protección contra borrado accidental de registros.
-- **📄 Reportoría Avanzada:**
-    - Estados de cuenta en **PDF** con marca de agua y diseño corporativo (WeasyPrint).
-    - Exportaciones a **Excel** personalizables con selección de columnas.
-- **🤖 Inteligencia Artificial:**
-    - Chatbot integrado para consultas naturales sobre datos financieros y operativos (RAG).
-- **📱 UX/UI Moderna:**
-    - Diseño responsive con "Glassmorphism" y animaciones fluidas.
-    - Modo Oscuro/Claro nativo.
-    - Tablas inteligentes con filtrado, ordenamiento y paginación en servidor.
+---
+
+## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025)
+
+Hemos realizado una actualización mayor enfocada en la experiencia de usuario, seguridad y flexibilidad de marca:
+
+### 🎨 UX/UI & Branding "White-Label"
+-   **Normalización de Marca:** Se ha refactorizado todo el código para eliminar referencias hardcodeadas ("Luximia"), convirtiendo el sistema en un producto **White-Label** adaptable a cualquier identidad corporativa.
+-   **Tema "Nebula":** Nueva paleta de colores premium y modo oscuro refinado.
+-   **Animaciones Interactivas:** Implementación de "El Oso" (Login Avatar) utilizando **SVG Dinámico + CSS Animations**, que reacciona en tiempo real al cursor y al tipeo de contraseñas.
+-   **Dashboard v2:** Gráficos interactivos con `recharts` y transiciones fluidas.
+
+### 🛡️ Seguridad Avanzada (Identity-First)
+-   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID) utilizando `@simplewebauthn` y `webauthn` en backend.
+-   **2FA/TOTP:** Integración nativa de Doble Factor de Autenticación (Google Authenticator) con `pyotp`.
+-   **Auditoría Granular:** Rastreo completo de acciones críticas (Creación/Edición/Eliminado) mediante `django-auditlog`.
+
+### ⚙️ Funcionalidad y Estabilidad
+-   **Nómina y Pagos:** Corrección crítica en el motor de cálculo de nómina y generación de recibos.
+-   **Selector Multi-Empresa:** Restauración de funcionalidad para superusuarios que gestionan múltiples entidades legales.
+-   **POS Terminal:** Corrección de layout y scrollbars en la terminal de punto de venta.
+-   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios vía SendGrid.
 
 ---
 
-## 2. Stack Tecnológico (Actualizado: Dic 2025)
+## 3. Stack Tecnológico (Actualizado: Dic 2025)
 
 ### Backend
-- **Lenguaje:** Python 3.12+
-- **Framework:** **Django 6.0**
-- **API:** Django Rest Framework (DRF) 3.16.1
-- **Autenticación:** JWT + WebAuthn (Passkeys)
-- **Base de Datos:** PostgreSQL 17 con extensión `pgvector` (para IA/RAG).
-- **Tareas Asíncronas:** Celery + Redis.
-- **Utilidades:** Polars (procesamiento de datos), WeasyPrint (PDF), OpenAI API (IA).
+-   **Core:** Python 3.12+
+-   **Framework:** **Django 6.0**
+-   **API:** Django Rest Framework (DRF) 3.16.1
+-   **Autenticación:** `webauthn` (2.7.0), `pyotp` (2.9.0), `djangorestframework-simplejwt` (5.5.1).
+-   **Datos & IA:**
+    -   **DB:** PostgreSQL 17 + `pgvector` (0.4.2).
+    -   **Procesamiento:** `polars` (1.36.1) para alto rendimiento en datos.
+    -   **IA:** `openai` (2.9.0) para chatbot RAG.
+-   **Reportes:** `weasyprint` (67.0) para generación de PDFs pixel-perfect.
+-   **Infra:** `gunicorn` (23.0.0), `celery` (Async Tasks).
 
 ### Frontend
-- **Framework:** **Next.js 16** (App Router)
-- **Biblioteca UI:** **React 19**
-- **Estilos:** **Tailwind CSS 4.0**
-- **Componentes:** Lucide React (iconos), Recharts (gráficas), Framer Motion (animaciones).
-- **Cliente HTTP:** Axios con interceptores modulares.
+-   **Framework:** **Next.js 16.0.8** (App Router, Server Actions).
+-   **Biblioteca UI:** **React 19.2.1**
+-   **Estilos:** **Tailwind CSS 4.1.18** + `tailwindcss-animate`.
+-   **Componentes:**
+    -   `lucide-react` (0.560.0) - Iconografía.
+    -   `sonner` (1.5.0) - Notificaciones Toast.
+    -   `recharts` (3.5.1) - Visualización de datos.
+    -   `react-hook-form` (7.53.0) - Gestión de formularios.
+-   **Cliente HTTP:** `axios` (1.13.2) con interceptores modulares.
 
 ### Infraestructura
-- **Contenedores:** Docker & Docker Compose.
-- **Almacenamiento:** Cloudflare R2 (compatible con S3).
-- **Email:** SendGrid API.
+-   **Contenedores:** Docker & Docker Compose.
+-   **Almacenamiento:** Cloudflare R2 (compatible con S3).
+-   **Email:** SendGrid API.
 
 ---
 
-## 3. Instalación y Despliegue
+## 4. Instalación y Despliegue
 
-### 3.1. Requisitos Previos
+### 4.1. Requisitos Previos
 - Docker Desktop instalado y corriendo.
 - Clave de API de OpenAI (opcional para funciones de IA).
 - Credenciales de Banxico (para tipo de cambio).
 
-### 3.2. Configuración Local
+### 4.2. Configuración Local
 1.  **Clonar el repositorio:**
     ```bash
     git clone <url-del-repo>
-    cd luximia-erp
+    cd sistema-erp
     ```
 2.  **Configurar variables de entorno:**
     Crea un archivo `.env` en la raíz basado en `.env.example`.
@@ -102,9 +117,9 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
     - **Backend API:** `http://localhost:8000`
     - **Admin Panel:** `http://localhost:8000/admin/`
 
-### 3.3. Estructura de Proyecto
+### 4.3. Estructura de Proyecto
 ```
-luximia-erp/
+sistema-erp/
 ├── backend/            # Django API
 │   ├── contabilidad/   # App: Finanzas y Proyectos
 │   ├── users/          # App: Auth y Usuarios
@@ -112,16 +127,17 @@ luximia-erp/
 │   ├── auditoria/      # App: Logs y Seguridad
 │   └── ...
 ├── frontend/           # Next.js App
-│   └── luximia_erp_ui/
+│   └── erp_ui/
 │       ├── app/        # App Router (Páginas)
 │       ├── components/ # UI Reutilizable
 │       └── services/   # Capa de API Modular
+├── docs/               # Documentación del Proyecto
 └── docker-compose.yml  # Orquestación
 ```
 
 ---
 
-## 4. Flujo de Trabajo (Git)
+## 5. Flujo de Trabajo (Git)
 
 Para mantener la calidad del código, seguimos el flujo de _Feature Branch_:
 

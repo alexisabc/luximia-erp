@@ -19,6 +19,7 @@ urlpatterns = [
     path('juridico/', include('juridico.urls')), # Placeholder
     path('compras/', include('compras.urls')),
     path('users/', include('users.urls')),
+    path('notifications/', include('notifications.urls')),
     path('ia/', include('ia.urls')),
     path('pos/', include('pos.urls')),
 

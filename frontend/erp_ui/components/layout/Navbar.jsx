@@ -4,6 +4,7 @@ import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, Search, Bell, Settings, LogOut, ChevronRight, User as UserIcon } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
+import NotificationsBell from './NotificationsBell';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
@@ -102,10 +103,7 @@ export default function Navbar() {
             <div className="flex items-center gap-2 sm:gap-3">
                 <ThemeSwitcher showLabel={false} className="h-10 w-10 rounded-xl hover:bg-gray-100 text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400 justify-center" />
 
-                <button className="relative flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-900 animate-pulse"></span>
-                </button>
+                <NotificationsBell />
 
                 {/* User Dropdown */}
                 <div className="relative" ref={userMenuRef}>
