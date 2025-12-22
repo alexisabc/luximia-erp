@@ -2,11 +2,20 @@
 set -e
 
 # Función para esperar a la base de datos
+# Función para esperar a la base de datos
 wait_for_db() {
-    echo "🟡 Esperando a la base de datos en ${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}..."
-    while ! pg_isready -h "${POSTGRES_HOST:-db}" -p "${POSTGRES_PORT:-5432}" -q; do
-        sleep 1
-    done
+    if [ -n "$DATABASE_URL" ]; then
+        echo "🟡 Detectada DATABASE_URL. Esperando a la base de datos..."
+        # pg_isready soporta URIs de conexión en el parámetro -d
+        while ! pg_isready -d "$DATABASE_URL" -q; do
+            sleep 1
+        done
+    else
+        echo "🟡 Esperando a la base de datos en ${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432}..."
+        while ! pg_isready -h "${POSTGRES_HOST:-db}" -p "${POSTGRES_PORT:-5432}" -q; do
+            sleep 1
+        done
+    fi
     echo "🟢 ¡Base de datos lista!"
 }
 

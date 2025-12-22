@@ -372,8 +372,10 @@ LOGGING = {
 
 # --- Configuración de almacenamiento S3 compatible (Cloudflare R2) ---
 
+# --- Configuración de almacenamiento S3 compatible (Cloudflare R2) ---
+
 if os.getenv("CLOUDFLARE_R2_BUCKET_NAME"):
-    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    # Credenciales y Configuración GLOBAL de AWS/S3/R2
     AWS_ACCESS_KEY_ID = os.getenv("CLOUDFLARE_R2_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
     AWS_STORAGE_BUCKET_NAME = os.getenv("CLOUDFLARE_R2_BUCKET_NAME")
@@ -381,6 +383,37 @@ if os.getenv("CLOUDFLARE_R2_BUCKET_NAME"):
     AWS_S3_REGION_NAME = os.getenv("CLOUDFLARE_R2_REGION", "auto")
     AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_S3_ADDRESSING_STYLE = os.getenv("CLOUDFLARE_R2_ADDRESSING_STYLE", "virtual")
-    AWS_DEFAULT_ACL = None
+    
+    # Seguridad: Deshabilitar ACLs ya que R2 no las soporta igual y es mejor manejarlo por bucket policy
+    AWS_DEFAULT_ACL = None 
+    
+    # Definición de Storages (Django 4.2+ / 5.0)
+    STORAGES = {
+        "default": {
+            "BACKEND": "config.storage_backends.MediaStorage",
+        },
+        "staticfiles": {
+            # Si en producción quieres static en R2, cambia esto. 
+            # Recomendación: Mantener Whitenoise para Static (Rendimiento)
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage", 
+        },
+    }
+    
+    # Comentado: Si se quisiera Static en R2 también:
+    # STORAGES["staticfiles"]["BACKEND"] = "config.storage_backends.StaticStorage"
+    
+    # Fallback para librerías viejas que buscan estas variables
+    DEFAULT_FILE_STORAGE = "config.storage_backends.MediaStorage"
+
+else:
+    # Local Storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage", 
+        },
+    }
 
 APPEND_SLASH = False
