@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import { APP_NAME, getMonogram } from '@/lib/branding';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import EmpresaSelector from '@/components/layout/EmpresaSelector';
+import SandboxToggle from '@/components/layout/SandboxToggle';
 import { MENU_STRUCTURE } from './navigationConfig';
-import { ChevronRight, Menu } from 'lucide-react';
+import { ChevronRight, Menu, Home } from 'lucide-react';
 
 const ChevronIcon = ({ isOpen, className = '' }) => (
     <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${isOpen ? 'rotate-90' : ''} ${className}`} />
@@ -65,10 +67,10 @@ export default function Sidebar() {
                     {isOpen && (
                         <Link href="/" className="flex items-center gap-3 transition-opacity duration-300">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
-                                {(process.env.NEXT_PUBLIC_APP_NAME || 'ERP')[0]}
+                                {getMonogram()}
                             </div>
                             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                                {process.env.NEXT_PUBLIC_APP_NAME || 'ERP SYSTEM'}
+                                {APP_NAME}
                             </span>
                         </Link>
                     )}
@@ -80,7 +82,7 @@ export default function Sidebar() {
                                 : 'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:scale-105'
                             }`}
                     >
-                        {isOpen ? <Menu className="h-5 w-5" /> : (process.env.NEXT_PUBLIC_APP_NAME || 'ERP')[0]}
+                        {isOpen ? <Menu className="h-5 w-5" /> : getMonogram()}
                     </button>
                 </div>
 
@@ -96,7 +98,7 @@ export default function Sidebar() {
                     {checkPermission('users.view_dashboard') && (
                         <div className="mb-2">
                             <Link href="/" className={`flex items-center p-2.5 rounded-xl text-sm transition-all duration-300 group ${pathname === '/' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'}`}>
-                                <Menu className={`h-5 w-5 ${isCollapsed ? 'mx-auto' : ''}`} />
+                                <Home className={`h-5 w-5 ${isCollapsed ? 'mx-auto' : ''}`} />
                                 <span className={`ml-3 transition-opacity duration-300 ${isCollapsed ? 'hidden' : 'block'}`}>Inicio</span>
                             </Link>
                         </div>
@@ -168,7 +170,11 @@ export default function Sidebar() {
                         );
                     })}
                 </nav>
-                {/* No Footer - moved to Navbar */}
+
+                {/* Sandbox Toggle Footer */}
+                <div className={`flex-none pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
+                    <SandboxToggle condensed={isCollapsed} />
+                </div>
             </aside>
         </>
     );

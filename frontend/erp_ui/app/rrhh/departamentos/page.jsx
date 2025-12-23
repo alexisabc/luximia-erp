@@ -240,6 +240,7 @@ export default function DepartamentosPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarDepartamentos}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/rrhh/departamentos/exportar-plantilla/"
             />
 
             <ConfirmationModal

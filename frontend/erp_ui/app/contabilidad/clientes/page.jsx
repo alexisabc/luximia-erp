@@ -272,6 +272,7 @@ export default function ClientesPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarClientes}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/contabilidad/clientes/exportar-plantilla/"
             />
 
             <ExportModal

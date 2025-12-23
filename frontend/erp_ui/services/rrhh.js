@@ -79,3 +79,49 @@ export const addConceptoRecibo = (id, data) => apiClient.post(`/rrhh/recibos-nom
 export const deleteConceptoRecibo = (reciboId, itemId) => apiClient.delete(`/rrhh/recibos-nomina/${reciboId}/eliminar-concepto/${itemId}/`);
 // Need endpoint for concepts list?
 export const getConceptos = (params = {}) => apiClient.get('/rrhh/conceptos-nomina/', { params });
+
+// ===================== Portal Empleado =====================
+export const getVacacionesBalance = () => apiClient.get('/rrhh/portal-vacaciones/balance/');
+export const getSolicitudesVacaciones = () => apiClient.get('/rrhh/portal-vacaciones/');
+export const createSolicitudVacaciones = (data) => apiClient.post('/rrhh/portal-vacaciones/', data);
+
+export const getPermisos = () => apiClient.get('/rrhh/portal-permisos/');
+export const createSolicitudPermiso = (data) => apiClient.post('/rrhh/portal-permisos/', data);
+
+export const getIncapacidades = () => apiClient.get('/rrhh/portal-incapacidades/');
+export const createIncapacidad = (data) => {
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
+    return apiClient.post('/rrhh/portal-incapacidades/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+};
+
+export const getDocumentosExpediente = () => apiClient.get('/rrhh/portal-documentos/');
+export const uploadDocumentoExpediente = (data) => {
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
+    return apiClient.post('/rrhh/portal-documentos/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+};
+
+// ===================== Gestión RRHH (Admin) =====================
+// Vacaciones
+export const getAdminVacaciones = () => apiClient.get('/rrhh/gestion-vacaciones/');
+export const aprobarVacaciones = (id, data) => apiClient.post(`/rrhh/gestion-vacaciones/${id}/aprobar/`, data);
+export const rechazarVacaciones = (id, data) => apiClient.post(`/rrhh/gestion-vacaciones/${id}/rechazar/`, data);
+
+// Permisos
+export const getAdminPermisos = () => apiClient.get('/rrhh/gestion-permisos/');
+// (Add approve/reject endpoints to backend logic if I forgot them? I added them to Vacaciones but not Permisos explicitly in the ViewSet code block I wrote? Let me check)
+
+// Incapacidades
+export const getAdminIncapacidades = () => apiClient.get('/rrhh/gestion-incapacidades/');
+export const validarIncapacidad = (id) => apiClient.post(`/rrhh/gestion-incapacidades/${id}/validar/`);
+
+// Documentos
+export const getAdminDocumentos = () => apiClient.get('/rrhh/gestion-documentos/');
+export const aprobarDocumento = (id) => apiClient.post(`/rrhh/gestion-documentos/${id}/aprobar/`);
+export const rechazarDocumento = (id, data) => apiClient.post(`/rrhh/gestion-documentos/${id}/rechazar/`, data);
+

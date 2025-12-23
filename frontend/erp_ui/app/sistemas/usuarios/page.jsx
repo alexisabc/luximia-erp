@@ -17,7 +17,7 @@ import {
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/tables/ReusableTable';
-import FormModal from '@/components/modals/Form';
+import UserModal from '@/components/modals/UserModal';
 import ConfirmationModal from '@/components/modals/Confirmation';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
@@ -149,30 +149,14 @@ export default function UsuariosPage() {
         fetchData(1, pageSize, query);
     }, [fetchData, pageSize]);
 
-    const USER_FORM_FIELDS = [
-        { name: 'email', label: 'Email', type: 'email', required: true },
-        { name: 'first_name', label: 'Nombre' },
-        { name: 'last_name', label: 'Apellido' },
-        {
-            name: 'groups',
-            label: 'Roles (Grupos)',
-            type: 'checkbox-group',
-            options: Array.isArray(groups) ? groups.map(g => ({ value: g.id, label: g.name })) : []
-        },
-    ];
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleMultiSelectChange = (fieldName, selectedId) => {
-        const currentSelection = formData[fieldName] || [];
-        const newSelection = currentSelection.includes(selectedId)
-            ? currentSelection.filter(id => id !== selectedId)
-            : [...currentSelection, selectedId];
-        setFormData(prev => ({ ...prev, [fieldName]: newSelection }));
-    };
+
 
     const handleColumnChange = (e) => {
         const { name, checked } = e.target;
@@ -334,16 +318,16 @@ export default function UsuariosPage() {
                 />
             </div>
 
-            <FormModal
+            <UserModal
+                key={String(isFormModalOpen)}
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 title={editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
                 formData={formData}
                 onFormChange={handleInputChange}
-                handleMultiSelectChange={handleMultiSelectChange}
                 onSubmit={handleSubmit}
-                fields={USER_FORM_FIELDS}
-                submitText="Enviar Invitación"
+                groups={groups}
+                submitText={editingUser ? 'Guardar Cambios' : 'Enviar Invitación'}
             />
 
             <ImportModal
@@ -351,6 +335,7 @@ export default function UsuariosPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarUsuarios}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/users/exportar-plantilla/"
             />
 
             <ExportModal

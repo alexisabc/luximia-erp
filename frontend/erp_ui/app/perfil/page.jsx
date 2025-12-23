@@ -16,6 +16,7 @@ import QRCode from 'react-qr-code';
 import { Card } from '@/components/ui/Card';
 import ConfirmationModal from '@/components/modals/Confirmation';
 import { Key, Smartphone, Save, RefreshCw, User, Lock, Mail, ShieldCheck } from 'lucide-react';
+import { COMPANY_NAME } from '@/lib/branding';
 
 export default function ProfilePage() {
     const { user } = useAuth();
@@ -170,7 +171,7 @@ export default function ProfilePage() {
             <div className="flex-none space-y-1">
                 <h1 className="text-3xl font-extrabold flex items-center gap-2 tracking-tight">
                     <User className="w-7 h-7 text-primary" />
-                    Perfiles Luximia
+                    Perfiles {COMPANY_NAME || 'Empresariales'}
                 </h1>
                 <p className="text-sm text-muted-foreground flex items-center gap-2 font-medium">
                     <Lock className="w-4 h-4" /> Configuración de identidad y blindaje de cuenta

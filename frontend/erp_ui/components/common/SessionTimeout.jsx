@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
-const TIMEOUT_MS = 15 * 60 * 1000; // 15 minutos de inactividad
+const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos de inactividad
 const WARNING_MS = 60 * 1000;      // Mostrar alerta 1 minuto antes
 
 export default function SessionTimeout() {

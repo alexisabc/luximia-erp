@@ -2,6 +2,7 @@
 import {
     Home,
     Users,
+    User,
     Building,
     FileText,
     Banknote,
@@ -32,6 +33,19 @@ import {
 } from 'lucide-react';
 
 export const MENU_STRUCTURE = [
+    {
+        key: 'portal',
+        label: 'Mi Portal',
+        icon: User,
+        items: [
+            {
+                label: 'Personal',
+                items: [
+                    { label: 'Portal del Empleado', path: '/portal' },
+                ]
+            }
+        ]
+    },
     {
         key: 'auditoria',
         label: 'Auditoría',
@@ -195,6 +209,12 @@ export const MENU_STRUCTURE = [
                 items: [
                     { label: 'Importar Datos', path: '/sistemas/importar', permission: 'contabilidad.add_pago' },
                     { label: 'Exportar Datos', path: '/sistemas/exportar', permission: 'contabilidad.view_contrato' },
+                ]
+            },
+            {
+                label: 'Configuración',
+                items: [
+                    { label: 'Empresas', path: '/sistemas/empresas', permission: 'core.view_empresa' },
                 ]
             },
             {

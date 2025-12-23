@@ -60,7 +60,7 @@ export default function ExportModal({
                             )}
                         </div>
 
-                        <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm max-h-[400px] overflow-y-auto custom-scrollbar">
+                        <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm max-h-[400px] overflow-auto custom-scrollbar relative">
                             {loading ? (
                                 <div className="p-8 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
                                     <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -73,7 +73,7 @@ export default function ExportModal({
                                             {visibleColumns.map((col) => (
                                                 <th
                                                     key={col.id}
-                                                    className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider bg-gray-50 dark:bg-gray-800"
+                                                    className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 whitespace-nowrap"
                                                 >
                                                     {col.label}
                                                 </th>
@@ -111,9 +111,9 @@ export default function ExportModal({
                         <CheckSquare className="w-4 h-4 text-blue-500" />
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Columnas a Exportar</span>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[200px] overflow-y-auto custom-scrollbar p-1">
                         {columns.map((col) => (
-                            <label key={col.id} className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-700">
+                            <label key={col.id} className="flex items-center space-x-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-gray-700 select-none">
                                 <input
                                     type="checkbox"
                                     name={col.id}
@@ -121,23 +121,23 @@ export default function ExportModal({
                                     onChange={onColumnChange}
                                     className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/20 focus:ring-offset-0"
                                 />
-                                <span className="text-sm text-gray-600 dark:text-gray-300">{col.label}</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-300 truncate" title={col.label}>{col.label}</span>
                             </label>
                         ))}
                     </div>
                 </div>
 
-                <div className="pt-6 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={onDownload}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 transition-all duration-200"
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/25 transition-all duration-200 w-full sm:w-auto"
                     >
                         <Download className="w-4 h-4" />
                         Descargar Excel

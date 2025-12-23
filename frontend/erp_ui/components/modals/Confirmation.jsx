@@ -27,17 +27,17 @@ export default function ConfirmationModal({
                     </div>
                 </div>
 
-                <div className="pt-6 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={onConfirm}
-                        className={`px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg transition-all duration-200 ${type === 'danger'
+                        className={`px-5 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg transition-all duration-200 w-full sm:w-auto ${type === 'danger'
                             ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/25'
                             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25'
                             }`}

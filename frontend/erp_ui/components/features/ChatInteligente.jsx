@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { consultaInteligente } from '@/services/api';
 import Image from 'next/image';
 import { Send, X, Sparkles, Bot, Loader2 } from 'lucide-react';
+import { APP_NAME } from '@/lib/branding';
 
 // ### VERSIÓN CORREGIDA Y ROBUSTA ###
 const TypingMessage = ({ text, start }) => {
@@ -105,7 +106,7 @@ const AssistantMessage = ({ response, isWelcome, chatIsOpen }) => {
 export default function ChatInteligente() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { sender: 'assistant', isWelcome: true, data: { respuesta: '¡Hola! Soy tu asistente de Luximia ERP. ¿En qué puedo ayudarte hoy?' } }
+        { sender: 'assistant', isWelcome: true, data: { respuesta: `¡Hola! Soy tu asistente de ${APP_NAME}. ¿En qué puedo ayudarte hoy?` } }
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -176,7 +177,7 @@ export default function ChatInteligente() {
                         </div>
                         <div>
                             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                Luximia AI
+                                {APP_NAME} AI
                                 <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Beta</span>
                             </h3>
                             <p className="text-xs text-gray-500 dark:text-gray-400">Tu asistente personal</p>

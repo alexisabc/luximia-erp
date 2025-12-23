@@ -87,27 +87,50 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
         setAnimationState('authenticating');
+
         try {
+            // 1. Obtener opciones del servidor
             const { data: options } = await apiClient.get(passkeyChallengeEndpoint);
-            if (!options?.challenge) throw new Error('Challenge inválido del servidor'); // Ajuste de robustez
+            if (!options?.challenge) throw new Error('Challenge inválido del servidor');
 
-            // Decodifica si es necesario, pero startAuthentication maneja JSON usualmente.
-            const assertion = await startAuthentication({ optionsJSON: options });
+            // 2. Iniciar autenticación con timeout de seguridad (60s)
+            // Esto evita que la UI se quede congelada si una extensión (ej. NordPass) falla silenciosamente
+            const assertionPromise = startAuthentication({ optionsJSON: options });
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout: La autenticación tardó demasiado.')), 60000)
+            );
 
+            const assertion = await Promise.race([assertionPromise, timeoutPromise]);
+
+            // 3. Verificar con el servidor
             const { data: tokens } = await apiClient.post(passkeyVerifyEndpoint, assertion);
             setAuthData(tokens);
             setAnimationState('success');
             setTimeout(() => router.push('/'), 1200);
+
         } catch (err) {
-            console.error(err);
+            // Solo loguear errores reales, no cancelaciones intencionales del usuario
+            const isCancellation = err?.name === 'NotAllowedError' || err?.name === 'AbortError' || err?.message?.includes('Timeout');
+
+            if (!isCancellation) {
+                console.error(err);
+            }
+
             const detail = err?.response?.data?.detail;
-            if (detail) setError(detail);
-            else if (err?.name === 'AbortError' || err?.name === 'NotAllowedError') setError('Cancelaste la autenticación.');
-            else setError('No pudimos validar tu acceso. Intenta de nuevo.');
+
+            if (detail) {
+                setError(detail);
+            } else if (isCancellation) {
+                // Mensaje más amigable y menos alarmista para cancelación
+                setError('Operación cancelada. Intenta de nuevo.');
+            } else {
+                setError('No pudimos validar tu acceso.');
+            }
 
             setAnimationState('error');
             setTimeout(() => setAnimationState('idle'), 1400);
         } finally {
+            // Asegurar que siempre se desbloquee la UI
             setIsLoading(false);
         }
     };
@@ -219,7 +242,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="relative flex items-center justify-center min-h-screen w-full overflow-hidden bg-[#020617] selection:bg-cyan-500/30 text-slate-200">
+        <div className="relative flex items-center justify-center h-screen w-full overflow-hidden bg-[#020617] selection:bg-cyan-500/30 text-slate-200">
 
             {/* --- ULTIMATE NEBULA BACKGROUND --- */}
             <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">

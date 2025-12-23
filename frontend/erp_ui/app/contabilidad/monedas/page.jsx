@@ -256,6 +256,7 @@ export default function MonedasPage() {
         onClose={() => setIsImportModalOpen(false)}
         onImport={importarMonedas}
         onSuccess={() => fetchData(currentPage, pageSize)}
+        templateUrl="/contabilidad/monedas/exportar-plantilla/"
       />
 
       <ConfirmationModal

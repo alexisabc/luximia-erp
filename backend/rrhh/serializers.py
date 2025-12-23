@@ -89,6 +89,8 @@ class EmpleadoSerializer(serializers.ModelSerializer):
     user_username = serializers.CharField(source='user.username', read_only=True)
     departamento_nombre = serializers.CharField(source='departamento.nombre', read_only=True)
     puesto_nombre = serializers.CharField(source='puesto.nombre', read_only=True)
+    centro_trabajo_nombre = serializers.CharField(source='centro_trabajo.nombre', read_only=True)
+    razon_social_nombre = serializers.CharField(source='razon_social.nombre_o_razon_social', read_only=True)
 
     class Meta:
         model = Empleado

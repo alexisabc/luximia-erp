@@ -54,15 +54,15 @@ export default function AppContent({ children }) {
                 <SessionTimeout /> {/* <-- Componente de manejo de sesión */}
                 <Sidebar />
 
-                <div className={`min-h-screen flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isOpen ? 'lg:ml-[17rem]' : 'lg:ml-20'}`}>
+                <div className={`h-screen overflow-hidden flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${isOpen ? 'lg:ml-[17rem]' : 'lg:ml-20'}`}>
                     <Navbar />
 
-                    <main className="flex-1 p-4 lg:p-6 overflow-x-hidden">
-                        <div key={pathname} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <main className="flex-1 p-4 lg:p-6 overflow-y-auto overflow-x-hidden flex flex-col">
+                        <div key={pathname} className="min-h-full animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col w-full">
                             {children}
                         </div>
-                        {hasPermission('contabilidad.can_use_ai') && <ChatInteligente />}
                     </main>
+                    {hasPermission('users.use_ai') && <ChatInteligente />}
                 </div>
             </div>
         </EmpresaProvider>

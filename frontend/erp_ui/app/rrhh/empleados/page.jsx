@@ -22,9 +22,13 @@ import ReusableTable from '@/components/tables/ReusableTable';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import'; // Imported
 import ActionButtons from '@/components/common/ActionButtons';
+import EmployeeDetailModal from '@/components/rrhh/EmployeeDetailModal';
+import { Eye } from 'lucide-react';
 
 const EMPLEADO_COLUMNAS_DISPLAY = [
-    { header: 'Usuario', render: (row) => row.user_username },
+    { header: 'Nombre Completo', render: (row) => <div className="font-bold text-gray-900 dark:text-gray-100">{row.nombres} {row.apellido_paterno}</div> },
+    { header: 'Correo', render: (row) => row.correo_laboral || row.user_email || 'Sin correo' },
+    { header: 'Centro Trabajo', render: (row) => row.centro_trabajo_nombre || 'N/A' },
     { header: 'Departamento', render: (row) => row.departamento_nombre },
     { header: 'Puesto', render: (row) => row.puesto_nombre },
 ];
@@ -48,6 +52,7 @@ export default function EmpleadosPage() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false); // Added
     const [formData, setFormData] = useState({ user: '', departamento: '', puesto: '' });
     const [editingEmpleado, setEditingEmpleado] = useState(null);
+    const [selectedEmployee, setSelectedEmployee] = useState(null); // Added
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showInactive, setShowInactive] = useState(false);
     const [users, setUsers] = useState([]);
@@ -277,6 +282,15 @@ export default function EmpleadosPage() {
                         onDelete: hasPermission('rrhh.delete_empleado') ? handleDeleteClick : null,
                         onHardDelete: hasPermission('rrhh.hard_delete_empleado') ? handleHardDelete : null,
                     }}
+                    customActions={(row) => (
+                        <button
+                            onClick={() => setSelectedEmployee(row)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors"
+                            title="Ver Detalle"
+                        >
+                            <Eye className="w-5 h-5" />
+                        </button>
+                    )}
                     pagination={{
                         currentPage,
                         totalCount: pageData.count,
@@ -313,6 +327,7 @@ export default function EmpleadosPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarEmpleados}
                 onSuccess={() => fetchData(currentPage)}
+                templateUrl="/rrhh/empleados/exportar-plantilla/"
             />
 
             <ExportModal
@@ -322,6 +337,12 @@ export default function EmpleadosPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onExport={handleExport}
+            />
+
+            {/* Detailed View Modal */}
+            <EmployeeDetailModal
+                employee={selectedEmployee}
+                onClose={() => setSelectedEmployee(null)}
             />
         </div>
     );

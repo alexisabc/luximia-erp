@@ -270,6 +270,7 @@ export default function FormasPagoPage() {
         onClose={() => setIsImportModalOpen(false)}
         onImport={importarFormasPago}
         onSuccess={() => fetchData(currentPage, pageSize)}
+        templateUrl="/contabilidad/formas-pago/exportar-plantilla/"
       />
 
       <ExportModal

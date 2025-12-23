@@ -14,7 +14,7 @@ import {
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/tables/ReusableTable';
-import FormModal from '@/components/modals/Form';
+import RolePermissionsModal from '@/components/modals/RolePermissionsModal';
 import ConfirmationModal from '@/components/modals/Confirmation';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
@@ -63,11 +63,35 @@ export default function RolesPage() {
         return allCols;
     });
 
+
+
+    const SPECIAL_PERMISSION_GROUPS = {
+        'view_dashboard': 'metasistema',
+        'view_consolidado': 'metasistema',
+        'view_inactive_records': 'metasistema',
+        'hard_delete_records': 'metasistema',
+        'use_ai': 'metasistema',
+        'view_logentry': 'metasistema', // Auditoría global
+    };
+
     const groupPermissions = (perms) => {
         const byModel = {};
+
+        // Permisos obsoletos que ya fueron migrados a globales
+        const DEPRECATED_PERMISSIONS = ['view_inactive_users', 'hard_delete_customuser'];
+
         perms.forEach(p => {
             if (!shouldDisplayPermission(p)) return;
-            const model = p['content_type__model'];
+
+            // Excluir permisos obsoletos
+            if (DEPRECATED_PERMISSIONS.includes(p.codename)) return;
+
+            let model = p['content_type__model'];
+            // Permitir reasignación de grupo para permisos especiales
+            if (SPECIAL_PERMISSION_GROUPS[p.codename]) {
+                model = SPECIAL_PERMISSION_GROUPS[p.codename];
+            }
+
             if (!byModel[model]) byModel[model] = [];
             byModel[model].push({ value: p.id, label: translatePermission(p) });
         });
@@ -75,6 +99,136 @@ export default function RolesPage() {
             label: translateModel(model),
             options,
         }));
+    };
+
+    // Mapeo de modelos a sus módulos/apps
+    const MODEL_TO_MODULE = {
+        'metasistema': 'Sistema',
+        'customuser': 'Sistema',
+        'group': 'Sistema',
+        'empresa': 'Sistema',
+        'empleado': 'RRHH',
+        'departamento': 'RRHH',
+        'puesto': 'RRHH',
+        'razonsocial': 'RRHH',
+        'centrotrabajo': 'RRHH',
+        'empleadodetallepersonal': 'RRHH',
+        'empleadodocumentacionoficial': 'RRHH',
+        'empleadodatoslaborales': 'RRHH',
+        'empleadonominabancaria': 'RRHH',
+        'empleadocreditoinfonavit': 'RRHH',
+        'empleadocontactoemergencia': 'RRHH',
+        'documentoexpediente': 'RRHH',
+        'solicitudpermiso': 'RRHH',
+        'solicitudvacaciones': 'RRHH',
+        'incapacidad': 'RRHH',
+        'ausencia': 'RRHH',
+        'nomina': 'Nómina',
+        'recibonomina': 'Nómina',
+        'conceptonomina': 'Nómina',
+        'configuracioneconomica': 'Nómina',
+        'detallereciboitem': 'Nómina',
+        'periodonomina': 'Nómina',
+        'tablaisr': 'Nómina',
+        'renglontablaisr': 'Nómina',
+        'subsidioempleo': 'Nómina',
+        'renglonsubsidio': 'Nómina',
+        'nominacentralizada': 'Nómina',
+        'cliente': 'Contabilidad',
+        'proyecto': 'Contabilidad',
+        'upe': 'Contabilidad',
+        'contrato': 'Contabilidad',
+        'pago': 'Contabilidad',
+        'moneda': 'Contabilidad',
+        'banco': 'Contabilidad',
+        'metodopago': 'Contabilidad',
+        'formapago': 'Contabilidad',
+        'planpago': 'Contabilidad',
+        'tipocambio': 'Contabilidad',
+        'cuentacontable': 'Contabilidad',
+        'centrocostos': 'Contabilidad',
+        'poliza': 'Contabilidad',
+        'detallepoliza': 'Contabilidad',
+        'vendedor': 'Contabilidad',
+        'esquemacomision': 'Contabilidad',
+        'presupuesto': 'Contabilidad',
+        'producto': 'POS',
+        'caja': 'POS',
+        'turno': 'POS',
+        'venta': 'POS',
+        'detalleventa': 'POS',
+        'cuentacliente': 'POS',
+        'movimientocaja': 'POS',
+        'movimientosaldocliente': 'POS',
+        'proveedor': 'Compras',
+        'insumo': 'Compras',
+        'ordencompra': 'Compras',
+        'detalleordencompra': 'Compras',
+        'contrarecibo': 'Tesorería',
+        'programacionpago': 'Tesorería',
+        'detalleprogramacion': 'Tesorería',
+        'cajachica': 'Tesorería',
+        'movimiento': 'Tesorería',
+        'activoit': 'Sistemas',
+        'asignacionequipo': 'Sistemas',
+        'categoriaequipo': 'Sistemas',
+        'modeloequipo': 'Sistemas',
+        'detalleasignacion': 'Sistemas',
+        'movimientoinventario': 'Sistemas',
+        'equipo': 'Sistemas',
+        'equiposm': 'Sistemas',
+        'inventario': 'Sistemas',
+        'promptia': 'IA',
+        'knowledgebase': 'IA',
+        'logentry': 'Auditoría',
+        'accessattempt': 'Auditoría',
+        'accessfailurelog': 'Auditoría',
+        'accesslog': 'Auditoría',
+        'notification': 'Notificaciones',
+    };
+
+    const groupPermissionsByModule = (perms) => {
+        const byModule = {};
+        const DEPRECATED_PERMISSIONS = ['view_inactive_users', 'hard_delete_customuser'];
+
+        perms.forEach(p => {
+            if (!shouldDisplayPermission(p)) return;
+            if (DEPRECATED_PERMISSIONS.includes(p.codename)) return;
+
+            let model = p['content_type__model'];
+            if (SPECIAL_PERMISSION_GROUPS[p.codename]) {
+                model = SPECIAL_PERMISSION_GROUPS[p.codename];
+            }
+
+            const module = MODEL_TO_MODULE[model] || 'Otros';
+
+            if (!byModule[module]) {
+                byModule[module] = {};
+            }
+            if (!byModule[module][model]) {
+                byModule[module][model] = {
+                    label: translateModel(model),
+                    options: []
+                };
+            }
+
+            byModule[module][model].options.push({
+                value: p.id,
+                label: translatePermission(p),
+                codename: p.codename
+            });
+        });
+
+        return Object.entries(byModule)
+            .map(([moduleName, models]) => ({
+                moduleName,
+                models: Object.values(models)
+            }))
+            .sort((a, b) => {
+                if (a.moduleName === 'Sistema') return -1;
+                if (b.moduleName === 'Sistema') return 1;
+                return a.moduleName.localeCompare(b.moduleName);
+            });
     };
 
     const ROL_FORM_FIELDS = [
@@ -120,7 +274,7 @@ export default function RolesPage() {
                         : groupsResData.count ?? normalizedGroups.length,
                 });
                 setPermissions(permissionsData);
-                setPermissionGroups(groupPermissions(permissionsData));
+                setPermissionGroups(groupPermissionsByModule(permissionsData));
                 setCurrentPage(page);
             } catch (err) {
                 setError('No se pudieron cargar los roles.');
@@ -309,17 +463,14 @@ export default function RolesPage() {
                 />
             </div>
 
-            <FormModal
+            <RolePermissionsModal
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 title={editingGroup ? 'Editar Rol' : 'Nuevo Rol'}
                 formData={formData}
                 onFormChange={handleInputChange}
-                handleMultiSelectChange={handleMultiSelectChange}
-                handleSelectAll={handleSelectAll}
-                handleGroupSelect={handleGroupSelect}
                 onSubmit={handleSubmit}
-                fields={ROL_FORM_FIELDS}
+                permissionsByModule={permissionGroups}
                 submitText="Guardar Rol"
             />
 
@@ -328,6 +479,7 @@ export default function RolesPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarRoles}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/users/groups/exportar-plantilla/"
             />
 
             <ExportModal

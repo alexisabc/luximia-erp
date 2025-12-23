@@ -28,7 +28,7 @@ export default function NotificationsBell() {
         setLoading(true);
         try {
             const res = await getNotifications();
-            setNotifications(res.data);
+            setNotifications(Array.isArray(res.data) ? res.data : (res.data.results || []));
         } catch (error) {
             console.error("Error fetching notifications", error);
         } finally {
@@ -137,8 +137,8 @@ export default function NotificationsBell() {
                                 <p className="text-sm">No tienes notificaciones</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                                {notifications.map((notif) => (
+                            <div className=" divide-y divide-gray-100 dark:divide-gray-800">
+                                {Array.isArray(notifications) && notifications.map((notif) => (
                                     <div
                                         key={notif.id}
                                         onClick={() => handleMarkAsRead(notif.id, notif.link)}

@@ -14,6 +14,7 @@ import {
     setupTotp,
     verifyTotp,
 } from '@/services/api';
+import { COMPANY_NAME } from '@/lib/branding';
 
 const StepIndicator = ({ currentStep, totalSteps, title, description }) => (
     <div className="text-center mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -245,7 +246,7 @@ function EnrollmentSetup() {
                 </div>
                 {/* Footer */}
                 <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-500 font-medium">
-                    <p>© 2025 Grupo Luximia</p>
+                    <p>© {new Date().getFullYear()} {COMPANY_NAME || 'Grupo Empresarial'}</p>
                 </div>
             </div>
         </div>

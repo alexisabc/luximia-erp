@@ -24,6 +24,8 @@ class HasPermissionForAction(permissions.BasePermission):
             "inactivos": "view",
             "hard_destroy": "delete",
             "restore": "delete", # Restaurar suele requerir privilegios de borrado/gestión
+            "exportar_plantilla": "view",
+            "importar_excel": "add",
         }
 
         # Obtiene la acción actual y el permiso requerido

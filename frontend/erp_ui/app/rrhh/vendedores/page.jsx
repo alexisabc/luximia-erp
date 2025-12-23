@@ -249,6 +249,7 @@ export default function VendedoresPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarVendedores}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/contabilidad/vendedores/exportar-plantilla/"
             />
 
             <ConfirmationModal

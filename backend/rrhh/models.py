@@ -8,6 +8,9 @@ from .models_nomina import (
     SubsidioEmpleo, RenglonSubsidio, Nomina, ReciboNomina, DetalleReciboItem,
     TipoConcepto, ClasificacionFiscal
 )
+from .models_portal import (
+    SolicitudVacaciones, SolicitudPermiso, Incapacidad, DocumentoExpediente
+)
 
 # Eliminamos ModeloBaseActivo local y usamos SoftDeleteModel
 
@@ -50,9 +53,12 @@ class Empleado(SoftDeleteModel):
 
     # Identificación y Relaciones
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="empleado")
+    no_empleado = models.CharField(max_length=20, unique=True, blank=True, null=True, verbose_name="No. Colaborador")
     nombres = models.CharField(max_length=100)
-    apellidos = models.CharField(max_length=100)
-    nombre_completo = models.CharField(max_length=200, blank=True)  # Calculado para compatibilidad
+    apellido_paterno = models.CharField(max_length=100, default="")
+    apellido_materno = models.CharField(max_length=100, blank=True, null=True)
+    # apellidos = models.CharField(max_length=100) # Deprecated in favor of granular
+    nombre_completo = models.CharField(max_length=255, blank=True)
     correo_laboral = models.EmailField(unique=True, blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     genero = models.CharField(max_length=1, choices=GENERO_CHOICES, blank=True, null=True)
@@ -66,11 +72,11 @@ class Empleado(SoftDeleteModel):
     razon_social = models.ForeignKey(RazonSocial, on_delete=models.SET_NULL, null=True, blank=True, related_name="empleados")
 
     def save(self, *args, **kwargs):
-        self.nombre_completo = f"{self.nombres} {self.apellidos}".strip()
+        self.nombre_completo = f"{self.nombres} {self.apellido_paterno} {self.apellido_materno or ''}".strip()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.nombre_completo or f"{self.nombres} {self.apellidos}"
+        return self.nombre_completo or f"{self.nombres} {self.apellido_paterno}"
 
 
 class EmpleadoDetallePersonal(SoftDeleteModel):
@@ -81,7 +87,14 @@ class EmpleadoDetallePersonal(SoftDeleteModel):
     nacionalidad = models.CharField(max_length=50, blank=True, null=True)
     domicilio = models.TextField(blank=True, null=True)
     codigo_postal = models.CharField(max_length=10, blank=True, null=True)
+    grado_estudios = models.CharField(max_length=100, blank=True, null=True, verbose_name="Grado Máximo de Estudios")
+    estatus_educativo = models.CharField(max_length=100, blank=True, null=True, verbose_name="Estatus Educativo")
+    
+    # Ficha Médica
     tipo_sangre = models.CharField(max_length=10, blank=True, null=True)
+    padecimientos = models.TextField(blank=True, null=True)
+    alergias = models.TextField(blank=True, null=True)
+    tratamiento_actual = models.TextField(blank=True, null=True, verbose_name="Tratamiento o Medicación")
 
     def __str__(self):
         return f"Detalles de {self.empleado}"
@@ -106,11 +119,22 @@ class EmpleadoDatosLaborales(SoftDeleteModel):
     fecha_ingreso = models.DateField(blank=True, null=True)
     tipo_contrato = models.CharField(max_length=100, blank=True, null=True)
     periodicidad_pago = models.CharField(max_length=50, blank=True, null=True)
-    jornada = models.CharField(max_length=50, blank=True, null=True)
+    jornada = models.CharField(max_length=50, blank=True, null=True) # Tipo de Jornada
+    horario_turno = models.CharField(max_length=100, blank=True, null=True, verbose_name="Horario o Turno")
     modalidad_trabajo = models.CharField(max_length=50, blank=True, null=True) # presencial/remoto
+    
+    # Datos SUA/IDSE
+    registro_patronal = models.CharField(max_length=50, blank=True, null=True)
+    tipo_trabajador = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Salariales
+    tipo_salario = models.CharField(max_length=50, blank=True, null=True) # Fijo, Variable, Mixto
+    tipo_nomina = models.CharField(max_length=50, blank=True, null=True) # Semanal, Quincenal, etc (redundant with payment period?)
+    
     salario_diario = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     salario_diario_integrado = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     ingresos_mensuales_brutos = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    bonos_excedentes = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Bonos y Excedentes")
 
     def __str__(self):
         return f"Datos Laborales de {self.empleado}"

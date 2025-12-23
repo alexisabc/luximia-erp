@@ -9,21 +9,37 @@ def get_current_user():
     """
     return getattr(_thread_locals, 'user', None)
 
+def is_sandbox_mode():
+    """Retorna True si el contexto actual es Sandbox."""
+    return getattr(_thread_locals, 'is_sandbox', False)
+
 class ThreadLocalMiddleware:
     """
-    Middleware para almacenar el usuario actual en thread-local storage.
-    Permite acceder al usuario desde cualquier lugar (ej. modelos save()) sin pasar el request.
+    Middleware para almacenar el usuario y contexto (Sandbox) actual en thread-local storage.
     """
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         _thread_locals.user = getattr(request, 'user', None)
+        
+        # Detectar Header de Sandbox
+        is_sandbox = request.headers.get('X-Sandbox-Mode', 'false').lower() == 'true'
+        _thread_locals.is_sandbox = is_sandbox
+        
+        # Inyectar atributo en request para uso fácil en views
+        request.is_sandbox = is_sandbox
+
         try:
             response = self.get_response(request)
+            
+            # (Opcional) header de respuesta para confirmar modo
+            if is_sandbox:
+                response['X-Sandbox-Enforced'] = 'True'
+                
         finally:
-            # Limpieza para evitar memory leaks o data cruzada en threads reutilizados
             _thread_locals.user = None
+            _thread_locals.is_sandbox = False
         return response
 
 

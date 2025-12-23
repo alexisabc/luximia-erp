@@ -282,6 +282,7 @@ export default function PuestosPage() {
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarPuestos}
                 onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/rrhh/puestos/exportar-plantilla/"
             />
 
             <ConfirmationModal

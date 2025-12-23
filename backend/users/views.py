@@ -61,6 +61,7 @@ from webauthn.helpers.exceptions import InvalidRegistrationResponse
 from .models import EnrollmentToken
 from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
 from .utils import build_enrollment_email_context
+from core.views import ExcelImportMixin
 
 logger = logging.getLogger(__name__)
 
@@ -312,6 +313,22 @@ class HardDeleteUserView(APIView):
             raise Http404
 
 
+class UserImportExportView(generics.GenericAPIView, ExcelImportMixin):
+    """
+    Vista dedicada para la importación/exportación de plantillas de usuarios.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsStaffOrSuperuser]
+
+    def get(self, request, *args, **kwargs):
+        return self.exportar_plantilla(request)
+
+    def post(self, request, *args, **kwargs):
+        return self.importar_excel(request)
+
+
+
 # ---------------------------------------------------------------------------
 # Vistas de Grupos y Permisos
 # ---------------------------------------------------------------------------
@@ -334,6 +351,22 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsStaffOrSuperuser]
+
+
+class GroupImportExportView(generics.GenericAPIView, ExcelImportMixin):
+    """
+    Vista dedicada para la importación/exportación de plantillas de grupos (roles).
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsStaffOrSuperuser]
+
+    def get(self, request, *args, **kwargs):
+        return self.exportar_plantilla(request)
+
+    def post(self, request, *args, **kwargs):
+        return self.importar_excel(request)
+
 
 
 class PermissionListView(generics.ListAPIView):

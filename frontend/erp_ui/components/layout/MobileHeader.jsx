@@ -1,6 +1,7 @@
 // components/layout/MobileHeader.jsx
 'use client';
 
+import { APP_NAME, getMonogram } from '@/lib/branding';
 import { useSidebar } from '@/context/SidebarContext';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
@@ -22,10 +23,10 @@ export default function MobileHeader() {
 
             <Link href="/" className="flex items-center justify-center flex-1">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30 mr-2">
-                    L
+                    {getMonogram()}
                 </div>
                 <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                    LUXIMIA
+                    {APP_NAME}
                 </span>
             </Link>
 

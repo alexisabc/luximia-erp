@@ -27,6 +27,7 @@ echo "🔄 Generando y aplicando migraciones..."
 python manage.py makemigrations --noinput
 python manage.py migrate ia --noinput
 python manage.py migrate --noinput
+python manage.py init_sandbox
 
 # 2. Tareas específicas de desarrollo
 if [ "$DEVELOPMENT_MODE" = "True" ]; then

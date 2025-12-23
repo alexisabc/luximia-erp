@@ -25,8 +25,8 @@ export const AuthProvider = ({ children }) => {
                 user_id: decoded.user_id,
                 username: decoded.username,
                 email: decoded.email,
-                first_name: decoded.first_name, // <-- Extraemos y guardamos el nombre
-                last_name: decoded.last_name,   // <-- Extraemos y guardamos el apellido
+                first_name: decoded.first_name,
+                last_name: decoded.last_name,
                 is_superuser: decoded.is_superuser,
                 permissions: decoded.permissions,
             });
@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
         setAuthTokens(null);
         setUser(null);
         localStorage.removeItem('authTokens');
+        // Redirigir al login
         window.location.href = '/login';
     }, []);
 
@@ -54,15 +55,26 @@ export const AuthProvider = ({ children }) => {
         const loadAuth = async () => {
             const raw = localStorage.getItem('authTokens');
             if (raw) {
-                const parsed = JSON.parse(raw);
-                if (parsed?.access) {
-                    const decoded = jwtDecode(parsed.access);
-                    const expired = Date.now() >= decoded.exp * 1000;
-                    if (expired) {
-                        localStorage.removeItem('authTokens');
-                    } else {
-                        setAuthTokens(parsed);
-                        // Corregido: Guardamos el objeto de usuario completo
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (parsed?.access) {
+                        const decoded = jwtDecode(parsed.access);
+                        const expired = Date.now() >= decoded.exp * 1000;
+
+                        // Si ha expirado y no hay token de refresco (o lógica adicional), limpiamos.
+                        // Nota: El interceptor de Axios se encargará de refrescar si es posible.
+                        // Aquí solo validamos estado inicial.
+                        if (expired) {
+                            // Podríamos intentar refrescar aquí, pero Axios lo hará en la primera petición.
+                            // Dejamos que el estado persista hasta que falle el refresh.
+                            // Opcional: localStorage.removeItem('authTokens'); // Si queremos ser estrictos
+                            // Pero mantenerlo permite al interceptor intentar el refresh.
+                            setAuthTokens(parsed);
+                            // Aún decodificamos usuario para UI, sabiendo que puede fallar pronto.
+                        } else {
+                            setAuthTokens(parsed);
+                        }
+
                         setUser({
                             user_id: decoded.user_id,
                             username: decoded.username,
@@ -73,13 +85,33 @@ export const AuthProvider = ({ children }) => {
                             permissions: decoded.permissions,
                         });
                     }
+                } catch (e) {
+                    console.error("Error loading auth:", e);
+                    localStorage.removeItem('authTokens');
                 }
             }
             setLoading(false);
         };
 
         loadAuth();
-    }, []);
+
+        // Listener para logout global disparado por Axios (core.js)
+        const handleLogoutEvent = () => {
+            // Limpiar estado de React
+            setAuthTokens(null);
+            setUser(null);
+            localStorage.removeItem('authTokens');
+            // Redirigir
+            window.location.href = '/login';
+        };
+
+        // Escuchar el evento custom
+        window.addEventListener('auth:logout', handleLogoutEvent);
+
+        return () => {
+            window.removeEventListener('auth:logout', handleLogoutEvent);
+        };
+    }, [logoutUser]); // Dependencia estable
 
     const value = useMemo(() => ({
         user,

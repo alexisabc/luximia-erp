@@ -156,6 +156,21 @@ else:
         }
     }
 
+# --- Sandbox Configuration ---
+# Intenta usar una variable específica, sino crea 'db_name_sandbox'
+SANDBOX_DB_NAME = os.getenv("POSTGRES_DB_SANDBOX") or f"{os.getenv('POSTGRES_DB', 'luximiadb')}_sandbox"
+
+DATABASES["sandbox"] = {
+    "ENGINE": "django.db.backends.postgresql",
+    "NAME": SANDBOX_DB_NAME,
+    "USER": os.getenv("POSTGRES_USER"),
+    "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+    "HOST": os.getenv("POSTGRES_HOST", "db"),
+    "PORT": os.getenv("POSTGRES_PORT", "5432"),
+}
+
+DATABASE_ROUTERS = ["config.routers.SandboxRouter"]
+
 # --- Internacionalización ---
 LANGUAGE_CODE = "es-mx"
 TIME_ZONE = "America/Cancun"

@@ -22,6 +22,8 @@ from .views import (
     PasskeyLoginChallengeView,
     PasskeyLoginView,
     VerifyTOTPLoginView,
+    UserImportExportView,
+    GroupImportExportView,
 )
 
 app_name = 'users'
@@ -63,5 +65,14 @@ urlpatterns = [
     path("totp/login/verify/", VerifyTOTPLoginView.as_view(), name="totp-login-verify"),
 
     # --- JWT refresh ---
+    # --- JWT refresh ---
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+
+    # --- Excel Import/Export (Users) ---
+    path("exportar-plantilla/", UserImportExportView.as_view(), name="user-export-template"),
+    path("importar-excel/", UserImportExportView.as_view(), name="user-import-excel"),
+
+    # --- Excel Import/Export (Groups) ---
+    path("groups/exportar-plantilla/", GroupImportExportView.as_view(), name="group-export-template"),
+    path("groups/importar-excel/", GroupImportExportView.as_view(), name="group-import-excel"),
 ]

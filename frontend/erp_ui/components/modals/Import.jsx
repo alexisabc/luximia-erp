@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import Modal from '@/components/modals';
-import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, X, Download } from 'lucide-react';
+import apiClient from '@/services/core';
 
-export default function ImportModal({ isOpen, onClose, onImport, onSuccess }) {
+export default function ImportModal({ isOpen, onClose, onImport, onSuccess, templateUrl }) {
     const [file, setFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState(null);
@@ -118,6 +119,42 @@ export default function ImportModal({ isOpen, onClose, onImport, onSuccess }) {
                     )}
                 </div>
 
+                <div className="flex justify-end">
+                    {templateUrl && (
+                        <button
+                            type="button"
+                            onClick={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    const response = await apiClient.get(templateUrl, { responseType: 'blob' });
+                                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    // Extract filename from header or default
+                                    const contentDisposition = response.headers['content-disposition'];
+                                    let fileName = 'plantilla.xlsx';
+                                    if (contentDisposition) {
+                                        const fileNameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                                        if (fileNameMatch.length === 2)
+                                            fileName = fileNameMatch[1];
+                                    }
+                                    link.setAttribute('download', fileName);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    link.remove();
+                                } catch (err) {
+                                    console.error("Error downloading template", err);
+                                    setError("No se pudo descargar la plantilla.");
+                                }
+                            }}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 transition-colors"
+                        >
+                            <Download className="w-4 h-4" />
+                            Descargar Plantilla de Ejemplo
+                        </button>
+                    )}
+                </div>
+
                 {error && (
                     <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm animate-in fade-in slide-in-from-top-2">
                         <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -132,18 +169,18 @@ export default function ImportModal({ isOpen, onClose, onImport, onSuccess }) {
                     </div>
                 )}
 
-                <div className="pt-2 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800 mt-6">
+                <div className="pt-2 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-800 mt-6">
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
                         disabled={!file || isUploading}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-full sm:w-auto"
                     >
                         {isUploading ? 'Importando...' : 'Comenzar Importación'}
                     </button>

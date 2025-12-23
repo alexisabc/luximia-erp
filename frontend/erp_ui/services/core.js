@@ -23,6 +23,7 @@ export const apiClient = axios.create({
 const naked = axios.create({ baseURL });
 
 // =================== Interceptor de request ===================
+// =================== Interceptor de request ===================
 apiClient.interceptors.request.use(async (req) => {
     let authTokens = (typeof window !== 'undefined') ? localStorage.getItem('authTokens') : null;
     authTokens = authTokens ? JSON.parse(authTokens) : null;
@@ -33,14 +34,35 @@ apiClient.interceptors.request.use(async (req) => {
             const isExpired = Date.now() >= payload.exp * 1000;
 
             if (isExpired && authTokens.refresh) {
-                const { data } = await naked.post('/users/token/refresh/', { refresh: authTokens.refresh });
-                localStorage.setItem('authTokens', JSON.stringify(data));
-                req.headers.Authorization = `Bearer ${data.access}`;
+                try {
+                    const { data } = await naked.post('/users/token/refresh/', { refresh: authTokens.refresh });
+                    localStorage.setItem('authTokens', JSON.stringify(data));
+                    req.headers.Authorization = `Bearer ${data.access}`;
+                } catch (refreshError) {
+                    // Si el refresh falla (token inválido o expirado también), cerramos sesión.
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('authTokens');
+                        window.dispatchEvent(new Event('auth:logout'));
+                    }
+                    return Promise.reject(refreshError);
+                }
             } else if (!isExpired) {
                 req.headers.Authorization = `Bearer ${authTokens.access}`;
             }
-        } catch {
-            if (typeof window !== 'undefined') localStorage.removeItem('authTokens');
+        } catch (err) {
+            // Error decodificando o procesando
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('authTokens');
+                window.dispatchEvent(new Event('auth:logout'));
+            }
+        }
+    }
+
+    // --- SANDBOX MODE CHECK ---
+    if (typeof window !== 'undefined') {
+        const isSandbox = localStorage.getItem('sandboxMode') === 'true';
+        if (isSandbox) {
+            req.headers['X-Sandbox-Mode'] = 'true';
         }
     }
 
@@ -52,10 +74,11 @@ apiClient.interceptors.response.use(
     (res) => res,
     (error) => {
         const status = error?.response?.status;
-        if (typeof window !== 'undefined' && status) {
+        if (typeof window !== 'undefined') {
             if (status === 401) {
+                // Token inválido o no provisto
                 localStorage.removeItem('authTokens');
-                window.location.href = '/login';
+                window.dispatchEvent(new Event('auth:logout'));
             } else if (status === 403) {
                 console.error("Acceso prohibido (403). Podría ser un problema de permisos o CSRF.");
             }
@@ -86,6 +109,28 @@ export const cambiarEmpresa = async (empresaId) => {
 /**
  * Obtiene todas las empresas (admin)
  */
-export const getEmpresas = async () => {
-    return await apiClient.get('/core/empresas/');
+/**
+ * Obtiene todas las empresas (admin). Soporta paginación y filtrado
+ */
+export const getEmpresas = async (page = 1, pageSize = 15, filters = {}) => {
+    return await apiClient.get('/core/empresas/', { params: { page, page_size: pageSize, ...filters } });
 };
+
+export const getInactiveEmpresas = async (page = 1, pageSize = 15, filters = {}) => {
+    return await apiClient.get('/core/empresas/', {
+        params: { page, page_size: pageSize, activo: false, ...filters }
+    });
+};
+
+export const createEmpresa = (data) => apiClient.post('/core/empresas/', data);
+export const updateEmpresa = (id, data) => apiClient.patch(`/core/empresas/${id}/`, data);
+export const deleteEmpresa = (id) => apiClient.delete(`/core/empresas/${id}/`);
+export const hardDeleteEmpresa = (id) => apiClient.delete(`/core/empresas/${id}/hard_delete/`); // Assuming backend supports this or generic delete with flag
+
+export const exportEmpresasExcel = (columns) =>
+    apiClient.post('/core/empresas/exportar-excel/', { columns }, { responseType: 'blob' });
+
+export const importarEmpresas = (formData) =>
+    apiClient.post('/core/empresas/importar-excel/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });

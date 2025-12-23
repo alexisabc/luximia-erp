@@ -253,6 +253,7 @@ export default function BancosPage() {
         onClose={() => setIsImportModalOpen(false)}
         onImport={importarBancos}
         onSuccess={() => fetchData(currentPage, pageSize)}
+        templateUrl="/contabilidad/bancos/exportar-plantilla/"
       />
 
       <ConfirmationModal

@@ -20,6 +20,7 @@ class HasPermissionForAction(permissions.BasePermission):
             "organigrama": "view",
             "exportar_excel": "view",
             "importar_excel": "add",
+            "exportar_plantilla": "view",
         }
 
         # Obtiene la acción actual y el permiso requerido

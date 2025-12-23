@@ -52,9 +52,10 @@ class CustomUser(AbstractUser, BaseModel):
     class Meta:
         permissions = [
             ("view_dashboard", "Can view dashboard"),
-            ("view_inactive_users", "Can view inactive users"),
-            ("hard_delete_customuser", "Can hard delete custom users"),
+            ("view_inactive_records", "Can view inactive records globally"),
+            ("hard_delete_records", "Can hard delete records globally"),
             ("view_consolidado", "Can view consolidated reports across companies"),
+            ("use_ai", "Can use AI features"),
         ]
 
 

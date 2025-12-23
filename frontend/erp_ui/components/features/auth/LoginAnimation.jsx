@@ -87,9 +87,13 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                     animation: wink 1s forwards;
                     transform-origin: center;
                 }
-                .success .ear {
+                .success .ear-left {
                     animation: ear-wiggle 1s ease-in-out infinite;
-                    transform-origin: center 80%;
+                    transform-origin: 22px 36px;
+                }
+                .success .ear-right {
+                    animation: ear-wiggle 1s ease-in-out infinite;
+                    transform-origin: 78px 36px;
                 }
                 @keyframes wink {
                     0%, 100% { transform: scaleY(1); }
@@ -186,10 +190,15 @@ export default function LoginAnimation({ state, eyeTranslation }) {
             <svg viewBox="0 0 100 100" className={`bear-svg ${state}`}>
                 <g className="head-group transition-all">
                     {/* Orejas */}
-                    <circle className="ear" cx="22" cy="30" r="10" fill="#795548" />
-                    <circle className="ear" cx="78" cy="30" r="10" fill="#795548" />
-                    <circle cx="22" cy="30" r="5" fill="#4e342e" />
-                    <circle cx="78" cy="30" r="5" fill="#4e342e" />
+                    {/* Orejas - Grouped for proper animation of inner parts */}
+                    <g className="ear-left">
+                        <circle cx="22" cy="30" r="10" fill="#795548" />
+                        <circle cx="22" cy="30" r="5" fill="#4e342e" />
+                    </g>
+                    <g className="ear-right">
+                        <circle cx="78" cy="30" r="10" fill="#795548" />
+                        <circle cx="78" cy="30" r="5" fill="#4e342e" />
+                    </g>
 
                     {/* Cabeza Base */}
                     <circle cx="50" cy="55" r="35" fill="#8d6e63" />
@@ -220,35 +229,36 @@ export default function LoginAnimation({ state, eyeTranslation }) {
                 {/* Manos cubriendo ojos (Diagonal desde los lados) */}
                 <g className="hands-container">
                     {/* MANO IZQUIERDA */}
+                    {/* MANO IZQUIERDA */}
                     <g className="paw-group paw-left" style={{ transform: leftPawTransform }}>
-                        {/* Brazo y Mano */}
+                        {/* Brazo y Mano - Slimmer Design */}
                         <path
-                            d="M -10 110 L 25 65 Q 35 50 48 65 L 55 110 Z"
+                            d="M 12 110 L 28 65 Q 38 48 48 65 L 52 110 Z"
                             fill="#795548" stroke="#5d4037" strokeWidth="1"
                         />
                         {/* Almohadilla */}
-                        <ellipse cx="36" cy="70" rx="8" ry="6" fill="#d7ccc8" transform="rotate(-30 36 70)" />
+                        <ellipse cx="38" cy="72" rx="6" ry="4.5" fill="#d7ccc8" transform="rotate(-20 38 72)" />
 
-                        {/* Garritas (Triángulos afilados) */}
-                        <path d="M 28 62 L 28 52 L 34 58 Z" fill="#3e2723" />
-                        <path d="M 36 56 L 39 46 L 42 56 Z" fill="#3e2723" />
-                        <path d="M 45 58 L 50 52 L 50 62 Z" fill="#3e2723" />
+                        {/* Garritas (Estilizadas y Curvas) */}
+                        <path d="M 30 58 Q 28 50 33 50 Q 34 54 35 57 Z" fill="#3e2723" />
+                        <path d="M 37 55 Q 36 46 41 46 Q 42 50 43 55 Z" fill="#3e2723" />
+                        <path d="M 45 58 Q 46 50 50 50 Q 49 54 50 57 Z" fill="#3e2723" />
                     </g>
 
                     {/* MANO DERECHA */}
                     <g className="paw-group paw-right" style={{ transform: rightPawTransform }}>
-                        {/* Brazo y Mano */}
+                        {/* Brazo y Mano - Slimmer Design */}
                         <path
-                            d="M 110 110 L 75 65 Q 65 50 52 65 L 45 110 Z"
+                            d="M 88 110 L 72 65 Q 62 48 52 65 L 48 110 Z"
                             fill="#795548" stroke="#5d4037" strokeWidth="1"
                         />
                         {/* Almohadilla */}
-                        <ellipse cx="64" cy="70" rx="8" ry="6" fill="#d7ccc8" transform="rotate(30 64 70)" />
+                        <ellipse cx="62" cy="72" rx="6" ry="4.5" fill="#d7ccc8" transform="rotate(20 62 72)" />
 
-                        {/* Garritas (Triángulos afilados) */}
-                        <path d="M 72 62 L 72 52 L 66 58 Z" fill="#3e2723" />
-                        <path d="M 64 56 L 61 46 L 58 56 Z" fill="#3e2723" />
-                        <path d="M 55 58 L 50 52 L 50 62 Z" fill="#3e2723" />
+                        {/* Garritas (Estilizadas y Curvas) */}
+                        <path d="M 70 58 Q 72 50 67 50 Q 66 54 65 57 Z" fill="#3e2723" />
+                        <path d="M 63 55 Q 64 46 59 46 Q 58 50 57 55 Z" fill="#3e2723" />
+                        <path d="M 55 58 Q 54 50 50 50 Q 51 54 50 57 Z" fill="#3e2723" />
                     </g>
                 </g>
 
