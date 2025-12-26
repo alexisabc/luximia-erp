@@ -142,7 +142,11 @@ class Command(BaseCommand):
 
                 except Exception as e:
                     # SEGURIDAD: No imprimir el token en logs.
-                    self.stdout.write(self.style.ERROR(f"❌ FALLÓ EL ENVÍO DE CORREO: {str(e)}"))
+                    error_str = str(e)
+                    if "Unauthorized" in error_str:
+                         self.stdout.write(self.style.WARNING("⚠️  SendGrid API Key inválida o no configurada (401 Unauthorized). El correo no se envió."))
+                    else:
+                        self.stdout.write(self.style.ERROR(f"❌ FALLÓ EL ENVÍO DE CORREO: {error_str}"))
                     self.stdout.write(self.style.WARNING(
                         "⚠️  El superusuario existe pero el correo falló. "
                         "Usa 'python manage.py get_enrollment_link' via SSH/Consola para obtener el link seguro."

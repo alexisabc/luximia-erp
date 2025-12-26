@@ -81,20 +81,23 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"⚠️  No se pudo crear la DB '{db_name}' automáticamente: {e}"))
                 self.stdout.write("   (Esto es normal en entornos Cloud si la base de datos no fue pre-creada)")
 
-        # 2. Ejecutar Migraciones en Sandbox
-        self.stdout.write("🔄 Aplicando migraciones a Sandbox...")
-        try:
-            # Primero migrar IA para instalar extensión 'vector' y evitar errores de dependencias
-            self.stdout.write("   -> Migrando app 'ia' (instala vector extension)...")
-            call_command('migrate', 'ia', database='sandbox', interactive=False)
-            
-            # Luego migrar el resto
-            self.stdout.write("   -> Aplicando resto de migraciones...")
-            call_command('migrate', database='sandbox', interactive=False)
-            
-            self.stdout.write(self.style.SUCCESS("✅ Migraciones de Sandbox aplicadas correctamente."))
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Error migrando Sandbox: {e}"))
+        if exists:
+            # 2. Ejecutar Migraciones en Sandbox
+            self.stdout.write("🔄 Aplicando migraciones a Sandbox...")
+            try:
+                # Primero migrar IA para instalar extensión 'vector' y evitar errores de dependencias
+                self.stdout.write("   -> Migrando app 'ia' (instala vector extension)...")
+                call_command('migrate', 'ia', database='sandbox', interactive=False)
+                
+                # Luego migrar el resto
+                self.stdout.write("   -> Aplicando resto de migraciones...")
+                call_command('migrate', database='sandbox', interactive=False)
+                
+                self.stdout.write(self.style.SUCCESS("✅ Migraciones de Sandbox aplicadas correctamente."))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"❌ Error migrando Sandbox: {e}"))
+        else:
+             self.stdout.write(self.style.WARNING("⚠️  Saltando migraciones de Sandbox porque la base de datos no existe."))
 
         # 3. Crear Superusuario para Sandbox si es necesario (Opcional, clonando del default)
         # Esto es complejo de automatizar sin inputs, mejor dejar que el usuario lo cree o usar un script de seed comun.
