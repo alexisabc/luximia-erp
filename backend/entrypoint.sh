@@ -22,6 +22,10 @@ wait_for_db() {
 # Ejecutar siempre al inicio
 wait_for_db
 
+# Refrescar colación si es necesario (limpia advertencias de Postgres)
+echo "🧹 Refrescando versiones de colación..."
+python manage.py refresh_collation || echo "⚠️ Advertencia: No se pudo refrescar la colación (posible falta de permisos o DB no postgres)."
+
 # 1. Migraciones (Generar y Aplicar)
 echo "🔄 Generando y aplicando migraciones..."
 python manage.py makemigrations --noinput

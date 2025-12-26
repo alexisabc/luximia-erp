@@ -157,17 +157,32 @@ else:
     }
 
 # --- Sandbox Configuration ---
-# Intenta usar una variable específica, sino crea 'db_name_sandbox'
-SANDBOX_DB_NAME = os.getenv("POSTGRES_DB_SANDBOX") or f"{os.getenv('POSTGRES_DB', 'luximiadb')}_sandbox"
+# 1. Start with a copy of Default to inherit HOST, PORT, USER, PASSWORD, SSL, etc.
+if "DATABASE_URL_SANDBOX" in os.environ and os.getenv("DATABASE_URL_SANDBOX"):
+    ssl_flag = os.getenv("DATABASE_SSL_REQUIRE")
+    ssl_require = (
+        ssl_flag.lower() in {"1", "true", "t", "yes"}
+        if ssl_flag is not None
+        else False
+    )
+    DATABASES["sandbox"] = dj_database_url.config(
+        env="DATABASE_URL_SANDBOX",
+        conn_max_age=600,
+        ssl_require=ssl_require
+    )
+else:
+    # Inherit from default (works for both local env vars and DATABASE_URL)
+    DATABASES["sandbox"] = DATABASES["default"].copy()
+    
+    # 2. Override specific Sandbox values
+    SANDBOX_DB_NAME = os.getenv("POSTGRES_DB_SANDBOX")
+    
+    if not SANDBOX_DB_NAME:
+        # Fallback local naming
+        default_name = DATABASES["default"].get("NAME", "luximiadb")
+        SANDBOX_DB_NAME = f"{default_name}_sandbox"
 
-DATABASES["sandbox"] = {
-    "ENGINE": "django.db.backends.postgresql",
-    "NAME": SANDBOX_DB_NAME,
-    "USER": os.getenv("POSTGRES_USER"),
-    "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-    "HOST": os.getenv("POSTGRES_HOST", "db"),
-    "PORT": os.getenv("POSTGRES_PORT", "5432"),
-}
+    DATABASES["sandbox"]["NAME"] = SANDBOX_DB_NAME
 
 DATABASE_ROUTERS = ["config.routers.SandboxRouter"]
 

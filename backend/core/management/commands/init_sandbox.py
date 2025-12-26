@@ -21,37 +21,65 @@ class Command(BaseCommand):
         db_port = sandbox_db['PORT']
 
         # 1. Crear la Base de Datos si no existe
-        # Nos conectamos a la DB 'postgres' (default) para poder crear otras DBs
-        default_db_conf = settings.DATABASES[DEFAULT_DB_ALIAS]
-        
+        # INTENTO 1: Ver si ya podemos conectarnos (ya existe y es accesible)
         try:
-            conn = psycopg2.connect(
-                dbname='postgres',
-                user=default_db_conf['USER'],
-                password=default_db_conf['PASSWORD'],
-                host=default_db_conf['HOST'],
-                port=default_db_conf['PORT']
-            )
-            conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-            cur = conn.cursor()
-            
-            # Verificar si existe
-            cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
-            exists = cur.fetchone()
-            
-            if not exists:
-                self.stdout.write(f"🟡 Creando base de datos Sandbox: {db_name}...")
-                cur.execute(f'CREATE DATABASE "{db_name}" OWNER "{db_user}";')
-                self.stdout.write(self.style.SUCCESS(f"✅ Base de datos {db_name} creada exitosamente."))
-            else:
-                self.stdout.write(f"ℹ️  La base de datos Sandbox {db_name} ya existe.")
-            
-            cur.close()
-            conn.close()
+            # Extraer opciones adicionales (como SSL) para la conexión directa
+            connect_kwargs = {
+                'dbname': db_name,
+                'user': db_user,
+                'password': db_pass,
+                'host': db_host,
+                'port': db_port,
+            }
+            # En producción, settings de Django usa 'OPTIONS' para SSL
+            if sandbox_db.get('OPTIONS'):
+                # Simplificación básica para psycopg2
+                ssl_mode = sandbox_db['OPTIONS'].get('sslmode')
+                if ssl_mode:
+                    connect_kwargs['sslmode'] = ssl_mode
 
-        except Exception as e:
-            self.stdout.write(self.style.ERROR(f"❌ Error verificando/creando Sandbox DB: {e}"))
-            # No retornamos, intentamos migrar por si acaso ya existe y el error fue otro
+            conn_test = psycopg2.connect(**connect_kwargs)
+            conn_test.close()
+            self.stdout.write(self.style.SUCCESS(f"ℹ️  La base de datos Sandbox '{db_name}' ya existe y es accesible."))
+            exists = True
+        except Exception:
+            exists = False
+
+        if not exists:
+            # INTENTO 2: Intentar crearla conectándose a la DB administrativa 'postgres'
+            # Esto suele funcionar en desarrollo local/Docker, pero falla en Cloud Managed DBs.
+            self.stdout.write(f"🟡 Intentando crear base de datos Sandbox: {db_name}...")
+            default_db_conf = settings.DATABASES[DEFAULT_DB_ALIAS]
+            
+            try:
+                # Nota: En Cloud, a veces no puedes conectar a 'postgres'. 
+                # Intentamos usar la base de datos default como puente si no es 'postgres'.
+                admin_db = 'postgres'
+                
+                conn = psycopg2.connect(
+                    dbname=admin_db,
+                    user=default_db_conf['USER'],
+                    password=default_db_conf['PASSWORD'],
+                    host=default_db_conf['HOST'],
+                    port=default_db_conf['PORT']
+                )
+                conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+                cur = conn.cursor()
+                
+                # Verificar si existe (por seguridad, aunque el test de arriba falló)
+                cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (db_name,))
+                if not cur.fetchone():
+                    cur.execute(f'CREATE DATABASE "{db_name}" OWNER "{db_user}";')
+                    self.stdout.write(self.style.SUCCESS(f"✅ Base de datos {db_name} creada exitosamente."))
+                else:
+                    self.stdout.write(f"ℹ️  La base de datos {db_name} ya existía en el servidor.")
+                
+                cur.close()
+                conn.close()
+
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f"⚠️  No se pudo crear la DB '{db_name}' automáticamente: {e}"))
+                self.stdout.write("   (Esto es normal en entornos Cloud si la base de datos no fue pre-creada)")
 
         # 2. Ejecutar Migraciones en Sandbox
         self.stdout.write("🔄 Aplicando migraciones a Sandbox...")
