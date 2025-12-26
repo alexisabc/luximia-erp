@@ -144,7 +144,7 @@ class Command(BaseCommand):
                     # SEGURIDAD: No imprimir el token en logs.
                     error_str = str(e)
                     if "Unauthorized" in error_str:
-                         self.stdout.write(self.style.WARNING("⚠️  SendGrid API Key inválida o no configurada (401 Unauthorized). El correo no se envió."))
+                         self.stdout.write(self.style.WARNING("⚠️  Resend API Key inválida o no configurada (401 Unauthorized). El correo no se envió."))
                     else:
                         self.stdout.write(self.style.ERROR(f"❌ FALLÓ EL ENVÍO DE CORREO: {error_str}"))
                     self.stdout.write(self.style.WARNING(

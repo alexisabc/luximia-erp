@@ -345,12 +345,12 @@ if DEBUG:
     EMAIL_USE_TLS = False
     DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "system@local.dev")
 else:
-    EMAIL_BACKEND = "config.emails.SendGridEmailBackend"
+    EMAIL_BACKEND = "config.emails.ResendEmailBackend"
     DEFAULT_FROM_EMAIL = os.getenv(
-        "SENDGRID_FROM_EMAIL", os.getenv("DEFAULT_FROM_EMAIL", "noreply@system.app")
+        "RESEND_FROM_EMAIL", os.getenv("DEFAULT_FROM_EMAIL", "noreply@system.app")
     )
 
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 
 # --- Django REST Framework y JWT ---
