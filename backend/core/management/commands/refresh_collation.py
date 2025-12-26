@@ -26,10 +26,13 @@ class Command(BaseCommand):
                 }
                 
                 # Soportar SSL en producción
+                # Soportar SSL explícito si está en la configuración de Django (dj_database_url)
                 if conf.get('OPTIONS'):
                     ssl_mode = conf['OPTIONS'].get('sslmode')
                     if ssl_mode:
                         connect_kwargs['sslmode'] = ssl_mode
+                        # Si sslmode es 'require' pero el servidor no tiene SSL, fallará.
+                        # El usuario debe ajustar DATABASE_SSL_REQUIRE=False en sus variables de entorno.
 
                 conn = psycopg2.connect(**connect_kwargs)
                 conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
