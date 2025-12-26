@@ -60,9 +60,19 @@ def _resolve_logo_url() -> str:
         return urljoin(base_front, env_logo_url)
 
     # Fallback legacy
-    static_path = static("img/logo.png").lstrip("/")
-    base_url = _get_assets_base_url()
-    return urljoin(base_url, static_path)
+    try:
+        # Intenta resolver usando staticfiles manifest (si existe)
+        clean_path = "img/logo.png"
+        static_path = static(clean_path).lstrip("/")
+        base_url = _get_assets_base_url()
+        return urljoin(base_url, static_path)
+    except ValueError:
+        # Si falla (ej. Manifest no tiene el archivo), retornamos una URL genérica al frontend
+        # para evitar romper el flujo de creación de usuario.
+        base_front = f"https://{getattr(settings, 'FRONTEND_DOMAIN', 'localhost:3000')}"
+        if getattr(settings, 'DEVELOPMENT_MODE', False):
+             base_front = "http://localhost:3000"
+        return urljoin(base_front, "/static/img/logo.png")
 
 
 def build_enrollment_email_context(
