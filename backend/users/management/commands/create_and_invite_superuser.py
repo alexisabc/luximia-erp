@@ -101,7 +101,7 @@ class Command(BaseCommand):
             # --- Paso 4: Generar y enviar el token si el usuario no está activo ---
             if not user.is_active:
                 EnrollmentToken.objects.filter(user=user).delete()
-                token = secrets.token_urlsafe(32)
+                token = secrets.token_hex(32)
                 token_hash = hashlib.sha256(token.encode()).hexdigest()
                 expires_at = timezone.now() + timedelta(hours=24)
                 EnrollmentToken.objects.create(

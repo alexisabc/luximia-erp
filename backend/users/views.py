@@ -168,7 +168,7 @@ class InviteUserView(APIView):
     def _send_invite(self, user):
         """Función interna para generar y enviar el token de invitación."""
         EnrollmentToken.objects.filter(user=user).delete()
-        token = secrets.token_urlsafe(32)
+        token = secrets.token_hex(32)
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         expires_at = timezone.now() + timedelta(hours=24)
         EnrollmentToken.objects.create(
