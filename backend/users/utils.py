@@ -30,7 +30,7 @@ def _get_assets_base_url() -> str:
             getattr(settings, "EMAIL_ASSETS_DOMAIN", None)
             or os.getenv("EMAIL_ASSETS_DOMAIN")
             or getattr(settings, "FRONTEND_DOMAIN", None)
-            or "luximia.app"
+            or "tudominio.com"
         )
         if domain.startswith("http://") or domain.startswith("https://"):
             base_url = domain
@@ -47,11 +47,20 @@ def _get_assets_base_url() -> str:
 def _resolve_logo_url() -> str:
     """Resolve the absolute URL for the logo used in enrollment emails."""
 
-    env_logo_url = getattr(settings, "EMAIL_LOGO_URL", None) or os.getenv("EMAIL_LOGO_URL")
+    # Prioridad 1: Variable explícita de logo
+    env_logo_url = getattr(settings, "NEXT_PUBLIC_LOGO_URL", None) or os.getenv("NEXT_PUBLIC_LOGO_URL")
     if env_logo_url:
-        return env_logo_url
+        # Si ya es URL absoluta, retornarla
+        if env_logo_url.startswith("http"):
+            return env_logo_url
+        # Si es ruta relativa, unirla al Frontend Domain
+        base_front = f"https://{getattr(settings, 'FRONTEND_DOMAIN', 'localhost:3000')}"
+        if getattr(settings, 'DEVELOPMENT_MODE', False):
+             base_front = "http://localhost:3000"
+        return urljoin(base_front, env_logo_url)
 
-    static_path = static("logo-luximia.png").lstrip("/")
+    # Fallback legacy
+    static_path = static("img/logo.png").lstrip("/")
     base_url = _get_assets_base_url()
     return urljoin(base_url, static_path)
 
@@ -65,7 +74,7 @@ def build_enrollment_email_context(
 ) -> Dict[str, Any]:
     """Genera el contexto base para los correos de enrolamiento."""
 
-    company_name = getattr(settings, "RP_NAME", "Luximia ERP")
+    company_name = getattr(settings, "NEXT_PUBLIC_APP_NAME", "Sistema ERP")
 
     display_name = ""
     if user is not None:

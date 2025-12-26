@@ -1,6 +1,6 @@
 ¡Hola, {{ display_name }}!
 
-Te damos la bienvenida a {{ company_name|default:"Luximia ERP" }}.
+Te damos la bienvenida a {{ company_name|default:"Sistema ERP" }}.
 
 Se ha creado una cuenta para ti. Para comenzar a utilizar la plataforma, por favor confirma tu correo y establece tu contraseña utilizando el siguiente enlace:
 
@@ -10,4 +10,4 @@ Este enlace de invitación caducará en {{ link_validity|default:"24 horas" }}.
 
 Si tienes alguna pregunta, contacta a tu administrador.
 
-© {% now "Y" %} {{ company_name|default:"Luximia ERP" }}. Todos los derechos reservados.
+© {% now "Y" %} {{ company_name|default:"Sistema ERP" }}. Todos los derechos reservados.
