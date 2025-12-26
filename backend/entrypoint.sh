@@ -26,9 +26,13 @@ wait_for_db
 echo "🧹 Refrescando versiones de colación..."
 python manage.py refresh_collation || echo "⚠️ Advertencia: No se pudo refrescar la colación (posible falta de permisos o DB no postgres)."
 
-# 1. Migraciones (Generar y Aplicar)
-echo "🔄 Generando y aplicando migraciones..."
-python manage.py makemigrations --noinput
+# 1. Migraciones (Generar solo en Dev, Aplicar siempre)
+if [ "$DEVELOPMENT_MODE" = "True" ]; then
+    echo "🔄 Generando migraciones (Dev Mode)..."
+    python manage.py makemigrations --noinput
+fi
+
+echo "🔄 Aplicando migraciones..."
 python manage.py migrate ia --noinput
 python manage.py migrate --noinput
 python manage.py init_sandbox

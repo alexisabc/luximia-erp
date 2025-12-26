@@ -52,4 +52,8 @@ class Command(BaseCommand):
                 cur.close()
                 conn.close()
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f"❌ Error refrescando colación en alias {db_alias}: {e}"))
+                error_msg = str(e)
+                if "does not exist" in error_msg:
+                    self.stdout.write(self.style.WARNING(f"⚠️  La base de datos '{db_name}' no existe. Saltando refresco."))
+                else:
+                    self.stdout.write(self.style.ERROR(f"❌ Error refrescando colación en alias {db_alias}: {e}"))
