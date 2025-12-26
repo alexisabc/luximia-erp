@@ -104,9 +104,23 @@ AXES_RESET_ON_SUCCESS = True # Resetear contador si logra entrar
 
 
 # --- Configuración de CORS ---
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
-).split(",")
+# --- Configuración de CORS ---
+cors_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+
+# Agregar automáticamente el FRONTEND_DOMAIN para evitar errores de configuración
+if FRONTEND_DOMAIN:
+    if "://" not in FRONTEND_DOMAIN:
+        CORS_ALLOWED_ORIGINS.append(f"https://{FRONTEND_DOMAIN}")
+        if DEBUG:
+            CORS_ALLOWED_ORIGINS.append(f"http://{FRONTEND_DOMAIN}")
+    else:
+        CORS_ALLOWED_ORIGINS.append(FRONTEND_DOMAIN)
+
+# Default Localhost fallback
+if not CORS_ALLOWED_ORIGINS and DEBUG:
+    CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # --- CSRF (importante incluso en dev cuando hay dominio/puerto distinto) ---
