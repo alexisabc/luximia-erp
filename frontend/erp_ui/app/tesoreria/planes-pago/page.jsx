@@ -313,6 +313,8 @@ export default function PlanesPagoPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
         </div>
     );

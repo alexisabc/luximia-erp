@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Beaker, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
-export default function SandboxToggle({ condensed = false }) {
+export default function SandboxToggle({ condensed = false, className = '' }) {
     const [isSandbox, setIsSandbox] = useState(false);
 
     useEffect(() => {
@@ -24,10 +24,10 @@ export default function SandboxToggle({ condensed = false }) {
             <button
                 onClick={toggleSandbox}
                 title={isSandbox ? "Desactivar Sandbox" : "Activar Sandbox"}
-                className={`p-2 rounded-lg transition-all ${isSandbox
+                className={`flex items-center justify-center p-2 rounded-xl transition-all ${isSandbox
                     ? 'bg-amber-100 text-amber-700 animate-pulse'
-                    : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
+                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-400'
+                    } ${className}`}
             >
                 <Beaker className="w-5 h-5" />
             </button>

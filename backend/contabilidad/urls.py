@@ -20,6 +20,7 @@ from .views import (
     CentroCostosViewSet,
     PolizaViewSet,
     DetallePolizaViewSet,
+    FacturaViewSet,
     strategic_dashboard,
 )
 
@@ -43,6 +44,7 @@ router.register(r"cuentas-contables", CuentaContableViewSet)
 router.register(r"centros-costos", CentroCostosViewSet)
 router.register(r"polizas", PolizaViewSet)
 router.register(r"detalles-poliza", DetallePolizaViewSet)
+router.register(r"facturas", FacturaViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

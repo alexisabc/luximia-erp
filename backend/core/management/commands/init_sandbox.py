@@ -56,7 +56,14 @@ class Command(BaseCommand):
         # 2. Ejecutar Migraciones en Sandbox
         self.stdout.write("🔄 Aplicando migraciones a Sandbox...")
         try:
+            # Primero migrar IA para instalar extensión 'vector' y evitar errores de dependencias
+            self.stdout.write("   -> Migrando app 'ia' (instala vector extension)...")
+            call_command('migrate', 'ia', database='sandbox', interactive=False)
+            
+            # Luego migrar el resto
+            self.stdout.write("   -> Aplicando resto de migraciones...")
             call_command('migrate', database='sandbox', interactive=False)
+            
             self.stdout.write(self.style.SUCCESS("✅ Migraciones de Sandbox aplicadas correctamente."))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"❌ Error migrando Sandbox: {e}"))

@@ -12,6 +12,7 @@ import time
 import logging
 import secrets
 from typing import Any
+import uuid
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -123,9 +124,24 @@ def _verify_totp(secret: str, token: str, interval: int = 30, window: int = 1) -
     return False
 
 
-def _get_jwt_for_user(user) -> dict:
+def _get_jwt_for_user(user, request: HttpRequest = None) -> dict:
+    # 1. Rotar versión del token para invalidar sesiones anteriores
+    user.token_version = uuid.uuid4()
+    
+    # 2. Registrar dispositivo si hay request
+    if request:
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        user.current_session_device = user_agent[:255] # Truncar a 255 chars
+    
+    # 3. Actualizar última conexión explícitamente
+    user.last_login = timezone.now()
+    
+    user.save()
+
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
+    
+    # Claims estándar
     access_token["username"] = user.username
     access_token["email"] = user.email
     access_token["first_name"] = user.first_name
@@ -133,6 +149,10 @@ def _get_jwt_for_user(user) -> dict:
     access_token["is_superuser"] = user.is_superuser
     access_token["permissions"] = list(user.get_all_permissions())
     access_token["ultima_empresa_activa"] = user.ultima_empresa_activa.id if user.ultima_empresa_activa else None
+    
+    # Claims de seguridad (Sesión Única)
+    access_token["token_version"] = str(user.token_version)
+
     return {
         "refresh": str(refresh),
         "access": str(access_token),
@@ -186,10 +206,11 @@ class InviteUserView(APIView):
         # Si se recibe un PK, es para reenviar una invitación
         if pk:
             try:
-                user = User.objects.get(pk=pk, is_active=False)
+                # Permitir re-invitar usuarios activos (caso: re-enrolamiento por pérdida de dispositivo)
+                user = User.objects.get(pk=pk)
             except User.DoesNotExist:
                 return Response(
-                    {"detail": "Usuario no encontrado o ya activo"},
+                    {"detail": "Usuario no encontrado"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
@@ -862,7 +883,7 @@ class PasskeyLoginView(APIView):
             # Axes: resetear fallos previos al tener éxito
             axes_reset(ip=credentials["ip_address"], username=credentials["username"])
 
-            return Response(_get_jwt_for_user(user))
+            return Response(_get_jwt_for_user(user, request))
 
         except Exception as e:
             logger.error("Error en autenticación Passkey: %s", e, exc_info=True)
@@ -914,7 +935,7 @@ class VerifyTOTPLoginView(APIView):
             )
 
         # OK: emitir JWT y limpiar sesión
-        tokens = _get_jwt_for_user(user)
+        tokens = _get_jwt_for_user(user, request)
         
         request.session.flush() # Limpia datos temporales y regenera ID de sesión
         
@@ -947,4 +968,23 @@ __all__ = [
     "PasskeyLoginChallengeView",
     "PasskeyLoginView",
     "VerifyTOTPLoginView",
+    "ResetUserSessionView",
 ]
+
+class ResetUserSessionView(APIView):
+    """
+    Fuerza el cierre de sesión de un usuario rotando su token_version.
+    """
+    permission_classes = [IsStaffOrSuperuser]
+
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+            # Rotar version
+            user.token_version = uuid.uuid4()
+            user.save()
+            
+            logger.info(f"Sesión reseteada para usuario {user.email} por admin {request.user.email}")
+            return Response({"detail": "Sesión cerrada correctamente. El usuario deberá ingresar nuevamente."})
+        except User.DoesNotExist:
+             return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)

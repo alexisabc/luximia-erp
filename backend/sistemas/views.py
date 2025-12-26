@@ -19,17 +19,19 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import io
 
-class CategoriaEquipoViewSet(viewsets.ModelViewSet):
+from core.views import BaseViewSet
+
+class CategoriaEquipoViewSet(BaseViewSet):
     queryset = CategoriaEquipo.objects.all()
     serializer_class = CategoriaEquipoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class ModeloEquipoViewSet(viewsets.ModelViewSet):
+class ModeloEquipoViewSet(BaseViewSet):
     queryset = ModeloEquipo.objects.all()
     serializer_class = ModeloEquipoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class ActivoITViewSet(viewsets.ModelViewSet):
+class ActivoITViewSet(BaseViewSet):
     queryset = ActivoIT.objects.all()
     serializer_class = ActivoITSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -42,7 +44,7 @@ class ActivoITViewSet(viewsets.ModelViewSet):
             qs = qs.filter(modelo_id=modelo_id)
         return Response(self.get_serializer(qs, many=True).data)
 
-class AsignacionEquipoViewSet(viewsets.ModelViewSet):
+class AsignacionEquipoViewSet(BaseViewSet):
     queryset = AsignacionEquipo.objects.all().order_by('-fecha_asignacion')
     serializer_class = AsignacionEquipoSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -170,7 +172,7 @@ class AsignacionEquipoViewSet(viewsets.ModelViewSet):
         buffer.seek(0)
         return HttpResponse(buffer, content_type='application/pdf')
 
-class MovimientoInventarioViewSet(viewsets.ModelViewSet):
+class MovimientoInventarioViewSet(BaseViewSet):
     queryset = MovimientoInventario.objects.all().order_by('-created_at')
     serializer_class = MovimientoInventarioSerializer
     permission_classes = [permissions.IsAuthenticated]

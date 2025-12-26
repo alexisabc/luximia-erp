@@ -268,8 +268,10 @@ export default function BancosPage() {
         onClose={() => setIsExportModalOpen(false)}
         columns={BANCO_COLUMNAS_EXPORT}
         selectedColumns={selectedColumns}
-        onColumnChange={handleColumnChange} // Fixed prop name to match ExportModal standard if needed (check ExportModal.jsx later if errors)
-        onExport={handleExport}
+        onColumnChange={handleColumnChange}
+        onDownload={handleExport}
+        data={pageData.results}
+        withPreview={true}
       />
     </div>
   );

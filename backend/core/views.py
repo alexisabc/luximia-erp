@@ -199,26 +199,30 @@ class ExcelImportMixin:
                         if not row_data: continue
 
                         # Identificar registro único (UPDATE vs CREATE)
-                        # Buscamos por ID si viene, o por campos únicos
+                        # Usar all_objects para encontrar registros incluso si están inactivos
+                        manager = getattr(model, 'all_objects', model.objects)
                         pk_field = model._meta.pk.name
                         instance = None
                         
                         if pk_field in row_data:
                             try:
-                                instance = model.objects.get(pk=row_data[pk_field])
-                            except model.DoesNotExist:
+                                instance = manager.filter(pk=row_data[pk_field]).first()
+                            except:
                                 pass
                         
-                        # Si no hay PK, buscar por campos unique
+                        # Si no hay PK o no se encontró, buscar por campos unique
                         if not instance:
                             unique_fields = [f.name for f in model._meta.get_fields() if getattr(f, 'unique', False) and f.name in row_data]
                             if unique_fields:
                                 q = {k: row_data[k] for k in unique_fields}
-                                instance = model.objects.filter(**q).first()
+                                instance = manager.filter(**q).first()
 
                         if instance:
                             for k, v in row_data.items():
                                 setattr(instance, k, v)
+                            # Si el modelo tiene campo 'activo', lo restauramos al importar
+                            if hasattr(instance, 'activo'):
+                                instance.activo = True
                             instance.save()
                             updated_count += 1
                         else:
@@ -255,11 +259,109 @@ class BaseViewSet(ExcelImportMixin, viewsets.ModelViewSet):
         
         # Filtrar por activo si el parámetro existe
         if hasattr(queryset.model, 'activo'):
+            # Si el manager por defecto ya filtra, esto refuerza o permite filtrar explícitamente
             activo = self.request.query_params.get('activo', None)
             if activo is not None:
                 queryset = queryset.filter(activo=activo.lower() == 'true')
         
         return queryset
+
+    @action(detail=False, methods=['post'], url_path='exportar-excel')
+    def exportar_excel(self, request):
+        """
+        Exporta los datos filtrados a Excel basándose en una lista de columnas.
+        Soporta campos dinámicos y relacionales a través del serializador.
+        """
+        import openpyxl
+        from django.http import HttpResponse
+        
+        columns = request.data.get('columns', [])
+        if not columns:
+            return Response({"error": "Debe especificar las columnas a exportar."}, status=400)
+            
+        # 1. Obtener datos filtrados
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # 2. Preparar el Libro de Excel
+        model = self.get_serializer_class().Meta.model
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = getattr(model._meta, 'verbose_name_plural', 'Datos').capitalize()
+        
+        # 3. Headers (Verbose names o el ID de la columna)
+        headers = []
+        for col_id in columns:
+            try:
+                field = model._meta.get_field(col_id.split('__')[0])
+                headers.append(getattr(field, 'verbose_name', col_id).upper())
+            except:
+                headers.append(col_id.replace('_', ' ').upper())
+        ws.append(headers)
+        
+        # 4. Datos (Usando el Serializador para respetar la lógica de negocio/propiedades)
+        serializer_class = self.get_serializer_class()
+        
+        for obj in queryset:
+            data = serializer_class(obj).data
+            row = []
+            for col_id in columns:
+                # Soporte para campos anidados (limitado a 1 nivel para este exportador genérico)
+                # p.ej: 'cliente__nombre'
+                if '__' in col_id:
+                    parts = col_id.split('__')
+                    val = data
+                    for p in parts:
+                        val = val.get(p) if isinstance(val, dict) else None
+                else:
+                    val = data.get(col_id)
+                
+                # Formateo básico de valores complejos
+                if isinstance(val, bool):
+                    val = 'SÍ' if val else 'NO'
+                elif val is None:
+                    val = ''
+                
+                row.append(str(val))
+            ws.append(row)
+            
+        # 5. Respuesta
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        filename = f"Export_{ws.title}_{timezone.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        wb.save(response)
+        return response
+
+    @action(detail=False, methods=['get'])
+    def inactivos(self, request):
+        """
+        Endpoint común para listar registros inactivos (soft-deleted).
+        GET /.../inactivos/
+        """
+        model = self.get_serializer_class().Meta.model
+        if not hasattr(model, 'activo'):
+            # Algunos modelos pueden usar 'is_active'
+            if hasattr(model, 'is_active'):
+                queryset = model.objects.filter(is_active=False)
+            else:
+                return Response({"error": "Este modelo no soporta borrado lógico con campo 'activo'."}, status=400)
+        else:
+            # Usamos el manager 'all_objects' para ignorar el filtro por defecto de 'objects'
+            if hasattr(model, 'all_objects'):
+                queryset = model.all_objects.filter(activo=False)
+            else:
+                queryset = model.objects.filter(activo=False)
+            
+        # Soportar búsqueda y otros filtros del ViewSet
+        queryset = self.filter_queryset(queryset)
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 from .permissions import HasPermissionForAction

@@ -4,12 +4,16 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 from core.models import BaseModel, register_audit
+import uuid
 
 
 class CustomUser(AbstractUser, BaseModel):
     """Base custom user model for passwordless authentication."""
     # Permitir auth sin password tradicional
-    password = models.CharField(max_length=128, blank=True, null=True)
+    # No es necesario redefinir password como nullable. Django maneja auth sin password
+    # usando set_unusable_password(). Dejarlo estándar evita problemas de compatibilidad.
+    # Explicitly default password to unusable for existing NULL rows during migration
+    password = models.CharField(max_length=128, default='!')
 
     # Passkeys guardadas como JSON
     passkey_credentials = models.JSONField(default=list, blank=True)
@@ -23,6 +27,10 @@ class CustomUser(AbstractUser, BaseModel):
 
     # Usuario inactivo hasta completar seguridad
     is_active = models.BooleanField(default=False)
+
+    # Control de Sesión Única
+    token_version = models.UUIDField(default=uuid.uuid4, editable=False)
+    current_session_device = models.CharField(max_length=255, blank=True, null=True, help_text="Dispositivo de la sesión actual")
 
     # Multi-empresa
     empresa_principal = models.ForeignKey(

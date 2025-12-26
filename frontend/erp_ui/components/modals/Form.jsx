@@ -1,8 +1,6 @@
-'use client';
-
 import Modal from '@/components/modals';
+import { Save, Layout, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 
-// El FormModal ahora es capaz de renderizar grupos de checkboxes
 export default function FormModal({
     isOpen,
     onClose,
@@ -11,16 +9,35 @@ export default function FormModal({
     onFormChange,
     onSubmit,
     fields,
-    handleMultiSelectChange, // Maneja selecciones múltiples
-    handleSelectAll, // Opcional: manejar selección global
-    handleGroupSelect, // Opcional: selección por grupo
+    handleMultiSelectChange,
+    handleSelectAll,
+    handleGroupSelect,
     submitText = "Guardar Cambios",
     maxWidth = "max-w-2xl",
+    icon: CustomIcon,
+    subtitle = "Completa la información requerida"
 }) {
     if (!isOpen) return null;
 
+    const Icon = CustomIcon || Layout;
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth={maxWidth}>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                        <Icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-gray-900 dark:text-white font-bold">{title}</span>
+                        <span className="text-xs text-gray-400 font-normal">{subtitle}</span>
+                    </div>
+                </div>
+            }
+            maxWidth={maxWidth}
+        >
             <form onSubmit={onSubmit} className="space-y-5">
                 {fields.map(field => (
                     <div key={field.name} className="space-y-1.5">
@@ -176,19 +193,20 @@ export default function FormModal({
                     </div>
                 ))}
 
-                <div className="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky bottom-0 z-10">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
+                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                     >
                         Cancelar
                     </button>
                     <button
                         type="submit"
-                        className="px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 transition-all duration-200 w-full sm:w-auto"
+                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/25 transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2"
                     >
-                        {submitText}
+                        <Save className="w-4 h-4" />
+                        <span>{submitText}</span>
                     </button>
                 </div>
             </form>

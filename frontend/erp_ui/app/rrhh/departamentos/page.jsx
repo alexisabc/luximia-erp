@@ -255,8 +255,10 @@ export default function DepartamentosPage() {
                 onClose={() => setIsExportModalOpen(false)}
                 columns={DEPARTAMENTO_COLUMNAS_EXPORT}
                 selectedColumns={selectedColumns}
-                onChange={handleColumnChange}
-                onExport={handleExport}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
         </div>
     );

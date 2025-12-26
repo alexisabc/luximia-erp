@@ -20,9 +20,9 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     )
     serializer_class = AuditLogSerializer
     permission_classes = [IsAuthenticated, CanViewAuditLog] 
-    # Mantenemos paginación por defecto del proyecto, o None si así se prefiere.
-    # El usuario original tenía pagination_class = None, lo respeto.
-    pagination_class = None 
+    # Mantenemos paginación por defecto del proyecto.
+    # El frontend espera 'results' y 'count', por lo que necesitamos paginación activa.
+    # pagination_class = None 
 
     @action(detail=False, methods=["get"], url_path="exportar")
     def exportar(self, request):

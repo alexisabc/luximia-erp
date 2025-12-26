@@ -20,6 +20,7 @@ from .models import (
     CentroCostos,
     Poliza,
     DetallePoliza,
+    Factura,
 )
 
 
@@ -423,4 +424,11 @@ class PolizaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Poliza
+        fields = '__all__'
+
+class FacturaSerializer(serializers.ModelSerializer):
+    moneda_codigo = serializers.ReadOnlyField(source='moneda.codigo')
+    
+    class Meta:
+        model = Factura
         fields = '__all__'

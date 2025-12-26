@@ -336,7 +336,9 @@ export default function EmpleadosPage() {
                 columns={EMPLEADO_COLUMNAS_EXPORT}
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
-                onExport={handleExport}
+                onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
 
             {/* Detailed View Modal */}

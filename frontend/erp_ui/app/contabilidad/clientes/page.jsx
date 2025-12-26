@@ -282,6 +282,8 @@ export default function ClientesPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
 
             <ConfirmationModal

@@ -42,6 +42,18 @@ export const getProveedores = async (params) => {
     return await api.get('/compras/proveedores/', { params });
 };
 
+export const createProveedor = async (data) => {
+    return await api.post('/compras/proveedores/', data);
+};
+
+export const updateProveedor = async (id, data) => {
+    return await api.patch(`/compras/proveedores/${id}/`, data);
+};
+
+export const deleteProveedor = async (id) => {
+    return await api.delete(`/compras/proveedores/${id}/`);
+};
+
 export const getInsumos = async (params) => {
     return await api.get('/compras/insumos/', { params });
 };
@@ -51,6 +63,24 @@ export const createDetalleOrden = async (data) => {
     return await api.post('/compras/detalles-orden/', data);
 };
 
+
 export const deleteDetalleOrden = async (id) => {
     return await api.delete(`/compras/detalles-orden/${id}/`);
+};
+
+// --- Import/Export
+export const exportarProveedoresExcel = async (params) => {
+    return await api.get('/compras/proveedores/exportar/', { params, responseType: 'blob' });
+};
+
+export const descargarPlantillaProveedores = async () => {
+    return await api.get('/compras/proveedores/exportar-plantilla/', { responseType: 'blob' });
+};
+
+export const importarProveedores = async (formData) => {
+    return await api.post('/compras/proveedores/importar-excel/', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
 };

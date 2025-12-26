@@ -30,6 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
             "has_totp",
             "passkey_provider",
             "totp_provider",
+            "last_login",
+            "current_session_device",
         ]
 
     def get_has_passkey(self, obj):

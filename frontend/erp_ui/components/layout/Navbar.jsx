@@ -5,6 +5,7 @@ import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { Menu, Search, Bell, Settings, LogOut, ChevronRight, User as UserIcon } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
+import SandboxToggle from './SandboxToggle';
 import NotificationsBell from './NotificationsBell';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
@@ -113,6 +114,7 @@ export default function Navbar() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
+                    <SandboxToggle condensed className="h-10 w-10" />
                     <ThemeSwitcher showLabel={false} className="h-10 w-10 rounded-xl hover:bg-gray-100 text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400 justify-center" />
 
                     <NotificationsBell />

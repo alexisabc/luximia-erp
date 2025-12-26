@@ -10,6 +10,8 @@ from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
+from django.db import models
+
 
 
 from core.permissions import HasPermissionForAction
@@ -34,6 +36,7 @@ from .models import (
     CentroCostos,
     Poliza,
     DetallePoliza,
+    Factura,
 )
 
 from .serializers import (
@@ -55,6 +58,7 @@ from .serializers import (
     CentroCostosSerializer,
     PolizaSerializer,
     DetallePolizaSerializer,
+    FacturaSerializer,
 )
 
 
@@ -182,6 +186,57 @@ class PolizaViewSet(ContabilidadBaseViewSet):
 class DetallePolizaViewSet(ContabilidadBaseViewSet):
     queryset = DetallePoliza.objects.all()
     serializer_class = DetallePolizaSerializer
+
+from core.views import ExcelImportMixin
+import openpyxl
+from django.http import HttpResponse
+
+class FacturaViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
+    queryset = Factura.objects.all().order_by("-fecha_emision")
+    serializer_class = FacturaSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
+        
+        if show_inactive and hasattr(Factura, 'all_objects'):
+            queryset = Factura.all_objects.all().order_by("-fecha_emision")
+        
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                models.Q(uuid__icontains=search) | 
+                models.Q(serie__icontains=search) |
+                models.Q(folio__icontains=search) |
+                models.Q(receptor_nombre__icontains=search) |
+                models.Q(receptor_rfc__icontains=search)
+            )
+            
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def exportar(self, request):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="facturas.xlsx"'
+        
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Facturas"
+        
+        headers = ['UUID', 'Serie', 'Folio', 'Fecha', 'Receptor', 'RFC Receptor', 'Total', 'Estado', 'Moneda']
+        ws.append(headers)
+        
+        facturas = self.filter_queryset(self.get_queryset())
+        
+        for f in facturas:
+            ws.append([
+                f.uuid, f.serie, f.folio, f.fecha_emision.strftime('%Y-%m-%d') if f.fecha_emision else '',
+                f.receptor_nombre, f.receptor_rfc, f.total, f.estado_sat, 
+                f.moneda.codigo if f.moneda else ''
+            ])
+            
+        wb.save(response)
+        return response
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

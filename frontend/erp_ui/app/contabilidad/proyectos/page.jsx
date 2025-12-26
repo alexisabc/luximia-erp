@@ -2,11 +2,12 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel } from '@/services/api';
+import { getProyectos, createProyecto, updateProyecto, deleteProyecto, getInactiveProyectos, hardDeleteProyecto, exportProyectosExcel, importarProyectos } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/tables/ReusableTable';
 import FormModal from '@/components/modals/Form'; // <-- Usa el FormModal
 import ExportModal from '@/components/modals/Export';
+import ImportModal from '@/components/modals/Import';
 import ConfirmationModal from '@/components/modals/Confirmation';
 import ActionButtons from '@/components/common/ActionButtons';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
@@ -83,6 +84,7 @@ export default function ProyectosPage() {
     // Estados para los modales
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Estados para la gestión de datos
@@ -267,10 +269,10 @@ export default function ProyectosPage() {
                     <ActionButtons
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('contabilidad.view_cliente')}
+                        canToggleInactive={hasPermission('contabilidad.view_proyecto')}
                         onCreate={handleCreateClick}
                         canCreate={hasPermission('contabilidad.add_proyecto')}
-                        importHref="/importar/proyectos"
+                        onImport={() => setIsImportModalOpen(true)}
                         canImport={hasPermission('contabilidad.add_proyecto')}
                         onExport={() => setIsExportModalOpen(true)}
                         canExport
@@ -323,6 +325,16 @@ export default function ProyectosPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
+            />
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={importarProyectos}
+                onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/contabilidad/proyectos/exportar-plantilla/"
             />
 
             <ConfirmationModal

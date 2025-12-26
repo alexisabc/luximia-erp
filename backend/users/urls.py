@@ -24,6 +24,7 @@ from .views import (
     VerifyTOTPLoginView,
     UserImportExportView,
     GroupImportExportView,
+    ResetUserSessionView,
 )
 
 app_name = 'users'
@@ -35,6 +36,7 @@ urlpatterns = [
     path("<int:pk>/hard/", HardDeleteUserView.as_view(), name="user-hard-delete"),
     path("invite/", InviteUserView.as_view(), name="invite-user"),
     path("<int:pk>/resend-invite/", InviteUserView.as_view(), name="resend-invite"),
+    path("<int:pk>/reset-session/", ResetUserSessionView.as_view(), name="reset-session"),
 
     # --- Grupos y Permisos ---
     path("groups/", GroupListView.as_view(), name="group-list-create"),

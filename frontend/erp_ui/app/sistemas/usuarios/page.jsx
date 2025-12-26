@@ -14,6 +14,7 @@ import {
     resendInvite,
     exportUsuariosExcel,
     importarUsuarios,
+    resetUserSession,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import ReusableTable from '@/components/tables/ReusableTable';
@@ -22,7 +23,7 @@ import ConfirmationModal from '@/components/modals/Confirmation';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
 import Overlay from '@/components/loaders/Overlay';
-import { Key, ShieldCheck, Mail } from 'lucide-react';
+import { Key, ShieldCheck, Mail, LogOut, Monitor, Smartphone, RefreshCcw } from 'lucide-react';
 import ActionButtons from '@/components/common/ActionButtons';
 
 const USUARIO_COLUMNAS_DISPLAY = [
@@ -41,13 +42,46 @@ const USUARIO_COLUMNAS_DISPLAY = [
         )
     },
     {
-        header: 'Seguridad',
+        header: 'Última Sesión',
         render: (row) => (
-            <div className="flex items-center gap-2">
-                {row.has_passkey && <span title="Passkey registrada"><Key className="text-blue-500" /></span>}
-                {row.has_totp && <span title="TOTP registrado"><ShieldCheck className="text-purple-500" /></span>}
+            <div className="flex flex-col text-xs">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {row.last_login ? new Date(row.last_login).toLocaleDateString() : '-'}
+                </span>
+                <span className="text-gray-500">
+                    {row.last_login ? new Date(row.last_login).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
+                </span>
             </div>
         )
+    },
+    {
+        header: 'Dispositivo',
+        render: (row) => {
+            if (!row.current_session_device) return <span className="text-xs text-gray-400">-</span>;
+
+            const ua = row.current_session_device.toLowerCase();
+            let Icon = Monitor;
+            let label = "PC";
+
+            if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+                Icon = Smartphone;
+                label = "Móvil";
+            }
+
+            // Extract OS simple name if possible
+            if (ua.includes('windows')) label += " (Win)";
+            else if (ua.includes('mac')) label += " (Mac)";
+            else if (ua.includes('linux')) label += " (Linux)";
+            else if (ua.includes('android')) label += " (Android)";
+            else if (ua.includes('ios') || ua.includes('iphone')) label += " (iOS)";
+
+            return (
+                <div className="flex items-center gap-2 justify-center" title={row.current_session_device}>
+                    <Icon className="w-4 h-4 text-gray-500" />
+                    <span className="text-xs text-gray-500">{label}</span>
+                </div>
+            );
+        }
     }
 ];
 
@@ -258,7 +292,30 @@ export default function UsuariosPage() {
         }
     };
 
+    const handleResetSession = async (userId) => {
+        if (!confirm("¿Está seguro de que desea cerrar la sesión de este usuario? Tendrá que volver a ingresar.")) return;
+        try {
+            await resetUserSession(userId);
+            alert("Sesión cerrada correctamente.");
+            setIsFormModalOpen(false); // Opcional: Cerrar modal o refrescar datos
+            fetchData(currentPage, pageSize); // Recargar porsi acaso last_login cambia? No cambia inmediatamente hasta que loguee de nuevo.
+        } catch (err) {
+            console.error(err);
+            alert("Error al cerrar sesión.");
+        }
+    };
+
     // deleted overlay block
+
+    const handleSelectAllColumns = (selectAll) => {
+        if (selectAll) {
+            const allCols = {};
+            USUARIO_COLUMNAS_EXPORT.forEach(c => (allCols[c.id] = true));
+            setSelectedColumns(allCols);
+        } else {
+            setSelectedColumns({});
+        }
+    };
 
     return (
         <div className="p-8 h-full flex flex-col">
@@ -297,12 +354,24 @@ export default function UsuariosPage() {
                         onEdit: hasPermission('users.change_customuser') ? openModalForEdit : null,
                         onDelete: hasPermission('users.delete_customuser') ? handleDeleteClick : null,
                         onHardDelete: hasPermission('users.hard_delete_customuser') ? handleHardDelete : null,
-                        customActions: [
+                        custom: [
                             {
                                 label: 'Reenviar Invitación',
                                 onClick: handleReinvite,
-                                icon: <Mail />,
+                                icon: (props) => <Mail {...props} className="h-5 w-5 text-yellow-500" />,
                                 shouldShow: (user) => !user.is_active
+                            },
+                            {
+                                label: 'Re-enrolar Dispositivo',
+                                onClick: handleReinvite,
+                                icon: (props) => <RefreshCcw {...props} className="h-5 w-5 text-cyan-500" />,
+                                shouldShow: (user) => user.is_active
+                            },
+                            {
+                                label: 'Cerrar Sesión',
+                                onClick: handleResetSession,
+                                icon: (props) => <LogOut {...props} className="h-5 w-5 text-amber-600" />,
+                                shouldShow: (user) => user.is_active
                             }
                         ]
                     }}
@@ -345,6 +414,7 @@ export default function UsuariosPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onDownload={handleExport}
+                onSelectAll={handleSelectAllColumns}
             />
 
             <ConfirmationModal

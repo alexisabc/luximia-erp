@@ -260,8 +260,10 @@ export default function EsquemasComisionPage() {
                 onClose={() => setIsExportModalOpen(false)}
                 columns={ESQUEMA_COLUMNAS_EXPORT}
                 selectedColumns={selectedColumns}
-                onChange={handleColumnChange}
-                onExport={handleExport}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
         </div>
     );

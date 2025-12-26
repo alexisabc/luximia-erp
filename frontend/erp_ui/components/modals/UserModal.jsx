@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Mail, User, Shield, Check } from 'lucide-react';
+import { X, Mail, User, Shield, Check, Monitor, Smartphone, LogOut, Calendar } from 'lucide-react';
 
 export default function UserModal({
     isOpen,
@@ -11,7 +11,7 @@ export default function UserModal({
     onFormChange,
     onSubmit,
     groups = [], // [{ id, name }]
-    submitText = 'Guardar'
+    submitText = 'Guardar',
 }) {
     if (!isOpen) return null;
 
@@ -120,8 +120,8 @@ export default function UserModal({
                                 onBlur={() => handleBlur('email')}
                                 required
                                 className={`w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border rounded-lg focus:ring-2 outline-none transition-all ${isEmailInvalid
-                                        ? 'border-red-300 focus:ring-red-200'
-                                        : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'
+                                    ? 'border-red-300 focus:ring-red-200'
+                                    : 'border-gray-200 dark:border-gray-700 focus:ring-indigo-500'
                                     }`}
                                 placeholder="usuario@empresa.com"
                             />

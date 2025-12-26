@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel } from '@/services/api';
+import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel, importarUPEs } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/modals/Form';
 import ExportModal from '@/components/modals/Export';
+import ImportModal from '@/components/modals/Import';
 import ConfirmationModal from '@/components/modals/Confirmation';
 import ReusableTable from '@/components/tables/ReusableTable';
 import { formatCurrency } from '@/utils/formatters';
@@ -75,6 +76,7 @@ export default function UPEsPage() {
     // Estados para los modales
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Estados para la gestión de datos
@@ -181,7 +183,7 @@ export default function UPEsPage() {
         try {
             const [upesRes, proyectosRes] = await Promise.all([
                 showInactive
-                    ? getInactiveUpes(page, size)
+                    ? getInactiveUpes(page, size, { search })
                     : getUPEs(page, size, { search }),
                 getAllProyectos()
             ]);
@@ -257,10 +259,10 @@ export default function UPEsPage() {
                     <ActionButtons
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('contabilidad.view_cliente')}
+                        canToggleInactive={hasPermission('contabilidad.view_upe')}
                         onCreate={handleCreateClick}
                         canCreate={hasPermission('contabilidad.add_upe')}
-                        importHref="/importar/upes"
+                        onImport={() => setIsImportModalOpen(true)}
                         canImport={hasPermission('contabilidad.add_upe')}
                         onExport={() => setIsExportModalOpen(true)}
                         canExport
@@ -313,6 +315,16 @@ export default function UPEsPage() {
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
                 onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
+            />
+
+            <ImportModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onImport={importarUPEs}
+                onSuccess={() => fetchData(currentPage, pageSize)}
+                templateUrl="/contabilidad/upes/exportar-plantilla/"
             />
 
             <ConfirmationModal

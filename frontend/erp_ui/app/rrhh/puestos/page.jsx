@@ -296,8 +296,10 @@ export default function PuestosPage() {
                 onClose={() => setIsExportModalOpen(false)}
                 columns={PUESTO_COLUMNAS_EXPORT}
                 selectedColumns={selectedColumns}
-                onChange={handleColumnChange}
-                onExport={handleExport}
+                onColumnChange={handleColumnChange}
+                onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
         </div>
     );

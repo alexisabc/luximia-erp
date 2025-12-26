@@ -264,7 +264,9 @@ export default function VendedoresPage() {
                 columns={VENDEDOR_COLUMNAS_EXPORT}
                 selectedColumns={selectedColumns}
                 onColumnChange={handleColumnChange}
-                onExport={handleExport}
+                onDownload={handleExport}
+                data={pageData.results}
+                withPreview={true}
             />
         </div>
     );

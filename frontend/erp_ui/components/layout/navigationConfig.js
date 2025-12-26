@@ -70,7 +70,7 @@ export const MENU_STRUCTURE = [
                 label: 'Cuentas',
                 items: [
                     { label: 'Clientes (CxC)', path: '/contabilidad/clientes', permission: 'contabilidad.view_cliente' },
-                    { label: 'Proveedores (CxP)', path: '/contabilidad/proveedores' },
+                    { label: 'Proveedores (CxP)', path: '/compras/proveedores', permission: 'compras.view_proveedor' },
                 ]
             },
             {
@@ -200,8 +200,7 @@ export const MENU_STRUCTURE = [
             {
                 label: 'Gestión IT',
                 items: [
-                    { label: 'Inventario', path: '/sistemas/inventario', permission: 'sistemas.view_activoit' },
-                    { label: 'Generar Responsiva', path: '/sistemas/responsivas/nuevo', permission: 'sistemas.add_asignacionequipo' },
+                    { label: 'Inventario IT', path: '/sistemas/inventario', permission: 'sistemas.view_activoit' },
                 ]
             },
             {

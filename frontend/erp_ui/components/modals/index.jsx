@@ -61,10 +61,16 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "ma
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-10">
-                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                        {title}
-                    </h3>
+                <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 z-10 font-bold">
+                    {typeof title === 'string' ? (
+                        <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                            {title}
+                        </h3>
+                    ) : (
+                        <div className="text-xl font-bold w-full">
+                            {title}
+                        </div>
+                    )}
                     <button
                         onClick={onClose}
                         className="p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

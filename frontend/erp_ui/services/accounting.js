@@ -30,7 +30,7 @@ export const getUPEs = (page = 1, pageSize = 15, filters = {}) =>
 export const createUPE = (data) => apiClient.post('/contabilidad/upes/', data);
 export const updateUPE = (id, data) => apiClient.patch(`/contabilidad/upes/${id}/`, data);
 export const deleteUPE = (id) => apiClient.delete(`/contabilidad/upes/${id}/`);
-export const getInactiveUpes = (page = 1, pageSize = 15) => apiClient.get('/contabilidad/upes/inactivos/', { params: { page, page_size: pageSize } });
+export const getInactiveUpes = (page = 1, pageSize = 15, filters = {}) => apiClient.get('/contabilidad/upes/inactivos/', { params: { page, page_size: pageSize, ...filters } });
 export const hardDeleteUpe = (id) => apiClient.delete(`/contabilidad/upes/${id}/hard/`);
 export const exportUpesExcel = (columns, filters = {}) =>
     apiClient.post('/contabilidad/upes/exportar-excel/', { columns }, { params: filters, responseType: 'blob' });
@@ -71,7 +71,7 @@ export const getMonedas = (page = 1, pageSize = 15, filters = {}) => apiClient.g
 export const createMoneda = (data) => apiClient.post('/contabilidad/monedas/', data);
 export const updateMoneda = (id, data) => apiClient.patch(`/contabilidad/monedas/${id}/`, data);
 export const deleteMoneda = (id) => apiClient.delete(`/contabilidad/monedas/${id}/`);
-export const getInactiveMonedas = (page = 1, pageSize = 15) => apiClient.get('/contabilidad/monedas/inactivos/', { params: { page, page_size: pageSize } });
+export const getInactiveMonedas = (page = 1, pageSize = 15, filters = {}) => apiClient.get('/contabilidad/monedas/inactivos/', { params: { page, page_size: pageSize, ...filters } });
 export const hardDeleteMoneda = (id) => apiClient.delete(`/contabilidad/monedas/${id}/hard/`);
 export const exportMonedasExcel = (columns) => apiClient.post('/contabilidad/monedas/exportar-excel/', { columns }, { responseType: 'blob' });
 export const importarMonedas = (formData) => apiClient.post('/contabilidad/monedas/importar-excel/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });

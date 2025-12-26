@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, F
+from django.db import models
+from django.http import HttpResponse
+import openpyxl
+from core.views import ExcelImportMixin
 
 from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra
 from .serializers import (
@@ -11,10 +15,66 @@ from .serializers import (
     DetalleOrdenCompraSerializer
 )
 
-class ProveedorViewSet(viewsets.ModelViewSet):
+from core.views import ExcelImportMixin
+import openpyxl
+from django.http import HttpResponse
+
+class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
     queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
+        
+        # SoftDeleteModel filtra por defecto. Si queremos inactivos (eliminados), 
+        # necesitamos usar el manager que los incluye o filtrar explícitamente.
+        # Asumiendo que 'objects' filtra, pero 'all_objects' incluye todo en SoftDeleteModel standard.
+        # Si no existe all_objects, usamos active_objects o similar. 
+        # Verificando implementación común en Django:
+        if show_inactive and hasattr(Proveedor, 'all_objects'):
+            queryset = Proveedor.all_objects.all()
+        elif show_inactive:
+            # Fallback si no hay manager específico, intentamos quitar el filtro default si es posible
+            # O simplemente retornamos queryset tal cual si no estaba filtrado
+            pass
+            
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                models.Q(razon_social__icontains=search) | 
+                models.Q(nombre_comercial__icontains=search) |
+                models.Q(rfc__icontains=search) |
+                models.Q(email_contacto__icontains=search)
+            )
+            
+        return queryset
+
+    @decorators.action(detail=False, methods=['get'])
+    def exportar(self, request):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="proveedores.xlsx"'
+        
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Proveedores"
+        
+        headers = ['ID', 'RFC', 'Razón Social', 'Nombre Comercial', 'Tipo', 'Email', 'Teléfono', 'Banco', 'Cuenta', 'CLABE', 'Días Crédito']
+        ws.append(headers)
+        
+        # Usamos el mismo queryset filtrado para respetar búsquedas
+        proveedores = self.filter_queryset(self.get_queryset())
+        
+        for p in proveedores:
+            ws.append([
+                p.id, p.rfc, p.razon_social, p.nombre_comercial, p.tipo_persona,
+                p.email_contacto, p.telefono,
+                p.banco_nombre, p.cuenta, p.clabe, p.dias_credito
+            ])
+            
+        wb.save(response)
+        return response
 
 class InsumoViewSet(viewsets.ModelViewSet):
     queryset = Insumo.objects.all()

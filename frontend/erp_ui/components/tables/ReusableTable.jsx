@@ -55,12 +55,13 @@ export default function ReusableTable({
                 <div className="flex items-center justify-center space-x-2">
                     {/* Custom Actions */}
                     {actions.custom && actions.custom.map((action, idx) => {
+                        if (action.shouldShow && !action.shouldShow(row)) return null;
                         const Icon = action.icon;
                         return (
                             <button
                                 key={idx}
                                 onClick={() => action.onClick(row)}
-                                className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                                className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
                                 title={action.tooltip || action.label}
                             >
                                 <Icon className="h-5 w-5" />
@@ -69,22 +70,22 @@ export default function ReusableTable({
                     })}
 
                     {actions.onView && (
-                        <Link href={`${actions.viewPath}/${row.id}`} className="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" title="Ver Detalle">
+                        <Link href={`${actions.viewPath}/${row.id}`} className="p-2 rounded-lg text-sky-500 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all duration-200" title="Ver Detalle">
                             <Eye className="h-5 w-5" />
                         </Link>
                     )}
                     {actions.onEdit && (
-                        <button onClick={() => actions.onEdit(row)} className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200" title="Editar">
+                        <button onClick={() => actions.onEdit(row)} className="p-2 rounded-lg text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200" title="Editar">
                             <SquarePen className="h-5 w-5" />
                         </button>
                     )}
                     {actions.onDelete && (
-                        <button onClick={() => actions.onDelete(row.id)} className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200" title="Eliminar">
+                        <button onClick={() => actions.onDelete(row.id)} className="p-2 rounded-lg text-purple-500 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-200" title="Desactivar">
                             <Trash className="h-5 w-5" />
                         </button>
                     )}
                     {actions.onHardDelete && (
-                        <button onClick={() => actions.onHardDelete(row.id)} className="p-2 rounded-lg text-gray-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200" title="Eliminar Definitivamente">
+                        <button onClick={() => actions.onHardDelete(row.id)} className="p-2 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200" title="Eliminar Definitivamente">
                             <XCircle className="h-5 w-5" />
                         </button>
                     )}

@@ -198,7 +198,7 @@ export default function MonedasPage() {
           <ActionButtons
             showInactive={showInactive}
             onToggleInactive={() => setShowInactive(!showInactive)}
-            canToggleInactive={hasPermission('contabilidad.view_cliente')}
+            canToggleInactive={hasPermission('contabilidad.view_moneda')}
             onCreate={handleCreateClick}
             canCreate={hasPermission('contabilidad.add_moneda')}
             onImport={() => setIsImportModalOpen(true)} // Updated
@@ -272,7 +272,9 @@ export default function MonedasPage() {
         columns={MONEDA_COLUMNAS_EXPORT}
         selectedColumns={selectedColumns}
         onColumnChange={handleColumnChange}
-        onExport={handleExport}
+        onDownload={handleExport}
+        data={pageData.results}
+        withPreview={true}
       />
     </div>
   );

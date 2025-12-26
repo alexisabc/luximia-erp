@@ -7,6 +7,7 @@ export const updateUser = (id, data) => apiClient.patch(`/users/${id}/`, data);
 export const deleteUser = (id) => apiClient.delete(`/users/${id}/`);
 export const hardDeleteUser = (id) => apiClient.delete(`/users/${id}/hard/`);
 export const resendInvite = (userId) => apiClient.post(`/users/${userId}/resend-invite/`);
+export const resetUserSession = (userId) => apiClient.post(`/users/${userId}/reset-session/`);
 export const getUser = (id) => apiClient.get(`/users/${id}/`);
 export const getUsers = (page = 1, pageSize = 15, filters = {}) =>
     apiClient.get('/users/', { params: { page, page_size: pageSize, ...filters } });
