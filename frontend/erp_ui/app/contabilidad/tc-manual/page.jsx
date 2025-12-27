@@ -30,7 +30,7 @@ export default function TiposCambioManualPage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await apiClient.get('/tipos-cambio-manual/');
+            const res = await apiClient.get('/contabilidad/tipos-cambio-manual/');
             setRates(res.data.results || res.data);
         } catch (error) {
             console.error(error);
@@ -58,7 +58,7 @@ export default function TiposCambioManualPage() {
                 moneda_origen_id: data.moneda,
                 // moneda_destino_id: null, (implícito 'MXN' visualmente si es null)
             };
-            await apiClient.post('/tipos-cambio-manual/', payload);
+            await apiClient.post('/contabilidad/tipos-cambio-manual/', payload);
             toast.success("Tipo de cambio guardado correctamente");
             setIsModalOpen(false);
             reset();

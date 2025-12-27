@@ -20,7 +20,7 @@ import openpyxl
 from django.http import HttpResponse
 
 class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
-    queryset = Proveedor.objects.all()
+    queryset = Proveedor.objects.all().order_by('id')
     serializer_class = ProveedorSerializer
     permission_classes = [permissions.IsAuthenticated]
 

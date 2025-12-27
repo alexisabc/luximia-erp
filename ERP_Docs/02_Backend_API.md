@@ -4,7 +4,7 @@ El backend es el núcleo de la lógica de negocio. Está organizado modularmente
 
 ## 📂 Estructura de Directorios (`backend/`)
 
-- `luximia_erp/`: Configuración global (`settings.py`, `urls.py`).
+- `config/`: Configuración global (`settings.py`, `urls.py`).
 - `contabilidad/`: **[CORE]** Gestión financiera, Proyectos, Clientes.
 - `rrhh/`: Recursos Humanos, Empleados, Nómina.
 - `users/`: Autenticación, Passkeys, Gestión de Usuarios.
@@ -24,12 +24,19 @@ Módulo más extenso. Maneja el flujo de dinero.
     - `/dashboard/strategic/`: Endpoint especial de agregación de datos para gráficas.
 
 ### 2. RRHH (`backend/rrhh`)
-Gestión del capital humano.
-- **Modelos Clave:**
-    - `Empleado` (Vinculado a `CustomUser`).
-    - `Departamento`, `Puesto`.
-    - `EsquemaComision`.
-- **Relaciones:** Un `Empleado` pertenece a un `Departamento` y tiene un `Puesto`.
+Gestión del capital humano y Nómina.
+-   **Modelos Clave:**
+    -   `Empleado` (Vinculado a `CustomUser`).
+    -   `Departamento`, `Puesto`.
+    -   `Nomina`, `ReciboNomina`, `ConfiguracionEconomica` (UMA, tablas ISR).
+-   **Motor de Cálculo (`engine.py`):**
+    -   Cálculo de ISR (Reglones/Tablas), Subsidio.
+    -   **IMSS:** Cálculo cuotas Obrero/Patronal detallado.
+    -   **Presupuestos:** Proyección de costo anual por empleado.
+-   **Servicios Nuevos:**
+    -   `NominaImporter`: Carga masiva desde Excel.
+    -   `NominaIOService`: Generación de archivos **SUA** e **IDSE**.
+-   **Relaciones:** Un `Empleado` pertenece a un `Departamento` y tiene un `Puesto`.
 
 ### 3. Usuarios (`backend/users`)
 Gestión de identidad.

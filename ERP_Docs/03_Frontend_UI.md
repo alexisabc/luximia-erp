@@ -2,7 +2,7 @@
 
 Cliente web moderno construido con **Next.js 16 (App Router)**.
 
-## 📂 Arquitectura de Carpetas (`frontend/luximia_erp_ui/`)
+## 📂 Arquitectura de Carpetas (`frontend/erp_ui/`)
 
 - `app/`: Rutas de la aplicación (File-system routing).
     - `(auth)/`: Grupo de rutas de autenticación (Login, Enroll). Layout dedicado.

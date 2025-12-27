@@ -52,10 +52,18 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **NGINX Hardening:** Implementación de **Reverse Proxy Seguro** con headers anti-XSS (`HttpOnly` cookies, `SameSite=Lax`, `X-Frame-Options`).
 
 ### ⚙️ Funcionalidad y Estabilidad
--   **Nómina y Pagos:** Corrección crítica en el motor de cálculo de nómina y generación de recibos.
+-   **Motor de Nómina 2025:**
+    -   Cálculo preciso de **IMSS Patronal y Obrero** (Desglose por ramas: Enfermedades, RCV, Invalidez, etc.).
+    -   Proyección de **Presupuesto Anual** (Carga Social + ISN + Prestaciones).
+    -   Calculadora inversa (Neto a Bruto) y timbrado (Mock) CFDI 4.0.
+    -   Importación/Exportación de layouts **SUA e IDSE**.
 -   **Selector Multi-Empresa:** Restauración de funcionalidad para superusuarios que gestionan múltiples entidades legales.
 -   **POS Terminal:** Corrección de layout y scrollbars en la terminal de punto de venta.
 -   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios vía SendGrid.
+
+### 📚 Documentación
+-   **Reestructuración:** Renombrado de carpeta de documentación a `ERP_Docs` para estandarización.
+-   **Limpieza de Código:** Depuración de servicios redundantes en `rrhh`.
 
 ---
 

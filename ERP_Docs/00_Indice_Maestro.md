@@ -1,6 +1,6 @@
-# 🦅 Luximia ERP - Documentación Maestra
+# 🦅 Sistema ERP - Documentación Maestra
 
-Bienvenido a la documentación técnica del sistema Luximia ERP. Este _vault_ está estructurado para facilitar el mantenimiento, escalabilidad y comprensión del sistema.
+Bienvenido a la documentación técnica del sistema ERP. Este _vault_ está estructurado para facilitar el mantenimiento, escalabilidad y comprensión del sistema.
 
 ## 🗂 Estructura del Vault
 
