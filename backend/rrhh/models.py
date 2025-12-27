@@ -6,7 +6,7 @@ from core.models import BaseModel, SoftDeleteModel, register_audit
 from .models_nomina import (
     ConceptoNomina, TablaISR, RenglonTablaISR, ConfiguracionEconomica,
     SubsidioEmpleo, RenglonSubsidio, Nomina, ReciboNomina, DetalleReciboItem,
-    TipoConcepto, ClasificacionFiscal
+    TipoConcepto, ClasificacionFiscal, BuzonIMSS
 )
 from .models_portal import (
     SolicitudVacaciones, SolicitudPermiso, Incapacidad, DocumentoExpediente
