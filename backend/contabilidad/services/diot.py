@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db.models import Sum
-from .models import Pago, Vendedor
+from contabilidad.models import Pago, Vendedor
 
 def generate_diot_txt(start_date, end_date):
     """

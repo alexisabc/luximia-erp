@@ -24,6 +24,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge";
+import ConnectivityIndicator from '@/components/ui/ConnectivityIndicator';
 
 export default function POSTerminalPage() {
     const router = useRouter();
@@ -270,6 +271,7 @@ export default function POSTerminalPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    <ConnectivityIndicator />
                     <Badge className={`${turno ? "bg-green-600 hover:bg-green-700 border-none text-white" : "bg-red-600 hover:bg-red-700 border-none text-white"} text-sm px-3 py-1`}>
                         {turno ? 'CAJA ABIERTA' : 'CAJA CERRADA'}
                     </Badge>

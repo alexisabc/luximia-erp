@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.utils import timezone
-from .models import Poliza, DetallePoliza, Factura, CuentaContable
-from .models_automation import PlantillaAsiento, ReglaAsiento
+from contabilidad.models import Poliza, DetallePoliza, Factura, CuentaContable
+from contabilidad.models_automation import PlantillaAsiento, ReglaAsiento
 
 def generar_poliza_from_factura(factura: Factura, plantilla: PlantillaAsiento, user=None) -> Poliza:
     """

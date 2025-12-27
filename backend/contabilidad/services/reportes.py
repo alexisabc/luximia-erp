@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db.models import Sum, Q
-from .models import CuentaContable, Poliza, DetallePoliza
+from contabilidad.models import CuentaContable, Poliza, DetallePoliza
 from datetime import date
 
 class ReporteFinancieroService:
