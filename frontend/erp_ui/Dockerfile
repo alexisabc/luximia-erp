@@ -4,7 +4,10 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 
-# Instala las dependencias (usamos install en lugar de ci para tolerar desajustes menores en dev)
+# Actualiza npm a la última versión estable
+RUN npm install -g npm@latest
+
+# Instala las dependencias
 RUN npm install
 
 COPY . .
