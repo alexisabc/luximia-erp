@@ -1,17 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Select, Badge, Card, Modal, Spin } from 'antd'; // Assuming Ant Design or similar
-import apiClient from '@/services/api'; // Adjust path
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
-import { Play, FileText } from 'lucide-react';
+import { Play, FileText, Loader2, Wand2 } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';
+import ReusableModal from '@/components/modals/ReusableModal';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
-// Simplified for brevity, assume we have a way to list Facturas needing provision
 export default function GeneradorPolizasPage() {
     const [facturas, setFacturas] = useState([]);
     const [plantillas, setPlantillas] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedFactura, setSelectedFactura] = useState(null);
+    const [selectedPlantilla, setSelectedPlantilla] = useState('');
     const [generating, setGenerating] = useState(false);
 
     useEffect(() => {
@@ -21,78 +28,124 @@ export default function GeneradorPolizasPage() {
     const loadData = async () => {
         setLoading(true);
         try {
+            // Carga facturas pendientes y plantillas
             const [resFacturas, resPlantillas] = await Promise.all([
-                apiClient.get('/contabilidad/facturas/?state=PENDIENTE_CONTABILIZAR'), // Conceptual query
+                apiClient.get('/contabilidad/facturas/', { params: { estado_sat: 'VIGENTE' } }), // Ajustar filtros según necesidad
                 apiClient.get('/contabilidad/plantillas-asientos/')
             ]);
-            // For demo, just show all facturas
-            const allFacturas = await apiClient.get('/contabilidad/facturas/');
-            setFacturas(allFacturas.data);
-            setPlantillas(resPlantillas.data);
+
+            // En un caso real filtraríamos las ya contabilizadas si el backend lo permite
+            setFacturas(resFacturas.data.results || resFacturas.data);
+            setPlantillas(resPlantillas.data.results || resPlantillas.data);
         } catch (error) {
             console.error(error);
-            toast.error("Error cargando datos");
+            toast.error("Error cargando datos. Verifique que las migraciones de Base de Datos se hayan aplicado.");
         } finally {
             setLoading(false);
         }
     };
 
-    const generarPoliza = async (facturaId, plantillaId) => {
-        if (!plantillaId) {
-            toast.warning("Selecciona una plantilla");
+    const handleOpenModal = (factura) => {
+        setSelectedFactura(factura);
+        setSelectedPlantilla('');
+        setIsModalOpen(true);
+    };
+
+    const handleGenerarPoliza = async () => {
+        if (!selectedPlantilla) {
+            toast.warning("Debes seleccionar una plantilla.");
             return;
         }
+
         setGenerating(true);
         try {
-            await apiClient.post(`/contabilidad/facturas/${facturaId}/generar-poliza/`, {
-                plantilla_id: plantillaId
+            await apiClient.post(`/contabilidad/facturas/${selectedFactura.id}/generar-poliza/`, {
+                plantilla_id: selectedPlantilla
             });
             toast.success("Póliza generada correctamente");
-            loadData(); // Refresh
+            setIsModalOpen(false);
+            // Opcional: Recargar datos o remover la factura de la lista si ya no es pendiente
+            loadData();
         } catch (error) {
-            toast.error("Error generando póliza");
             console.error(error);
+            toast.error(error.response?.data?.detalle || "Error generando póliza");
         } finally {
             setGenerating(false);
         }
     };
 
     const columns = [
-        { header: 'UUID', accessorKey: 'uuid', render: (row) => <span className="font-mono text-xs dark:text-gray-300">{row.uuid?.substring(0, 8)}...</span> },
-        { header: 'Fecha', accessorKey: 'fecha_emision', render: (row) => <span className="dark:text-gray-300">{row.fecha_emision?.substring(0, 10)}</span> },
-        { header: 'Receptor', accessorKey: 'receptor_nombre', render: (row) => <span className="font-medium dark:text-white">{row.receptor_nombre}</span> },
-        { header: 'Total', accessorKey: 'total', render: (row) => <span className="font-bold text-green-600 dark:text-green-400">${row.total}</span> },
+        {
+            header: 'UUID / Folio',
+            accessorKey: 'uuid',
+            cell: (row) => (
+                <div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        {row.serie ? `${row.serie}-` : ''}{row.folio || 'S/N'}
+                    </div>
+                    <div className="text-xs text-gray-500 font-mono" title={row.uuid}>
+                        {row.uuid?.substring(0, 8)}...
+                    </div>
+                </div>
+            )
+        },
+        {
+            header: 'Fecha',
+            accessorKey: 'fecha_emision',
+            cell: (row) => <span className="text-sm text-gray-600 dark:text-gray-400">{new Date(row.fecha_emision).toLocaleDateString()}</span>
+        },
+        {
+            header: 'Receptor / Emisor',
+            accessorKey: 'receptor_nombre',
+            cell: (row) => (
+                <div className="text-sm">
+                    <p className="font-medium">{row.receptor_nombre}</p>
+                    <p className="text-xs text-gray-500">{row.receptor_rfc}</p>
+                </div>
+            )
+        },
+        {
+            header: 'Total',
+            accessorKey: 'total',
+            cell: (row) => <span className="font-bold text-green-600 dark:text-green-400">${parseFloat(row.total).toLocaleString()}</span>
+        },
         {
             header: 'Acción',
-            render: (row) => (
-                <div className="flex gap-2 justify-center">
-                    <Select
-                        placeholder="Generar Póliza..."
-                        className="w-48"
-                        onChange={(val) => generarPoliza(row.id, val)}
-                        loading={generating}
-                        disabled={generating}
+            id: 'actions',
+            cell: (row) => (
+                <div className="flex justify-center">
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        onClick={() => handleOpenModal(row)}
                     >
-                        {plantillas.map(p => (
-                            <Select.Option key={p.id} value={p.id}>{p.nombre}</Select.Option>
-                        ))}
-                    </Select>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Generar
+                    </Button>
                 </div>
             )
         }
     ];
 
-
     return (
         <div className="p-8 h-full flex flex-col space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <FileText className="text-blue-600" />
-                    Generador de Pólizas
-                </h1>
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        <FileText className="text-blue-600 w-8 h-8" />
+                        Generador de Pólizas
+                    </h1>
+                    <p className="text-gray-500 mt-1">
+                        Crea pólizas contables automáticamente a partir de los XMLs de facturación.
+                    </p>
+                </div>
+                <Button onClick={loadData} variant="outline" size="sm">
+                    Recargar
+                </Button>
             </div>
 
-            <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
+            <div className="flex-1 min-h-0">
                 <ReusableTable
                     data={facturas}
                     columns={columns}
@@ -100,6 +153,50 @@ export default function GeneradorPolizasPage() {
                     pagination={{ pageSize: 10 }}
                 />
             </div>
+
+            <ReusableModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Generar Póliza Contable"
+                description={`Asocia una plantilla contable a la factura ${selectedFactura?.serie || ''}${selectedFactura?.folio || ''} (${selectedFactura?.uuid?.substring(0, 8)}...)`}
+                footer={
+                    <div className="flex justify-end gap-2 w-full">
+                        <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleGenerarPoliza} disabled={generating} className="bg-blue-600 hover:bg-blue-700">
+                            {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+                            Generar Póliza
+                        </Button>
+                    </div>
+                }
+            >
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Plantilla de Asiento</Label>
+                        <Select
+                            value={selectedPlantilla}
+                            onValueChange={setSelectedPlantilla}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona una plantilla..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {plantillas.length === 0 ? (
+                                    <div className="p-2 text-sm text-gray-500 text-center">No hay plantillas disponibles</div>
+                                ) : (
+                                    plantillas.map(p => (
+                                        <SelectItem key={p.id} value={String(p.id)}>
+                                            {p.nombre}
+                                        </SelectItem>
+                                    ))
+                                )}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-gray-500">
+                            Define cómo se distribuirán los cargos y abonos (Provisión, Pago, etc.)
+                        </p>
+                    </div>
+                </div>
+            </ReusableModal>
         </div>
     );
 }
