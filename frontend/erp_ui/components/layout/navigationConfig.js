@@ -77,12 +77,30 @@ export const MENU_STRUCTURE = [
                 label: 'Fiscal',
                 items: [
                     { label: 'Facturación', path: '/contabilidad/facturacion' },
+                    { label: 'Buzón Fiscal', path: '/contabilidad/facturacion/buzon' },
+                    { label: 'Generador de Pólizas', path: '/contabilidad/facturacion/polizas-automaticas' },
+                ]
+            },
+            {
+                label: 'Catálogos',
+                items: [
+                    { label: 'Cuentas Contables', path: '/contabilidad/cuentas-contables', permission: 'contabilidad.view_cuentacontable' },
+                    { label: 'Centros de Costos', path: '/contabilidad/centros-costos', permission: 'contabilidad.view_centrocostos' },
+                ]
+            },
+            {
+                label: 'Impuestos y SAT',
+                items: [
+                    { label: 'Declaración DIOT', path: '/contabilidad/fiscal/diot' },
+                    { label: 'Contabilidad Electrónica', path: '/contabilidad/fiscal/contabilidad-electronica' },
                 ]
             },
             {
                 label: 'Operaciones',
                 items: [
                     { label: 'Monedas', path: '/contabilidad/monedas', permission: 'contabilidad.view_moneda' },
+                    { label: 'TC Banxico (SAT)', path: '/contabilidad/tc-banxico', permission: 'contabilidad.view_tipodecambiosat' },
+                    { label: 'TC Manuales', path: '/contabilidad/tc-manual', permission: 'contabilidad.view_tipocambio' },
                     { label: 'Proyectos', path: '/contabilidad/proyectos', permission: 'contabilidad.view_proyecto' },
                     { label: 'UPEs', path: '/contabilidad/upes', permission: 'contabilidad.view_upe' },
                 ]

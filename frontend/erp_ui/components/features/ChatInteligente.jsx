@@ -110,6 +110,7 @@ export default function ChatInteligente() {
     ]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedModel, setSelectedModel] = useState('auto');
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -127,7 +128,7 @@ export default function ChatInteligente() {
         setInputValue('');
         setIsLoading(true);
         try {
-            const res = await consultaInteligente(inputValue);
+            const res = await consultaInteligente(inputValue, selectedModel);
             const assistantMessage = { sender: 'assistant', data: res.data };
             setMessages(prev => [...prev, assistantMessage]);
         } catch (error) {
@@ -180,7 +181,16 @@ export default function ChatInteligente() {
                                 {APP_NAME} AI
                                 <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Beta</span>
                             </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Tu asistente personal</p>
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                className="text-xs bg-transparent border-none focus:ring-0 text-gray-500 cursor-pointer p-0"
+                            >
+                                <option value="auto">Auto (Smart)</option>
+                                <option value="groq">Velocidad (Groq)</option>
+                                <option value="gemini">Balanceado (Gemini)</option>
+                                <option value="openai">Calidad (GPT-4o)</option>
+                            </select>
                         </div>
                     </div>
                     <button

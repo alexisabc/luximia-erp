@@ -35,6 +35,22 @@ docker-compose exec backend python manage.py migrate
 docker-compose exec backend python manage.py createsuperuser
 ```
 
+## 🛡️ NGINX Reverse Proxy (Híbrido)
+
+El sistema utiliza NGINX como un **Reverse Proxy** seguro y optimizado, compatible con Next.js Standalone (SSR).
+
+### Características
+- **Hybrid Mode:** Funciona tanto en local (`localhost:3000`) como en producción.
+- **Seguridad:** Inyecta headers anti-XSS (`HttpOnly`, `SameSite=Lax`) y `X-Frame-Options`.
+- **Performance:** Habilita **Gzip** para compresión de assets y maneja el caching.
+- **HMR Support:** Soporta Hot-Module-Reloading para desarrollo local (WebSockets).
+
+### Configuración
+El archivo de configuración se encuentra en `frontend/erp_ui/nginx.conf`.
+Si necesitas ajustar los tiempos de espera o el tamaño máximo de subida, edita este archivo y reconstruye el contenedor.
+
+---
+
 ## 🌐 Variables de Entorno (`.env`)
 
 ¡NUNCA SUBIR EL `.env` AL REPOSITORIO!

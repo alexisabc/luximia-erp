@@ -91,9 +91,27 @@ class TipoCambio(SoftDeleteModel):
 
 
 class Vendedor(SoftDeleteModel):
-    TIPO_CHOICES = [("INTERNO", "Interno"), ("EXTERNO", "Externo")]
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    TIPO_CHOICES = [("INTERNO", "Interno"), ("EXTERNO", "Externo")] # Legacy?
+    
+    # SAT DIOT Fields
+    TIPO_TERCERO_CHOICES = [
+        ('04', '04 - Proveedor Nacional'),
+        ('05', '05 - Proveedor Extranjero'),
+        ('15', '15 - Proveedor Global'),
+    ]
+    TIPO_OPERACION_CHOICES = [
+        ('03', '03 - Prestación de Servicios Profesionales'),
+        ('06', '06 - Arrendamiento de Inmuebles'),
+        ('85', '85 - Otros'),
+    ]
+    
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='EXTERNO')
     nombre_completo = models.CharField(max_length=200)
+    rfc = models.CharField(max_length=13, blank=True, null=True) # Critical for DIOT
+    
+    tipo_tercero = models.CharField(max_length=2, choices=TIPO_TERCERO_CHOICES, default='04')
+    tipo_operacion = models.CharField(max_length=2, choices=TIPO_OPERACION_CHOICES, default='85')
+    
     email = models.EmailField(blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
 
@@ -409,4 +427,9 @@ class Factura(SoftDeleteModel):
         return f"{self.serie or ''}{self.folio or ''} - {self.receptor_nombre} - ${self.total}"
 
 register_audit(Factura)
+
+
+# --- Automation / Integración ---
+from .models_automation import PlantillaAsiento, ReglaAsiento
+
 

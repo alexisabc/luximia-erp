@@ -127,5 +127,8 @@ export const getStrategicDashboardData = (timeframe, selectedProjects, morosidad
     return apiClient.get('/contabilidad/dashboard/strategic/', { params: { timeframe, projects, morosidad: morosidadRange, por_cobrar: porCobrarRange } });
 };
 
-export const consultaInteligente = (consulta, extra = {}) =>
-    apiClient.post('/ia/chat/', { consulta, ...extra });
+export const consultaInteligente = (consulta, model = 'auto') =>
+    apiClient.post('/ia/chat/', { consulta, model });
+
+export const uploadFacturasXMLs = (formData) =>
+    apiClient.post('/contabilidad/facturas/upload-xml/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });

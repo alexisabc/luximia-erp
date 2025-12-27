@@ -432,3 +432,18 @@ class FacturaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Factura
         fields = '__all__'
+
+# --- Automation Serializers ---
+
+from .models_automation import PlantillaAsiento, ReglaAsiento
+
+class ReglaAsientoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReglaAsiento
+        fields = '__all__'
+
+class PlantillaAsientoSerializer(serializers.ModelSerializer):
+    reglas = ReglaAsientoSerializer(many=True, read_only=True)
+    class Meta:
+        model = PlantillaAsiento
+        fields = '__all__'

@@ -1,7 +1,7 @@
 # Sistema ERP - Documentación del Proyecto
 
 - **Versión:** 2.6
-- **Fecha de última actualización:** 22 de diciembre de 2025
+- **Fecha de última actualización:** 26 de diciembre de 2025
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
 
 ---
@@ -49,6 +49,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID) utilizando `@simplewebauthn` y `webauthn` en backend.
 -   **2FA/TOTP:** Integración nativa de Doble Factor de Autenticación (Google Authenticator) con `pyotp`.
 -   **Auditoría Granular:** Rastreo completo de acciones críticas (Creación/Edición/Eliminado) mediante `django-auditlog`.
+-   **NGINX Hardening:** Implementación de **Reverse Proxy Seguro** con headers anti-XSS (`HttpOnly` cookies, `SameSite=Lax`, `X-Frame-Options`).
 
 ### ⚙️ Funcionalidad y Estabilidad
 -   **Nómina y Pagos:** Corrección crítica en el motor de cálculo de nómina y generación de recibos.
@@ -73,7 +74,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Infra:** `gunicorn` (23.0.0), `celery` (Async Tasks).
 
 ### Frontend
--   **Framework:** **Next.js 16.0.8** (App Router, Server Actions).
+-   **Framework:** **Next.js 16.0.8** (App Router, Server Actions, Standalone Output).
 -   **Biblioteca UI:** **React 19.2.1**
 -   **Estilos:** **Tailwind CSS 4.1.18** + `tailwindcss-animate`.
 -   **Componentes:**
@@ -84,6 +85,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Cliente HTTP:** `axios` (1.13.2) con interceptores modulares.
 
 ### Infraestructura
+-   **Gateway:** **NGINX Reverse Proxy** (Gzip, Caching, Security Headers).
 -   **Contenedores:** Docker & Docker Compose.
 -   **Almacenamiento:** Cloudflare R2 (compatible con S3).
 -   **Email:** SendGrid API.
