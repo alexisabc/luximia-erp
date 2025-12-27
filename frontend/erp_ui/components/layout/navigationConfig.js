@@ -34,19 +34,6 @@ import {
 
 export const MENU_STRUCTURE = [
     {
-        key: 'portal',
-        label: 'Mi Portal',
-        icon: User,
-        items: [
-            {
-                label: 'Personal',
-                items: [
-                    { label: 'Portal del Empleado', path: '/portal' },
-                ]
-            }
-        ]
-    },
-    {
         key: 'auditoria',
         label: 'Auditoría',
         icon: FileSearch,
@@ -61,11 +48,40 @@ export const MENU_STRUCTURE = [
         ]
     },
     {
+        key: 'compras',
+        label: 'Compras',
+        icon: ShoppingBag,
+        permission: 'compras.view_ordencompra',
+        items: [
+            {
+                label: 'Catálogos',
+                items: [
+                    { label: 'Insumos', path: '/compras/insumos', permission: 'compras.view_insumo' },
+                    { label: 'Proveedores', path: '/compras/proveedores', permission: 'compras.view_proveedor' },
+                ]
+            },
+            {
+                label: 'Gestión',
+                items: [
+                    { label: 'Dashboard', path: '/compras', permission: 'compras.view_ordencompra' },
+                    { label: 'Nueva Orden', path: '/compras/nueva', permission: 'compras.add_ordencompra' },
+                ]
+            }
+        ]
+    },
+    {
         key: 'contabilidad',
         label: 'Contabilidad',
         icon: FileText,
         permission: 'contabilidad.view_cliente',
         items: [
+            {
+                label: 'Catálogos',
+                items: [
+                    { label: 'Centros de Costos', path: '/contabilidad/centros-costos', permission: 'contabilidad.view_centrocostos' },
+                    { label: 'Cuentas Contables', path: '/contabilidad/cuentas-contables', permission: 'contabilidad.view_cuentacontable' },
+                ]
+            },
             {
                 label: 'Cuentas',
                 items: [
@@ -76,26 +92,28 @@ export const MENU_STRUCTURE = [
             {
                 label: 'Fiscal',
                 items: [
-                    { label: 'Facturación', path: '/contabilidad/facturacion' },
                     { label: 'Buzón Fiscal', path: '/contabilidad/facturacion/buzon' },
+                    { label: 'Facturación', path: '/contabilidad/facturacion' },
                     { label: 'Generador de Pólizas', path: '/contabilidad/facturacion/polizas-automaticas' },
                 ]
             },
             {
-                label: 'Catálogos',
+                label: 'Impuestos y SAT',
                 items: [
-                    { label: 'Cuentas Contables', path: '/contabilidad/cuentas-contables', permission: 'contabilidad.view_cuentacontable' },
-                    { label: 'Centros de Costos', path: '/contabilidad/centros-costos', permission: 'contabilidad.view_centrocostos' },
+                    { label: 'Certificados (FIEL/CSD)', path: '/configuracion/sat', permission: 'contabilidad.view_certificadodigital' },
+                    { label: 'Contabilidad Electrónica', path: '/contabilidad/fiscal/contabilidad-electronica' },
+                    { label: 'Declaración DIOT', path: '/contabilidad/fiscal/diot' },
+                    { label: 'Tablero Fiscal', path: '/contabilidad/fiscal/dashboard' },
                 ]
             },
             {
                 label: 'Operaciones',
                 items: [
-                    { label: 'Pólizas', path: '/contabilidad/polizas', permission: 'contabilidad.view_poliza' },
                     { label: 'Monedas', path: '/contabilidad/monedas', permission: 'contabilidad.view_moneda' },
+                    { label: 'Pólizas', path: '/contabilidad/polizas', permission: 'contabilidad.view_poliza' },
+                    { label: 'Proyectos', path: '/contabilidad/proyectos', permission: 'contabilidad.view_proyecto' },
                     { label: 'TC Banxico (SAT)', path: '/contabilidad/tc-banxico', permission: 'contabilidad.view_tipodecambiosat' },
                     { label: 'TC Manuales', path: '/contabilidad/tc-manual', permission: 'contabilidad.view_tipocambio' },
-                    { label: 'Proyectos', path: '/contabilidad/proyectos', permission: 'contabilidad.view_proyecto' },
                     { label: 'UPEs', path: '/contabilidad/upes', permission: 'contabilidad.view_upe' },
                 ]
             },
@@ -103,15 +121,6 @@ export const MENU_STRUCTURE = [
                 label: 'Reportes',
                 items: [
                     { label: 'Estados Financieros', path: '/contabilidad/reportes', permission: 'contabilidad.view_reportefinanciero' },
-                ]
-            },
-            {
-                label: 'Impuestos y SAT',
-                items: [
-                    { label: 'Tablero Fiscal', path: '/contabilidad/fiscal/dashboard' },
-                    { label: 'Certificados (FIEL/CSD)', path: '/configuracion/sat', permission: 'contabilidad.view_certificadodigital' },
-                    { label: 'Declaración DIOT', path: '/contabilidad/fiscal/diot' },
-                    { label: 'Contabilidad Electrónica', path: '/contabilidad/fiscal/contabilidad-electronica' },
                 ]
             },
         ]
@@ -146,46 +155,37 @@ export const MENU_STRUCTURE = [
         ]
     },
     {
-        key: 'compras',
-        label: 'Compras',
-        icon: ShoppingBag,
-        permission: 'compras.view_ordencompra',
+        key: 'portal',
+        label: 'Mi Portal',
+        icon: User,
         items: [
             {
-                label: 'Gestión',
+                label: 'Personal',
                 items: [
-                    { label: 'Dashboard', path: '/compras', permission: 'compras.view_ordencompra' },
-                    { label: 'Nueva Orden', path: '/compras/nueva', permission: 'compras.add_ordencompra' },
-                ]
-            },
-            {
-                label: 'Catálogos',
-                items: [
-                    { label: 'Proveedores', path: '/compras/proveedores', permission: 'compras.view_proveedor' },
-                    { label: 'Insumos', path: '/compras/insumos', permission: 'compras.view_insumo' },
+                    { label: 'Portal del Empleado', path: '/portal' },
                 ]
             }
         ]
     },
     {
-        key: 'tesoreria',
-        label: 'Tesorería',
-        icon: Wallet,
-        permission: 'tesoreria.view_cuentabancaria',
+        key: 'pos',
+        label: 'Punto de Venta',
+        icon: ShoppingCart,
+        permission: 'pos.view_venta',
         items: [
             {
-                label: 'Gestión',
+                label: 'Administración',
                 items: [
-                    { label: 'Cuentas Bancarias', path: '/tesoreria/cuentas-bancarias', permission: 'tesoreria.view_cuentabancaria' },
-                    { label: 'Egresos', path: '/tesoreria/egresos', permission: 'tesoreria.view_egreso' },
-                    { label: 'Cajas Chicas', path: '/tesoreria/cajas-chicas', permission: 'tesoreria.view_cajachica' },
+                    { label: 'Cajas y Turnos', path: '/pos/turnos', permission: 'pos.view_turno' },
+                    { label: 'Cuentas Clientes', path: '/pos/cuentas', permission: 'pos.view_cuentacliente' },
+                    { label: 'Productos', path: '/pos/productos', permission: 'pos.view_producto' },
                 ]
             },
             {
-                label: 'Operaciones',
+                label: 'Operación',
                 items: [
-                    { label: 'ContraRecibos', path: '/tesoreria/contrarecibos', permission: 'tesoreria.view_contrarecibo' },
-                    { label: 'Programación de Pagos', path: '/tesoreria/programaciones', permission: 'tesoreria.view_programacionpago' },
+                    { label: 'Historial Ventas', path: '/pos/ventas', permission: 'pos.view_venta' },
+                    { label: 'Terminal PV', path: '/pos/terminal', permission: 'pos.add_venta' },
                 ]
             }
         ]
@@ -199,11 +199,11 @@ export const MENU_STRUCTURE = [
             {
                 label: 'Administración',
                 items: [
+                    { label: 'Buzón IMSS', path: '/rrhh/imss/buzon' },
+                    { label: 'Cálculo PTU', path: '/rrhh/ptu' },
                     { label: 'Esquemas Comisión', path: '/rrhh/esquemas-comision', permission: 'contabilidad.view_esquemacomision' },
                     { label: 'Expedientes', path: '/rrhh/expedientes' },
                     { label: 'Nómina', path: '/rrhh/nominas' },
-                    { label: 'Cálculo PTU', path: '/rrhh/ptu' },
-                    { label: 'Buzón IMSS', path: '/rrhh/imss/buzon' },
                 ]
             },
             {
@@ -220,34 +220,17 @@ export const MENU_STRUCTURE = [
         ]
     },
     {
-        key: 'pos',
-        label: 'Punto de Venta',
-        icon: ShoppingCart,
-        permission: 'pos.view_venta',
-        items: [
-            {
-                label: 'Operación',
-                items: [
-                    { label: 'Terminal PV', path: '/pos/terminal', permission: 'pos.add_venta' },
-                    { label: 'Historial Ventas', path: '/pos/ventas', permission: 'pos.view_venta' },
-                ]
-            },
-            {
-                label: 'Administración',
-                items: [
-                    { label: 'Cajas y Turnos', path: '/pos/turnos', permission: 'pos.view_turno' },
-                    { label: 'Productos', path: '/pos/productos', permission: 'pos.view_producto' },
-                    { label: 'Cuentas Clientes', path: '/pos/cuentas', permission: 'pos.view_cuentacliente' },
-                ]
-            }
-        ]
-    },
-    {
         key: 'sistemas',
         label: 'Sistemas',
         icon: Monitor,
         permission: 'users.view_customuser',
         items: [
+            {
+                label: 'Configuración',
+                items: [
+                    { label: 'Empresas', path: '/sistemas/empresas', permission: 'core.view_empresa' },
+                ]
+            },
             {
                 label: 'Gestión IT',
                 items: [
@@ -257,14 +240,8 @@ export const MENU_STRUCTURE = [
             {
                 label: 'Herramientas',
                 items: [
-                    { label: 'Importar Datos', path: '/sistemas/importar', permission: 'contabilidad.add_pago' },
                     { label: 'Exportar Datos', path: '/sistemas/exportar', permission: 'contabilidad.view_contrato' },
-                ]
-            },
-            {
-                label: 'Configuración',
-                items: [
-                    { label: 'Empresas', path: '/sistemas/empresas', permission: 'core.view_empresa' },
+                    { label: 'Importar Datos', path: '/sistemas/importar', permission: 'contabilidad.add_pago' },
                 ]
             },
             {
@@ -273,6 +250,29 @@ export const MENU_STRUCTURE = [
                     { label: 'Bitácora de Eventos', path: '/auditoria', permission: 'auditoria.view_auditlog' },
                     { label: 'Roles y Permisos', path: '/sistemas/roles', permission: 'auth.view_group' },
                     { label: 'Usuarios', path: '/sistemas/usuarios', permission: 'users.view_customuser' },
+                ]
+            }
+        ]
+    },
+    {
+        key: 'tesoreria',
+        label: 'Tesorería',
+        icon: Wallet,
+        permission: 'tesoreria.view_cuentabancaria',
+        items: [
+            {
+                label: 'Gestión',
+                items: [
+                    { label: 'Cajas Chicas', path: '/tesoreria/cajas-chicas', permission: 'tesoreria.view_cajachica' },
+                    { label: 'Cuentas Bancarias', path: '/tesoreria/cuentas-bancarias', permission: 'tesoreria.view_cuentabancaria' },
+                    { label: 'Egresos', path: '/tesoreria/egresos', permission: 'tesoreria.view_egreso' },
+                ]
+            },
+            {
+                label: 'Operaciones',
+                items: [
+                    { label: 'ContraRecibos', path: '/tesoreria/contrarecibos', permission: 'tesoreria.view_contrarecibo' },
+                    { label: 'Programación de Pagos', path: '/tesoreria/programaciones', permission: 'tesoreria.view_programacionpago' },
                 ]
             }
         ]
