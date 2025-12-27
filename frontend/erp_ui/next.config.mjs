@@ -1,15 +1,22 @@
 import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
-  dest: "public",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: false,
-  swcMinify: true,
-  disable: process.env.NODE_ENV === "development",
-  workboxOptions: {
-    disableDevLogs: true,
-  },
+    dest: "public",
+    cacheOnFrontEndNav: true,
+    aggressiveFrontEndNavCaching: true,
+    reloadOnOnline: false,
+    swcMinify: true,
+    disable: process.env.NODE_ENV === "development",
+    workboxOptions: {
+        disableDevLogs: true,
+        // Optimización: Excluir archivos innecesarios del precache para acelerar el build
+        exclude: [
+            /\.map$/,
+            /^middleware-manifest\.json$/,
+            /_headers/,
+            /_redirects/
+        ],
+    },
 });
 
 /** @type {import('next').NextConfig} */

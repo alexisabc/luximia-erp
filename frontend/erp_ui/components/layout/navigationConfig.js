@@ -126,7 +126,6 @@ export const MENU_STRUCTURE = [
                 label: 'Estratégico',
                 items: [
                     { label: 'Dashboard', path: '/direccion/dashboard', permission: 'users.view_dashboard' },
-                    { label: 'KPIs', path: '/direccion/kpis' },
                 ]
             }
         ]
