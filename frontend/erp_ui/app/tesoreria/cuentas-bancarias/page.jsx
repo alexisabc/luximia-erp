@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     getCuentasBancarias,
     createCuentaBancaria,
@@ -203,8 +203,8 @@ export default function CuentasBancariasPage() {
             accessorKey: 'activa',
             cell: (row) => (
                 <span className={`px-2 py-1 text-xs rounded-full ${row.activa
-                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                     }`}>
                     {row.activa ? 'Activa' : 'Inactiva'}
                 </span>
@@ -436,7 +436,7 @@ export default function CuentasBancariasPage() {
                                 name="es_principal"
                                 control={control}
                                 render={({ field }) => (
-                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                                 )}
                             />
                             <Label>Cuenta Principal</Label>
@@ -448,7 +448,7 @@ export default function CuentasBancariasPage() {
                                 control={control}
                                 defaultValue={true}
                                 render={({ field }) => (
-                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                                 )}
                             />
                             <Label>Activa</Label>
