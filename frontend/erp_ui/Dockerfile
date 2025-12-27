@@ -4,8 +4,8 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 
-# Instala las dependencias de forma rápida y determinista
-RUN npm ci
+# Instala las dependencias (usamos install en lugar de ci para tolerar desajustes menores en dev)
+RUN npm install
 
 COPY . .
 RUN npm run build
