@@ -52,8 +52,11 @@ export default function TiposCambioManualPage() {
     const onSubmit = async (data) => {
         try {
             const payload = {
-                ...data,
-                // Ensure date format or other transforms if needed
+                escenario: "PACTADO",
+                fecha: data.fecha,
+                valor: data.valor,
+                moneda_origen_id: data.moneda,
+                // moneda_destino_id: null, (implícito 'MXN' visualmente si es null)
             };
             await apiClient.post('/tipos-cambio-manual/', payload);
             toast.success("Tipo de cambio guardado correctamente");

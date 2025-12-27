@@ -7,8 +7,8 @@ COPY package*.json ./
 # Actualiza npm a la última versión estable
 RUN npm install -g npm@latest
 
-# Instala las dependencias
-RUN npm install
+# Instala las dependencias (loglevel error para silenciar advertencias de dependencias transitivas no críticas)
+RUN npm install --loglevel error
 
 COPY . .
 RUN npm run build

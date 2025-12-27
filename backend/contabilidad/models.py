@@ -82,9 +82,12 @@ class TipoCambio(SoftDeleteModel):
     escenario = models.CharField(max_length=20, choices=ESCENARIO_CHOICES)
     fecha = models.DateField()
     valor = models.DecimalField(max_digits=12, decimal_places=4)
+    
+    moneda_origen = models.ForeignKey('Moneda', on_delete=models.CASCADE, related_name='tipos_cambio_origen', null=True, blank=True)
+    moneda_destino = models.ForeignKey('Moneda', on_delete=models.CASCADE, related_name='tipos_cambio_destino', null=True, blank=True)
 
     class Meta:
-        unique_together = ("escenario", "fecha")
+        unique_together = ("escenario", "fecha", "moneda_origen", "moneda_destino")
 
     def __str__(self):
         return f"{self.escenario} - {self.fecha}"

@@ -22,7 +22,7 @@ export default function KPIDashboard() {
         setLoading(true);
         setError(null);
         try {
-            const res = await apiClient.get('/dashboard/strategic/', { params: { timeframe } });
+            const res = await apiClient.get('/contabilidad/dashboard/strategic/', { params: { timeframe } });
             setData(res.data);
         } catch (err) {
             console.error(err);

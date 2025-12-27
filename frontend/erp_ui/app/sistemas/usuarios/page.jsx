@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import {
     getUsers,
@@ -236,10 +237,14 @@ export default function UsuariosPage() {
 
     const handleReinvite = async (user) => {
         try {
-            await resendInvite(user.id);
-            alert("Invitación reenviada con éxito.");
+            const promise = resendInvite(user.id);
+            toast.promise(promise, {
+                loading: 'Reenviando invitación...',
+                success: 'Invitación reenviada con éxito',
+                error: 'Error al reenviar la invitación'
+            });
+            await promise;
         } catch (err) {
-            setError('Error al reenviar la invitación.');
             console.error(err);
         }
     };
@@ -296,12 +301,12 @@ export default function UsuariosPage() {
         if (!confirm("¿Está seguro de que desea cerrar la sesión de este usuario? Tendrá que volver a ingresar.")) return;
         try {
             await resetUserSession(userId);
-            alert("Sesión cerrada correctamente.");
-            setIsFormModalOpen(false); // Opcional: Cerrar modal o refrescar datos
-            fetchData(currentPage, pageSize); // Recargar porsi acaso last_login cambia? No cambia inmediatamente hasta que loguee de nuevo.
+            toast.success("Sesión cerrada correctamente.");
+            setIsFormModalOpen(false);
+            fetchData(currentPage, pageSize);
         } catch (err) {
             console.error(err);
-            alert("Error al cerrar sesión.");
+            toast.error("Error al cerrar sesión.");
         }
     };
 

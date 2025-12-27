@@ -67,6 +67,16 @@ class MetodoPagoSerializer(serializers.ModelSerializer):
 
 
 class TipoCambioSerializer(serializers.ModelSerializer):
+    moneda_origen = MonedaSerializer(read_only=True)
+    moneda_destino = MonedaSerializer(read_only=True)
+    
+    moneda_origen_id = serializers.PrimaryKeyRelatedField(
+        queryset=Moneda.objects.all(), source='moneda_origen', write_only=True
+    )
+    moneda_destino_id = serializers.PrimaryKeyRelatedField(
+        queryset=Moneda.objects.all(), source='moneda_destino', write_only=True, required=False
+    )
+
     class Meta:
         model = TipoCambio
         fields = "__all__"
