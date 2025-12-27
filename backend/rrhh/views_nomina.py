@@ -6,10 +6,11 @@ from django.db import transaction
 from django.db.models import Sum
 
 from core.permissions import HasPermissionForAction
-from .models import Nomina, ReciboNomina, Empleado
+from .models import Nomina, ReciboNomina, Empleado, BuzonIMSS
 from .serializers_nomina import (
     NominaSerializer, NominaDetailSerializer, 
-    ReciboNominaSerializer, CalculoNominaSerializer
+    ReciboNominaSerializer, CalculoNominaSerializer,
+    BuzonIMSSSerializer
 )
 from .engine import PayrollCalculator
 
@@ -323,3 +324,34 @@ class HistoricoNominaViewSet(viewsets.ReadOnlyModelViewSet):
         qs.delete()
         return Response({"detail": f"Se eliminaron {count} registros del histórico."})
 
+
+class BuzonIMSSViewSet(viewsets.ModelViewSet):
+    queryset = BuzonIMSS.objects.all().order_by("-fecha_recibido")
+    serializer_class = BuzonIMSSSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class PTUViewSet(viewsets.ViewSet):
+    """
+    Vista para simulación y cálculo de PTU.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @decorators.action(detail=False, methods=['post'], url_path='calcular-proyecto')
+    def calcular_proyecto(self, request):
+        """
+        Recibe anio y monto_repartir.
+        Retorna la lista de empleados y sus montos asignados.
+        """
+        anio = request.data.get('anio')
+        monto = request.data.get('monto')
+
+        if not anio or not monto:
+            return Response({"error": "Año y Monto son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from .services.calculo_ptu import CalculoPTUService
+            proyecto = CalculoPTUService.calcular_preliminar(int(anio), float(monto))
+            return Response(proyecto)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

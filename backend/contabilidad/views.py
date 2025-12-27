@@ -10,7 +10,26 @@ from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
-from django.db import models
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils.dateparse import parse_date
+from .models import (
+    CertificadoDigital,
+    CuentaContable,
+    BuzonMensaje,
+    OpinionCumplimiento,
+    # ... existing imports implicitly handled by viewsets logic below if needed, 
+    # but strictly speaking I should check if I need to add specific imports if I replace the whole file or parts.
+    # The user asked to "Help create logic...". I will append/insert the new ViewSets.
+)
+from .serializers import (
+    CertificadoDigitalSerializer,
+    BuzonMensajeSerializer,
+    OpinionCumplimientoSerializer,
+)
+from .services.reportes import ReporteFinancieroService
+from .services.sat_integration import SATIntegrationService
 from django.http import HttpResponse
 import openpyxl
 from core.views import ExcelImportMixin
@@ -605,3 +624,87 @@ def strategic_dashboard(request):
         },
     }
     return Response(data)
+
+
+class CertificadoDigitalViewSet(ContabilidadBaseViewSet):
+    queryset = CertificadoDigital.objects.all().order_by("-fecha_fin_validez")
+    serializer_class = CertificadoDigitalSerializer
+
+
+class ReporteFinancieroViewSet(viewsets.ViewSet):
+    """
+    Endpoints para reportes contables financieros.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def balanza_comprobacion(self, request):
+        fecha_start = parse_date(request.query_params.get('start', ''))
+        fecha_end = parse_date(request.query_params.get('end', ''))
+        
+        if not fecha_start or not fecha_end:
+            return Response({"error": "Fechas start y end requeridas (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        data = ReporteFinancieroService.obtener_balanza_comprobacion(fecha_start, fecha_end)
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def estado_resultados(self, request):
+        fecha_start = parse_date(request.query_params.get('start', ''))
+        fecha_end = parse_date(request.query_params.get('end', ''))
+        
+        if not fecha_start or not fecha_end:
+            return Response({"error": "Fechas start y end requeridas (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = ReporteFinancieroService.obtener_estado_resultados(fecha_start, fecha_end)
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def balance_general(self, request):
+        fecha_corte = parse_date(request.query_params.get('date', ''))
+        
+        if not fecha_corte:
+            return Response({"error": "Fecha date requerida (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = ReporteFinancieroService.obtener_balance_general(fecha_corte)
+        return Response(data)
+
+
+class BuzonMensajeViewSet(ContabilidadBaseViewSet):
+    """
+    Vista del Buzón Tributario.
+    """
+    queryset = BuzonMensaje.objects.all().order_by("-fecha_recibido")
+    serializer_class = BuzonMensajeSerializer
+    
+    @action(detail=False, methods=['post'], url_path='sincronizar')
+    def sincronizar(self, request):
+        """
+        Fuerza la sincronización con el SAT para buscar nuevos mensajes.
+        """
+        rfc = request.data.get('rfc')
+        if not rfc:
+            return Response({"error": "RFC es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        mensajes = SATIntegrationService.sincronizar_buzon(rfc)
+        serializer = self.get_serializer(mensajes, many=True)
+        return Response(serializer.data)
+
+class OpinionCumplimientoViewSet(ContabilidadBaseViewSet):
+    """
+    Vista de Opinión de Cumplimiento.
+    """
+    queryset = OpinionCumplimiento.objects.all().order_by("-fecha_consulta")
+    serializer_class = OpinionCumplimientoSerializer
+    
+    @action(detail=False, methods=['post'], url_path='consultar')
+    def consultar(self, request):
+        """
+        Consulta en tiempo real.
+        """
+        rfc = request.data.get('rfc')
+        if not rfc:
+             return Response({"error": "RFC es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+             
+        opinion = SATIntegrationService.consultar_opinion_cumplimiento(rfc)
+        return Response(self.get_serializer(opinion).data)

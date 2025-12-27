@@ -429,7 +429,72 @@ class Factura(SoftDeleteModel):
 register_audit(Factura)
 
 
-# --- Automation / Integración ---
-from .models_automation import PlantillaAsiento, ReglaAsiento
+
+# --- Certificados y Configuración Fiscal ---
+
+class CertificadoDigital(SoftDeleteModel):
+    """Almacén de Certificados (FIEL, CSD) encriptados."""
+    TIPO_CERT_CHOICES = [
+        ('FIEL', 'Firma Electrónica (FIEL)'),
+        ('CSD', 'Certificado de Sello Digital (CSD)'),
+    ]
+    
+    nombre = models.CharField(max_length=100, help_text="Ej. CSD Principal 2024")
+    rfc = models.CharField(max_length=13, help_text="RFC al que pertenece el certificado")
+    tipo = models.CharField(max_length=10, choices=TIPO_CERT_CHOICES, default='CSD')
+    
+    # Archivos
+    archivo_cer = models.FileField(upload_to='sat/certs/', help_text="Archivo .cer (Público)")
+    archivo_key = models.FileField(upload_to='sat/keys/', help_text="Archivo .key (Privado) - Proteger acceso")
+    password = models.CharField(max_length=255, help_text="Contraseña de la clave privada (Encriptada)")
+    
+    # Metadatos
+    fecha_inicio_validez = models.DateTimeField(null=True, blank=True)
+    fecha_fin_validez = models.DateTimeField(null=True, blank=True)
+    numero_serie = models.CharField(max_length=50, blank=True, null=True)
+    
+    activo = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.tipo} - {self.rfc} - {self.nombre}"
+
+register_audit(CertificadoDigital)
+
+
+# --- SAT Integración (Buzón & Cumplimiento) ---
+
+class BuzonMensaje(SoftDeleteModel):
+    """Mensajes simulados o scrapeados del Buzón Tributario."""
+    rfc = models.CharField(max_length=13)
+    asunto = models.CharField(max_length=200)
+    cuerpo = models.TextField()
+    fecha_recibido = models.DateTimeField()
+    leido = models.BooleanField(default=False)
+    # Importancia: Normal, Alta (Requerimiento)
+    es_requerimiento = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.rfc} - {self.asunto}"
+
+class OpinionCumplimiento(SoftDeleteModel):
+    """Historial de Opiniones de Cumplimiento (32-D)."""
+    ESTADO_CHOICES = [
+        ('POSITIVA', 'Positiva'),
+        ('NEGATIVA', 'Negativa'),
+        ('SIN_OBLIGACIONES', 'Sin Obligaciones'),
+    ]
+    
+    rfc = models.CharField(max_length=13)
+    fecha_consulta = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    folio = models.CharField(max_length=50, blank=True, null=True)
+    archivo_pdf = models.FileField(upload_to='sat/opiniones/', blank=True, null=True)
+    observaciones = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.rfc} - {self.estado} ({self.fecha_consulta.date()})"
+
+register_audit(BuzonMensaje)
+register_audit(OpinionCumplimiento)
 
 

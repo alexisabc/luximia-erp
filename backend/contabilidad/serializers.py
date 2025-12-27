@@ -21,6 +21,9 @@ from .models import (
     Poliza,
     DetallePoliza,
     Factura,
+    CertificadoDigital,
+    BuzonMensaje,
+    OpinionCumplimiento,
 )
 
 
@@ -431,6 +434,23 @@ class FacturaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Factura
+        fields = '__all__'
+
+class CertificadoDigitalSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True) # Solo escritura para seguridad básica
+    
+    class Meta:
+        model = CertificadoDigital
+        fields = '__all__'
+
+class BuzonMensajeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuzonMensaje
+        fields = '__all__'
+
+class OpinionCumplimientoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpinionCumplimiento
         fields = '__all__'
 
 # --- Automation Serializers ---

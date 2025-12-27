@@ -2,9 +2,18 @@ from rest_framework import serializers
 from .models import (
     Nomina, ReciboNomina, DetalleReciboItem, 
     ConceptoNomina, TablaISR, ConfiguracionEconomica,
-    Empleado, NominaCentralizada, PeriodoNomina
+    Empleado, NominaCentralizada, PeriodoNomina, BuzonIMSS
 )
 from .serializers import EmpleadoSerializer
+
+# ---------------------------------------------------------------------------
+# Serializers de Configuración
+# ---------------------------------------------------------------------------
+
+class BuzonIMSSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuzonIMSS
+        fields = '__all__'
 
 # ---------------------------------------------------------------------------
 # Serializers de Configuración

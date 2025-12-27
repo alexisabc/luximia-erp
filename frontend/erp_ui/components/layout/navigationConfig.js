@@ -89,22 +89,31 @@ export const MENU_STRUCTURE = [
                 ]
             },
             {
-                label: 'Impuestos y SAT',
-                items: [
-                    { label: 'Declaración DIOT', path: '/contabilidad/fiscal/diot' },
-                    { label: 'Contabilidad Electrónica', path: '/contabilidad/fiscal/contabilidad-electronica' },
-                ]
-            },
-            {
                 label: 'Operaciones',
                 items: [
+                    { label: 'Pólizas', path: '/contabilidad/polizas', permission: 'contabilidad.view_poliza' },
                     { label: 'Monedas', path: '/contabilidad/monedas', permission: 'contabilidad.view_moneda' },
                     { label: 'TC Banxico (SAT)', path: '/contabilidad/tc-banxico', permission: 'contabilidad.view_tipodecambiosat' },
                     { label: 'TC Manuales', path: '/contabilidad/tc-manual', permission: 'contabilidad.view_tipocambio' },
                     { label: 'Proyectos', path: '/contabilidad/proyectos', permission: 'contabilidad.view_proyecto' },
                     { label: 'UPEs', path: '/contabilidad/upes', permission: 'contabilidad.view_upe' },
                 ]
-            }
+            },
+            {
+                label: 'Reportes',
+                items: [
+                    { label: 'Estados Financieros', path: '/contabilidad/reportes', permission: 'contabilidad.view_reportefinanciero' },
+                ]
+            },
+            {
+                label: 'Impuestos y SAT',
+                items: [
+                    { label: 'Tablero Fiscal', path: '/contabilidad/fiscal/dashboard' },
+                    { label: 'Certificados (FIEL/CSD)', path: '/configuracion/sat', permission: 'contabilidad.view_certificadodigital' },
+                    { label: 'Declaración DIOT', path: '/contabilidad/fiscal/diot' },
+                    { label: 'Contabilidad Electrónica', path: '/contabilidad/fiscal/contabilidad-electronica' },
+                ]
+            },
         ]
     },
     {
@@ -171,6 +180,8 @@ export const MENU_STRUCTURE = [
                     { label: 'Esquemas Comisión', path: '/rrhh/esquemas-comision', permission: 'contabilidad.view_esquemacomision' },
                     { label: 'Expedientes', path: '/rrhh/expedientes' },
                     { label: 'Nómina', path: '/rrhh/nominas' },
+                    { label: 'Cálculo PTU', path: '/rrhh/ptu' },
+                    { label: 'Buzón IMSS', path: '/rrhh/imss/buzon' },
                 ]
             },
             {
