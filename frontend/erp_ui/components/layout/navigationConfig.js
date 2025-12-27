@@ -168,6 +168,29 @@ export const MENU_STRUCTURE = [
         ]
     },
     {
+        key: 'tesoreria',
+        label: 'Tesorería',
+        icon: Wallet,
+        permission: 'tesoreria.view_cuentabancaria',
+        items: [
+            {
+                label: 'Gestión',
+                items: [
+                    { label: 'Cuentas Bancarias', path: '/tesoreria/cuentas-bancarias', permission: 'tesoreria.view_cuentabancaria' },
+                    { label: 'Egresos', path: '/tesoreria/egresos', permission: 'tesoreria.view_egreso' },
+                    { label: 'Cajas Chicas', path: '/tesoreria/cajas-chicas', permission: 'tesoreria.view_cajachica' },
+                ]
+            },
+            {
+                label: 'Operaciones',
+                items: [
+                    { label: 'ContraRecibos', path: '/tesoreria/contrarecibos', permission: 'tesoreria.view_contrarecibo' },
+                    { label: 'Programación de Pagos', path: '/tesoreria/programaciones', permission: 'tesoreria.view_programacionpago' },
+                ]
+            }
+        ]
+    },
+    {
         key: 'rrhh',
         label: 'RRHH',
         icon: Users,

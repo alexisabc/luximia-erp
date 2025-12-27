@@ -59,12 +59,21 @@ class CustomUser(AbstractUser, BaseModel):
 
     class Meta:
         permissions = [
-            ("view_dashboard", "Can view dashboard"),
-            ("view_inactive_records", "Can view inactive records globally"),
-            ("hard_delete_records", "Can hard delete records globally"),
-            ("view_consolidado", "Can view consolidated reports across companies"),
-            ("use_ai", "Can use AI features"),
+            # Dashboard y Vistas Generales
+            ("view_dashboard", "Ver Dashboard"),
+            ("view_inactive_records", "Ver registros inactivos globalmente"),
+            ("hard_delete_records", "Eliminar permanentemente registros"),
+            ("view_consolidado", "Ver reportes consolidados entre empresas"),
+            
+            # IA y Funciones Avanzadas
+            ("use_ai", "Usar funciones de IA"),
+            
+            # Gestión de Usuarios
+            ("view_inactive_users", "Ver usuarios inactivos"),
+            ("hard_delete_customuser", "Eliminar permanentemente usuarios"),
         ]
+        verbose_name = "Usuario"
+        verbose_name_plural = "Usuarios"
 
 
 class EnrollmentToken(BaseModel):
