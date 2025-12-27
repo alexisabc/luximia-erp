@@ -11,6 +11,9 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 from django.db import models
+from django.http import HttpResponse
+import openpyxl
+from core.views import ExcelImportMixin
 
 
 
@@ -245,9 +248,7 @@ class DetallePolizaViewSet(ContabilidadBaseViewSet):
     queryset = DetallePoliza.objects.all()
     serializer_class = DetallePolizaSerializer
 
-from core.views import ExcelImportMixin
-import openpyxl
-from django.http import HttpResponse
+
 
 class FacturaViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
     queryset = Factura.objects.all().order_by("-fecha_emision")
