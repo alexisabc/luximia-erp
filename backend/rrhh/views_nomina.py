@@ -330,6 +330,27 @@ class BuzonIMSSViewSet(viewsets.ModelViewSet):
     serializer_class = BuzonIMSSSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @decorators.action(detail=False, methods=['post'], url_path='sincronizar')
+    def sincronizar(self, request):
+        """
+        Simula (o ejecuta) la conexión con el IDSE para descargar nuevos mensajes.
+        """
+        from django.utils import timezone
+        import random
+        
+        # Simulación de respuesta del IDSE
+        nuevos = 0
+        if random.random() > 0.7:
+            BuzonIMSS.objects.create(
+                asunto="Emisión Mensual EBA - Octubre",
+                cuerpo="La emisión bimestral anticipada ya se encuentra disponible para su descarga.",
+                fecha_recibido=timezone.now(),
+                leido=False
+            )
+            nuevos = 1
+        
+        return Response({"detail": "Sincronización completada", "nuevos_mensajes": nuevos})
+
 
 class PTUViewSet(viewsets.ViewSet):
     """

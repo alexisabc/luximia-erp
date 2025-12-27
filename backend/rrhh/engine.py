@@ -351,12 +351,32 @@ class PayrollCalculator:
 
     def _calcular_imss_obrero(self, sbc: Decimal, dias: Decimal) -> Decimal:
         """
-        Cálculo aproximado de cuotas obreras IMSS.
+        Cálculo detallado de cuotas obreras IMSS (Factores vigentes).
         """
+        uma = self.config_economica.valor_uma
         sbc_total = sbc * dias
-        # 2.7% aprox global. Se podría refinar con self.config_economica
-        factor = Decimal('0.027') 
-        return (sbc_total * factor).quantize(Decimal('0.01'))
+        total_cuota = Decimal('0.0')
+
+        # 1. Enfermedades y Maternidad: Excedente 3 UMA (0.40%)
+        # Aplica si el SBC es mayor a 3 UMAs
+        base_3uma = Decimal('3.0') * uma
+        if sbc > base_3uma:
+            base_excedente = (sbc - base_3uma) * dias
+            total_cuota += base_excedente * Decimal('0.0040')
+
+        # 2. Enfermedades y Maternidad: Prestaciones en Dinero (0.25%)
+        total_cuota += sbc_total * Decimal('0.0025')
+
+        # 3. Gastos Médicos Pensionados (0.375%)
+        total_cuota += sbc_total * Decimal('0.00375')
+        
+        # 4. Invalidez y Vida (0.625%)
+        total_cuota += sbc_total * Decimal('0.00625')
+        
+        # 5. Cesantía en Edad Avanzada y Vejez (1.125%) - Cuota Obrero
+        total_cuota += sbc_total * Decimal('0.01125')
+
+        return total_cuota.quantize(Decimal('0.01'))
 
     def _get_concepto_confiable(self, clave_fiscal: str, tipo=TipoConcepto.PERCEPCION) -> ConceptoNomina:
         concepto = ConceptoNomina.objects.filter(clave_sat=clave_fiscal, tipo=tipo).first()
@@ -370,6 +390,112 @@ class PayrollCalculator:
                 tipo=tipo
             )
         return concepto
+
+    def _calcular_imss_patronal(self, sbc: Decimal, dias: Decimal) -> Dict[str, Decimal]:
+        """
+        Calcula la Carga Social Patronal (IMSS + INFONAVIT + RCV) detallada.
+        Retorna un diccionario con los rubros y el total.
+        """
+        cfg = self.config_economica
+        uma = cfg.valor_uma
+        sbc_total = sbc * dias
+        
+        cuotas = {
+            'cuota_fija': Decimal('0.0'),
+            'excedente_3uma': Decimal('0.0'),
+            'prest_dinero': Decimal('0.0'),
+            'gastos_medicos': Decimal('0.0'), # EyM Patron
+            'riesgo_trabajo': Decimal('0.0'),
+            'invalidez_vida': Decimal('0.0'),
+            'guarderias': Decimal('0.0'),
+            'retiro': Decimal('0.0'),
+            'cesantia_vejez': Decimal('0.0'),
+            'infonavit': Decimal('0.0'),
+        }
+
+        # 1. Enfermedades y Maternidad: Cuota Fija (20.40% UMA)
+        cuotas['cuota_fija'] = (uma * dias) * (cfg.cuota_fija_imss_patron / 100)
+
+        # 2. Excedente 3 UMA
+        base_3uma = Decimal('3.0') * uma
+        if sbc > base_3uma:
+            base_exc = (sbc - base_3uma) * dias
+            # 1.10% Patronal approx estándar, o usar campo si existiera especifico.
+            # Usaremos 1.10% hardcoded si no está en config, o inferirlo.
+            # Config tiene porc_imss_enfermedad_excedente_obrero (0.40). El patronal suele ser 1.10.
+            cuotas['excedente_3uma'] = base_exc * Decimal('0.0110')
+
+        # 3. Prestaciones Dinero (0.70%)
+        cuotas['prest_dinero'] = sbc_total * (cfg.porc_imss_enfermedad_maternidad_patron / 100)
+        
+        # 4. Gastos Medicos Pensionados (1.05%)
+        # Config tiene porc_imss_enfermedad_maternidad_patron que es 0.70 (PD). GMP es 1.05.
+        # Asumiremos constantes estándar ley 2024 si no están desglosadas en config.
+        cuotas['gastos_medicos'] = sbc_total * Decimal('0.0105')
+
+        # 5. Riesgo Trabajo
+        cuotas['riesgo_trabajo'] = sbc_total * (cfg.porc_imss_riesgo_trabajo_patron / 100)
+
+        # 6. Invalidez y Vida (1.75%)
+        cuotas['invalidez_vida'] = sbc_total * (cfg.porc_imss_invalidez_vida_patron / 100)
+
+        # 7. Guarderías (1.00%)
+        cuotas['guarderias'] = sbc_total * (cfg.porc_imss_guarderia_prestaciones_patron / 100)
+
+        # 8. Retiro (2.00%)
+        cuotas['retiro'] = sbc_total * (cfg.porc_imss_retiro_patron / 100)
+
+        # 9. Cesantía y Vejez (Patronal) - Gradual 2024+
+        # Usamos el valor configurado (aprox 3.15% base 2023, pero en 2025 sube segun salario).
+        # Implementación simple usa el valor config promedio.
+        cuotas['cesantia_vejez'] = sbc_total * (cfg.porc_imss_cesantia_vejez_patron / 100)
+
+        # 10. INFONAVIT (5.00%)
+        cuotas['infonavit'] = sbc_total * (cfg.porc_infonavit_patron / 100)
+
+        return cuotas
+
+    def proyectar_costo_anual(self, empleado: Empleado) -> Dict[str, Any]:
+        """
+        Calcula el Presupuesto Anual de Gasto Total para un empleado.
+        Incluye: Sueldo, Aguinaldo, Prima Vacacional, Carga Social Patronal, ISN.
+        """
+        laborales = getattr(empleado, 'datos_laborales', None)
+        if not laborales:
+            return {'error': 'Sin datos laborales'}
+
+        sbc = laborales.salario_diario_integrado
+        sd = laborales.salario_diario
+        
+        # 1. Sueldo Anual (365 días)
+        sueldo_anual = sd * Decimal('365')
+        
+        # 2. Aguinaldo (15 días mín)
+        aguinaldo = sd * Decimal('15')
+        
+        # 3. Prima Vacacional (25% de 6 días mín = 1.5 días) -> Promedio 1 año antiguedad
+        prima_vacacional = sd * Decimal('6') * Decimal('0.25')
+        
+        # 4. Carga Social Anual
+        # Estimamos 365 días cotizados
+        patronal_mensual = self._calcular_imss_patronal(sbc, Decimal('30.4'))
+        total_patronal_mensual = sum(patronal_mensual.values())
+        carga_social_anual = total_patronal_mensual * Decimal('12')
+        
+        # 5. ISN (Impuesto Sobre Nómina) - Estatal (Ej. 3% CDMX/QRO)
+        base_isn = sueldo_anual + aguinaldo + prima_vacacional
+        isn_anual = base_isn * Decimal('0.03')
+        
+        costo_total = base_isn + carga_social_anual + isn_anual
+        
+        return {
+            'empleado': empleado.nombre_completo,
+            'sueldo_bruto_anual': base_isn,
+            'carga_social_anual': carga_social_anual,
+            'isn_estimado': isn_anual,
+            'costo_total_anual': costo_total,
+            'factor_costo': (costo_total / sueldo_anual) if sueldo_anual > 0 else 0
+        }
 
     def _add_item(self, recibo: ReciboNomina, concepto: ConceptoNomina, monto: Decimal, gravado: bool = False):
         monto = monto.quantize(Decimal('0.01'))

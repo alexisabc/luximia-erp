@@ -84,3 +84,17 @@ class EmpleadoViewSet(RrhhBaseViewSet):
                 tree.append(node)
 
         return Response(tree)
+
+    @action(detail=True, methods=['get'], url_path='proyeccion-costo')
+    def proyeccion_costo(self, request, pk=None):
+        """
+        Retorna el cálculo detallado del costo anual estimado del empleado (Presupuesto).
+        """
+        empleado = self.get_object()
+        from .engine import PayrollCalculator
+        try:
+            calculator = PayrollCalculator()
+            proyeccion = calculator.proyectar_costo_anual(empleado)
+            return Response(proyeccion)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

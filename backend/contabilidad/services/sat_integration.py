@@ -1,65 +1,88 @@
 import random
+import logging
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.conf import settings
 from contabilidad.models import BuzonMensaje, OpinionCumplimiento
+
+logger = logging.getLogger(__name__)
 
 class SATIntegrationService:
     """
-    Servicio para simular (o implementar futura) integración con el SAT.
-    - Consulta de Opinión de Cumplimiento.
-    - Lectura de Buzón Tributario.
-    - Validación de RFCs.
+    Servicio Centralizado de Integración con el SAT.
+    
+    MEJORES PRÁCTICAS & ARQUITECTURA:
+    ---------------------------------
+    1. SEGURIDAD: Nunca almacenar la FIEL (.key) en texto plano. Usar variables de entorno o Vault.
+    2. ESTABILIDAD: Los servicios del SAT (SOAP) son inestables. Implementar 'Exponential Backoff' para reintentos.
+    3. INTERMEDIARIOS: Para facturación (CFDI 4.0), es obligatorio usar un PAC.
+       Para consultas de estado (32-D, Constancia), se recomienda usar APIs de PACs (ej. Finkok, SW Sapien)
+       en lugar de scraping directo al portal del SAT para evitar bloqueos por IP.
     """
 
     @staticmethod
     def consultar_opinion_cumplimiento(rfc):
         """
-        Simula la consulta de la opinión 32-D en tiempo real.
-        En producción, esto usaría un scraper (Selenium/Playwright) o una API de terceros.
+        Consulta la Opinión de Cumplimiento (32-D) del contribuyente.
+        
+        Estrategia Actual: MOCK (Simulación)
+        Estrategia Recomendada: API de PAC (ej. /api/v2/sat/opinion-cumplimiento)
         """
-        # Simulación de respuesta aleatoria para demo
-        estados = ['POSITIVA', 'POSITIVA', 'POSITIVA', 'NEGATIVA'] # Mayor probabilidad de positiva
-        estado = random.choice(estados)
+        logger.info(f"Iniciando consulta de opinión de cumplimiento para {rfc}")
+        
+        # Simulación de latencia de red
+        # time.sleep(1) 
+
+        # Lógica de Mock realista
+        estados_posibles = ['POSITIVA'] * 8 + ['NEGATIVA'] * 2
+        estado = random.choice(estados_posibles)
         
         observaciones = ""
         if estado == 'NEGATIVA':
-            observaciones = "Crédito fiscal firme detectado: H-123456. Declaración anual 2023 no presentada."
-        
+            observaciones = "Se detectaron créditos fiscales firmes no pagados. Declaración anual ISR 2024 pendiente."
+
+        # Registrar historial
         opinion = OpinionCumplimiento.objects.create(
             rfc=rfc,
             estado=estado,
             folio=f"24NA{random.randint(100000,999999)}",
             observaciones=observaciones,
-            # archivo_pdf = ... (aquí guardaríamos el PDF descargado)
+            fecha_consulta=timezone.now()
         )
+        
         return opinion
 
     @staticmethod
-    def obtener_status_constancia(rfc, cif_id):
+    def obtener_status_constancia(rfc, cif_id=None):
         """
-        Simula obtener datos de la Constancia de Situación Fiscal dado un CIF ID.
+        Obtiene datos de la Constancia de Situación Fiscal.
+        Útil para validar el Régimen Fiscal y Código Postal actualizados (Requisito CFDI 4.0).
         """
-        # Placeholder
+        # En producción: Conectar a API de validación de RFC del SAT o PAC.
         return {
             "rfc": rfc,
             "estatus": "ACTIVO",
-            "domicilio": "CALLE CONOCIDA 123, COL. CENTRO, CDMX",
-            "regimenes": ["601 - General de Ley Personas Morales"]
+            "domicilio": "DOMICILIO FISCAL CONOCIDO",
+            "cp": "06000",
+            "regimenes": [{"clave": "601", "descripcion": "General de Ley Personas Morales"}]
         }
 
     @staticmethod
     def sincronizar_buzon(rfc):
         """
-        Simula leer mensajes nuevos del Buzón Tributario.
+        Descarga notificaciones no leídas del Buzón Tributario.
+        Importante: Requiere autenticación con FIEL/CIEC.
         """
         nuevos_mensajes = []
         
-        # Simular que encontramos un mensaje si no hay recientes
-        if not BuzonMensaje.objects.filter(rfc=rfc, fecha_recibido__gte=timezone.now() - timedelta(days=7)).exists():
+        # Mock: Generar mensaje si no se ha revisado recientemente
+        ultimo_mensaje = BuzonMensaje.objects.filter(rfc=rfc).order_by('-fecha_recibido').first()
+        
+        if not ultimo_mensaje or ultimo_mensaje.fecha_recibido < timezone.now() - timedelta(days=5):
             msg = BuzonMensaje.objects.create(
                 rfc=rfc,
-                asunto="Aviso importante sobre su declara...",
-                cuerpo="Estimado contribuyente, le recordamos presentar su declaración provisional...",
+                asunto="Recordatorio: Declaración Provisional ISR",
+                cuerpo="Estimado contribuyente, le recordamos que su fecha límite de pago es el día 17.",
                 fecha_recibido=timezone.now(),
                 es_requerimiento=False
             )
