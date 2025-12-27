@@ -2,7 +2,8 @@ import os
 import logging
 from django.conf import settings
 from openai import OpenAI, OpenAIError
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from groq import Groq, GroqError
 
 logger = logging.getLogger(__name__)
@@ -41,24 +42,28 @@ class GeminiProvider(AIProvider):
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
         if self.api_key:
-            genai.configure(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key)
+        else:
+            self.client = None
         
     def generate(self, messages, temperature=0.3):
-        if not self.api_key:
+        if not self.client:
             raise ValueError("Gemini API Key not found")
 
         try:
-            # Gemini expects a different format usually, but let's try to adapt
-            # Flatten messages to prompt or use chat history
-            system_instruction = next((m['content'] for m in messages if m['role'] == 'system'), "")
+            # Extract system instruction and user message
+            system_instruction = next((m['content'] for m in messages if m['role'] == 'system'), None)
             user_message = next((m['content'] for m in messages if m['role'] == 'user'), "")
             
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction) # Flash is fast/free-tier friendly
-            response = model.generate_content(
-                user_message,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=temperature
-                )
+            config = types.GenerateContentConfig(
+                temperature=temperature,
+                system_instruction=system_instruction
+            )
+
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=user_message,
+                config=config
             )
             return response.text
         except Exception as e:
