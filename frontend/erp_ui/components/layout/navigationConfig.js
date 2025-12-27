@@ -276,28 +276,5 @@ export const MENU_STRUCTURE = [
                 ]
             }
         ]
-    },
-    {
-        key: 'tesoreria',
-        label: 'Tesorería',
-        icon: Wallet,
-        permission: 'contabilidad.view_banco',
-        items: [
-            {
-                label: 'Egresos',
-                items: [
-                    { label: 'Cajas Chicas', path: '/tesoreria/cajas' },
-                ]
-            },
-            {
-                label: 'Gestión de Fondos',
-                items: [
-                    { label: 'Bancos', path: '/tesoreria/bancos', permission: 'contabilidad.view_banco' },
-                    { label: 'Formas de Pago', path: '/tesoreria/formas-pago', permission: 'contabilidad.view_formapago' },
-                    { label: 'Pagos', path: '/tesoreria/pagos', permission: 'contabilidad.view_pago' },
-                    { label: 'Planes de Pago', path: '/tesoreria/planes-pago', permission: 'contabilidad.view_planpago' },
-                ]
-            }
-        ]
     }
 ];

@@ -1,7 +1,7 @@
 # Sistema ERP - Documentación del Proyecto
 
 - **Versión:** 2.6
-- **Fecha de última actualización:** 26 de diciembre de 2025
+- **Fecha de última actualización:** 27 de diciembre de 2025
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
 
 ---
@@ -19,25 +19,61 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
     *   **Proyectos y UPEs:** Gestión detallada de unidades privativas (inventario inmobiliario).
     *   **Cuentas por Cobrar (CxC):** Control de clientes, presupuestos, contratos y pagos.
     *   **Divisas:** Consulta de tipos de cambio manuales y **sincronización automática diaria con Banxico (SAT)**.
-*   **🧾 Tesorería:**
-    *   Gestión de Bancos y Cajas Chicas.
-    *   Control de Egresos y Planes de Pago.
+*   **🏦 Tesorería:**
+    *   **Cuentas Bancarias:** Gestión completa con conciliación automática (Sistema vs Banco).
+    *   **Egresos:** Flujo de autorización multinivel con control de pagos.
+    *   **Cajas Chicas:** Fondos fijos con registro de gastos y reembolsos.
+    *   **ContraRecibos:** Gestión de facturas y documentos para pago.
+    *   **Programaciones de Pago:** Lotes de pagos y dispersión bancaria.
 *   **👥 Recursos Humanos (RRHH):**
     *   Expedientes digitales de empleados.
     *   Organigramas, Departamentos y Puestos.
     *   Esquemas de Comisión y seguimiento de asesores/vendedores.
+    *   **Motor de Nómina 2025** con cálculo IMSS, ISR y PTU.
 *   **⚖️ Jurídico:**
     *   Repositorio de contratos legales y expedientes.
+*   **🛒 Compras:**
+    *   Órdenes de Compra con flujo de autorización.
+    *   Gestión de Proveedores e Insumos.
+*   **🛍️ Punto de Venta (POS):**
+    *   Terminal de venta con gestión de productos.
+    *   Control de turnos y cortes de caja.
 *   **💻 Sistemas:**
     *   **Auditoría:** Bitácora completa de cambios (Audit Logs) para trazabilidad.
     *   Gestión de Usuarios, Roles y Permisos granulares.
     *   Importación/Exportación masiva de datos (Excel).
+*   **🤖 IA:**
+    *   Asistente inteligente con búsqueda semántica.
+    *   Indexación de 15 modelos del sistema.
+    *   Filtrado automático por permisos.
 
 ---
 
 ## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025)
 
 Hemos realizado una actualización mayor enfocada en la experiencia de usuario, seguridad y flexibilidad de marca:
+
+### 💰 Módulo de Tesorería (NUEVO - 100% Completo)
+-   **Gestión de Cuentas Bancarias:** CRUD completo con conciliación bancaria automática.
+-   **Control de Egresos:** Flujo de autorización multinivel (Borrador → Autorizado → Pagado).
+-   **Cajas Chicas:** Gestión de fondos fijos con registro de gastos y reembolsos.
+-   **ContraRecibos:** Registro de facturas y documentos para pago con validación.
+-   **Programaciones de Pago:** Lotes de pagos y generación de layouts bancarios.
+-   **18 Endpoints API REST** con acciones personalizadas.
+-   **5 Páginas UI** con diseño premium y 23 cards de estadísticas.
+-   **4 Permisos personalizados** para control granular de operaciones.
+
+### 🔐 Sistema de Permisos Mejorado
+-   **401 Permisos Gestionados:** 367 estándar + 34 personalizados.
+-   **Traducciones al Español:** 100% de permisos traducidos.
+-   **Comando `update_permissions`:** Gestión automática de permisos y traducciones.
+-   **Documentación Completa:** Guía de permisos y roles con ejemplos de uso.
+
+### 🤖 Sistema de IA Actualizado
+-   **Indexación de Modelos:** 15 modelos del sistema indexados para búsqueda semántica.
+-   **Búsqueda Contextual:** Embeddings con OpenAI y filtrado automático por permisos.
+-   **Comando `index_models`:** Gestión de indexación por app o modelo.
+-   **Integración Lista:** Preparado para chat IA con contexto del sistema.
 
 ### 🎨 UX/UI & Branding "White-Label"
 -   **Normalización de Marca:** Se ha refactorizado todo el código para eliminar referencias hardcodeadas ("Luximia"), convirtiendo el sistema en un producto **White-Label** adaptable a cualquier identidad corporativa.
@@ -64,6 +100,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 ### 📚 Documentación
 -   **Reestructuración:** Renombrado de carpeta de documentación a `ERP_Docs` para estandarización.
 -   **Limpieza de Código:** Depuración de servicios redundantes en `rrhh`.
+-   **7 Documentos Técnicos Nuevos:** Guías completas de Tesorería, Permisos e IA.
 
 ---
 

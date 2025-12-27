@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     getCuentasBancarias,
     createCuentaBancaria,
@@ -436,7 +435,12 @@ export default function CuentasBancariasPage() {
                                 name="es_principal"
                                 control={control}
                                 render={({ field }) => (
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                    <input
+                                        type="checkbox"
+                                        checked={field.value || false}
+                                        onChange={(e) => field.onChange(e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    />
                                 )}
                             />
                             <Label>Cuenta Principal</Label>
@@ -448,7 +452,12 @@ export default function CuentasBancariasPage() {
                                 control={control}
                                 defaultValue={true}
                                 render={({ field }) => (
-                                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                    <input
+                                        type="checkbox"
+                                        checked={field.value || false}
+                                        onChange={(e) => field.onChange(e.target.checked)}
+                                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    />
                                 )}
                             />
                             <Label>Activa</Label>
