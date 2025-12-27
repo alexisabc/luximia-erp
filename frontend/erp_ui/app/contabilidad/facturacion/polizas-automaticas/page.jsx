@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Select, Badge, Card, Modal, Spin } from 'antd'; // Assuming Ant Design or similar
-import { apiClient } from '@/services/api'; // Adjust path
+import apiClient from '@/services/api'; // Adjust path
 import { toast } from 'sonner';
 import { Play, FileText } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';

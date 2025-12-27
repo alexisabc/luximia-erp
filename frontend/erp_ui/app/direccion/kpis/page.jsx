@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Select, Statistic, Row, Col, Spin, Alert } from 'antd';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DollarSign, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 
 const { Option } = Select;
 

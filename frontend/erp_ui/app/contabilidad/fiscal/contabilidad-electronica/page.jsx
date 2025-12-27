@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { DatePicker, Button, Card, Tabs, Select } from 'antd';
 import { FileCode, ShieldCheck } from 'lucide-react';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
 
 export default function ContabilidadElectronicaPage() {

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { DatePicker, Button, Card, Alert } from 'antd';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
 import { FileText, Download } from 'lucide-react';
 import dayjs from 'dayjs';

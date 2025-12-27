@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, InputNumber, DatePicker, Select } from 'antd';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Banknote } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';

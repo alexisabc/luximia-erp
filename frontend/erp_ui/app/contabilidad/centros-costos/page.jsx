@@ -7,7 +7,7 @@ import ReusableTable from '@/components/tables/ReusableTable';
 import ReusableModal from '@/components/modals/ReusableModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
 
 export default function CentrosCostosPage() {

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Input, InputNumber, Select, Upload, Switch } from 'antd';
 import { Plus, Download, Upload as UploadIcon, Package } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';
-import { apiClient } from '@/services/api';
+import apiClient from '@/services/api';
 import { toast } from 'sonner';
 
 export default function InsumosPage() {
