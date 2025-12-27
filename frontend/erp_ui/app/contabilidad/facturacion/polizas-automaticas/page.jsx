@@ -9,6 +9,7 @@ import ReusableModal from '@/components/modals/ReusableModal';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import ActionButtons from '@/components/common/ActionButtons';
 
 export default function GeneradorPolizasPage() {
     const [facturas, setFacturas] = useState([]);
@@ -80,7 +81,7 @@ export default function GeneradorPolizasPage() {
             accessorKey: 'uuid',
             cell: (row) => (
                 <div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                         {row.serie ? `${row.serie}-` : ''}{row.folio || 'S/N'}
                     </div>
                     <div className="text-xs text-gray-500 font-mono" title={row.uuid}>
@@ -99,7 +100,7 @@ export default function GeneradorPolizasPage() {
             accessorKey: 'receptor_nombre',
             cell: (row) => (
                 <div className="text-sm">
-                    <p className="font-medium">{row.receptor_nombre}</p>
+                    <p className="font-medium text-gray-800 dark:text-gray-200">{row.receptor_nombre}</p>
                     <p className="text-xs text-gray-500">{row.receptor_rfc}</p>
                 </div>
             )
@@ -132,7 +133,7 @@ export default function GeneradorPolizasPage() {
         <div className="p-8 h-full flex flex-col space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 flex items-center gap-3">
                         <FileText className="text-blue-600 w-8 h-8" />
                         Generador de Pólizas
                     </h1>
@@ -140,17 +141,22 @@ export default function GeneradorPolizasPage() {
                         Crea pólizas contables automáticamente a partir de los XMLs de facturación.
                     </p>
                 </div>
-                <Button onClick={loadData} variant="outline" size="sm">
-                    Recargar
-                </Button>
+                {/* Reusing ActionButtons just for consistency, even if some props are unused */}
+                <ActionButtons
+                    canCreate={false}
+                    canImport={false}
+                    canExport={false}
+                // Custom buttons or just reuse the standard structure
+                />
             </div>
 
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
                 <ReusableTable
                     data={facturas}
                     columns={columns}
                     loading={loading}
                     pagination={{ pageSize: 10 }}
+                    emptyMessage="No hay facturas pendientes para procesar."
                 />
             </div>
 
@@ -160,7 +166,7 @@ export default function GeneradorPolizasPage() {
                 title="Generar Póliza Contable"
                 description={`Asocia una plantilla contable a la factura ${selectedFactura?.serie || ''}${selectedFactura?.folio || ''} (${selectedFactura?.uuid?.substring(0, 8)}...)`}
                 footer={
-                    <div className="flex justify-end gap-2 w-full">
+                    <div className="flex justify-end gap-2 w-full pt-4">
                         <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
                         <Button onClick={handleGenerarPoliza} disabled={generating} className="bg-blue-600 hover:bg-blue-700">
                             {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
@@ -169,7 +175,7 @@ export default function GeneradorPolizasPage() {
                     </div>
                 }
             >
-                <div className="space-y-4">
+                <div className="space-y-4 px-1">
                     <div className="space-y-2">
                         <Label>Plantilla de Asiento</Label>
                         <Select
