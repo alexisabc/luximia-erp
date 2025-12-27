@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Upload } from 'antd';
+import { useForm } from 'react-hook-form';
 import { Plus, Download, Upload as UploadIcon, Building2 } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';
 import ReusableModal from '@/components/modals/ReusableModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+// import { Switch } from '@/components/ui/switch'; // Ensure this exists or use check
 import apiClient from '@/services/api';
 import { toast } from 'sonner';
 
@@ -16,8 +17,9 @@ export default function CentrosCostosPage() {
     const [showInactive, setShowInactive] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
-    const [form] = Form.useForm();
     const [search, setSearch] = useState('');
+
+    const { register, handleSubmit, reset, setValue } = useForm();
 
     useEffect(() => {
         loadData();
@@ -31,27 +33,27 @@ export default function CentrosCostosPage() {
             setData(res.data.results || res.data);
         } catch (error) {
             console.error(error);
-            toast.error("Error cargando datos");
+            toast.error("Error cargando centros de costos");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSave = async (values) => {
+    const onSubmit = async (formData) => {
         try {
             if (editingItem) {
-                await apiClient.put(`/contabilidad/centros-costos/${editingItem.id}/`, values);
+                await apiClient.put(`/contabilidad/centros-costos/${editingItem.id}/`, formData);
                 toast.success("Centro actualizado");
             } else {
-                await apiClient.post('/contabilidad/centros-costos/', values);
+                await apiClient.post('/contabilidad/centros-costos/', formData);
                 toast.success("Centro creado");
             }
             setIsModalOpen(false);
             setEditingItem(null);
-            form.resetFields();
+            reset();
             loadData();
         } catch (error) {
-            toast.error("Error guardando");
+            toast.error("Error al guardar");
         }
     };
 
@@ -59,11 +61,43 @@ export default function CentrosCostosPage() {
         if (!confirm("¿Seguro de desactivar?")) return;
         try {
             await apiClient.delete(`/contabilidad/centros-costos/${id}/`);
-            toast.success("Desactivado");
+            toast.success("Centro desactivado");
             loadData();
         } catch (error) {
-            toast.error("Error desactivando");
+            toast.error("Error al desactivar");
         }
+    };
+
+    const openModal = (item = null) => {
+        setEditingItem(item);
+        if (item) {
+            setValue('codigo', item.codigo);
+            setValue('nombre', item.nombre);
+        } else {
+            reset({ codigo: '', nombre: '' });
+        }
+        setIsModalOpen(true);
+    };
+
+    const columns = [
+        { header: 'Código', accessorKey: 'codigo', render: (row) => <span className="font-mono font-bold text-gray-700 dark:text-gray-300">{row.codigo}</span> },
+        { header: 'Nombre', accessorKey: 'nombre', render: (row) => <span className="dark:text-gray-200 font-medium">{row.nombre}</span> },
+    ];
+
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('archivo', file);
+        try {
+            await apiClient.post('/contabilidad/centros-costos/importar-excel/', formData);
+            toast.success("Importación exitosa");
+            loadData();
+        } catch (e) {
+            toast.error("Error importando");
+        }
+        e.target.value = ''; // Reset input
     };
 
     const handleExport = async () => {
@@ -76,31 +110,11 @@ export default function CentrosCostosPage() {
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch (e) {
-            toast.error("Error exportando");
-        }
+        } catch (e) { toast.error("Error exportando"); }
     };
-
-    const handleImport = async (file) => {
-        const formData = new FormData();
-        formData.append('archivo', file);
-        try {
-            await apiClient.post('/contabilidad/centros-costos/importar-excel/', formData);
-            toast.success("Importación exitosa");
-            loadData();
-        } catch (e) {
-            toast.error("Error importando");
-        }
-        return false;
-    };
-
-    const columns = [
-        { header: 'Código', accessorKey: 'codigo', render: (row) => <span className="font-mono font-bold dark:text-white">{row.codigo}</span> },
-        { header: 'Nombre', accessorKey: 'nombre', render: (row) => <span className="dark:text-gray-200">{row.nombre}</span> },
-    ];
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
+        <div className="p-8 h-full flex flex-col space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <Building2 className="text-purple-600" />
@@ -109,13 +123,20 @@ export default function CentrosCostosPage() {
                 <div className="flex gap-2">
                     <div className="flex items-center gap-2 mr-4 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
                         <span className="text-sm text-gray-600 dark:text-gray-400">Ver Inactivos</span>
-                        <Switch checked={showInactive} onChange={setShowInactive} size="small" />
+                        <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500" />
                     </div>
-                    <Upload beforeUpload={handleImport} showUploadList={false}>
-                        <Button icon={<UploadIcon size={16} />}>Importar</Button>
-                    </Upload>
-                    <Button icon={<Download size={16} />} onClick={handleExport}>Exportar</Button>
-                    <Button type="primary" icon={<Plus size={16} />} onClick={() => { setEditingItem(null); form.resetFields(); setIsModalOpen(true); }} className="bg-purple-600">Nuevo</Button>
+
+                    <div className="relative">
+                        <input type="file" id="import-file" className="hidden" onChange={handleImport} accept=".xlsx,.xls" />
+                        <label htmlFor="import-file">
+                            <Button variant="outline" size="sm" className="gap-2 cursor-pointer" asChild>
+                                <span><UploadIcon size={16} /> Importar</span>
+                            </Button>
+                        </label>
+                    </div>
+
+                    <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}><Download size={16} /> Exportar</Button>
+                    <Button onClick={() => openModal()} className="bg-purple-600 hover:bg-purple-700 gap-2"><Plus size={16} /> Nuevo</Button>
                 </div>
             </div>
 
@@ -126,27 +147,32 @@ export default function CentrosCostosPage() {
                     loading={loading}
                     onSearch={setSearch}
                     actions={{
-                        onEdit: (row) => { setEditingItem(row); form.setFieldsValue(row); setIsModalOpen(true); },
+                        onEdit: (row) => openModal(row),
                         onDelete: handleDelete
                     }}
                 />
             </div>
 
-            <Modal
+            <ReusableModal
                 title={editingItem ? "Editar Centro" : "Nuevo Centro"}
-                open={isModalOpen}
-                onCancel={() => setIsModalOpen(false)}
-                onOk={() => form.submit()}
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
             >
-                <Form form={form} layout="vertical" onFinish={handleSave}>
-                    <Form.Item name="codigo" label="Código" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                </Form>
-            </Modal>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Código</label>
+                        <Input {...register('codigo', { required: true })} placeholder="Ej. ADM-001" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Nombre</label>
+                        <Input {...register('nombre', { required: true })} placeholder="Administración General" />
+                    </div>
+                    <div className="flex justify-end pt-4 gap-2">
+                        <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                        <Button type="submit">Guardar</Button>
+                    </div>
+                </form>
+            </ReusableModal>
         </div>
     );
 }

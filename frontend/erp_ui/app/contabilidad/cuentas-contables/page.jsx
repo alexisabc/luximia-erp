@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Upload } from 'antd';
 import { Plus, Download, Upload as UploadIcon, Layers } from 'lucide-react';
 import ReusableTable from '@/components/tables/ReusableTable';
 import ReusableModal from '@/components/modals/ReusableModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import apiClient from '@/services/api';
 import { toast } from 'sonner';
 
@@ -31,7 +31,7 @@ export default function CuentasContablesPage() {
             setData(res.data.results || res.data);
         } catch (error) {
             console.error(error);
-            toast.error("Error cargando cuentas");
+            toast.error("Error cargando cuentas contables");
         } finally {
             setLoading(false);
         }
@@ -83,7 +83,10 @@ export default function CuentasContablesPage() {
         }
     };
 
-    const handleImport = async (file) => {
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const formData = new FormData();
         formData.append('archivo', file);
         try {
@@ -93,7 +96,7 @@ export default function CuentasContablesPage() {
         } catch (e) {
             toast.error("Error importando");
         }
-        return false;
+        e.target.value = '';
     };
 
     const columns = [
@@ -105,7 +108,7 @@ export default function CuentasContablesPage() {
     ];
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
+        <div className="p-8 h-full flex flex-col space-y-6 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <Layers className="text-blue-600" />
@@ -116,9 +119,16 @@ export default function CuentasContablesPage() {
                         <span className="text-sm text-gray-600 dark:text-gray-400">Ver Inactivos</span>
                         <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500" />
                     </div>
-                    <Upload beforeUpload={handleImport} showUploadList={false}>
-                        <Button variant="outline" size="sm" className="gap-2"><UploadIcon size={16} /> Importar</Button>
-                    </Upload>
+
+                    <div className="relative">
+                        <input type="file" id="import-acc-file" className="hidden" onChange={handleImport} accept=".xlsx,.xls" />
+                        <label htmlFor="import-acc-file">
+                            <Button variant="outline" size="sm" className="gap-2 cursor-pointer" asChild>
+                                <span><UploadIcon size={16} /> Importar</span>
+                            </Button>
+                        </label>
+                    </div>
+
                     <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}><Download size={16} /> Exportar</Button>
                     <Button onClick={() => { setEditingItem(null); setFormData({}); setIsModalOpen(true); }} className="bg-blue-600 gap-2 hover:bg-blue-700"><Plus size={16} /> Nuevo</Button>
                 </div>
@@ -149,6 +159,7 @@ export default function CuentasContablesPage() {
                             value={formData.codigo || ''}
                             onChange={e => setFormData({ ...formData, codigo: e.target.value })}
                             required
+                            placeholder="Ej. 101-01"
                         />
                     </div>
                     <div className="space-y-2">
@@ -157,35 +168,36 @@ export default function CuentasContablesPage() {
                             value={formData.nombre || ''}
                             onChange={e => setFormData({ ...formData, nombre: e.target.value })}
                             required
+                            placeholder="Caja General"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Tipo</label>
-                            <select
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                                value={formData.tipo || ''}
-                                onChange={e => setFormData({ ...formData, tipo: e.target.value })}
-                                required
-                            >
-                                <option value="">Seleccionar...</option>
-                                <option value="ACTIVO">Activo</option>
-                                <option value="PASIVO">Pasivo</option>
-                                <option value="CAPITAL">Capital</option>
-                                <option value="INGRESOS">Ingresos</option>
-                                <option value="EGRESOS">Egresos</option>
-                            </select>
+                            <Select value={formData.tipo} onValueChange={val => setFormData({ ...formData, tipo: val })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ACTIVO">Activo</SelectItem>
+                                    <SelectItem value="PASIVO">Pasivo</SelectItem>
+                                    <SelectItem value="CAPITAL">Capital</SelectItem>
+                                    <SelectItem value="INGRESOS">Ingresos</SelectItem>
+                                    <SelectItem value="EGRESOS">Egresos</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Naturaleza</label>
-                            <select
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                                value={formData.naturaleza || ''}
-                                onChange={e => setFormData({ ...formData, naturaleza: e.target.value })}
-                            >
-                                <option value="DEUDORA">Deudora</option>
-                                <option value="ACREEDORA">Acreedora</option>
-                            </select>
+                            <Select value={formData.naturaleza} onValueChange={val => setFormData({ ...formData, naturaleza: val })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="DEUDORA">Deudora</SelectItem>
+                                    <SelectItem value="ACREEDORA">Acreedora</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <div className="space-y-2">
@@ -193,6 +205,7 @@ export default function CuentasContablesPage() {
                         <Input
                             value={formData.codigo_agrupador || ''}
                             onChange={e => setFormData({ ...formData, codigo_agrupador: e.target.value })}
+                            placeholder="Ej. 100.01"
                         />
                     </div>
                     <div className="flex justify-end pt-4 gap-2">

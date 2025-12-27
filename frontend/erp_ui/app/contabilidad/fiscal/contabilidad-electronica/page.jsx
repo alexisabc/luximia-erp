@@ -1,23 +1,24 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DatePicker, Button, Card, Tabs, Select } from 'antd';
-import { FileCode, ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Input } from '@/components/ui/input';
 import apiClient from '@/services/api';
 import { toast } from 'sonner';
+import { FileCode, ShieldCheck, Loader2 } from 'lucide-react';
 
 export default function ContabilidadElectronicaPage() {
-    const [month, setMonth] = useState(null);
+    const [monthStr, setMonthStr] = useState(''); // Format: YYYY-MM
     const [loading, setLoading] = useState({});
 
     const downloadXML = async (type) => {
-        if (!month) {
+        if (!monthStr) {
             toast.warning("Selecciona mes y año.");
             return;
         }
 
-        const anio = month.year();
-        const mes = month.month() + 1; // 0-indexed
+        const [anio, mes] = monthStr.split('-');
 
         setLoading(prev => ({ ...prev, [type]: true }));
         try {
@@ -50,53 +51,66 @@ export default function ContabilidadElectronicaPage() {
 
     return (
         <div className="p-8 max-w-5xl mx-auto space-y-6">
-            <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+            <div className="flex items-center gap-3">
                 <ShieldCheck className="w-8 h-8 text-blue-600" />
-                Contabilidad Electrónica (SAT)
-            </h1>
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    Contabilidad Electrónica (SAT)
+                </h1>
+            </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-                <Card title="1. Catálogo de Cuentas" className="shadow-sm">
-                    <p className="text-sm text-gray-500 mb-4">
-                        Se envía por única vez o cada vez que se modifique el catálogo a nivel mayor o subcuenta de primer nivel.
-                    </p>
-                    <div className="flex flex-col gap-4">
-                        <DatePicker.MonthPicker
-                            onChange={val => setMonth(val)}
-                            placeholder="Mes de envío"
-                            className="w-full"
-                        />
+            <div className="grid md:grid-cols-2 gap-8">
+                <Card className="shadow-sm">
+                    <CardHeader>
+                        <CardTitle>1. Catálogo de Cuentas</CardTitle>
+                        <CardDescription>
+                            Se envía por única vez o cada vez que se modifique el catálogo a nivel mayor o subcuenta de primer nivel.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Periodo</label>
+                            <Input
+                                type="month"
+                                value={monthStr}
+                                onChange={(e) => setMonthStr(e.target.value)}
+                            />
+                        </div>
                         <Button
-                            icon={<FileCode size={16} />}
                             onClick={() => downloadXML('CATALOGO')}
-                            loading={loading['CATALOGO']}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            disabled={loading['CATALOGO']}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700"
                         >
+                            {loading['CATALOGO'] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCode className="mr-2 h-4 w-4" />}
                             Descargar Catálogo (XML)
                         </Button>
-                    </div>
+                    </CardContent>
                 </Card>
 
-                <Card title="2. Balanza de Comprobación" className="shadow-sm">
-                    <p className="text-sm text-gray-500 mb-4">
-                        Se envía mensualmente. Debe coincidir con los saldos de tus pólizas registradas.
-                    </p>
-                    <div className="flex flex-col gap-4">
-                        <DatePicker.MonthPicker
-                            onChange={val => setMonth(val)}
-                            placeholder="Periodo"
-                            value={month}
-                            className="w-full"
-                        />
+                <Card className="shadow-sm">
+                    <CardHeader>
+                        <CardTitle>2. Balanza de Comprobación</CardTitle>
+                        <CardDescription>
+                            Se envía mensualmente. Debe coincidir con los saldos de tus pólizas registradas.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Periodo</label>
+                            <Input
+                                type="month"
+                                value={monthStr}
+                                onChange={(e) => setMonthStr(e.target.value)}
+                            />
+                        </div>
                         <Button
-                            icon={<FileCode size={16} />}
                             onClick={() => downloadXML('BALANZA')}
-                            loading={loading['BALANZA']}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            disabled={loading['BALANZA']}
+                            className="w-full bg-green-600 hover:bg-green-700"
                         >
+                            {loading['BALANZA'] ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileCode className="mr-2 h-4 w-4" />}
                             Descargar Balanza (XML)
                         </Button>
-                    </div>
+                    </CardContent>
                 </Card>
             </div>
         </div>
