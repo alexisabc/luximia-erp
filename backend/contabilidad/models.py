@@ -498,3 +498,7 @@ register_audit(BuzonMensaje)
 register_audit(OpinionCumplimiento)
 
 
+# --- Automatización (Plantillas) ---
+from .models_automation import PlantillaAsiento, ReglaAsiento
+
+
