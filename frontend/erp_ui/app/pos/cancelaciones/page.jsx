@@ -16,7 +16,7 @@ import {
     getSolicitudesCancelacion
 } from '@/services/pos';
 import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/Reusable';
+import ReusableModal from '@/components/modals/ReusableModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
