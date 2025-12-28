@@ -121,7 +121,7 @@ export default function OrganigramaPage() {
     );
 
     return (
-        <div className="flex flex-col h-[calc(100vh-64px)] bg-gray-50 dark:bg-slate-950 overflow-hidden transition-colors duration-500">
+        <div className="flex flex-col h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 overflow-hidden transition-colors duration-500">
             {/* Header flotante */}
             <div className="absolute top-6 left-6 z-10 pointer-events-none">
                 <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-purple-400 drop-shadow-sm">
@@ -132,7 +132,7 @@ export default function OrganigramaPage() {
 
             <div
                 ref={containerRef}
-                className="flex-1 w-full h-full bg-gray-50 dark:bg-slate-950 relative transition-colors duration-500"
+                className="flex-1 w-full h-full bg-transparent relative transition-colors duration-500"
             >
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-slate-400 animate-pulse bg-gray-50 dark:bg-slate-950 z-50">

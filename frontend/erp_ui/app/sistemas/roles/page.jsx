@@ -71,6 +71,12 @@ export default function RolesPage() {
         'view_inactive_records': 'metasistema',
         'hard_delete_records': 'metasistema',
         'use_ai': 'metasistema',
+        'manage_ai_settings': 'metasistema',
+        'view_audit_logs': 'metasistema',
+        'export_audit_logs': 'metasistema',
+        'view_security_alerts': 'metasistema',
+        'access_all_companies': 'metasistema',
+        'switch_company_context': 'metasistema',
         'view_logentry': 'metasistema', // Auditoría global
     };
 
@@ -160,6 +166,7 @@ export default function RolesPage() {
         'cuentacliente': 'POS',
         'movimientocaja': 'POS',
         'movimientosaldocliente': 'POS',
+        'solicitudcancelacion': 'POS',
         'proveedor': 'Compras',
         'insumo': 'Compras',
         'ordencompra': 'Compras',
@@ -169,6 +176,7 @@ export default function RolesPage() {
         'detalleprogramacion': 'Tesorería',
         'cajachica': 'Tesorería',
         'movimiento': 'Tesorería',
+        'cuentabancaria': 'Tesorería',
         'activoit': 'Sistemas',
         'asignacionequipo': 'Sistemas',
         'categoriaequipo': 'Sistemas',

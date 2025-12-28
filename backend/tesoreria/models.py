@@ -139,10 +139,29 @@ class CuentaBancaria(SoftDeleteModel):
         verbose_name_plural = "Cuentas Bancarias"
         unique_together = ['banco', 'numero_cuenta']
         permissions = [
-            ("autorizar_egreso", "Autorizar Egresos"),
-            ("realizar_pago", "Realizar Pagos"),
-            ("conciliar_banco", "Conciliar Cuentas Bancarias"),
-            ("cerrar_caja", "Cerrar Caja Chica"),
+            # ===== BANCOS =====
+            ("view_bank_balances", "Ver saldos bancarios"),
+            ("conciliate_bank", "Conciliar cuentas bancarias"),
+            ("register_bank_movement", "Registrar movimientos bancarios"),
+            
+            # ===== EGRESOS Y PAGOS =====
+            ("create_payment_request", "Solicitar pagos"),
+            ("authorize_payment", "Autorizar pagos y egresos"),
+            ("execute_payment", "Ejecutar pagos (emitir cheques/transferencias)"),
+            ("void_payment", "Anular pagos emitidos"),
+            
+            # ===== CAJA CHICA =====
+            ("manage_petty_cash", "Gestionar caja chica"),
+            ("close_petty_cash", "Cerrar y reembolsar caja chica"),
+            ("approve_petty_cash_expense", "Aprobar gastos de caja chica"),
+            
+            # ===== FLUJO DE EFECTIVO =====
+            ("view_cash_flow", "Ver flujo de efectivo"),
+            ("create_cash_projection", "Crear proyecciones de flujo"),
+            
+            # ===== REPORTES =====
+            ("view_treasury_reports", "Ver reportes de tesorería"),
+            ("export_treasury_reports", "Exportar reportes de tesorería"),
         ]
     
     def __str__(self):

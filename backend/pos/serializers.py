@@ -69,6 +69,7 @@ class MovimientoCajaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VentaCancelacionSerializer(serializers.Serializer):
+    """Serializer legacy - mantener para compatibilidad."""
     supervisor_username = serializers.CharField()
     supervisor_code = serializers.CharField(help_text="TOTP code del supervisor")
     motivo = serializers.CharField()
@@ -83,3 +84,100 @@ class PagoCuentaSerializer(serializers.Serializer):
     comentarios = serializers.CharField(required=False, allow_blank=True)
     turno_id = serializers.IntegerField(help_text="ID del turno activo para registrar ingreso si es efectivo")
 
+
+# ============= SISTEMA DE CANCELACIONES CON AUTORIZACIÓN =============
+
+from .models import SolicitudCancelacion
+
+class SolicitudCancelacionSerializer(serializers.ModelSerializer):
+    """Serializer para listar y ver solicitudes de cancelación."""
+    venta_folio = serializers.ReadOnlyField(source='venta.folio')
+    venta_total = serializers.DecimalField(
+        source='venta.total', 
+        max_digits=12, 
+        decimal_places=2, 
+        read_only=True
+    )
+    venta_fecha = serializers.DateTimeField(source='venta.fecha', read_only=True)
+    solicitante_nombre = serializers.ReadOnlyField(source='solicitante.username')
+    solicitante_nombre_completo = serializers.SerializerMethodField()
+    autorizado_por_nombre = serializers.ReadOnlyField(source='autorizado_por.username')
+    tiempo_transcurrido = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SolicitudCancelacion
+        fields = [
+            'id', 'venta', 'venta_folio', 'venta_total', 'venta_fecha',
+            'solicitante', 'solicitante_nombre', 'solicitante_nombre_completo',
+            'motivo', 'estado', 'autorizado_por', 'autorizado_por_nombre',
+            'fecha_autorizacion', 'comentarios_autorizacion',
+            'fecha_solicitud', 'tiempo_transcurrido'
+        ]
+        read_only_fields = [
+            'venta_folio', 'venta_total', 'solicitante_nombre',
+            'autorizado_por_nombre', 'fecha_autorizacion', 'fecha_solicitud'
+        ]
+    
+    def get_solicitante_nombre_completo(self, obj):
+        return f"{obj.solicitante.first_name} {obj.solicitante.last_name}".strip() or obj.solicitante.username
+    
+    def get_tiempo_transcurrido(self, obj):
+        from django.utils import timezone
+        delta = timezone.now() - obj.fecha_solicitud
+        minutes = int(delta.total_seconds() / 60)
+        if minutes < 60:
+            return f"Hace {minutes} min"
+        hours = minutes // 60
+        if hours < 24:
+            return f"Hace {hours}h"
+        days = hours // 24
+        return f"Hace {days}d"
+
+
+class CrearSolicitudCancelacionSerializer(serializers.Serializer):
+    """Serializer para que el cajero solicite una cancelación."""
+    venta_id = serializers.IntegerField(help_text="ID de la venta a cancelar")
+    motivo = serializers.CharField(
+        min_length=10, 
+        help_text="Motivo de la cancelación (mínimo 10 caracteres)"
+    )
+    
+    def validate_venta_id(self, value):
+        from .models import Venta
+        try:
+            venta = Venta.objects.get(pk=value)
+            if venta.estado == 'CANCELADA':
+                raise serializers.ValidationError("Esta venta ya está cancelada.")
+            # Verificar si ya hay una solicitud pendiente
+            if venta.solicitudes_cancelacion.filter(estado='PENDIENTE').exists():
+                raise serializers.ValidationError("Ya existe una solicitud de cancelación pendiente para esta venta.")
+            return value
+        except Venta.DoesNotExist:
+            raise serializers.ValidationError("Venta no encontrada.")
+
+
+class AutorizarCancelacionSerializer(serializers.Serializer):
+    """Serializer para que el supervisor autorice una cancelación."""
+    codigo_autorizacion = serializers.CharField(
+        min_length=6, 
+        max_length=6,
+        help_text="Código TOTP de autorización del supervisor (6 dígitos)"
+    )
+    comentarios = serializers.CharField(
+        required=False, 
+        allow_blank=True,
+        help_text="Comentarios opcionales del supervisor"
+    )
+    
+    def validate_codigo_autorizacion(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("El código debe contener solo dígitos.")
+        return value
+
+
+class RechazarCancelacionSerializer(serializers.Serializer):
+    """Serializer para que el supervisor rechace una cancelación."""
+    comentarios = serializers.CharField(
+        min_length=5,
+        help_text="Motivo del rechazo (requerido)"
+    )

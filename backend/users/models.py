@@ -24,6 +24,18 @@ class CustomUser(AbstractUser, BaseModel):
     totp_secret = models.CharField(max_length=255, blank=True, null=True)
     # Proveedor del generador de códigos TOTP (Authy, Google Authenticator, etc.)
     totp_provider = models.CharField(max_length=100, blank=True, null=True)
+    
+    # TOTP de Autorización (separado del login para operaciones sensibles)
+    totp_authorization_secret = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True,
+        help_text="Secreto TOTP para autorización de operaciones sensibles (cancelaciones, devoluciones, etc.)"
+    )
+    totp_authorization_configured = models.BooleanField(
+        default=False,
+        help_text="Indica si el usuario ha configurado su TOTP de autorización"
+    )
 
     # Usuario inactivo hasta completar seguridad
     is_active = models.BooleanField(default=False)
@@ -59,18 +71,31 @@ class CustomUser(AbstractUser, BaseModel):
 
     class Meta:
         permissions = [
-            # Dashboard y Vistas Generales
-            ("view_dashboard", "Ver Dashboard"),
-            ("view_inactive_records", "Ver registros inactivos globalmente"),
-            ("hard_delete_records", "Eliminar permanentemente registros"),
-            ("view_consolidado", "Ver reportes consolidados entre empresas"),
+            # ===== DASHBOARD Y VISTAS GENERALES =====
+            ("view_dashboard", "Ver Panel Principal (Dashboard)"),
+            ("view_inactive_records", "Ver registros inactivos en todo el sistema"),
+            ("hard_delete_records", "Eliminar permanentemente registros (sin recuperación)"),
+            ("view_consolidado", "Ver reportes consolidados multi-empresa"),
             
-            # IA y Funciones Avanzadas
-            ("use_ai", "Usar funciones de IA"),
+            # ===== IA Y FUNCIONES AVANZADAS =====
+            ("use_ai", "Usar asistente de Inteligencia Artificial"),
+            ("manage_ai_settings", "Configurar parámetros de IA"),
             
-            # Gestión de Usuarios
-            ("view_inactive_users", "Ver usuarios inactivos"),
+            # ===== GESTIÓN DE USUARIOS =====
+            ("view_inactive_users", "Ver usuarios inactivos o suspendidos"),
             ("hard_delete_customuser", "Eliminar permanentemente usuarios"),
+            ("impersonate_users", "Iniciar sesión como otro usuario (impersonar)"),
+            ("manage_user_permissions", "Gestionar permisos de usuarios"),
+            ("reset_user_credentials", "Restablecer credenciales de acceso"),
+            
+            # ===== SEGURIDAD Y AUDITORÍA =====
+            ("view_audit_logs", "Ver registros de auditoría"),
+            ("export_audit_logs", "Exportar registros de auditoría"),
+            ("view_security_alerts", "Ver alertas de seguridad"),
+            
+            # ===== MULTI-EMPRESA =====
+            ("access_all_companies", "Acceder a todas las empresas del sistema"),
+            ("switch_company_context", "Cambiar contexto de empresa activa"),
         ]
         verbose_name = "Usuario"
         verbose_name_plural = "Usuarios"

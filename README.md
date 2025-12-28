@@ -2,6 +2,7 @@
 
 - **Versión:** 2.6
 - **Fecha de última actualización:** 27 de diciembre de 2025
+- **Última sesión:** Implementación completa de Tesorería + Sistema de Permisos + IA + Navegación + Seeds
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
 
 ---

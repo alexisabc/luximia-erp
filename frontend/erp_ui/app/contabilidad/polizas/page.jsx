@@ -72,13 +72,18 @@ export default function PolizasPage() {
     };
 
     return (
-        <div className="p-8 space-y-8 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Nueva Póliza Contable</h1>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+            <div className="mb-6 sm:mb-8">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">Nueva Póliza Contable</h1>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Registro de movimientos contables con partida doble</p>
+                    </div>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                <Card className="shadow-sm">
+                <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
                     <CardHeader>
                         <CardTitle>Encabezado</CardTitle>
                     </CardHeader>
@@ -115,7 +120,7 @@ export default function PolizasPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm">
+                <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle>Movimientos</CardTitle>
                         <Button type="button" variant="outline" size="sm" onClick={() => append({ cuenta: '', debe: 0, haber: 0 })} className="gap-2">

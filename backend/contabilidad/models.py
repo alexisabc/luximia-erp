@@ -149,7 +149,34 @@ class UPE(SoftDeleteModel):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="DISPONIBLE")
 
     class Meta:
-        permissions = [("can_use_ai", "Can Use AI Chat")]
+        permissions = [
+            # ===== CATÁLOGO DE CUENTAS =====
+            ("manage_chart_of_accounts", "Gestionar catálogo de cuentas contables"),
+            ("close_accounting_period", "Cerrar períodos contables"),
+            
+            # ===== PÓLIZAS =====
+            ("create_journal_entry", "Crear pólizas contables"),
+            ("post_journal_entry", "Aplicar/Mayorizar pólizas"),
+            ("reverse_journal_entry", "Revertir pólizas aplicadas"),
+            ("delete_journal_entry", "Eliminar pólizas contables"),
+            
+            # ===== FACTURACIÓN =====
+            ("issue_invoice", "Emitir facturas (CFDI)"),
+            ("cancel_invoice", "Cancelar facturas (CFDI)"),
+            ("view_fiscal_documents", "Ver documentos fiscales"),
+            
+            # ===== TIPOS DE CAMBIO =====
+            ("manage_exchange_rates", "Gestionar tipos de cambio"),
+            
+            # ===== REPORTES CONTABLES =====
+            ("view_financial_statements", "Ver estados financieros"),
+            ("export_financial_reports", "Exportar reportes financieros"),
+            ("view_diot", "Ver DIOT"),
+            ("generate_diot", "Generar DIOT"),
+            
+            # ===== IA CONTABLE =====
+            ("use_ai_accounting", "Usar IA para contabilidad"),
+        ]
 
     def __str__(self):
         return self.identificador

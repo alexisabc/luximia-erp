@@ -318,3 +318,318 @@ class CuentaClienteViewSet(viewsets.ModelViewSet):
         movimientos = MovimientoSaldoCliente.objects.filter(cuenta=cuenta).order_by('-created_at')[:50]
         return Response(MovimientoSaldoClienteSerializer(movimientos, many=True).data)
 
+
+# ============= SISTEMA DE CANCELACIONES CON AUTORIZACIÓN =============
+
+from django.utils import timezone
+from rest_framework.views import APIView
+from .models import SolicitudCancelacion
+from .serializers import (
+    SolicitudCancelacionSerializer,
+    CrearSolicitudCancelacionSerializer,
+    AutorizarCancelacionSerializer,
+    RechazarCancelacionSerializer
+)
+
+
+def get_client_ip(request):
+    """Obtiene la IP del cliente de la request."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+class SolicitudCancelacionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar solicitudes de cancelación.
+    - Cajeros pueden crear solicitudes
+    - Supervisores pueden aprobar/rechazar
+    """
+    queryset = SolicitudCancelacion.objects.all()
+    serializer_class = SolicitudCancelacionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filtra según el tipo de usuario y parámetros."""
+        qs = super().get_queryset()
+        
+        # Filtrar por estado
+        estado = self.request.query_params.get('estado')
+        if estado:
+            qs = qs.filter(estado=estado)
+        
+        # Si no es staff, solo ver sus propias solicitudes
+        if not self.request.user.is_staff and not self.request.user.has_perm('pos.authorize_cancellation'):
+            qs = qs.filter(solicitante=self.request.user)
+        
+        return qs
+
+
+class SolicitarCancelacionView(APIView):
+    """
+    Vista para que un cajero solicite la cancelación de un ticket.
+    POST: Crea una solicitud de cancelación pendiente de aprobación.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        serializer = CrearSolicitudCancelacionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        venta_id = serializer.validated_data['venta_id']
+        motivo = serializer.validated_data['motivo']
+        
+        venta = Venta.objects.get(pk=venta_id)
+        
+        # Obtener turno activo del usuario si existe
+        turno_activo = Turno.objects.filter(
+            usuario=request.user, 
+            cerrado=False
+        ).first()
+        
+        # Crear solicitud
+        solicitud = SolicitudCancelacion.objects.create(
+            venta=venta,
+            solicitante=request.user,
+            motivo=motivo,
+            turno=turno_activo,
+            ip_solicitante=get_client_ip(request)
+        )
+        
+        return Response({
+            "detail": "Solicitud de cancelación creada. Pendiente de autorización.",
+            "solicitud_id": solicitud.id,
+            "estado": solicitud.estado
+        }, status=status.HTTP_201_CREATED)
+
+
+class CancelacionesPendientesView(APIView):
+    """
+    Vista para que supervisores vean las cancelaciones pendientes.
+    GET: Lista todas las cancelaciones pendientes de aprobación.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        # Verificar permiso
+        if not request.user.is_staff and not request.user.has_perm('pos.authorize_cancellation'):
+            return Response({
+                "detail": "No tienes permiso para ver cancelaciones pendientes."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        pendientes = SolicitudCancelacion.objects.filter(
+            estado='PENDIENTE'
+        ).order_by('-fecha_solicitud')
+        
+        serializer = SolicitudCancelacionSerializer(pendientes, many=True)
+        return Response({
+            "count": pendientes.count(),
+            "results": serializer.data
+        })
+
+
+class AutorizarCancelacionView(APIView):
+    """
+    Vista para que un supervisor autorice una cancelación.
+    POST: Valida el código TOTP y aprueba la cancelación.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        # Verificar permiso
+        if not request.user.is_staff and not request.user.has_perm('pos.authorize_cancellation'):
+            return Response({
+                "detail": "No tienes permiso para autorizar cancelaciones."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Obtener solicitud
+        solicitud = get_object_or_404(SolicitudCancelacion, pk=pk)
+        
+        if solicitud.estado != 'PENDIENTE':
+            return Response({
+                "detail": f"Esta solicitud ya fue {solicitud.estado.lower()}."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar datos
+        serializer = AutorizarCancelacionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        codigo = serializer.validated_data['codigo_autorizacion']
+        comentarios = serializer.validated_data.get('comentarios', '')
+        
+        # Verificar TOTP de autorización
+        supervisor = request.user
+        
+        # Usar el TOTP de autorización si está configurado, sino el de login
+        totp_secret = supervisor.totp_authorization_secret or supervisor.totp_secret
+        
+        if not totp_secret:
+            return Response({
+                "detail": "No tienes configurado un código de autorización. Configúralo en tu perfil."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        totp = pyotp.TOTP(totp_secret)
+        if not totp.verify(codigo, valid_window=1):
+            return Response({
+                "detail": "Código de autorización inválido."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Aprobar la cancelación
+        with transaction.atomic():
+            solicitud.aprobar(
+                autorizador=supervisor,
+                ip=get_client_ip(request),
+                comentarios=comentarios
+            )
+            
+            # Revertir movimientos de saldo si aplica
+            venta = solicitud.venta
+            if venta.metodo_pago_principal in ['CREDITO', 'ANTICIPO'] and venta.cliente:
+                try:
+                    cuenta = CuentaCliente.objects.get(cliente=venta.cliente)
+                    saldo_anterior = cuenta.saldo
+                    cuenta.saldo += venta.total
+                    cuenta.save()
+                    
+                    MovimientoSaldoCliente.objects.create(
+                        cuenta=cuenta,
+                        tipo='CANCELACION',
+                        monto=venta.total,
+                        referencia_venta=venta,
+                        saldo_anterior=saldo_anterior,
+                        saldo_nuevo=cuenta.saldo,
+                        comentarios=f"Cancelación autorizada - Venta {venta.folio}"
+                    )
+                except CuentaCliente.DoesNotExist:
+                    pass
+        
+        return Response({
+            "detail": f"Cancelación del ticket {venta.folio} autorizada exitosamente.",
+            "venta_folio": venta.folio,
+            "autorizado_por": supervisor.username,
+            "fecha_autorizacion": solicitud.fecha_autorizacion
+        })
+
+
+class RechazarCancelacionView(APIView):
+    """
+    Vista para que un supervisor rechace una cancelación.
+    POST: Marca la solicitud como rechazada.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        # Verificar permiso
+        if not request.user.is_staff and not request.user.has_perm('pos.authorize_cancellation'):
+            return Response({
+                "detail": "No tienes permiso para rechazar cancelaciones."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Obtener solicitud
+        solicitud = get_object_or_404(SolicitudCancelacion, pk=pk)
+        
+        if solicitud.estado != 'PENDIENTE':
+            return Response({
+                "detail": f"Esta solicitud ya fue {solicitud.estado.lower()}."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar datos
+        serializer = RechazarCancelacionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        comentarios = serializer.validated_data['comentarios']
+        
+        # Rechazar la solicitud
+        solicitud.rechazar(
+            autorizador=request.user,
+            ip=get_client_ip(request),
+            comentarios=comentarios
+        )
+        
+        return Response({
+            "detail": f"Solicitud de cancelación rechazada.",
+            "venta_folio": solicitud.venta.folio,
+            "rechazado_por": request.user.username
+        })
+
+
+class ConfigurarTOTPAutorizacionView(APIView):
+    """
+    Vista para que un usuario configure su TOTP de autorización.
+    GET: Genera un nuevo secreto y retorna el QR code.
+    POST: Verifica el código y activa el TOTP de autorización.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Genera un nuevo secreto TOTP para autorización."""
+        import base64
+        import qrcode
+        from io import BytesIO
+        
+        user = request.user
+        
+        # Generar nuevo secreto
+        secret = pyotp.random_base32()
+        
+        # Guardar temporalmente (sin activar)
+        user.totp_authorization_secret = secret
+        user.totp_authorization_configured = False
+        user.save()
+        
+        # Generar URI para QR
+        totp = pyotp.TOTP(secret)
+        uri = totp.provisioning_uri(
+            name=user.username,
+            issuer_name="ERP-Autorizaciones"
+        )
+        
+        # Generar QR como base64
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return Response({
+            "secret": secret,
+            "qr_code": f"data:image/png;base64,{qr_base64}",
+            "uri": uri,
+            "message": "Escanea el código QR con tu app autenticadora y luego verifica con un código."
+        })
+    
+    def post(self, request):
+        """Verifica y activa el TOTP de autorización."""
+        codigo = request.data.get('codigo')
+        
+        if not codigo:
+            return Response({
+                "detail": "Código requerido."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        
+        if not user.totp_authorization_secret:
+            return Response({
+                "detail": "Primero genera un nuevo secreto usando GET."
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        totp = pyotp.TOTP(user.totp_authorization_secret)
+        if totp.verify(codigo, valid_window=1):
+            user.totp_authorization_configured = True
+            user.save()
+            
+            return Response({
+                "detail": "TOTP de autorización configurado exitosamente.",
+                "configured": True
+            })
+        else:
+            return Response({
+                "detail": "Código inválido. Intenta de nuevo."
+            }, status=status.HTTP_400_BAD_REQUEST)

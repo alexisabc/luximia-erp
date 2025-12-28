@@ -1,21 +1,34 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Página de Gestión de Proveedores - Actualizada v2.6
+ * 
+ * Características:
+ * - ✅ Responsive (móvil → TV)
+ * - ✅ Dark mode completo
+ * - ✅ Stats cards con gradientes
+ * - ✅ Toasts modernos (Sonner)
+ * - ✅ Componentes reutilizables
+ * - ✅ Iconos Lucide
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
     Users, Plus, Building2, CreditCard,
-    Search, Phone, Hash, Receipt
+    Phone, TrendingUp, AlertCircle, Clock
 } from 'lucide-react';
-import { toast } from 'sonner';
 
+// Componentes
 import ReusableTable from '@/components/tables/ReusableTable';
 import ProveedorModal from '@/components/modals/ProveedorModal';
 import ConfirmationModal from '@/components/modals/Confirmation';
-import { Badge } from '@/components/ui/badge';
-
 import ActionButtons from '@/components/common/ActionButtons';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
+import { Badge } from '@/components/ui/badge';
 
+// Servicios
 import {
     getProveedores,
     createProveedor,
@@ -26,30 +39,70 @@ import {
 } from '@/services/compras';
 
 export default function ProveedoresPage() {
-    // ... (existing state)
+    // Estados
     const [proveedores, setProveedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
-
-    // Feature flags / filters
     const [showInactive, setShowInactive] = useState(false);
 
-    // Pagination state
+    // Paginación
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize] = useState(10);
     const [totalItems, setTotalItems] = useState(0);
 
-    // Modals state
+    // Modales
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [editingProveedor, setEditingProveedor] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
-
-    // Import/Export Modals
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-    // --- Data Fetching ---
+    // Export
+    const exportColumns = [
+        { id: 'rfc', label: 'RFC' },
+        { id: 'razon_social', label: 'Razón Social' },
+        { id: 'nombre_comercial', label: 'Nombre Comercial' },
+        { id: 'email_contacto', label: 'Email' },
+        { id: 'telefono', label: 'Teléfono' },
+        { id: 'banco_nombre', label: 'Banco' },
+        { id: 'cuenta', label: 'Cuenta' },
+        { id: 'dias_credito', label: 'Días Crédito' }
+    ];
+
+    const [selectedExportColumns, setSelectedExportColumns] = useState(
+        exportColumns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
+    );
+
+    // Estadísticas calculadas
+    const stats = [
+        {
+            label: 'Total Proveedores',
+            value: totalItems || 0,
+            icon: Users,
+            gradient: 'from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700'
+        },
+        {
+            label: 'Con Crédito',
+            value: proveedores.filter(p => p.dias_credito > 0).length || 0,
+            icon: Clock,
+            gradient: 'from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700'
+        },
+        {
+            label: 'Contado',
+            value: proveedores.filter(p => p.dias_credito === 0).length || 0,
+            icon: TrendingUp,
+            gradient: 'from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700'
+        },
+        {
+            label: 'Con Datos Bancarios',
+            value: proveedores.filter(p => p.banco_nombre).length || 0,
+            icon: CreditCard,
+            gradient: 'from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700'
+        }
+    ];
+
+    // Cargar datos
     const fetchProveedores = useCallback(async (page = 1, searchQuery = '', showInactiveFlag = false) => {
         setLoading(true);
         try {
@@ -61,7 +114,6 @@ export default function ProveedoresPage() {
             };
             const response = await getProveedores(params);
 
-            // Handle pagination response format
             if (response.data.results) {
                 setProveedores(response.data.results);
                 setTotalItems(response.data.count);
@@ -81,7 +133,7 @@ export default function ProveedoresPage() {
         fetchProveedores(currentPage, search, showInactive);
     }, [fetchProveedores, currentPage, search, showInactive]);
 
-    // --- Handlers ---
+    // Handlers
     const handleSearch = (query) => {
         setSearch(query);
         setCurrentPage(1);
@@ -144,7 +196,6 @@ export default function ProveedoresPage() {
                 show_inactive: showInactive
             });
 
-            // Crear Blob y descargar
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
@@ -161,33 +212,15 @@ export default function ProveedoresPage() {
         }
     };
 
-    // Columns for Export Modal
-    const exportColumns = [
-        { id: 'rfc', label: 'RFC' },
-        { id: 'razon_social', label: 'Razón Social' },
-        { id: 'nombre_comercial', label: 'Nombre Comercial' },
-        { id: 'email_contacto', label: 'Email' },
-        { id: 'telefono', label: 'Teléfono' },
-        { id: 'banco_nombre', label: 'Banco' },
-        { id: 'cuenta', label: 'Cuenta' },
-        { id: 'dias_credito', label: 'Días Crédito' },
-    ];
-
-    const [selectedExportColumns, setSelectedExportColumns] = useState(
-        exportColumns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
-    );
-
-    // --- Table Configuration ---
-    // ... (columns definition remains same, omitting for brevity in tool call context unless needed rewrite)
+    // Columnas de la tabla
     const columns = [
-        // ... (Keep existing columns logic)
         {
             header: 'Razón Social / Comercial',
             accessorKey: 'razon_social',
             cell: (row) => (
                 <div className="flex items-start gap-3 text-left">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg shrink-0">
-                        <Building2 className="nav-icon text-blue-600 dark:text-blue-400 w-5 h-5" />
+                        <Building2 className="text-blue-600 dark:text-blue-400 w-5 h-5" />
                     </div>
                     <div>
                         <p className="font-semibold text-gray-900 dark:text-gray-100">{row.razon_social}</p>
@@ -213,7 +246,6 @@ export default function ProveedoresPage() {
                 <div className="flex flex-col gap-1 text-sm text-left">
                     {row.email_contacto ? (
                         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                            {/* Mail icon implicit */}
                             <span className="truncate max-w-[180px]" title={row.email_contacto}>{row.email_contacto}</span>
                         </div>
                     ) : <span className="text-gray-400 italic">Sin email</span>}
@@ -266,60 +298,87 @@ export default function ProveedoresPage() {
     ];
 
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+            {/* Header */}
+            <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            Directorio de Proveedores
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                            Gestión centralizada de cuentas por pagar y socios comerciales
+                        </p>
+                    </div>
 
-            {/* Page Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 flex items-center gap-3">
-                        Directorio de Proveedores
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400 mt-1">
-                        Gestión centralizada de cuentas por pagar y socios comerciales.
-                    </p>
+                    <ActionButtons
+                        showInactive={showInactive}
+                        onToggleInactive={handleToggleInactive}
+                        canToggleInactive={true}
+                        onImport={() => setIsImportModalOpen(true)}
+                        canImport={true}
+                        onExport={() => setIsExportModalOpen(true)}
+                        canExport={true}
+                        onCreate={handleCreate}
+                        canCreate={true}
+                    />
                 </div>
-                <ActionButtons
-                    // Visual Toggle
-                    showInactive={showInactive}
-                    onToggleInactive={handleToggleInactive}
-                    canToggleInactive={true} // Assuming all users can toggle for now
-
-                    // Import
-                    onImport={() => setIsImportModalOpen(true)}
-                    canImport={true} // Add permission check if needed
-
-                    // Export
-                    onExport={() => setIsExportModalOpen(true)}
-                    canExport={true} // Add permission check if needed
-
-                    // Create
-                    onCreate={handleCreate}
-                    canCreate={true}
-                />
             </div>
 
-            {/* Table Section */}
-            <div className="flex-grow min-h-0 relative">
-                <ReusableTable
-                    data={proveedores}
-                    columns={columns}
-                    loading={loading}
-                    onSearch={handleSearch}
-                    search={true}
-                    pagination={{
-                        currentPage,
-                        totalCount: totalItems,
-                        pageSize,
-                        onPageChange: setCurrentPage
-                    }}
-                    actions={{
-                        onEdit: handleEdit,
-                        onDelete: handleDeleteClick,
-                    }}
-                />
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div
+                            key={index}
+                            className={`
+                                bg-gradient-to-br ${stat.gradient}
+                                rounded-xl p-4 sm:p-6
+                                shadow-lg hover:shadow-xl
+                                transition-all duration-300
+                                transform hover:-translate-y-1
+                            `}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" />
+                            </div>
+                            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">
+                                {stat.value}
+                            </div>
+                            <div className="text-xs sm:text-sm text-white/80">
+                                {stat.label}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Modals */}
+            {/* Main Content */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <div className="overflow-x-auto">
+                    <ReusableTable
+                        data={proveedores}
+                        columns={columns}
+                        loading={loading}
+                        onSearch={handleSearch}
+                        search={true}
+                        pagination={{
+                            currentPage,
+                            totalCount: totalItems,
+                            pageSize,
+                            onPageChange: setCurrentPage
+                        }}
+                        actions={{
+                            onEdit: handleEdit,
+                            onDelete: handleDeleteClick
+                        }}
+                        emptyMessage="No hay proveedores disponibles"
+                    />
+                </div>
+            </div>
+
+            {/* Modales */}
             <ProveedorModal
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
@@ -347,7 +406,7 @@ export default function ProveedoresPage() {
                     setSelectedExportColumns(prev => ({ ...prev, [name]: checked }));
                 }}
                 onDownload={handleExport}
-                data={proveedores} // Preview data
+                data={proveedores}
                 withPreview={true}
             />
 
@@ -355,7 +414,10 @@ export default function ProveedoresPage() {
                 isOpen={isImportModalOpen}
                 onClose={() => setIsImportModalOpen(false)}
                 onImport={importarProveedores}
-                onSuccess={() => fetchProveedores(currentPage, search, showInactive)}
+                onSuccess={() => {
+                    fetchProveedores(currentPage, search, showInactive);
+                    toast.success('Proveedores importados exitosamente');
+                }}
                 templateUrl="/compras/proveedores/exportar-plantilla/"
             />
         </div>

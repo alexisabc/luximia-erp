@@ -1,27 +1,38 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Building2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Building2, Loader2, TrendingUp, AlertCircle, Target } from 'lucide-react';
+
 import ReusableTable from '@/components/tables/ReusableTable';
 import ReusableModal from '@/components/modals/ReusableModal';
 import ActionButtons from '@/components/common/ActionButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+
 import apiClient from '@/services/api';
-import { toast } from 'sonner';
 
 export default function CentrosCostosPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showInactive, setShowInactive] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState(null);
     const [search, setSearch] = useState('');
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false); // If we used standard ImportModal
 
     const { register, handleSubmit, reset, setValue, formState: { isSubmitting } } = useForm();
+
+    const stats = [
+        { label: 'Total Centros', value: data.length || 0, icon: Building2, gradient: 'from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' },
+        { label: 'Activos', value: data.filter(c => c.activo !== false).length || 0, icon: TrendingUp, gradient: 'from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700' },
+        { label: 'Inactivos', value: data.filter(c => c.activo === false).length || 0, icon: AlertCircle, gradient: 'from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700' },
+        { label: 'Departamentos', value: data.length || 0, icon: Target, gradient: 'from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700' }
+    ];
 
     useEffect(() => {
         loadData();
@@ -59,14 +70,17 @@ export default function CentrosCostosPage() {
         }
     };
 
-    const handleDelete = async (row) => {
-        if (!confirm("¿Seguro de desactivar?")) return; // Ideally use ConfirmationModal
+    const handleDelete = async () => {
+        if (!itemToDelete) return;
         try {
-            await apiClient.delete(`/contabilidad/centros-costos/${row.id}/`);
+            await apiClient.delete(`/contabilidad/centros-costos/${itemToDelete.id}/`);
             toast.success("Centro desactivado");
             loadData();
         } catch (error) {
             toast.error("Error al desactivar");
+        } finally {
+            setIsConfirmModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -83,122 +97,109 @@ export default function CentrosCostosPage() {
 
     const columns = [
         {
-            header: 'Código',
-            accessorKey: 'codigo',
-            cell: (row) => <span className="font-mono font-bold text-gray-800 dark:text-gray-200">{row.codigo}</span>
+            header: 'Centro de Costos',
+            render: (row) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                        <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-gray-900 dark:text-white">{row.nombre}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">{row.codigo}</div>
+                    </div>
+                </div>
+            )
         },
         {
-            header: 'Nombre',
-            accessorKey: 'nombre',
-            cell: (row) => <span className="dark:text-gray-200 font-medium">{row.nombre}</span>
-        },
+            header: 'Estado',
+            render: (row) => (
+                <Badge variant={row.activo !== false ? 'success' : 'secondary'}>
+                    {row.activo !== false ? 'Activo' : 'Inactivo'}
+                </Badge>
+            )
+        }
     ];
 
-    // For simplicity, keeping the direct file input for now if ImportModal isn't strictly required for this specific quick refactor, 
-    // but ActionButtons supports onImport. To avoid custom logic, usually we'd use ImportModal.
-    // Let's use the file input via ActionButtons generic handler or keep custom if needed.
-    // Ideally user wants "mismos estilos", so ActionButtons is key.
-
-    const handleExport = async () => {
-        try {
-            const res = await apiClient.get('/contabilidad/centros-costos/exportar/', { responseType: 'blob' });
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'centros_costos.xlsx');
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (e) { toast.error("Error exportando"); }
-    };
-
-    // Custom hidden input trigger for import, executed when ActionButtons onImport is clicked
-    const handleImportClick = () => {
-        document.getElementById('import-file-cc').click();
-    };
-
-    const handleImportFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append('archivo', file);
-        try {
-            await apiClient.post('/contabilidad/centros-costos/importar-excel/', formData);
-            toast.success("Importación exitosa");
-            loadData();
-        } catch (e) {
-            toast.error("Error importando");
-        }
-        e.target.value = '';
-    };
-
     return (
-        <div className="p-8 h-full flex flex-col space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 flex items-center gap-3">
-                        <Building2 className="text-blue-600 w-8 h-8" />
-                        Centros de Costos
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                        Gestiona los centros de costos para la contabilidad analítica.
-                    </p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+            <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">Centros de Costos</h1>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Gestión de centros de costos contables</p>
+                    </div>
+                    <ActionButtons
+                        showInactive={showInactive}
+                        onToggleInactive={() => setShowInactive(!showInactive)}
+                        canToggleInactive={true}
+                        onCreate={() => openModal()}
+                        canCreate={true}
+                    />
                 </div>
-
-                {/* Hidden input for import */}
-                <input type="file" id="import-file-cc" className="hidden" onChange={handleImportFileChange} accept=".xlsx,.xls" />
-
-                <ActionButtons
-                    showInactive={showInactive}
-                    onToggleInactive={() => setShowInactive(!showInactive)}
-                    canToggleInactive={true}
-                    onCreate={() => openModal()}
-                    canCreate={true}
-                    onImport={handleImportClick}
-                    canImport={true}
-                    onExport={handleExport}
-                    canExport={true}
-                />
             </div>
 
-            <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
-                    data={data}
-                    columns={columns}
-                    loading={loading}
-                    onSearch={setSearch}
-                    actions={{
-                        onEdit: (row) => openModal(row),
-                        onDelete: handleDelete
-                    }}
-                    emptyMessage="No se encontraron centros de costos."
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={index} className={`bg-gradient-to-br ${stat.gradient} rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+                            <div className="flex items-center justify-between mb-2"><Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" /></div>
+                            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                            <div className="text-xs sm:text-sm text-white/80">{stat.label}</div>
+                        </div>
+                    );
+                })}
             </div>
 
-            <ReusableModal
-                title={editingItem ? "Editar Centro de Costos" : "Nuevo Centro de Costos"}
-                description="Complete la información del centro de costos."
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            >
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-1">
-                    <div className="space-y-2">
-                        <Label>Código</Label>
-                        <Input {...register('codigo', { required: true })} placeholder="Ej. ADM-001" className="font-mono" />
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <div className="overflow-x-auto">
+                    <ReusableTable
+                        data={data}
+                        columns={columns}
+                        loading={loading}
+                        onSearch={setSearch}
+                        actions={{
+                            onEdit: openModal,
+                            onDelete: (row) => { setItemToDelete(row); setIsConfirmModalOpen(true); }
+                        }}
+                        emptyMessage="No hay centros de costos disponibles"
+                    />
+                </div>
+            </div>
+
+            <ReusableModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? "Editar Centro de Costos" : "Nuevo Centro de Costos"} size="md">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div>
+                        <Label htmlFor="codigo">Código <span className="text-red-500">*</span></Label>
+                        <Input id="codigo" {...register('codigo', { required: true })} placeholder="Ej: CC-001" className="mt-1" />
                     </div>
-                    <div className="space-y-2">
-                        <Label>Nombre</Label>
-                        <Input {...register('nombre', { required: true })} placeholder="Administración General" />
+                    <div>
+                        <Label htmlFor="nombre">Nombre <span className="text-red-500">*</span></Label>
+                        <Input id="nombre" {...register('nombre', { required: true })} placeholder="Nombre del centro de costos" className="mt-1" />
                     </div>
-                    <div className="flex justify-end pt-6 gap-2">
-                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Guardar
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSubmitting} className="w-full sm:w-auto">Cancelar</Button>
+                        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                            {isSubmitting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>) : ('Guardar')}
                         </Button>
                     </div>
                 </form>
+            </ReusableModal>
+
+            <ReusableModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Centro de Costos" size="sm">
+                <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-gray-700 dark:text-gray-300 mb-2">¿Estás seguro de que deseas desactivar el centro <span className="font-semibold">{itemToDelete?.nombre}</span>?</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">El centro ya no aparecerá en las listas principales.</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleDelete}>Desactivar</Button>
+                    </div>
+                </div>
             </ReusableModal>
         </div>
     );

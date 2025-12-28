@@ -128,3 +128,53 @@ export const deleteCaja = (id) => apiClient.delete(`/pos/cajas/${id}/`);
 export const getTurnos = (page = 1, pageSize = 20, filters = {}) => apiClient.get('/pos/turnos/', { params: { page, page_size: pageSize, ...filters } });
 export const getTurnoDetalle = (id) => apiClient.get(`/pos/turnos/${id}/`);
 
+// ===================== SISTEMA DE CANCELACIONES CON AUTORIZACIÓN =====================
+
+/**
+ * Solicita la cancelación de una venta (para cajeros)
+ * @param {number} ventaId - ID de la venta a cancelar
+ * @param {string} motivo - Motivo de la cancelación (mínimo 10 caracteres)
+ */
+export const solicitarCancelacion = (ventaId, motivo) =>
+    apiClient.post('/pos/cancelaciones/solicitar/', { venta_id: ventaId, motivo });
+
+/**
+ * Obtiene las cancelaciones pendientes de autorización (para supervisores)
+ */
+export const getCancelacionesPendientes = () =>
+    apiClient.get('/pos/cancelaciones/pendientes/');
+
+/**
+ * Autoriza una solicitud de cancelación (para supervisores)
+ * @param {number} solicitudId - ID de la solicitud
+ * @param {string} codigoAutorizacion - Código TOTP de 6 dígitos
+ * @param {string} comentarios - Comentarios opcionales
+ */
+export const autorizarCancelacion = (solicitudId, codigoAutorizacion, comentarios = '') =>
+    apiClient.post(`/pos/cancelaciones/${solicitudId}/autorizar/`, {
+        codigo_autorizacion: codigoAutorizacion,
+        comentarios
+    });
+
+/**
+ * Rechaza una solicitud de cancelación (para supervisores)
+ * @param {number} solicitudId - ID de la solicitud
+ * @param {string} comentarios - Motivo del rechazo (requerido)
+ */
+export const rechazarCancelacion = (solicitudId, comentarios) =>
+    apiClient.post(`/pos/cancelaciones/${solicitudId}/rechazar/`, { comentarios });
+
+/**
+ * Obtiene el historial de solicitudes de cancelación
+ * @param {string} estado - Filtrar por estado: PENDIENTE, APROBADA, RECHAZADA
+ */
+export const getSolicitudesCancelacion = (estado = null) =>
+    apiClient.get('/pos/solicitudes-cancelacion/', { params: estado ? { estado } : {} });
+
+/**
+ * Genera un nuevo TOTP de autorización (GET) o lo verifica (POST)
+ */
+export const configurarTOTPAutorizacion = {
+    generar: () => apiClient.get('/pos/configurar-totp-autorizacion/'),
+    verificar: (codigo) => apiClient.post('/pos/configurar-totp-autorizacion/', { codigo })
+};
