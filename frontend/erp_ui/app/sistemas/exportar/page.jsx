@@ -16,7 +16,7 @@ import {
     getPagos,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import { Download, Eye, FileSpreadsheet, Search, Calendar, Filter, XCircle, Settings2 } from 'lucide-react';
+import { Download, Eye, FileSpreadsheet, Search, Calendar, Filter, XCircle, Settings2, FileText } from 'lucide-react';
 
 const PROYECTO_COLUMNAS_EXPORT = [
     { id: 'id', label: 'ID' },
@@ -291,20 +291,21 @@ export default function ReportesPage() {
         .slice(0, 10);
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 min-h-[calc(100vh-100px)]">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8 flex flex-col">
 
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-green-600" />
                     Generador de Reportes
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-gray-600 dark:text-gray-300">
                     Crea reportes personalizados y expórtalos a Excel.
                 </p>
             </div>
 
             {/* Selection Card */}
-            <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl p-8 rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100 dark:border-gray-700">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                     {/* Report Selector - Enhanced Search */}
                     <div className="space-y-4">
@@ -459,7 +460,7 @@ export default function ReportesPage() {
 
             {/* Preview Section */}
             {previewVisible && (
-                <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/30 animate-in fade-in slide-in-from-bottom-8">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 lg:p-8 border border-gray-100 dark:border-gray-700 mt-8 animate-in fade-in slide-in-from-bottom-8">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">Vista Previa de Datos (Primeros 50)</h3>
 

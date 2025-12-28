@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Database, Search, ArrowLeft, FileInput, ChevronRight } from 'lucide-react';
 import DataImporter from '@/components/features/data/DataImporter';
 import {
   importarDatosMasivos,
@@ -258,15 +259,16 @@ export default function ImportarPage() {
   const selectedConfig = selectedKey ? IMPORTS[selectedKey] : null;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 min-h-[calc(100vh-100px)]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8 flex flex-col">
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+            <Database className="w-8 h-8 text-purple-600" />
             Centro de Importación
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 dark:text-gray-300">
             Gestiona la carga masiva de datos para tu sistema ERP.
           </p>
         </div>
@@ -274,9 +276,9 @@ export default function ImportarPage() {
         {selectedKey && (
           <button
             onClick={() => { setSelectedKey(null); setSearchTerm(''); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all shadow-sm"
           >
-            ← Volver al catálogo
+            <ArrowLeft className="w-4 h-4" /> Volver al catálogo
           </button>
         )}
       </div>
@@ -286,16 +288,14 @@ export default function ImportarPage() {
           {/* Search Bar */}
           <div className="relative max-w-xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="h-5 w-5 text-gray-400" />
             </div>
             <input
               type="text"
               placeholder="Buscar módulo a importar (ej. Clientes, Bancos...)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all shadow-sm"
             />
           </div>
 
@@ -306,20 +306,19 @@ export default function ImportarPage() {
                 <button
                   key={key}
                   onClick={() => setSelectedKey(key)}
-                  className="group relative flex flex-col items-start p-6 rounded-2xl bg-white/70 dark:bg-gray-900/40 backdrop-blur-md border border-white/20 dark:border-gray-700/30 hover:bg-white dark:hover:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left w-full"
+                  className="group relative flex flex-col items-start p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-left w-full"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    {/* Icono genérico o específico si se desea mapear */}
-                    <span className="text-2xl">📄</span>
+                  <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <FileInput className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {imp.label}
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
                     {imp.description}
                   </p>
                   <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                    <span className="text-blue-600 dark:text-blue-400">→</span>
+                    <ChevronRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                 </button>
               ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Building2 } from 'lucide-react';
 import {
     getEmpresas,
     createEmpresa,
@@ -229,14 +230,17 @@ export default function EmpresasPage() {
     const canDelete = hasPermission('core.delete_empresa');
 
     return (
-        <div className="p-8 h-full flex flex-col">
-            <div className="flex-shrink-0">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8 flex flex-col">
+            <div className="flex-shrink-0 mb-6 sm:mb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+                            <Building2 className="w-8 h-8 text-blue-600" />
                             Gestión de Empresas
                         </h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">Configuración multi-empresa y datos fiscales.</p>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                            Configuración multi-empresa y datos fiscales.
+                        </p>
                     </div>
                     <ActionButtons
                         showInactive={showInactive}
@@ -257,7 +261,7 @@ export default function EmpresasPage() {
                 )}
             </div>
 
-            <div className="flex-grow min-h-0">
+            <div className="flex-grow min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700">
                 <ReusableTable
                     data={pageData.results}
                     columns={EMPRESA_COLUMNAS_DISPLAY}
