@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 
 export default function CancelacionesPage() {
@@ -315,84 +314,93 @@ export default function CancelacionesPage() {
                 })}
             </div>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid w-full max-w-md grid-cols-2">
-                    <TabsTrigger value="pendientes" className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Pendientes
-                        {pendientes.length > 0 && (
-                            <Badge variant="destructive" className="ml-1">{pendientes.length}</Badge>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="historial" className="flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        Historial
-                    </TabsTrigger>
-                </TabsList>
+            {/* Selector de Pestañas Simple */}
+            <div className="flex space-x-2 p-1 bg-gray-100 dark:bg-gray-800/50 rounded-xl mb-6 w-full max-w-md border border-gray-200 dark:border-gray-700">
+                <button
+                    onClick={() => setActiveTab('pendientes')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'pendientes'
+                        ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/30'
+                        }`}
+                >
+                    <Clock className="w-4 h-4" /> Pendientes
+                    {pendientes.length > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-1">
+                            {pendientes.length}
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => setActiveTab('historial')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'historial'
+                        ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700'
+                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/30'
+                        }`}
+                >
+                    <FileText className="w-4 h-4" /> Historial
+                </button>
+            </div>
 
-                {/* Tab Pendientes */}
-                <TabsContent value="pendientes">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                        <ReusableTable
-                            data={pendientes}
-                            columns={columns}
-                            loading={loading}
-                            actions={{
-                                custom: [
-                                    {
-                                        icon: CheckCircle,
-                                        label: 'Autorizar',
-                                        onClick: abrirModalAutorizacion,
-                                        tooltip: 'Autorizar cancelación',
-                                        className: 'text-green-600 hover:text-green-700'
-                                    },
-                                    {
-                                        icon: XCircle,
-                                        label: 'Rechazar',
-                                        onClick: abrirModalRechazo,
-                                        tooltip: 'Rechazar cancelación',
-                                        className: 'text-red-600 hover:text-red-700'
-                                    }
-                                ]
-                            }}
-                        />
-                        {pendientes.length === 0 && !loading && (
-                            <div className="p-12 text-center text-gray-500">
-                                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-300" />
-                                <p className="text-lg font-medium">Sin solicitudes pendientes</p>
-                                <p className="text-sm">Todas las cancelaciones han sido procesadas</p>
-                            </div>
-                        )}
-                    </div>
-                </TabsContent>
-
-                {/* Tab Historial */}
-                <TabsContent value="historial">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                        <ReusableTable
-                            data={historial}
-                            columns={[
-                                ...columns,
+            {/* Contenido de Pestañas */}
+            {activeTab === 'pendientes' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in duration-300">
+                    <ReusableTable
+                        data={pendientes}
+                        columns={columns}
+                        loading={loading}
+                        actions={{
+                            custom: [
                                 {
-                                    header: 'Autorizado Por',
-                                    accessorKey: 'autorizado_por_nombre',
-                                    cell: (row) => row.autorizado_por_nombre ? (
-                                        <div className="flex items-center gap-2">
-                                            <Shield className="w-4 h-4 text-blue-500" />
-                                            <span>{row.autorizado_por_nombre}</span>
-                                        </div>
-                                    ) : (
-                                        <span className="text-gray-400">-</span>
-                                    )
+                                    icon: CheckCircle,
+                                    label: 'Autorizar',
+                                    onClick: abrirModalAutorizacion,
+                                    tooltip: 'Autorizar cancelación',
+                                    className: 'text-green-600 hover:text-green-700'
+                                },
+                                {
+                                    icon: XCircle,
+                                    label: 'Rechazar',
+                                    onClick: abrirModalRechazo,
+                                    tooltip: 'Rechazar cancelación',
+                                    className: 'text-red-600 hover:text-red-700'
                                 }
-                            ]}
-                            loading={loading}
-                            onSearch={() => { }}
-                        />
-                    </div>
-                </TabsContent>
-            </Tabs>
+                            ]
+                        }}
+                    />
+                    {pendientes.length === 0 && !loading && (
+                        <div className="p-16 text-center text-gray-400">
+                            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-200 dark:text-green-900/30" />
+                            <p className="text-xl font-bold">Sin solicitudes pendientes</p>
+                            <p className="text-sm">Todo está al día</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'historial' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in duration-300">
+                    <ReusableTable
+                        data={historial}
+                        columns={[
+                            ...columns,
+                            {
+                                header: 'Autorizado Por',
+                                accessorKey: 'autorizado_por_nombre',
+                                cell: (row) => row.autorizado_por_nombre ? (
+                                    <div className="flex items-center gap-2">
+                                        <Shield className="w-4 h-4 text-blue-500" />
+                                        <span>{row.autorizado_por_nombre}</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-gray-400">-</span>
+                                )
+                            }
+                        ]}
+                        loading={loading}
+                        onSearch={() => { }}
+                    />
+                </div>
+            )}
 
             {/* Modal de Autorización */}
             <ReusableModal
@@ -403,7 +411,6 @@ export default function CancelacionesPage() {
             >
                 {selectedSolicitud && (
                     <div className="space-y-6">
-                        {/* Información del ticket */}
                         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
@@ -422,63 +429,61 @@ export default function CancelacionesPage() {
                                 </div>
                                 <div className="col-span-2">
                                     <span className="text-gray-500">Motivo:</span>
-                                    <p className="text-gray-700 dark:text-gray-300">{selectedSolicitud.motivo}</p>
+                                    <p className="text-gray-700 dark:text-gray-300 italic">"{selectedSolicitud.motivo}"</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Código de autorización */}
                         <div>
-                            <Label className="flex items-center gap-2">
-                                <Lock className="w-4 h-4" />
-                                Código de Autorización *
+                            <Label className="flex items-center gap-2 mb-2">
+                                <Lock className="w-4 h-4 text-blue-500" />
+                                Código de Autorización (TOTP)
                             </Label>
                             <Input
-                                type="password"
+                                type="text"
                                 inputMode="numeric"
                                 maxLength={6}
                                 value={codigoAuth}
                                 onChange={(e) => setCodigoAuth(e.target.value.replace(/\D/g, ''))}
-                                placeholder="Ingresa tu código TOTP de 6 dígitos"
-                                className="text-center text-2xl tracking-widest font-mono mt-2"
+                                placeholder="000000"
+                                className="text-center text-3xl tracking-[0.5em] font-mono h-16 focus:ring-blue-500"
                                 autoFocus
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Ingresa el código de tu app autenticadora (Google Authenticator, Authy, etc.)
+                            <p className="text-xs text-center text-gray-500 mt-2">
+                                Ingresa el código de 6 dígitos generado en tu aplicación autenticadora.
                             </p>
                         </div>
 
-                        {/* Comentarios */}
                         <div>
-                            <Label>Comentarios (opcional)</Label>
+                            <Label>Comentarios de Autorización (opcional)</Label>
                             <Textarea
                                 value={comentariosAuth}
                                 onChange={(e) => setComentariosAuth(e.target.value)}
-                                placeholder="Agrega un comentario sobre esta autorización..."
+                                placeholder="Ej: Autorizado tras verificar mercancía devuelta..."
                                 className="mt-2"
                             />
                         </div>
 
-                        {/* Botones */}
-                        <div className="flex gap-3 justify-end">
+                        <div className="flex gap-3 pt-2">
                             <Button
                                 variant="outline"
+                                className="flex-1"
                                 onClick={() => setShowAuthModal(false)}
                                 disabled={procesando}
                             >
                                 Cancelar
                             </Button>
                             <Button
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-500/20"
                                 onClick={handleAutorizar}
                                 disabled={codigoAuth.length !== 6 || procesando}
-                                className="bg-green-600 hover:bg-green-700"
                             >
                                 {procesando ? (
                                     <RefreshCw className="w-4 h-4 animate-spin mr-2" />
                                 ) : (
                                     <CheckCircle className="w-4 h-4 mr-2" />
                                 )}
-                                Autorizar Cancelación
+                                Confirmar Autorización
                             </Button>
                         </div>
                     </div>
@@ -489,64 +494,44 @@ export default function CancelacionesPage() {
             <ReusableModal
                 isOpen={showRejectModal}
                 onClose={() => setShowRejectModal(false)}
-                title="Rechazar Cancelación"
+                title="Rechazar Solicitud"
                 size="md"
             >
-                {selectedSolicitud && (
-                    <div className="space-y-6">
-                        {/* Información del ticket */}
-                        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span className="text-gray-500">Ticket:</span>
-                                    <p className="font-bold text-lg">{selectedSolicitud.venta_folio}</p>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Solicitante:</span>
-                                    <p className="font-medium">{selectedSolicitud.solicitante_nombre}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Motivo del rechazo */}
-                        <div>
-                            <Label>Motivo del Rechazo *</Label>
-                            <Textarea
-                                value={motivoRechazo}
-                                onChange={(e) => setMotivoRechazo(e.target.value)}
-                                placeholder="Explica por qué se rechaza esta solicitud..."
-                                className="mt-2"
-                                required
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Mínimo 5 caracteres. Este motivo será visible para el cajero.
-                            </p>
-                        </div>
-
-                        {/* Botones */}
-                        <div className="flex gap-3 justify-end">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowRejectModal(false)}
-                                disabled={procesando}
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                onClick={handleRechazar}
-                                disabled={motivoRechazo.length < 5 || procesando}
-                                variant="destructive"
-                            >
-                                {procesando ? (
-                                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                                ) : (
-                                    <XCircle className="w-4 h-4 mr-2" />
-                                )}
-                                Rechazar Solicitud
-                            </Button>
-                        </div>
+                <div className="space-y-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Indica el motivo por el cual rechazas esta solicitud de cancelación. El cajero podrá ver este mensaje.
+                    </p>
+                    <Textarea
+                        value={motivoRechazo}
+                        onChange={(e) => setMotivoRechazo(e.target.value)}
+                        placeholder="Escribe el motivo del rechazo aquí..."
+                        className="min-h-[100px]"
+                        autoFocus
+                    />
+                    <div className="flex gap-3 pt-2">
+                        <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setShowRejectModal(false)}
+                            disabled={procesando}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={handleRechazar}
+                            disabled={motivoRechazo.length < 5 || procesando}
+                        >
+                            {procesando ? (
+                                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                                <XCircle className="w-4 h-4 mr-2" />
+                            )}
+                            Rechazar Solicitud
+                        </Button>
                     </div>
-                )}
+                </div>
             </ReusableModal>
         </div>
     );
