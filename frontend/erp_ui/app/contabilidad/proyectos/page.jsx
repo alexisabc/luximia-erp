@@ -20,16 +20,16 @@ import {
     CheckCircle, Clock, Package
 } from 'lucide-react';
 
-// Componentes
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
+// Componentes Atomic Design
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
 import ActionButtons from '@/components/common/ActionButtons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import Button from '@/components/atoms/Button';
+import Input from '@/components/atoms/Input';
+import Label from '@/components/atoms/Label';
+import Textarea from '@/components/atoms/Textarea';
+import Badge from '@/components/atoms/Badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 
 // Servicios y utilidades
 import {
@@ -380,53 +380,48 @@ export default function ProyectosPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
             {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                            Gestión de Proyectos
-                        </h1>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                            Administra el catálogo de proyectos activos e inactivos
-                        </p>
+            <div className="mb-4 sm:mb-6 lg:mb-8">
+                <div className="flex flex-col gap-4 sm:gap-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                                Gestión de Proyectos
+                            </h1>
+                            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+                                Administra el catálogo de proyectos activos e inactivos
+                            </p>
+                        </div>
+                        <ActionButtons
+                            showInactive={showInactive}
+                            onToggleInactive={() => setShowInactive(!showInactive)}
+                            canToggleInactive={hasPermission('contabilidad.view_proyecto')}
+                            onCreate={handleCreateClick}
+                            canCreate={hasPermission('contabilidad.add_proyecto')}
+                            onImport={() => setIsImportModalOpen(true)}
+                            canImport={hasPermission('contabilidad.add_proyecto')}
+                            onExport={() => setIsExportModalOpen(true)}
+                            canExport
+                        />
                     </div>
-
-                    <ActionButtons
-                        showInactive={showInactive}
-                        onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('contabilidad.view_proyecto')}
-                        onCreate={handleCreateClick}
-                        canCreate={hasPermission('contabilidad.add_proyecto')}
-                        onImport={() => setIsImportModalOpen(true)}
-                        canImport={hasPermission('contabilidad.add_proyecto')}
-                        onExport={() => setIsExportModalOpen(true)}
-                        canExport
-                    />
                 </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
                 {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
                         <div
                             key={index}
-                            className={`
-                                bg-gradient-to-br ${stat.gradient}
-                                rounded-xl p-4 sm:p-6
-                                shadow-lg hover:shadow-xl
-                                transition-all duration-300
-                                transform hover:-translate-y-1
-                            `}
+                            className={`bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" />
+                            <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                <Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white/80" />
                             </div>
-                            <div className={`${stat.isAmount ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl lg:text-4xl'} font-bold text-white mb-1`}>
+                            <div className={`${stat.isAmount ? 'text-lg sm:text-xl lg:text-2xl' : 'text-2xl sm:text-3xl lg:text-4xl'} font-bold text-white mb-0.5 sm:mb-1`}>
                                 {stat.value}
                             </div>
-                            <div className="text-xs sm:text-sm text-white/80">
+                            <div className="text-xs sm:text-sm text-white/80 truncate">
                                 {stat.label}
                             </div>
                         </div>
@@ -437,7 +432,7 @@ export default function ProyectosPage() {
             {/* Main Content */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={pageData.results}
                         columns={PROYECTO_COLUMNAS_DISPLAY}
                         actions={{
@@ -454,7 +449,8 @@ export default function ProyectosPage() {
                         loading={loading}
                         isPaginating={isPaginating}
                         onSearch={handleSearch}
-                        emptyMessage="No hay proyectos disponibles"
+                        search={true}
+                        mobileCardView={true}
                     />
                 </div>
             </div>

@@ -6,11 +6,7 @@ import {
     Monitor, Laptop, Users, HardDrive,
     Smartphone, Filter,
     Search, Printer, CheckCircle2,
-<<<<<<< HEAD
     Eye, Sparkles, History, Layers, ClipboardList, Package, XCircle
-=======
-    Eye, Sparkles, History, Layers, ClipboardList, Package
->>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -289,7 +285,6 @@ export default function InventarioSistemasPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8 flex flex-col">
 
             {/* Header y Acciones */}
-<<<<<<< HEAD
             <div className="flex-shrink-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex flex-col gap-4 sm:gap-6">
                     {/* Título */}
@@ -299,112 +294,86 @@ export default function InventarioSistemasPage() {
                             <span className="truncate">Inventario de Sistemas</span>
                         </h1>
                         <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
-=======
-            <div className="flex-shrink-0 mb-6 sm:mb-8">
-                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-                            <Monitor className="w-8 h-8 text-blue-600" />
-                            Inventario de Sistemas
-                        </h1>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
->>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                             Gestión centralizada de activos tecnológicos y responsivas.
                         </p>
                     </div>
 
                     {/* Switcher & Actions */}
-<<<<<<< HEAD
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                         {/* Tab Switcher */}
                         <div className="flex items-center p-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                             <button
                                 onClick={() => setActiveTab('activos')}
                                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all touch-target ${activeTab === 'activos'
-=======
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-                        <div className="flex items-center p-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm w-full sm:w-auto">
-                            <button
-                                onClick={() => setActiveTab('activos')}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'activos'
->>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 <Layers className="w-4 h-4" />
-<<<<<<< HEAD
                                 <span className="hidden xs:inline">Inventario</span>
-                            </button>
+                            </button >
                             <button
                                 onClick={() => setActiveTab('responsivas')}
                                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all touch-target ${activeTab === 'responsivas'
-=======
-                                Inventario
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('responsivas')}
-                                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${activeTab === 'responsivas'
->>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                     }`}
                             >
                                 <ClipboardList className="w-4 h-4" />
-<<<<<<< HEAD
                                 <span className="hidden xs:inline">Responsivas</span>
-                            </button>
-                        </div>
+                            </button >
+                        </div >
 
                         {/* Action Buttons */}
 =======
                                 Responsivas
                             </button>
-                        </div>
+                </div>
 
 >>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
-                        <ActionButtons
-                            showInactive={showInactive}
-                            onToggleInactive={() => setShowInactive(!showInactive)}
-                            canToggleInactive={hasPermission(activeTab === 'activos' ? 'sistemas.view_activoit' : 'sistemas.view_asignacionequipo')}
-                            onCreate={() => router.push(activeTab === 'activos' ? '/sistemas/inventario/nuevo' : '/sistemas/responsivas/nuevo')}
-                            canCreate={hasPermission(activeTab === 'activos' ? 'sistemas.add_activoit' : 'sistemas.add_asignacionequipo')}
-                            onImport={() => setIsImportModalOpen(true)}
-                            canImport={hasPermission(activeTab === 'activos' ? 'sistemas.add_activoit' : 'sistemas.add_asignacionequipo')}
-                            onExport={() => setIsExportModalOpen(true)}
-                            canExport={hasPermission(activeTab === 'activos' ? 'sistemas.view_activoit' : 'sistemas.view_asignacionequipo')}
-                        />
-                    </div>
-                </div>
-            </div>
+                < ActionButtons
+                    showInactive={showInactive}
+                    onToggleInactive={() => setShowInactive(!showInactive)
+                    }
+                    canToggleInactive={hasPermission(activeTab === 'activos' ? 'sistemas.view_activoit' : 'sistemas.view_asignacionequipo')}
+                    onCreate={() => router.push(activeTab === 'activos' ? '/sistemas/inventario/nuevo' : '/sistemas/responsivas/nuevo')}
+                    canCreate={hasPermission(activeTab === 'activos' ? 'sistemas.add_activoit' : 'sistemas.add_asignacionequipo')}
+                    onImport={() => setIsImportModalOpen(true)}
+                    canImport={hasPermission(activeTab === 'activos' ? 'sistemas.add_activoit' : 'sistemas.add_asignacionequipo')}
+                    onExport={() => setIsExportModalOpen(true)}
+                    canExport={hasPermission(activeTab === 'activos' ? 'sistemas.view_activoit' : 'sistemas.view_asignacionequipo')}
+                />
+            </div >
+        </div >
+            </div >
 
-            {/* Estadísticas */}
+        {/* Estadísticas */ }
 <<<<<<< HEAD
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+        < div className = "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6" >
 =======
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
 >>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
-                {(activeTab === 'activos'
-                    ? [
-                        { label: 'Total Activos', value: totalItems, icon: HardDrive, gradient: 'from-blue-500 to-indigo-600' },
-                        { label: 'En Resguardo', value: data.filter(a => a.estado === 'DISPONIBLE').length, icon: Package, gradient: 'from-emerald-500 to-teal-600' },
-                        { label: 'En Soporte', value: data.filter(a => a.estado === 'MANTENIMIENTO').length, icon: Filter, gradient: 'from-amber-500 to-orange-600' },
-                        { label: 'Asignados', value: data.filter(a => a.estado === 'ASIGNADO').length, icon: Users, gradient: 'from-indigo-500 to-purple-600' }
-                    ]
-                    : [
-                        { label: 'Total Emitidas', value: totalItems, icon: ClipboardList, gradient: 'from-blue-500 to-indigo-600' },
-                        { label: 'Por Firmar', value: data.filter(r => !r.firmada).length, icon: History, gradient: 'from-amber-500 to-orange-600' },
-                        { label: 'Firmadas', value: data.filter(r => r.firmada).length, icon: CheckCircle2, gradient: 'from-emerald-500 to-teal-600' },
-                        { label: 'Hoy', value: data.filter(r => r.fecha_asignacion === new Date().toISOString().split('T')[0]).length, icon: Sparkles, gradient: 'from-cyan-500 to-blue-600' }
-                    ]
-                ).map((stat, i) => (
+            {(activeTab === 'activos'
+                ? [
+                    { label: 'Total Activos', value: totalItems, icon: HardDrive, gradient: 'from-blue-500 to-indigo-600' },
+                    { label: 'En Resguardo', value: data.filter(a => a.estado === 'DISPONIBLE').length, icon: Package, gradient: 'from-emerald-500 to-teal-600' },
+                    { label: 'En Soporte', value: data.filter(a => a.estado === 'MANTENIMIENTO').length, icon: Filter, gradient: 'from-amber-500 to-orange-600' },
+                    { label: 'Asignados', value: data.filter(a => a.estado === 'ASIGNADO').length, icon: Users, gradient: 'from-indigo-500 to-purple-600' }
+                ]
+                : [
+                    { label: 'Total Emitidas', value: totalItems, icon: ClipboardList, gradient: 'from-blue-500 to-indigo-600' },
+                    { label: 'Por Firmar', value: data.filter(r => !r.firmada).length, icon: History, gradient: 'from-amber-500 to-orange-600' },
+                    { label: 'Firmadas', value: data.filter(r => r.firmada).length, icon: CheckCircle2, gradient: 'from-emerald-500 to-teal-600' },
+                    { label: 'Hoy', value: data.filter(r => r.fecha_asignacion === new Date().toISOString().split('T')[0]).length, icon: Sparkles, gradient: 'from-cyan-500 to-blue-600' }
+                ]
+            ).map((stat, i) => (
 <<<<<<< HEAD
-                    <div key={i} className={`bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
-                        <div className="flex items-center justify-between mb-1 sm:mb-2">
-                            <stat.icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white/80" />
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">{stat.value}</div>
-                        <div className="text-xs sm:text-sm text-white/80 truncate">{stat.label}</div>
+                <div key={i} className={`bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                        <stat.icon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-white/80" />
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-bold text-white mb-0.5 sm:mb-1">{stat.value}</div>
+                    <div className="text-xs sm:text-sm text-white/80 truncate">{stat.label}</div>
 =======
                     <div key={i} className={`bg-gradient-to-br ${stat.gradient} rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
                         <div className="flex items-center justify-between mb-2">
@@ -415,75 +384,75 @@ export default function InventarioSistemasPage() {
 >>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                     </div>
                 ))}
-            </div>
+                </div>
 
-            {/* Tabla con Estilo Tarjeta */}
-            <div className="flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700 flex flex-col">
+            {/* Tabla con Estilo Tarjeta */ }
+                < div className = "flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700 flex flex-col" >
                 <div className="flex-1 overflow-hidden">
 <<<<<<< HEAD
-                    <DataTable
+                <DataTable
 =======
                     <ReusableTable
 >>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
-                        key={activeTab}
-                        data={data}
-                        columns={activeTab === 'activos' ? columnsActivos : columnsResponsivas}
-                        loading={loading}
-                        onSearch={setSearch}
+                    key={activeTab}
+                    data={data}
+                    columns={activeTab === 'activos' ? columnsActivos : columnsResponsivas}
+                    loading={loading}
+                    onSearch={setSearch}
 <<<<<<< HEAD
-                        search={true}
-                        mobileCardView={true}
+                    search={true}
+                    mobileCardView={true}
 =======
                         searchPlaceholder={activeTab === 'activos' ? "Buscar activos..." : "Buscar responsivas..."}
 >>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
-                        pagination={{
-                            currentPage: page,
-                            totalCount: totalItems,
-                            pageSize: pageSize,
-                            onPageChange: setPage
-                        }}
-                        actions={activeTab === 'activos' ? {
-                            onEdit: hasPermission('sistemas.change_activoit') ? (r) => router.push(`/sistemas/inventario/editar/${r.id}`) : null,
-                        } : {
-                            custom: [
-                                {
-                                    icon: Printer,
-                                    onClick: (r) => handlePrintResponsiva(r.id),
-                                    label: 'Imprimir',
-                                    tooltip: 'Imprimir Responsiva PDF'
-                                },
-                                {
-                                    icon: Eye,
-                                    onClick: (r) => router.push(`/sistemas/responsivas/detalle/${r.id}`),
-                                    label: 'Ver',
-                                    tooltip: 'Ver Detalle'
-                                }
-                            ]
-                        }}
-                    />
-                </div>
-            </div>
+                    pagination={{
+                        currentPage: page,
+                        totalCount: totalItems,
+                        pageSize: pageSize,
+                        onPageChange: setPage
+                    }}
+                    actions={activeTab === 'activos' ? {
+                        onEdit: hasPermission('sistemas.change_activoit') ? (r) => router.push(`/sistemas/inventario/editar/${r.id}`) : null,
+                    } : {
+                        custom: [
+                            {
+                                icon: Printer,
+                                onClick: (r) => handlePrintResponsiva(r.id),
+                                label: 'Imprimir',
+                                tooltip: 'Imprimir Responsiva PDF'
+                            },
+                            {
+                                icon: Eye,
+                                onClick: (r) => router.push(`/sistemas/responsivas/detalle/${r.id}`),
+                                label: 'Ver',
+                                tooltip: 'Ver Detalle'
+                            }
+                        ]
+                    }}
+                />
+                </div >
+            </div >
 
-            {/* Modales de Gestión */}
-            <ExportModal
-                isOpen={isExportModalOpen}
-                onClose={() => setIsExportModalOpen(false)}
-                columns={COLUMNAS_EXPORT_ACTIVOS} // Por ahora solo activos
-                selectedColumns={selectedColumns}
-                onColumnChange={handleColumnChange}
-                onDownload={handleExport}
-                onSelectAll={handleSelectAllColumns}
-                data={data}
-                withPreview={activeTab === 'activos'}
+                {/* Modales de Gestión */ }
+                < ExportModal
+                isOpen = { isExportModalOpen }
+                onClose = {() => setIsExportModalOpen(false)}
+columns = { COLUMNAS_EXPORT_ACTIVOS } // Por ahora solo activos
+selectedColumns = { selectedColumns }
+onColumnChange = { handleColumnChange }
+onDownload = { handleExport }
+onSelectAll = { handleSelectAllColumns }
+data = { data }
+withPreview = { activeTab === 'activos'}
             />
 
-            <ImportModal
-                isOpen={isImportModalOpen}
-                onClose={() => setIsImportModalOpen(false)}
-                onImport={activeTab === 'activos' ? importarActivosIT : importarAsignaciones}
-                onSuccess={() => fetchData()}
-                templateUrl={activeTab === 'activos' ? "/sistemas/activos/exportar-plantilla/" : "/sistemas/asignaciones/exportar-plantilla/"}
+    < ImportModal
+isOpen = { isImportModalOpen }
+onClose = {() => setIsImportModalOpen(false)}
+onImport = { activeTab === 'activos' ? importarActivosIT : importarAsignaciones}
+onSuccess = {() => fetchData()}
+templateUrl = { activeTab === 'activos' ? "/sistemas/activos/exportar-plantilla/" : "/sistemas/asignaciones/exportar-plantilla/"}
             />
-        </div>
+        </div >
     );
 }
