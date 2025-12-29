@@ -7,6 +7,7 @@ import {
     AlertCircle, Loader2, Package
 } from 'lucide-react';
 
+<<<<<<< HEAD
 import DataTable from '@/components/organisms/DataTable';
 import Modal from '@/components/organisms/Modal';
 import ActionButtons from '@/components/common/ActionButtons';
@@ -15,6 +16,16 @@ import Input from '@/components/atoms/Input';
 import Label from '@/components/atoms/Label';
 import Badge from '@/components/atoms/Badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+=======
+import ReusableTable from '@/components/tables/ReusableTable';
+import ReusableModal from '@/components/modals/ReusableModal';
+import ActionButtons from '@/components/common/ActionButtons';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+>>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
 
 import {
     getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE,
@@ -44,7 +55,11 @@ const UPE_COLUMNAS_DISPLAY = [
     {
         header: 'Proyecto',
         render: (row) => (
+<<<<<<< HEAD
             <Badge variant="info" size="sm">
+=======
+            <Badge variant="outline" className="font-medium">
+>>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                 {row.proyecto_nombre}
             </Badge>
         )
@@ -61,6 +76,7 @@ const UPE_COLUMNAS_DISPLAY = [
     {
         header: 'Estado',
         render: (row) => {
+<<<<<<< HEAD
             const statusMap = {
                 'Disponible': 'success',
                 'Vendida': 'info',
@@ -69,6 +85,16 @@ const UPE_COLUMNAS_DISPLAY = [
             };
             return (
                 <Badge variant={statusMap[row.estado] || 'default'} size="sm">
+=======
+            const statusStyles = {
+                'Disponible': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                'Vendida': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+                'Pagada': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+                'Bloqueada': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+            };
+            return (
+                <Badge className={statusStyles[row.estado] || 'bg-gray-100 text-gray-800'}>
+>>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
                     {row.estado}
                 </Badge>
             );
@@ -292,6 +318,7 @@ export default function UPEsPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+<<<<<<< HEAD
             <div className="mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex flex-col gap-4 sm:gap-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -442,6 +469,143 @@ export default function UPEsPage() {
                     </div>
                 </div>
             </Modal>
+=======
+            <div className="mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            Gestión de UPEs
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                            Administra las unidades privativas y su disponibilidad
+                        </p>
+                    </div>
+                    <ActionButtons
+                        showInactive={showInactive}
+                        onToggleInactive={() => setShowInactive(!showInactive)}
+                        canToggleInactive={hasPermission('contabilidad.view_upe')}
+                        onCreate={handleCreateClick}
+                        canCreate={hasPermission('contabilidad.add_upe')}
+                        onImport={() => setIsImportModalOpen(true)}
+                        canImport={hasPermission('contabilidad.add_upe')}
+                        onExport={() => setIsExportModalOpen(true)}
+                        canExport={true}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={index} className={`bg-gradient-to-br ${stat.gradient} rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+                            <div className="flex items-center justify-between mb-2"><Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" /></div>
+                            <div className={`${stat.isAmount ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl lg:text-4xl'} font-bold text-white mb-1`}>{stat.value}</div>
+                            <div className="text-xs sm:text-sm text-white/80">{stat.label}</div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <div className="overflow-x-auto">
+                    <ReusableTable
+                        data={pageData.results}
+                        columns={UPE_COLUMNAS_DISPLAY}
+                        actions={{
+                            onEdit: hasPermission('contabilidad.change_upe') ? handleEditClick : null,
+                            onDelete: hasPermission('contabilidad.delete_upe') ? handleDeleteClick : null,
+                            onHardDelete: hasPermission('contabilidad.delete_user') ? handleHardDelete : null
+                        }}
+                        pagination={{ currentPage, totalCount: pageData.count, pageSize, onPageChange: handlePageChange }}
+                        loading={loading}
+                        isPaginating={isPaginating}
+                        onSearch={handleSearch}
+                        emptyMessage="No hay UPEs disponibles"
+                    />
+                </div>
+            </div>
+
+            <ReusableModal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title={editingUPE ? 'Editar UPE' : 'Nueva UPE'} size="lg">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="identificador">Identificador <span className="text-red-500">*</span></Label>
+                            <Input id="identificador" value={formData.identificador} onChange={(e) => setFormData({ ...formData, identificador: e.target.value })} placeholder="Ej: A-101" required className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="proyecto">Proyecto <span className="text-red-500">*</span></Label>
+                            <Select value={formData.proyecto?.toString()} onValueChange={(value) => setFormData({ ...formData, proyecto: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccione proyecto" /></SelectTrigger>
+                                <SelectContent>
+                                    {proyectos.map(p => (<SelectItem key={p.id} value={p.id.toString()}>{p.nombre}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="nivel">Nivel <span className="text-red-500">*</span></Label>
+                            <Input id="nivel" type="number" value={formData.nivel} onChange={(e) => setFormData({ ...formData, nivel: e.target.value })} required className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="metros_cuadrados">Metros Cuadrados <span className="text-red-500">*</span></Label>
+                            <Input id="metros_cuadrados" type="number" step="0.01" value={formData.metros_cuadrados} onChange={(e) => setFormData({ ...formData, metros_cuadrados: e.target.value })} required className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="estacionamientos">Estacionamientos <span className="text-red-500">*</span></Label>
+                            <Input id="estacionamientos" type="number" value={formData.estacionamientos} onChange={(e) => setFormData({ ...formData, estacionamientos: e.target.value })} required className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="valor_total">Valor Total <span className="text-red-500">*</span></Label>
+                            <Input id="valor_total" type="number" step="0.01" value={formData.valor_total} onChange={(e) => setFormData({ ...formData, valor_total: e.target.value })} required className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="moneda">Moneda <span className="text-red-500">*</span></Label>
+                            <Select value={formData.moneda} onValueChange={(value) => setFormData({ ...formData, moneda: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="MXN">MXN</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="estado">Estado <span className="text-red-500">*</span></Label>
+                            <Select value={formData.estado} onValueChange={(value) => setFormData({ ...formData, estado: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Disponible">Disponible</SelectItem>
+                                    <SelectItem value="Vendida">Vendida</SelectItem>
+                                    <SelectItem value="Pagada">Pagada</SelectItem>
+                                    <SelectItem value="Bloqueada">Bloqueada</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button type="button" variant="outline" onClick={() => setIsFormModalOpen(false)} disabled={isSubmitting} className="w-full sm:w-auto">Cancelar</Button>
+                        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                            {isSubmitting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>) : ('Guardar UPE')}
+                        </Button>
+                    </div>
+                </form>
+            </ReusableModal>
+
+            <ReusableModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar UPE" size="sm">
+                <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-gray-700 dark:text-gray-300 mb-2">¿Estás seguro de que deseas desactivar la UPE <span className="font-semibold">{itemToDelete?.identificador}</span>?</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">La UPE ya no aparecerá en las listas principales.</p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleConfirmDelete}>Desactivar</Button>
+                    </div>
+                </div>
+            </ReusableModal>
+>>>>>>> ff8deb2ccbc4b587f035702c72a1f581ab58662c
 
             <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImport={importarUPEs} onSuccess={() => { fetchData(currentPage, pageSize); toast.success('UPEs importadas exitosamente'); }} templateUrl="/contabilidad/upes/exportar-plantilla/" />
             <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} columns={UPE_COLUMNAS_EXPORT} selectedColumns={selectedColumns} onColumnChange={handleColumnChange} onDownload={handleExport} data={pageData.results} withPreview={true} />
