@@ -6,6 +6,7 @@ from django.conf import settings
 from openai import OpenAI, OpenAIError
 
 from .rag import retrieve_relevant_context
+from .services import AIService
 
 MAX_QUERY_TOKENS = 300
 MAX_RESPONSE_TOKENS = 500
@@ -27,6 +28,8 @@ class AIAssistantView(APIView):
 
     def post(self, request):
         consulta = request.data.get("consulta", "").strip()
+        preferred_model = request.data.get("model", "auto")
+        
         if not consulta:
             return Response({"detalle": "Consulta requerida"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -55,18 +58,11 @@ class AIAssistantView(APIView):
             {"role": "user", "content": f"Contexto del Sistema (Datos Reales):\n{contexto_str}\n\nPregunta del Usuario: {consulta}"}
         ]
 
-        # 3. Llamar a OpenAI
-        client = OpenAI(api_key=settings.OPENAI_API_KEY if hasattr(settings, 'OPENAI_API_KEY') else None)
+        # 3. Llamar al Servicio de IA (Multi-modelo)
+        ai_service = AIService()
         try:
-            completion = client.chat.completions.create(
-                model="gpt-4o-mini", # Eficiente y capaz
-                messages=mensajes,
-                max_tokens=MAX_RESPONSE_TOKENS,
-                temperature=0.3, # Baja temperatura para ser fiel a los datos
-            )
-            respuesta = completion.choices[0].message.content.strip()
-            
-        except OpenAIError as e:
-            return Response({"detalle": f"Error del modelo IA: {str(e)}"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            respuesta = ai_service.generate_response(mensajes, preferred_model=preferred_model)
+        except Exception as e:
+            return Response({"detalle": f"Error del servicio IA: {str(e)}"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         return Response({"respuesta": respuesta})

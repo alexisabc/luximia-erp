@@ -1,26 +1,113 @@
 import apiClient from './core';
+import { db, saveOfflineSale, getPendingSales, markSaleSynced } from './db';
 
 // ===================== POS / Productos =====================
-export const getProductosPOS = (search = '') => apiClient.get('/pos/productos/', { params: { search } });
-
-// ===================== POS / Turnos (Caja) =====================
 /**
- * Obtiene el turno activo del usuario actual (si existe)
- * Filtra por cerrado=False
+ * Obtiene productos. Si hay red, actualiza caché local. Si no, usa caché.
  */
-export const getTurnoActivo = async () => {
-    const response = await apiClient.get('/pos/turnos/', { params: { cerrado: false, limit: 1 } });
-    // Asumimos que el backend ordena por fecha desc, el primero debería ser el activo
-    return response.data.results?.[0] || null;
+export const getProductosPOS = async (search = '') => {
+    try {
+        const response = await apiClient.get('/pos/productos/', { params: { search } });
+        // Actualizar caché local (bulkPut es más eficiente)
+        if (response.data && Array.isArray(response.data)) {
+            await db.products.bulkPut(response.data);
+        } else if (response.data.results) {
+            // Django Pagination support
+            await db.products.bulkPut(response.data.results);
+        }
+        return response;
+    } catch (error) {
+        console.warn('Network error, fetching from local DB', error);
+        // Fallback a Dexie
+        let collection = db.products.orderBy('nombre');
+        if (search) {
+            const searchLower = search.toLowerCase();
+            collection = db.products.filter(p => p.nombre.toLowerCase().includes(searchLower) || p.codigo_barras.includes(search));
+        }
+        const offlineData = await collection.toArray();
+        return { data: offlineData, isOffline: true };
+    }
 };
 
-export const abrirTurno = (cajaId, saldoInicial) => apiClient.post('/pos/turnos/abrir/', { caja: cajaId, saldo_inicial: saldoInicial });
-export const cerrarTurno = (turnoId, saldoDeclarado) => apiClient.post(`/pos/turnos/${turnoId}/cerrar/`, { saldo_declarado: saldoDeclarado });
+// ===================== POS / Turnos (Caja) =====================
+export const getTurnoActivo = async () => {
+    try {
+        const response = await apiClient.get('/pos/turnos/', { params: { cerrado: false, limit: 1 } });
+        const turno = response.data.results?.[0] || null;
+        if (turno) {
+            await db.turnos.put({ id: 'active_turn', ...turno });
+        }
+        return turno;
+    } catch (error) {
+        console.warn('Network error, fetching active turn from local DB', error);
+        return await db.turnos.get('active_turn');
+    }
+};
+
+export const abrirTurno = async (cajaId, saldoInicial) => {
+    const response = await apiClient.post('/pos/turnos/abrir/', { caja: cajaId, saldo_inicial: saldoInicial });
+    if (response.data) await db.turnos.put({ id: 'active_turn', ...response.data });
+    return response;
+};
+
+export const cerrarTurno = async (turnoId, saldoDeclarado) => {
+    const response = await apiClient.post(`/pos/turnos/${turnoId}/cerrar/`, { saldo_declarado: saldoDeclarado });
+    await db.turnos.delete('active_turn');
+    return response;
+};
 
 export const getCajas = () => apiClient.get('/pos/cajas/');
 
-// ===================== POS / Ventas =====================
-export const createVenta = (data) => apiClient.post('/pos/ventas/', data);
+// ===================== POS / Ventas & Sincronización =====================
+
+/**
+ * Intenta enviar venta al API. Si falla, guarda en cola offline.
+ */
+export const createVenta = async (data) => {
+    if (navigator.onLine) {
+        try {
+            const response = await apiClient.post('/pos/ventas/', data);
+            // Si funciona, intentamos sincronizar cola pendiente en segundo plano
+            syncPendingSales();
+            return response;
+        } catch (error) {
+            console.warn('Online sale failed, saving to offline queue', error);
+            await saveOfflineSale(data);
+            return { data: { id: 'offline-' + Date.now(), offline: true }, isOffline: true }; // Mock response
+        }
+    } else {
+        console.log('Offline mode detected, saving to queue');
+        await saveOfflineSale(data);
+        return { data: { id: 'offline-' + Date.now(), offline: true }, isOffline: true };
+    }
+};
+
+/**
+ * Sincroniza ventas pendientes una por una
+ */
+export const syncPendingSales = async () => {
+    if (!navigator.onLine) return;
+
+    const pending = await getPendingSales();
+    if (pending.length === 0) return;
+
+    console.log(`Syncing ${pending.length} pending sales...`);
+
+    for (const sale of pending) {
+        try {
+            await apiClient.post('/pos/ventas/', sale.payload);
+            await markSaleSynced(sale.id);
+            // Opcional: Eliminar de DB local para no llenarla
+            await db.ventas.delete(sale.id);
+            console.log(`Sale ${sale.id} synced successfully`);
+        } catch (error) {
+            console.error(`Failed to sync sale ${sale.id}`, error);
+            // No borramos, se reintentará luego
+        }
+    }
+};
+
+
 export const cancelarVenta = (ventaId, authData) => apiClient.post(`/pos/ventas/${ventaId}/cancelar/`, authData);
 export const getVentas = (page = 1, pageSize = 20, filters = {}) => apiClient.get('/pos/ventas/', { params: { page, page_size: pageSize, ...filters } });
 
@@ -40,3 +127,54 @@ export const deleteCaja = (id) => apiClient.delete(`/pos/cajas/${id}/`);
 
 export const getTurnos = (page = 1, pageSize = 20, filters = {}) => apiClient.get('/pos/turnos/', { params: { page, page_size: pageSize, ...filters } });
 export const getTurnoDetalle = (id) => apiClient.get(`/pos/turnos/${id}/`);
+
+// ===================== SISTEMA DE CANCELACIONES CON AUTORIZACIÓN =====================
+
+/**
+ * Solicita la cancelación de una venta (para cajeros)
+ * @param {number} ventaId - ID de la venta a cancelar
+ * @param {string} motivo - Motivo de la cancelación (mínimo 10 caracteres)
+ */
+export const solicitarCancelacion = (ventaId, motivo) =>
+    apiClient.post('/pos/cancelaciones/solicitar/', { venta_id: ventaId, motivo });
+
+/**
+ * Obtiene las cancelaciones pendientes de autorización (para supervisores)
+ */
+export const getCancelacionesPendientes = () =>
+    apiClient.get('/pos/cancelaciones/pendientes/');
+
+/**
+ * Autoriza una solicitud de cancelación (para supervisores)
+ * @param {number} solicitudId - ID de la solicitud
+ * @param {string} codigoAutorizacion - Código TOTP de 6 dígitos
+ * @param {string} comentarios - Comentarios opcionales
+ */
+export const autorizarCancelacion = (solicitudId, codigoAutorizacion, comentarios = '') =>
+    apiClient.post(`/pos/cancelaciones/${solicitudId}/autorizar/`, {
+        codigo_autorizacion: codigoAutorizacion,
+        comentarios
+    });
+
+/**
+ * Rechaza una solicitud de cancelación (para supervisores)
+ * @param {number} solicitudId - ID de la solicitud
+ * @param {string} comentarios - Motivo del rechazo (requerido)
+ */
+export const rechazarCancelacion = (solicitudId, comentarios) =>
+    apiClient.post(`/pos/cancelaciones/${solicitudId}/rechazar/`, { comentarios });
+
+/**
+ * Obtiene el historial de solicitudes de cancelación
+ * @param {string} estado - Filtrar por estado: PENDIENTE, APROBADA, RECHAZADA
+ */
+export const getSolicitudesCancelacion = (estado = null) =>
+    apiClient.get('/pos/solicitudes-cancelacion/', { params: estado ? { estado } : {} });
+
+/**
+ * Genera un nuevo TOTP de autorización (GET) o lo verifica (POST)
+ */
+export const configurarTOTPAutorizacion = {
+    generar: () => apiClient.get('/pos/configurar-totp-autorizacion/'),
+    verificar: (codigo) => apiClient.post('/pos/configurar-totp-autorizacion/', { codigo })
+};

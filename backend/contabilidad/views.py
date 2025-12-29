@@ -10,7 +10,29 @@ from django.utils import timezone
 from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
-from django.db import models
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils.dateparse import parse_date
+from .models import (
+    CertificadoDigital,
+    CuentaContable,
+    BuzonMensaje,
+    OpinionCumplimiento,
+    # ... existing imports implicitly handled by viewsets logic below if needed, 
+    # but strictly speaking I should check if I need to add specific imports if I replace the whole file or parts.
+    # The user asked to "Help create logic...". I will append/insert the new ViewSets.
+)
+from .serializers import (
+    CertificadoDigitalSerializer,
+    BuzonMensajeSerializer,
+    OpinionCumplimientoSerializer,
+)
+from .services.reportes import ReporteFinancieroService
+from .services.sat_integration import SATIntegrationService
+from django.http import HttpResponse
+import openpyxl
+from core.views import ExcelImportMixin
 
 
 
@@ -171,13 +193,71 @@ class ContratoViewSet(ContabilidadBaseViewSet):
 
 
 
-class CuentaContableViewSet(ContabilidadBaseViewSet):
+class CuentaContableViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
     queryset = CuentaContable.objects.all().order_by("codigo")
     serializer_class = CuentaContableSerializer
 
-class CentroCostosViewSet(ContabilidadBaseViewSet):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
+        if show_inactive and hasattr(CuentaContable, 'all_objects'):
+            queryset = CuentaContable.all_objects.all().order_by("codigo")
+        
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                models.Q(codigo__icontains=search) | 
+                models.Q(nombre__icontains=search)
+            )
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def exportar(self, request):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="cuentas_contables.xlsx"'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Cuentas"
+        ws.append(['Código', 'Nombre', 'Tipo', 'Naturaleza', 'Nivel', 'Agrupador SAT'])
+        
+        for p in self.filter_queryset(self.get_queryset()):
+            ws.append([p.codigo, p.nombre, p.tipo, p.naturaleza, p.nivel, p.codigo_agrupador])
+            
+        wb.save(response)
+        return response
+
+class CentroCostosViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
     queryset = CentroCostos.objects.all().order_by("codigo")
     serializer_class = CentroCostosSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
+        if show_inactive and hasattr(CentroCostos, 'all_objects'):
+            queryset = CentroCostos.all_objects.all().order_by("codigo")
+
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                models.Q(codigo__icontains=search) | 
+                models.Q(nombre__icontains=search)
+            )
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def exportar(self, request):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="centros_costos.xlsx"'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Centros de Costos"
+        ws.append(['Código', 'Nombre'])
+        
+        for p in self.filter_queryset(self.get_queryset()):
+            ws.append([p.codigo, p.nombre])
+            
+        wb.save(response)
+        return response
 
 class PolizaViewSet(ContabilidadBaseViewSet):
     queryset = Poliza.objects.all().order_by("-fecha", "-numero")
@@ -187,9 +267,7 @@ class DetallePolizaViewSet(ContabilidadBaseViewSet):
     queryset = DetallePoliza.objects.all()
     serializer_class = DetallePolizaSerializer
 
-from core.views import ExcelImportMixin
-import openpyxl
-from django.http import HttpResponse
+
 
 class FacturaViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
     queryset = Factura.objects.all().order_by("-fecha_emision")
@@ -237,6 +315,175 @@ class FacturaViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
             
         wb.save(response)
         return response
+
+    @action(detail=False, methods=['post'], url_path='upload-xml')
+    def upload_xml(self, request):
+        """
+        Sube y procesa uno o múltiples archivos XML (CFDI).
+        """
+        from .services.xml_parser import parse_cfdi
+        from django.core.files.base import ContentFile
+
+        archivos = request.FILES.getlist('xmls')
+        if not archivos:
+            return Response({"detalle": "No se enviaron archivos."}, status=status.HTTP_400_BAD_REQUEST)
+
+        resultados = {
+            "procesados": 0,
+            "errores": 0,
+            "duplicados": 0,
+            "detalles": []
+        }
+
+        for archivo in archivos:
+            nombre_archivo = archivo.name
+            try:
+                # 1. Leer y Parsear
+                contenido = archivo.read()
+                data = parse_cfdi(contenido)
+                
+                # 2. Verificar Duplicidad
+                if Factura.objects.filter(uuid=data['uuid']).exists():
+                    resultados['duplicados'] += 1
+                    resultados['detalles'].append({
+                        "archivo": nombre_archivo,
+                        "status": "error",
+                        "mensaje": f"UUID {data['uuid']} ya existe."
+                    })
+                    continue
+
+                # 3. Resolver Foreign Keys (Moneda, MetodoPago, etc.)
+                # Intento simple de macheo, idealmente debería ser más robusto
+                moneda, _ = Moneda.objects.get_or_create(
+                    codigo=data['moneda'], 
+                    defaults={'nombre': data['moneda']}
+                )
+                
+                metodo_pago = None
+                if data['metodo_pago']:
+                    metodo_pago = MetodoPago.objects.filter(nombre__icontains=data['metodo_pago']).first()
+
+                # 4. Crear Factura
+                factura = Factura.objects.create(
+                    version=data['version'],
+                    uuid=data['uuid'],
+                    serie=data['serie'],
+                    folio=data['folio'],
+                    fecha_emision=data['fecha_emision'],
+                    fecha_timbrado=data['fecha_timbrado'],
+                    rfc_emisor=data['rfc_emisor'],
+                    nombre_emisor=data['nombre_emisor'],
+                    regimen_emisor=data['regimen_emisor'],
+                    rfc_receptor=data['rfc_receptor'],
+                    nombre_receptor=data['nombre_receptor'],
+                    regimen_receptor=data['regimen_receptor'],
+                    uso_cfdi=data['uso_cfdi'],
+                    total=data['total'],
+                    subtotal=data['subtotal'],
+                    moneda=moneda,
+                    tipo_cambio=data['tipo_cambio'],
+                    tipo_comprobante=data['tipo_comprobante'],
+                    metodo_pago=metodo_pago,
+                    # Guardamos el archivo
+                    xml_archivo=ContentFile(contenido, name=f"{data['uuid']}.xml")
+                )
+                
+                resultados['procesados'] += 1
+                resultados['detalles'].append({
+                    "archivo": nombre_archivo,
+                    "status": "success",
+                    "uuid": data['uuid']
+                })
+
+            except Exception as e:
+                resultados['errores'] += 1
+                resultados['detalles'].append({
+                    "archivo": nombre_archivo,
+                    "status": "error",
+                    "mensaje": str(e)
+                })
+
+        return Response(resultados)
+
+    @action(detail=True, methods=['post'], url_path='generar-poliza')
+    def generar_poliza(self, request, pk=None):
+        """
+        Genera una póliza basada en una plantilla para esta factura.
+        """
+        from .services.provisioning import generar_poliza_from_factura
+        from .models_automation import PlantillaAsiento
+        from .serializers import PolizaSerializer
+        
+        factura = self.get_object()
+        plantilla_id = request.data.get('plantilla_id')
+        
+        if not plantilla_id:
+             return Response({"detalle": "Se requiere plantilla_id"}, status=status.HTTP_400_BAD_REQUEST)
+             
+        try:
+            plantilla = PlantillaAsiento.objects.get(pk=plantilla_id)
+            poliza = generar_poliza_from_factura(factura, plantilla)
+            return Response(PolizaSerializer(poliza).data)
+        except Exception as e:
+            return Response({"detalle": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='download-diot')
+    def download_diot(self, request):
+        """
+        Genera y descarga el TXT de la DIOT.
+        Params: start_date, end_date
+        """
+        from django.http import HttpResponse
+        from .services.diot import generate_diot_txt
+        
+        start = request.query_params.get('start_date')
+        end = request.query_params.get('end_date')
+        
+        txt_content = generate_diot_txt(start, end)
+        
+        response = HttpResponse(txt_content, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="DIOT.txt"'
+        return response
+
+    @action(detail=False, methods=['get'], url_path='download-catalogo')
+    def download_catalogo(self, request):
+        from .services.sat_xml import generate_catalogo_xml
+        from django.http import HttpResponse
+        
+        try:
+             anio = int(request.query_params.get('anio', 2023))
+             mes = int(request.query_params.get('mes', 1))
+             xml_content = generate_catalogo_xml(anio, mes)
+             
+             response = HttpResponse(xml_content, content_type='text/xml')
+             response['Content-Disposition'] = f'attachment; filename="Catalogo_{anio}{mes:02d}.xml"'
+             return response
+        except Exception as e:
+             return Response({"detalle": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='download-balanza')
+    def download_balanza(self, request):
+        from .services.sat_xml import generate_balanza_xml
+        from django.http import HttpResponse
+        
+        try:
+             anio = int(request.query_params.get('anio', 2023))
+             mes = int(request.query_params.get('mes', 1))
+             
+             xml_content = generate_balanza_xml(anio, mes)
+             
+             response = HttpResponse(xml_content, content_type='text/xml')
+             # Format filename per SAT: RFC+Anio+Mes+B+N.xml
+             response['Content-Disposition'] = f'attachment; filename="Balanza_{anio}{mes:02d}.xml"'
+             return response
+        except Exception as e:
+             return Response({"detalle": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class PlantillaAsientoViewSet(ContabilidadBaseViewSet):
+    from .models_automation import PlantillaAsiento
+    from .serializers import PlantillaAsientoSerializer
+    queryset = PlantillaAsiento.objects.all().order_by("nombre")
+    serializer_class = PlantillaAsientoSerializer
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -377,3 +624,87 @@ def strategic_dashboard(request):
         },
     }
     return Response(data)
+
+
+class CertificadoDigitalViewSet(ContabilidadBaseViewSet):
+    queryset = CertificadoDigital.objects.all().order_by("-fecha_fin_validez")
+    serializer_class = CertificadoDigitalSerializer
+
+
+class ReporteFinancieroViewSet(viewsets.ViewSet):
+    """
+    Endpoints para reportes contables financieros.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def balanza_comprobacion(self, request):
+        fecha_start = parse_date(request.query_params.get('start', ''))
+        fecha_end = parse_date(request.query_params.get('end', ''))
+        
+        if not fecha_start or not fecha_end:
+            return Response({"error": "Fechas start y end requeridas (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        data = ReporteFinancieroService.obtener_balanza_comprobacion(fecha_start, fecha_end)
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def estado_resultados(self, request):
+        fecha_start = parse_date(request.query_params.get('start', ''))
+        fecha_end = parse_date(request.query_params.get('end', ''))
+        
+        if not fecha_start or not fecha_end:
+            return Response({"error": "Fechas start y end requeridas (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = ReporteFinancieroService.obtener_estado_resultados(fecha_start, fecha_end)
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def balance_general(self, request):
+        fecha_corte = parse_date(request.query_params.get('date', ''))
+        
+        if not fecha_corte:
+            return Response({"error": "Fecha date requerida (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = ReporteFinancieroService.obtener_balance_general(fecha_corte)
+        return Response(data)
+
+
+class BuzonMensajeViewSet(ContabilidadBaseViewSet):
+    """
+    Vista del Buzón Tributario.
+    """
+    queryset = BuzonMensaje.objects.all().order_by("-fecha_recibido")
+    serializer_class = BuzonMensajeSerializer
+    
+    @action(detail=False, methods=['post'], url_path='sincronizar')
+    def sincronizar(self, request):
+        """
+        Fuerza la sincronización con el SAT para buscar nuevos mensajes.
+        """
+        rfc = request.data.get('rfc')
+        if not rfc:
+            return Response({"error": "RFC es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        mensajes = SATIntegrationService.sincronizar_buzon(rfc)
+        serializer = self.get_serializer(mensajes, many=True)
+        return Response(serializer.data)
+
+class OpinionCumplimientoViewSet(ContabilidadBaseViewSet):
+    """
+    Vista de Opinión de Cumplimiento.
+    """
+    queryset = OpinionCumplimiento.objects.all().order_by("-fecha_consulta")
+    serializer_class = OpinionCumplimientoSerializer
+    
+    @action(detail=False, methods=['post'], url_path='consultar')
+    def consultar(self, request):
+        """
+        Consulta en tiempo real.
+        """
+        rfc = request.data.get('rfc')
+        if not rfc:
+             return Response({"error": "RFC es requerido"}, status=status.HTTP_400_BAD_REQUEST)
+             
+        opinion = SATIntegrationService.consultar_opinion_cumplimiento(rfc)
+        return Response(self.get_serializer(opinion).data)

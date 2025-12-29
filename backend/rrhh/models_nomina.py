@@ -285,9 +285,22 @@ class DetalleReciboItem(models.Model):
         verbose_name_plural = "Detalles de Conceptos"
 
 
-# Auditoría
-register_audit(ConceptoNomina)
-register_audit(TablaISR)
-register_audit(ConfiguracionEconomica)
 register_audit(Nomina)
 register_audit(ReciboNomina)
+
+
+class BuzonIMSS(SoftDeleteModel):
+    """
+    Mensajes recibidos del IDSE / Buzón IMSS.
+    """
+    fecha_recibido = models.DateTimeField(auto_now_add=True)
+    asunto = models.CharField(max_length=200)
+    cuerpo = models.TextField()
+    registro_patronal = models.CharField(max_length=20, blank=True, null=True)
+    leido = models.BooleanField(default=False)
+    archivo_adjunto = models.FileField(upload_to="imss/buzon/", blank=True, null=True)
+
+    def __str__(self):
+        return f"IMSS: {self.asunto} ({self.fecha_recibido.date()})"
+
+register_audit(BuzonIMSS)

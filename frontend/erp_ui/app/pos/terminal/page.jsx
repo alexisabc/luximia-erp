@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Search, ShoppingCart, CreditCard, DollarSign,
@@ -24,6 +24,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge";
+import ConnectivityIndicator from '@/components/ui/ConnectivityIndicator';
 
 export default function POSTerminalPage() {
     const router = useRouter();
@@ -58,10 +59,58 @@ export default function POSTerminalPage() {
     // Refs
     const searchInputRef = useRef(null);
 
+    // Estado para feedback visual
+    const [recentlyAdded, setRecentlyAdded] = useState(null);
+
     // 1. Inicialización: Buscar Turno Activo
     useEffect(() => {
         checkTurno();
     }, []);
+
+    // Atajos de Teclado (Optimización de velocidad)
+    useEffect(() => {
+        const handleKeyPress = (e) => {
+            // F2: Focus en búsqueda
+            if (e.key === 'F2') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                toast.info('F2: Búsqueda de productos');
+            }
+
+            // F3: Cobrar
+            if (e.key === 'F3' && items.length > 0 && turno) {
+                e.preventDefault();
+                setShowCobrarModal(true);
+                toast.info('F3: Procesar pago');
+            }
+
+            // F4: Limpiar carrito
+            if (e.key === 'F4' && items.length > 0) {
+                e.preventDefault();
+                if (confirm('¿Limpiar carrito?')) {
+                    setItems([]);
+                    toast.success('Carrito limpiado');
+                }
+            }
+
+            // F5: Buscar cliente
+            if (e.key === 'F5') {
+                e.preventDefault();
+                toast.info('F5: Búsqueda de cliente');
+                // Focus en búsqueda de cliente (implementar según tu UI)
+            }
+
+            // ESC: Cerrar modales
+            if (e.key === 'Escape') {
+                setShowCobrarModal(false);
+                setShowCorteModal(false);
+                setShowTurnoModal(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [items.length, turno]);
 
     const checkTurno = async () => {
         // Only set loading if not already loading (prevent flash)
@@ -123,31 +172,62 @@ export default function POSTerminalPage() {
         }
     };
 
-    // 2. Buscador de Productos
+    // 2. Buscador de Productos (Optimizado)
     useEffect(() => {
+        const controller = new AbortController();
         const delayDebounceFn = setTimeout(async () => {
             if (searchTerm.length > 2) {
                 try {
                     const { data } = await getProductosPOS(searchTerm);
-                    setSearchResults(data.results);
+                    setSearchResults(data.results || []);
                 } catch (error) {
-                    console.error(error);
+                    if (error.name !== 'AbortError') {
+                        console.error(error);
+                    }
                 }
             } else {
                 setSearchResults([]);
             }
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
+        }, 300); // Reducido de 500ms a 300ms para mayor velocidad
+
+        return () => {
+            clearTimeout(delayDebounceFn);
+            controller.abort();
+        };
     }, [searchTerm]);
 
     const addToCart = (producto) => {
+        // Validación de stock
+        if (producto.stock_disponible !== undefined && producto.stock_disponible <= 0) {
+            toast.error(`${producto.nombre} sin stock disponible`);
+            return;
+        }
+
         setItems(prev => {
             const existing = prev.find(i => i.id === producto.id);
+            const newQty = existing ? existing.cantidad + 1 : 1;
+
+            // Validar que no exceda el stock
+            if (producto.stock_disponible !== undefined && newQty > producto.stock_disponible) {
+                toast.warning(`Stock máximo: ${producto.stock_disponible} unidades`);
+                return prev;
+            }
+
             if (existing) {
-                return prev.map(i => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i);
+                return prev.map(i => i.id === producto.id ? { ...i, cantidad: newQty } : i);
             }
             return [...prev, { ...producto, cantidad: 1 }];
         });
+
+        // Feedback visual
+        setRecentlyAdded(producto.id);
+        setTimeout(() => setRecentlyAdded(null), 1000);
+
+        // Sonido de confirmación (opcional)
+        try {
+            new Audio('/sounds/beep.mp3').play().catch(() => { });
+        } catch (e) { }
+
         setSearchTerm('');
         setSearchResults([]);
         searchInputRef.current?.focus();
@@ -167,9 +247,13 @@ export default function POSTerminalPage() {
         setItems(prev => prev.filter(i => i.id !== id));
     };
 
-    // 3. Totales
-    const total = items.reduce((acc, item) => acc + ((item.precio_final || item.precio_lista * 1.16) * item.cantidad), 0);
-    const impuestos = total - (total / 1.16);
+    // 3. Totales (Optimizado con useMemo)
+    const total = useMemo(() =>
+        items.reduce((acc, item) => acc + ((item.precio_final || item.precio_lista * 1.16) * item.cantidad), 0),
+        [items]
+    );
+
+    const impuestos = useMemo(() => total - (total / 1.16), [total]);
 
     // 4. Cobro
     const handleCobrar = async () => {
@@ -255,7 +339,7 @@ export default function POSTerminalPage() {
 
     return (
         // Wrapper principal debe ser relativo y llenar el espacio disponible del layout
-        <div className="flex flex-col h-[calc(100vh-2rem)] -m-4 bg-gray-100 dark:bg-gray-950 overflow-hidden relative">
+        <div className="flex flex-col h-[calc(100vh-2rem)] -m-4 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 overflow-hidden relative">
             {/* Header POS */}
             <header className="bg-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10 flex-shrink-0">
                 <div className="flex items-center gap-4">
@@ -267,9 +351,13 @@ export default function POSTerminalPage() {
                         <p className="text-xs text-gray-400">
                             Turno #{turno?.id || '---'} • {turno?.usuario_nombre || 'Sin Usuario'}
                         </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            F2: Buscar | F3: Cobrar | F4: Limpiar | F5: Cliente | ESC: Cerrar
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    <ConnectivityIndicator />
                     <Badge className={`${turno ? "bg-green-600 hover:bg-green-700 border-none text-white" : "bg-red-600 hover:bg-red-700 border-none text-white"} text-sm px-3 py-1`}>
                         {turno ? 'CAJA ABIERTA' : 'CAJA CERRADA'}
                     </Badge>
@@ -353,7 +441,11 @@ export default function POSTerminalPage() {
                                             </td>
                                         </tr>
                                     ) : items.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                                        <tr
+                                            key={item.id}
+                                            className={`hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 ${recentlyAdded === item.id ? 'bg-green-100 dark:bg-green-900/20 scale-[1.01]' : ''
+                                                }`}
+                                        >
                                             <td className="px-6 py-4">
                                                 <p className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[200px]">{item.nombre}</p>
                                                 <p className="text-xs text-gray-500 font-mono">{item.codigo}</p>

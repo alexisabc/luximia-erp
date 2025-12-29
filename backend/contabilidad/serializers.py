@@ -21,6 +21,9 @@ from .models import (
     Poliza,
     DetallePoliza,
     Factura,
+    CertificadoDigital,
+    BuzonMensaje,
+    OpinionCumplimiento,
 )
 
 
@@ -64,6 +67,16 @@ class MetodoPagoSerializer(serializers.ModelSerializer):
 
 
 class TipoCambioSerializer(serializers.ModelSerializer):
+    moneda_origen = MonedaSerializer(read_only=True)
+    moneda_destino = MonedaSerializer(read_only=True)
+    
+    moneda_origen_id = serializers.PrimaryKeyRelatedField(
+        queryset=Moneda.objects.all(), source='moneda_origen', write_only=True
+    )
+    moneda_destino_id = serializers.PrimaryKeyRelatedField(
+        queryset=Moneda.objects.all(), source='moneda_destino', write_only=True, required=False
+    )
+
     class Meta:
         model = TipoCambio
         fields = "__all__"
@@ -431,4 +444,36 @@ class FacturaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Factura
+        fields = '__all__'
+
+class CertificadoDigitalSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True) # Solo escritura para seguridad básica
+    
+    class Meta:
+        model = CertificadoDigital
+        fields = '__all__'
+
+class BuzonMensajeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BuzonMensaje
+        fields = '__all__'
+
+class OpinionCumplimientoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OpinionCumplimiento
+        fields = '__all__'
+
+# --- Automation Serializers ---
+
+from .models_automation import PlantillaAsiento, ReglaAsiento
+
+class ReglaAsientoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReglaAsiento
+        fields = '__all__'
+
+class PlantillaAsientoSerializer(serializers.ModelSerializer):
+    reglas = ReglaAsientoSerializer(many=True, read_only=True)
+    class Meta:
+        model = PlantillaAsiento
         fields = '__all__'

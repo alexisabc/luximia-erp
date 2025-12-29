@@ -19,7 +19,7 @@ import { Key, Smartphone, Save, RefreshCw, User, Lock, Mail, ShieldCheck } from 
 import { COMPANY_NAME } from '@/lib/branding';
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, hasPermission } = useAuth();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -377,6 +377,42 @@ export default function ProfilePage() {
                             )}
                         </div>
                     </Card>
+
+                    {/* Tarjeta TOTP de Autorización - Solo para usuarios con permiso de autorizar */}
+                    {(user?.is_staff || hasPermission?.('pos.authorize_cancellation')) && (
+                        <Card className="flex-1 bg-card border border-border shadow-sm p-6 flex flex-col relative overflow-hidden group">
+                            <div className="flex items-start justify-between">
+                                <div className="flex gap-4">
+                                    <div className="p-3 bg-orange-500/10 rounded-xl ring-1 ring-orange-500/20">
+                                        <ShieldCheck className="w-7 h-7 text-orange-600 dark:text-orange-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-foreground">Código de Autorización</h3>
+                                        <p className="text-sm text-muted-foreground mt-0.5 font-medium">Para autorizar cancelaciones y operaciones sensibles.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex flex-col justify-center mt-4">
+                                <div className="w-full py-6 border-2 border-dashed border-orange-200 dark:border-orange-800 rounded-xl flex flex-col items-center justify-center gap-3 text-center bg-orange-50/50 dark:bg-orange-900/10">
+                                    <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                                        <Lock className="w-5 h-5" />
+                                        <span className="text-sm font-bold">TOTP separado para mayor seguridad</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground max-w-sm">
+                                        Configura un código de autorización exclusivo para aprobar cancelaciones, devoluciones y otras operaciones sensibles.
+                                    </p>
+                                    <a
+                                        href="/perfil/seguridad/totp-autorizacion"
+                                        className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-bold hover:brightness-110 transition-all shadow-lg active:scale-95 flex items-center gap-2 text-sm"
+                                    >
+                                        <ShieldCheck className="w-4 h-4" />
+                                        Configurar Código de Autorización
+                                    </a>
+                                </div>
+                            </div>
+                        </Card>
+                    )}
 
                 </div>
             </div>

@@ -1,7 +1,8 @@
 # Sistema ERP - Documentación del Proyecto
 
 - **Versión:** 2.6
-- **Fecha de última actualización:** 22 de diciembre de 2025
+- **Fecha de última actualización:** 27 de diciembre de 2025
+- **Última sesión:** Implementación completa de Tesorería + Sistema de Permisos + IA + Navegación + Seeds
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
 
 ---
@@ -19,25 +20,61 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
     *   **Proyectos y UPEs:** Gestión detallada de unidades privativas (inventario inmobiliario).
     *   **Cuentas por Cobrar (CxC):** Control de clientes, presupuestos, contratos y pagos.
     *   **Divisas:** Consulta de tipos de cambio manuales y **sincronización automática diaria con Banxico (SAT)**.
-*   **🧾 Tesorería:**
-    *   Gestión de Bancos y Cajas Chicas.
-    *   Control de Egresos y Planes de Pago.
+*   **🏦 Tesorería:**
+    *   **Cuentas Bancarias:** Gestión completa con conciliación automática (Sistema vs Banco).
+    *   **Egresos:** Flujo de autorización multinivel con control de pagos.
+    *   **Cajas Chicas:** Fondos fijos con registro de gastos y reembolsos.
+    *   **ContraRecibos:** Gestión de facturas y documentos para pago.
+    *   **Programaciones de Pago:** Lotes de pagos y dispersión bancaria.
 *   **👥 Recursos Humanos (RRHH):**
     *   Expedientes digitales de empleados.
     *   Organigramas, Departamentos y Puestos.
     *   Esquemas de Comisión y seguimiento de asesores/vendedores.
+    *   **Motor de Nómina 2025** con cálculo IMSS, ISR y PTU.
 *   **⚖️ Jurídico:**
     *   Repositorio de contratos legales y expedientes.
+*   **🛒 Compras:**
+    *   Órdenes de Compra con flujo de autorización.
+    *   Gestión de Proveedores e Insumos.
+*   **🛍️ Punto de Venta (POS):**
+    *   Terminal de venta con gestión de productos.
+    *   Control de turnos y cortes de caja.
 *   **💻 Sistemas:**
     *   **Auditoría:** Bitácora completa de cambios (Audit Logs) para trazabilidad.
     *   Gestión de Usuarios, Roles y Permisos granulares.
     *   Importación/Exportación masiva de datos (Excel).
+*   **🤖 IA:**
+    *   Asistente inteligente con búsqueda semántica.
+    *   Indexación de 15 modelos del sistema.
+    *   Filtrado automático por permisos.
 
 ---
 
 ## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025)
 
 Hemos realizado una actualización mayor enfocada en la experiencia de usuario, seguridad y flexibilidad de marca:
+
+### 💰 Módulo de Tesorería (NUEVO - 100% Completo)
+-   **Gestión de Cuentas Bancarias:** CRUD completo con conciliación bancaria automática.
+-   **Control de Egresos:** Flujo de autorización multinivel (Borrador → Autorizado → Pagado).
+-   **Cajas Chicas:** Gestión de fondos fijos con registro de gastos y reembolsos.
+-   **ContraRecibos:** Registro de facturas y documentos para pago con validación.
+-   **Programaciones de Pago:** Lotes de pagos y generación de layouts bancarios.
+-   **18 Endpoints API REST** con acciones personalizadas.
+-   **5 Páginas UI** con diseño premium y 23 cards de estadísticas.
+-   **4 Permisos personalizados** para control granular de operaciones.
+
+### 🔐 Sistema de Permisos Mejorado
+-   **401 Permisos Gestionados:** 367 estándar + 34 personalizados.
+-   **Traducciones al Español:** 100% de permisos traducidos.
+-   **Comando `update_permissions`:** Gestión automática de permisos y traducciones.
+-   **Documentación Completa:** Guía de permisos y roles con ejemplos de uso.
+
+### 🤖 Sistema de IA Actualizado
+-   **Indexación de Modelos:** 15 modelos del sistema indexados para búsqueda semántica.
+-   **Búsqueda Contextual:** Embeddings con OpenAI y filtrado automático por permisos.
+-   **Comando `index_models`:** Gestión de indexación por app o modelo.
+-   **Integración Lista:** Preparado para chat IA con contexto del sistema.
 
 ### 🎨 UX/UI & Branding "White-Label"
 -   **Normalización de Marca:** Se ha refactorizado todo el código para eliminar referencias hardcodeadas ("Luximia"), convirtiendo el sistema en un producto **White-Label** adaptable a cualquier identidad corporativa.
@@ -49,12 +86,22 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID) utilizando `@simplewebauthn` y `webauthn` en backend.
 -   **2FA/TOTP:** Integración nativa de Doble Factor de Autenticación (Google Authenticator) con `pyotp`.
 -   **Auditoría Granular:** Rastreo completo de acciones críticas (Creación/Edición/Eliminado) mediante `django-auditlog`.
+-   **NGINX Hardening:** Implementación de **Reverse Proxy Seguro** con headers anti-XSS (`HttpOnly` cookies, `SameSite=Lax`, `X-Frame-Options`).
 
 ### ⚙️ Funcionalidad y Estabilidad
--   **Nómina y Pagos:** Corrección crítica en el motor de cálculo de nómina y generación de recibos.
+-   **Motor de Nómina 2025:**
+    -   Cálculo preciso de **IMSS Patronal y Obrero** (Desglose por ramas: Enfermedades, RCV, Invalidez, etc.).
+    -   Proyección de **Presupuesto Anual** (Carga Social + ISN + Prestaciones).
+    -   Calculadora inversa (Neto a Bruto) y timbrado (Mock) CFDI 4.0.
+    -   Importación/Exportación de layouts **SUA e IDSE**.
 -   **Selector Multi-Empresa:** Restauración de funcionalidad para superusuarios que gestionan múltiples entidades legales.
 -   **POS Terminal:** Corrección de layout y scrollbars en la terminal de punto de venta.
 -   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios vía SendGrid.
+
+### 📚 Documentación
+-   **Reestructuración:** Renombrado de carpeta de documentación a `ERP_Docs` para estandarización.
+-   **Limpieza de Código:** Depuración de servicios redundantes en `rrhh`.
+-   **7 Documentos Técnicos Nuevos:** Guías completas de Tesorería, Permisos e IA.
 
 ---
 
@@ -73,7 +120,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Infra:** `gunicorn` (23.0.0), `celery` (Async Tasks).
 
 ### Frontend
--   **Framework:** **Next.js 16.0.8** (App Router, Server Actions).
+-   **Framework:** **Next.js 16.0.8** (App Router, Server Actions, Standalone Output).
 -   **Biblioteca UI:** **React 19.2.1**
 -   **Estilos:** **Tailwind CSS 4.1.18** + `tailwindcss-animate`.
 -   **Componentes:**
@@ -84,6 +131,7 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Cliente HTTP:** `axios` (1.13.2) con interceptores modulares.
 
 ### Infraestructura
+-   **Gateway:** **NGINX Reverse Proxy** (Gzip, Caching, Security Headers).
 -   **Contenedores:** Docker & Docker Compose.
 -   **Almacenamiento:** Cloudflare R2 (compatible con S3).
 -   **Email:** SendGrid API.

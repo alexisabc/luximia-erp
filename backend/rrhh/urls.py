@@ -7,7 +7,7 @@ from .views import (
     RazonSocialViewSet,
     EmpleadoViewSet,
 )
-from .views_nomina import NominaViewSet, HistoricoNominaViewSet, ReciboNominaViewSet, ConceptoNominaViewSet
+from .views_nomina import NominaViewSet, HistoricoNominaViewSet, ReciboNominaViewSet, ConceptoNominaViewSet, BuzonIMSSViewSet, PTUViewSet
 from .views_periodos import PeriodoNominaViewSet
 from .views_portal import (
     PortalVacacionesViewSet, PortalPermisosViewSet, PortalIncapacidadViewSet, PortalDocumentosViewSet,
@@ -30,6 +30,10 @@ router.register(r"portal-vacaciones", PortalVacacionesViewSet, basename="portal-
 router.register(r"portal-permisos", PortalPermisosViewSet, basename="portal-permisos")
 router.register(r"portal-incapacidades", PortalIncapacidadViewSet, basename="portal-incapacidades")
 router.register(r"portal-documentos", PortalDocumentosViewSet, basename="portal-documentos")
+
+router.register(r"buzon-imss", BuzonIMSSViewSet)
+router.register(r"ptu", PTUViewSet, basename='ptu')
+
 # Gestion RH
 router.register(r"gestion-vacaciones", AdminVacacionesViewSet, basename="gestion-vacaciones")
 router.register(r"gestion-permisos", AdminPermisosViewSet, basename="gestion-permisos")

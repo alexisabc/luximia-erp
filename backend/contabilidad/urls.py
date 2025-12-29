@@ -21,7 +21,12 @@ from .views import (
     PolizaViewSet,
     DetallePolizaViewSet,
     FacturaViewSet,
+    PlantillaAsientoViewSet,
     strategic_dashboard,
+    CertificadoDigitalViewSet,
+    ReporteFinancieroViewSet,
+    BuzonMensajeViewSet,
+    OpinionCumplimientoViewSet,
 )
 
 router = DefaultRouter()
@@ -45,6 +50,11 @@ router.register(r"centros-costos", CentroCostosViewSet)
 router.register(r"polizas", PolizaViewSet)
 router.register(r"detalles-poliza", DetallePolizaViewSet)
 router.register(r"facturas", FacturaViewSet)
+router.register(r"plantillas-asientos", PlantillaAsientoViewSet)
+router.register(r"certificados-digitales", CertificadoDigitalViewSet)
+router.register(r"reportes-financieros", ReporteFinancieroViewSet, basename="reportes-financieros")
+router.register(r"buzon-tributario", BuzonMensajeViewSet)
+router.register(r"opinion-cumplimiento", OpinionCumplimientoViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

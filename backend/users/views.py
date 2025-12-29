@@ -194,7 +194,7 @@ class InviteUserView(APIView):
             "users/enrollment_email.html", context
         )
         send_mail(
-            "Invitación a Luximia ERP",
+            "Invitación a Sistema ERP",
             plain_message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
@@ -460,7 +460,7 @@ class PasskeyRegisterChallengeView(APIView):
             )
 
         rp_id = getattr(settings, "RP_ID", request.get_host().split(":")[0])
-        rp_name = getattr(settings, "RP_NAME", "Luximia ERP")
+        rp_name = getattr(settings, "RP_NAME", "Sistema ERP")
 
         uv_mode = (
             UserVerificationRequirement.REQUIRED
@@ -577,7 +577,7 @@ class TOTPSetupView(APIView):
         user.totp_secret = signing.dumps(secret, salt="totp")
         user.save()
 
-        issuer = getattr(settings, "TOTP_ISSUER", "Luximia ERP")
+        issuer = getattr(settings, "TOTP_ISSUER", "Sistema ERP")
         label = f"{issuer}:{user.email}"
         otpauth_uri = f"otpauth://totp/{label}?secret={secret}&issuer={issuer}&digits=6"
         return Response({"otpauth_uri": otpauth_uri})
@@ -646,7 +646,7 @@ class TOTPResetView(APIView):
         request.user.totp_secret = signing.dumps(secret, salt="totp")
         request.user.save()
 
-        issuer = getattr(settings, "TOTP_ISSUER", "Luximia ERP")
+        issuer = getattr(settings, "TOTP_ISSUER", "Sistema ERP")
         label = f"{issuer}:{request.user.email}"
         otpauth_uri = f"otpauth://totp/{label}?secret={secret}&issuer={issuer}&digits=6"
         return Response({"otpauth_uri": otpauth_uri})

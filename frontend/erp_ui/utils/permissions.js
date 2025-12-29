@@ -478,6 +478,74 @@ const permissionTranslations = {
   change_inventario: "Editar inventario",
   delete_inventario: "Eliminar inventario",
   view_inventario: "Ver inventario",
+
+  // ===== SISTEMA DE CANCELACIONES Y OPERACIONES SENSIBLES =====
+  request_cancellation: "Solicitar cancelación de venta",
+  authorize_cancellation: "Autorizar cancelación de venta",
+  request_refund: "Solicitar devolución de producto",
+  authorize_refund: "Autorizar devolución de producto",
+  void_transaction: "Anular transacción del día",
+
+  // ===== PUNTO DE VENTA (EXTENDIDO) =====
+  open_cash_register: "Abrir turno de caja",
+  close_cash_register: "Cerrar turno de caja",
+  view_other_shifts: "Ver turnos de otros cajeros",
+  modify_closed_shift: "Modificar turnos cerrados",
+  view_all_sales: "Ver ventas de todos los cajeros",
+  apply_special_discount: "Aplicar descuentos especiales (sin límite)",
+  sell_on_credit: "Vender a crédito (cuenta corriente)",
+  sell_below_cost: "Vender por debajo del costo",
+  manage_customer_credit: "Gestionar crédito de clientes",
+  receive_payments: "Recibir abonos de clientes",
+  adjust_customer_balance: "Ajustar saldos de clientes",
+  register_cash_income: "Registrar ingresos de efectivo",
+  register_cash_withdrawal: "Registrar retiros de efectivo",
+  view_pos_reports: "Ver reportes del Punto de Venta",
+  export_pos_reports: "Exportar reportes del Punto de Venta",
+  view_sales_statistics: "Ver estadísticas de ventas",
+
+  // ===== SEGURIDAD Y AUDITORÍA (EXTENDIDO) =====
+  impersonate_users: "Iniciar sesión como otro usuario",
+  manage_user_permissions: "Gestionar permisos de usuarios",
+  reset_user_credentials: "Restablecer credenciales de acceso",
+  view_audit_logs: "Ver registros de auditoría",
+  export_audit_logs: "Exportar registros de auditoría",
+  view_security_alerts: "Ver alertas de seguridad",
+  access_all_companies: "Acceder a todas las empresas",
+  switch_company_context: "Cambiar contexto de empresa",
+  manage_ai_settings: "Configurar parámetros de IA",
+
+  // ===== TESORERÍA (EXTENDIDO) =====
+  view_bank_balances: "Ver saldos bancarios",
+  conciliate_bank: "Conciliar cuentas bancarias",
+  register_bank_movement: "Registrar movimientos bancarios",
+  create_payment_request: "Solicitar pagos/egresos",
+  authorize_payment: "Autorizar pagos y egresos",
+  execute_payment: "Ejecutar pagos (emisión)",
+  void_payment: "Anular pagos emitidos",
+  manage_petty_cash: "Gestionar caja chica",
+  close_petty_cash: "Cerrar y reembolsar caja chica",
+  approve_petty_cash_expense: "Aprobar gastos de caja chica",
+  view_cash_flow: "Ver flujo de efectivo",
+  create_cash_projection: "Crear proyecciones de flujo",
+  view_treasury_reports: "Ver reportes de tesorería",
+  export_treasury_reports: "Exportar reportes de tesorería",
+
+  // ===== CONTABILIDAD (EXTENDIDO) =====
+  manage_chart_of_accounts: "Gestionar catálogo de cuentas",
+  close_accounting_period: "Cerrar períodos contables",
+  create_journal_entry: "Crear pólizas contables",
+  post_journal_entry: "Aplicar/Mayorizar pólizas",
+  reverse_journal_entry: "Revertir pólizas aplicadas",
+  issue_invoice: "Emitir facturas (CFDI)",
+  cancel_invoice: "Cancelar facturas (CFDI)",
+  view_fiscal_documents: "Ver documentos fiscales",
+  manage_exchange_rates: "Gestionar tipos de cambio",
+  view_financial_statements: "Ver estados financieros",
+  export_financial_reports: "Exportar reportes financieros",
+  view_diot: "Ver DIOT",
+  generate_diot: "Generar DIOT",
+  use_ai_accounting: "Usar IA para contabilidad",
 };
 
 export const translatePermission = (permission) => {
@@ -598,6 +666,7 @@ const modelTranslations = {
   // Grupos especiales virtuales
   metasistema: 'Permisos del Sistema',
   ia: 'Inteligencia Artificial',
+  solicitudcancelacion: 'Solicitudes de Cancelación',
 };
 
 export const translateModel = (model) => modelTranslations[model] || model;

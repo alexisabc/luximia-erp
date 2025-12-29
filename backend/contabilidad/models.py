@@ -82,18 +82,39 @@ class TipoCambio(SoftDeleteModel):
     escenario = models.CharField(max_length=20, choices=ESCENARIO_CHOICES)
     fecha = models.DateField()
     valor = models.DecimalField(max_digits=12, decimal_places=4)
+    
+    moneda_origen = models.ForeignKey('Moneda', on_delete=models.CASCADE, related_name='tipos_cambio_origen', null=True, blank=True)
+    moneda_destino = models.ForeignKey('Moneda', on_delete=models.CASCADE, related_name='tipos_cambio_destino', null=True, blank=True)
 
     class Meta:
-        unique_together = ("escenario", "fecha")
+        unique_together = ("escenario", "fecha", "moneda_origen", "moneda_destino")
 
     def __str__(self):
         return f"{self.escenario} - {self.fecha}"
 
 
 class Vendedor(SoftDeleteModel):
-    TIPO_CHOICES = [("INTERNO", "Interno"), ("EXTERNO", "Externo")]
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
+    TIPO_CHOICES = [("INTERNO", "Interno"), ("EXTERNO", "Externo")] # Legacy?
+    
+    # SAT DIOT Fields
+    TIPO_TERCERO_CHOICES = [
+        ('04', '04 - Proveedor Nacional'),
+        ('05', '05 - Proveedor Extranjero'),
+        ('15', '15 - Proveedor Global'),
+    ]
+    TIPO_OPERACION_CHOICES = [
+        ('03', '03 - Prestación de Servicios Profesionales'),
+        ('06', '06 - Arrendamiento de Inmuebles'),
+        ('85', '85 - Otros'),
+    ]
+    
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='EXTERNO')
     nombre_completo = models.CharField(max_length=200)
+    rfc = models.CharField(max_length=13, blank=True, null=True) # Critical for DIOT
+    
+    tipo_tercero = models.CharField(max_length=2, choices=TIPO_TERCERO_CHOICES, default='04')
+    tipo_operacion = models.CharField(max_length=2, choices=TIPO_OPERACION_CHOICES, default='85')
+    
     email = models.EmailField(blank=True, null=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
 
@@ -128,7 +149,34 @@ class UPE(SoftDeleteModel):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default="DISPONIBLE")
 
     class Meta:
-        permissions = [("can_use_ai", "Can Use AI Chat")]
+        permissions = [
+            # ===== CATÁLOGO DE CUENTAS =====
+            ("manage_chart_of_accounts", "Gestionar catálogo de cuentas contables"),
+            ("close_accounting_period", "Cerrar períodos contables"),
+            
+            # ===== PÓLIZAS =====
+            ("create_journal_entry", "Crear pólizas contables"),
+            ("post_journal_entry", "Aplicar/Mayorizar pólizas"),
+            ("reverse_journal_entry", "Revertir pólizas aplicadas"),
+            ("delete_journal_entry", "Eliminar pólizas contables"),
+            
+            # ===== FACTURACIÓN =====
+            ("issue_invoice", "Emitir facturas (CFDI)"),
+            ("cancel_invoice", "Cancelar facturas (CFDI)"),
+            ("view_fiscal_documents", "Ver documentos fiscales"),
+            
+            # ===== TIPOS DE CAMBIO =====
+            ("manage_exchange_rates", "Gestionar tipos de cambio"),
+            
+            # ===== REPORTES CONTABLES =====
+            ("view_financial_statements", "Ver estados financieros"),
+            ("export_financial_reports", "Exportar reportes financieros"),
+            ("view_diot", "Ver DIOT"),
+            ("generate_diot", "Generar DIOT"),
+            
+            # ===== IA CONTABLE =====
+            ("use_ai_accounting", "Usar IA para contabilidad"),
+        ]
 
     def __str__(self):
         return self.identificador
@@ -409,4 +457,78 @@ class Factura(SoftDeleteModel):
         return f"{self.serie or ''}{self.folio or ''} - {self.receptor_nombre} - ${self.total}"
 
 register_audit(Factura)
+
+
+
+# --- Certificados y Configuración Fiscal ---
+
+class CertificadoDigital(SoftDeleteModel):
+    """Almacén de Certificados (FIEL, CSD) encriptados."""
+    TIPO_CERT_CHOICES = [
+        ('FIEL', 'Firma Electrónica (FIEL)'),
+        ('CSD', 'Certificado de Sello Digital (CSD)'),
+    ]
+    
+    nombre = models.CharField(max_length=100, help_text="Ej. CSD Principal 2024")
+    rfc = models.CharField(max_length=13, help_text="RFC al que pertenece el certificado")
+    tipo = models.CharField(max_length=10, choices=TIPO_CERT_CHOICES, default='CSD')
+    
+    # Archivos
+    archivo_cer = models.FileField(upload_to='sat/certs/', help_text="Archivo .cer (Público)")
+    archivo_key = models.FileField(upload_to='sat/keys/', help_text="Archivo .key (Privado) - Proteger acceso")
+    password = models.CharField(max_length=255, help_text="Contraseña de la clave privada (Encriptada)")
+    
+    # Metadatos
+    fecha_inicio_validez = models.DateTimeField(null=True, blank=True)
+    fecha_fin_validez = models.DateTimeField(null=True, blank=True)
+    numero_serie = models.CharField(max_length=50, blank=True, null=True)
+    
+    activo = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.tipo} - {self.rfc} - {self.nombre}"
+
+register_audit(CertificadoDigital)
+
+
+# --- SAT Integración (Buzón & Cumplimiento) ---
+
+class BuzonMensaje(SoftDeleteModel):
+    """Mensajes simulados o scrapeados del Buzón Tributario."""
+    rfc = models.CharField(max_length=13)
+    asunto = models.CharField(max_length=200)
+    cuerpo = models.TextField()
+    fecha_recibido = models.DateTimeField()
+    leido = models.BooleanField(default=False)
+    # Importancia: Normal, Alta (Requerimiento)
+    es_requerimiento = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.rfc} - {self.asunto}"
+
+class OpinionCumplimiento(SoftDeleteModel):
+    """Historial de Opiniones de Cumplimiento (32-D)."""
+    ESTADO_CHOICES = [
+        ('POSITIVA', 'Positiva'),
+        ('NEGATIVA', 'Negativa'),
+        ('SIN_OBLIGACIONES', 'Sin Obligaciones'),
+    ]
+    
+    rfc = models.CharField(max_length=13)
+    fecha_consulta = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES)
+    folio = models.CharField(max_length=50, blank=True, null=True)
+    archivo_pdf = models.FileField(upload_to='sat/opiniones/', blank=True, null=True)
+    observaciones = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.rfc} - {self.estado} ({self.fecha_consulta.date()})"
+
+register_audit(BuzonMensaje)
+register_audit(OpinionCumplimiento)
+
+
+# --- Automatización (Plantillas) ---
+from .models_automation import PlantillaAsiento, ReglaAsiento
+
 

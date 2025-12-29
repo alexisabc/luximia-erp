@@ -193,7 +193,7 @@ else:
     
     if not SANDBOX_DB_NAME:
         # Fallback local naming
-        default_name = DATABASES["default"].get("NAME", "luximiadb")
+        default_name = DATABASES["default"].get("NAME", "erp_system_db")
         SANDBOX_DB_NAME = f"{default_name}_sandbox"
 
     DATABASES["sandbox"]["NAME"] = SANDBOX_DB_NAME

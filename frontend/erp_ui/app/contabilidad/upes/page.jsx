@@ -1,40 +1,87 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE, getInactiveUpes, hardDeleteUpe, exportUpesExcel, importarUPEs } from '@/services/api';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
+import {
+    Building, Home, DollarSign, TrendingUp,
+    AlertCircle, Loader2, Package
+} from 'lucide-react';
+
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import ActionButtons from '@/components/common/ActionButtons';
+import Button from '@/components/atoms/Button';
+import Input from '@/components/atoms/Input';
+import Label from '@/components/atoms/Label';
+import Badge from '@/components/atoms/Badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import {
+    getUPEs, getAllProyectos, createUPE, updateUPE, deleteUPE,
+    getInactiveUpes, hardDeleteUpe, exportUpesExcel, importarUPEs
+} from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import FormModal from '@/components/modals/Form';
+import { formatCurrency } from '@/utils/formatters';
+
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
-import ConfirmationModal from '@/components/modals/Confirmation';
-import ReusableTable from '@/components/tables/ReusableTable';
-import { formatCurrency } from '@/utils/formatters';
-import ActionButtons from '@/components/common/ActionButtons';
 
-// ### 2. Define las columnas para la tabla y la exportación ###
 const UPE_COLUMNAS_DISPLAY = [
-    { header: 'Identificador', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.identificador}</span> },
-    { header: 'Proyecto', render: (row) => <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">{row.proyecto_nombre}</span> },
-    { header: 'Nivel', render: (row) => row.nivel },
-    { header: 'm²', render: (row) => row.metros_cuadrados },
-    { header: 'Estacionamientos', render: (row) => row.estacionamientos },
+    {
+        header: 'UPE',
+        render: (row) => (
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white">
+                    <Home className="w-5 h-5" />
+                </div>
+                <div>
+                    <div className="font-medium text-gray-900 dark:text-white">{row.identificador}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Nivel {row.nivel}</div>
+                </div>
+            </div>
+        )
+    },
+    {
+        header: 'Proyecto',
+        render: (row) => (
+            <Badge variant="info" size="sm">
+                {row.proyecto_nombre}
+            </Badge>
+        )
+    },
+    {
+        header: 'Detalles',
+        render: (row) => (
+            <div className="text-sm">
+                <div className="text-gray-700 dark:text-gray-300">{row.metros_cuadrados} m²</div>
+                <div className="text-gray-500 dark:text-gray-400">{row.estacionamientos} estac.</div>
+            </div>
+        )
+    },
     {
         header: 'Estado',
         render: (row) => {
-            const statusStyles = {
-                'Disponible': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                'Vendida': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-                'Pagada': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-                'Bloqueada': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            const statusMap = {
+                'Disponible': 'success',
+                'Vendida': 'info',
+                'Pagada': 'primary',
+                'Bloqueada': 'danger'
             };
             return (
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border border-transparent ${statusStyles[row.estado] || 'bg-gray-100 text-gray-800'}`}>
+                <Badge variant={statusMap[row.estado] || 'default'} size="sm">
                     {row.estado}
-                </span>
+                </Badge>
             );
         }
     },
-    { header: 'Valor Total', render: (row) => <div className="text-right font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(row.valor_total, row.moneda)}</div> },
+    {
+        header: 'Valor Total',
+        render: (row) => (
+            <div className="text-right font-semibold text-gray-800 dark:text-gray-200">
+                {formatCurrency(row.valor_total, row.moneda)}
+            </div>
+        )
+    }
 ];
 
 const UPE_COLUMNAS_EXPORT = [
@@ -46,23 +93,7 @@ const UPE_COLUMNAS_EXPORT = [
     { id: 'estacionamientos', label: 'Estacionamientos' },
     { id: 'valor_total', label: 'Valor Total' },
     { id: 'moneda', label: 'Moneda' },
-    { id: 'estado', label: 'Estado' },
-];
-
-const UPE_FORM_FIELDS = [
-    { name: 'identificador', label: 'Identificador', required: true },
-    { name: 'proyecto', label: 'Proyecto', type: 'select', options: [], required: true }, // Las opciones se llenarán dinámicamente
-    { name: 'nivel', label: 'Nivel', type: 'number', required: true },
-    { name: 'metros_cuadrados', label: 'Metros cuadrados', type: 'number', required: true },
-    { name: 'estacionamientos', label: 'Estacionamientos', type: 'number', required: true },
-    { name: 'valor_total', label: 'Valor Total', type: 'number', required: true },
-    { name: 'moneda', label: 'Moneda', type: 'select', options: [{ value: 'USD', label: 'USD' }, { value: 'MXN', label: 'MXN' }], required: true },
-    {
-        name: 'estado', label: 'Estado', type: 'select', options: [
-            { value: 'Disponible', label: 'Disponible' }, { value: 'Vendida', label: 'Vendida' },
-            { value: 'Pagada', label: 'Pagada' }, { value: 'Bloqueada', label: 'Bloqueada' }
-        ], required: true
-    },
+    { id: 'estado', label: 'Estado' }
 ];
 
 export default function UPEsPage() {
@@ -70,106 +101,59 @@ export default function UPEsPage() {
     const [pageData, setPageData] = useState({ results: [], count: 0 });
     const [proyectos, setProyectos] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
-    const [error, setError] = useState(null);
-
-    // Estados para los modales
+    const [loading, setLoading] = useState(true);
+    const [isPaginating, setIsPaginating] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showInactive, setShowInactive] = useState(false);
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-
-    // Estados para la gestión de datos
-    const [formData, setFormData] = useState({ identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
+    const [formData, setFormData] = useState({
+        identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '',
+        valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: ''
+    });
     const [editingUPE, setEditingUPE] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
-    const [showInactive, setShowInactive] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedColumns, setSelectedColumns] = useState(() => {
         const allCols = {};
         UPE_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
         return allCols;
     });
-    const [loading, setLoading] = useState(true);
-    const [isPaginating, setIsPaginating] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
 
-    const hasInitialData = React.useRef(false);
+    const pageSize = 10;
+    const hasInitialData = useRef(false);
 
-    const upeFormFields = UPE_FORM_FIELDS.map(field => {
-        if (field.name === 'proyecto') {
-            return { ...field, options: proyectos.map(p => ({ value: p.id, label: p.nombre })) };
+    const stats = [
+        {
+            label: 'Total UPEs',
+            value: pageData.count || 0,
+            icon: Building,
+            gradient: 'from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700'
+        },
+        {
+            label: 'Disponibles',
+            value: pageData.results?.filter(u => u.estado === 'Disponible').length || 0,
+            icon: Package,
+            gradient: 'from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700'
+        },
+        {
+            label: 'Vendidas',
+            value: pageData.results?.filter(u => u.estado === 'Vendida' || u.estado === 'Pagada').length || 0,
+            icon: TrendingUp,
+            gradient: 'from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700'
+        },
+        {
+            label: 'Valor Total',
+            value: pageData.results?.length > 0
+                ? `$${(pageData.results.reduce((sum, u) => sum + parseFloat(u.valor_total || 0), 0) / 1000000).toFixed(1)}M`
+                : '$0',
+            icon: DollarSign,
+            gradient: 'from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700',
+            isAmount: true
         }
-        return field;
-    });
-
-    const handleCreateClick = () => {
-        setEditingUPE(null);
-        setFormData({ identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '', valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: '' });
-        setIsFormModalOpen(true);
-    };
-
-    const handleEditClick = (upe) => {
-        setEditingUPE(upe);
-        setFormData({ ...upe, proyecto: upe.proyecto });
-        setIsFormModalOpen(true);
-    };
-
-    // ### 3. Reemplaza handleDeleteClick y añade handleConfirmDelete ###
-    const handleDeleteClick = (upeId) => {
-        setItemToDelete(upeId);
-        setIsConfirmModalOpen(true);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!itemToDelete) return;
-        try {
-            await deleteUPE(itemToDelete);
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            setError('Error al eliminar. La UPE podría tener un contrato asociado.');
-        } finally {
-            setIsConfirmModalOpen(false);
-            setItemToDelete(null);
-        }
-    };
-
-    const handleHardDelete = async (id) => {
-        try {
-            await hardDeleteUpe(id);
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            setError('Error al eliminar definitivamente.');
-        }
-    };
-
-    const handleExport = async () => {
-        const columnsToExport = UPE_COLUMNAS_EXPORT
-            .filter(c => selectedColumns[c.id])
-            .map(c => c.id);
-
-        try {
-            const response = await exportUpesExcel(columnsToExport);
-            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'reporte_upes.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            setIsExportModalOpen(false);
-        } catch (err) {
-            setError('No se pudo exportar el archivo.');
-        }
-    };
-
-
-    const handleColumnChange = (e) => {
-        const { name, checked } = e.target;
-        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
-    };
-
+    ];
 
     const fetchData = useCallback(async (page, size, search = searchQuery) => {
         if (!authTokens || !size || size <= 0) return;
@@ -192,7 +176,8 @@ export default function UPEsPage() {
             setCurrentPage(page);
             hasInitialData.current = true;
         } catch (err) {
-            setError('No se pudieron cargar las UPEs.');
+            console.error(err);
+            toast.error('Error cargando UPEs');
         } finally {
             setLoading(false);
             setIsPaginating(false);
@@ -202,139 +187,264 @@ export default function UPEsPage() {
     useEffect(() => { fetchData(1, pageSize); }, [pageSize, fetchData]);
 
     const handlePageChange = (newPage) => { fetchData(newPage, pageSize); };
-
     const handleSearch = useCallback((query) => {
         setSearchQuery(query);
         fetchData(1, pageSize, query);
     }, [fetchData, pageSize]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    const handleCreateClick = () => {
+        setEditingUPE(null);
+        setFormData({
+            identificador: '', nivel: '', metros_cuadrados: '', estacionamientos: '',
+            valor_total: '', moneda: 'USD', estado: 'Disponible', proyecto: ''
+        });
+        setIsFormModalOpen(true);
+    };
+
+    const handleEditClick = (upe) => {
+        setEditingUPE(upe);
+        setFormData({ ...upe, proyecto: upe.proyecto });
+        setIsFormModalOpen(true);
+    };
+
+    const handleDeleteClick = (upe) => {
+        setItemToDelete(upe);
+        setIsConfirmModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+
         try {
             if (editingUPE) {
                 await updateUPE(editingUPE.id, formData);
+                toast.success('UPE actualizada exitosamente');
             } else {
                 await createUPE(formData);
+                toast.success('UPE creada exitosamente');
             }
             setIsFormModalOpen(false);
             fetchData(currentPage, pageSize);
         } catch (err) {
+            console.error(err);
             const errorData = err.response?.data;
-            const errorMessages = errorData ? Object.values(errorData).flat().join(', ') : 'Error al guardar la UPE.';
-            setError(errorMessages);
+            const errorMessages = errorData ? Object.values(errorData).flat().join(', ') : 'Error al guardar la UPE';
+            toast.error(errorMessages);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    // Función para obtener el estilo del badge según el nombre del proyecto
-    const getProjectBadgeStyle = (projectName) => {
-        // Puedes añadir más proyectos y colores aquí
-        switch (projectName.toLowerCase()) {
-            case 'shark tower':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-            case 'be towers':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'torre medica':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-            default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    const handleConfirmDelete = async () => {
+        if (!itemToDelete) return;
+
+        try {
+            await deleteUPE(itemToDelete.id);
+            toast.success('UPE desactivada exitosamente');
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            console.error(err);
+            toast.error('Error al eliminar. La UPE podría tener un contrato asociado.');
+        } finally {
+            setIsConfirmModalOpen(false);
+            setItemToDelete(null);
         }
     };
 
+    const handleHardDelete = async (id) => {
+        try {
+            await hardDeleteUpe(id);
+            toast.success('UPE eliminada permanentemente');
+            fetchData(currentPage, pageSize);
+        } catch (err) {
+            console.error(err);
+            toast.error('Error al eliminar definitivamente');
+        }
+    };
+
+    const handleColumnChange = (e) => {
+        const { name, checked } = e.target;
+        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
+    };
+
+    const handleExport = async () => {
+        const columnsToExport = UPE_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+
+        try {
+            const response = await exportUpesExcel(columnsToExport);
+            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_upes.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            setIsExportModalOpen(false);
+            toast.success('Archivo exportado exitosamente');
+        } catch (err) {
+            console.error(err);
+            toast.error('No se pudo exportar el archivo');
+        }
+    };
 
     return (
-        <div className="p-8 h-full flex flex-col">
-            <div className="flex-shrink-0">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
-                            Gestión de UPEs
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">Administra las unidades privativas y su disponibilidad.</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
+            <div className="mb-4 sm:mb-6 lg:mb-8">
+                <div className="flex flex-col gap-4 sm:gap-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                                Gestión de UPEs
+                            </h1>
+                            <p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+                                Administra las unidades privativas y su disponibilidad
+                            </p>
+                        </div>
+                        <ActionButtons
+                            showInactive={showInactive}
+                            onToggleInactive={() => setShowInactive(!showInactive)}
+                            canToggleInactive={hasPermission('contabilidad.view_upe')}
+                            onCreate={handleCreateClick}
+                            canCreate={hasPermission('contabilidad.add_upe')}
+                            onImport={() => setIsImportModalOpen(true)}
+                            canImport={hasPermission('contabilidad.add_upe')}
+                            onExport={() => setIsExportModalOpen(true)}
+                            canExport={true}
+                        />
                     </div>
-                    <ActionButtons
-                        showInactive={showInactive}
-                        onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('contabilidad.view_upe')}
-                        onCreate={handleCreateClick}
-                        canCreate={hasPermission('contabilidad.add_upe')}
-                        onImport={() => setIsImportModalOpen(true)}
-                        canImport={hasPermission('contabilidad.add_upe')}
-                        onExport={() => setIsExportModalOpen(true)}
-                        canExport
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={index} className={`bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+                            <div className="flex items-center justify-between mb-1 sm:mb-2"><Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white/80" /></div>
+                            <div className={`${stat.isAmount ? 'text-lg sm:text-xl lg:text-2xl' : 'text-2xl sm:text-3xl lg:text-4xl'} font-bold text-white mb-0.5 sm:mb-1`}>{stat.value}</div>
+                            <div className="text-xs sm:text-sm text-white/80 truncate">{stat.label}</div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                <div className="overflow-x-auto">
+                    <DataTable
+                        data={pageData.results}
+                        columns={UPE_COLUMNAS_DISPLAY}
+                        actions={{
+                            onEdit: hasPermission('contabilidad.change_upe') ? handleEditClick : null,
+                            onDelete: hasPermission('contabilidad.delete_upe') ? handleDeleteClick : null,
+                            onHardDelete: hasPermission('contabilidad.delete_user') ? handleHardDelete : null
+                        }}
+                        pagination={{ currentPage, totalCount: pageData.count, pageSize, onPageChange: handlePageChange }}
+                        loading={loading}
+                        isPaginating={isPaginating}
+                        onSearch={handleSearch}
+                        search={true}
+                        mobileCardView={true}
                     />
                 </div>
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6">
-                        {error}
-                    </div>
-                )}
             </div>
 
-            <div className="flex-grow min-h-0">
-                <ReusableTable
-                    data={pageData.results}
-                    columns={UPE_COLUMNAS_DISPLAY}
-                    actions={{
-                        onEdit: hasPermission('contabilidad.change_upe') ? handleEditClick : null,
-                        onDelete: hasPermission('contabilidad.delete_upe') ? handleDeleteClick : null,
-                        onHardDelete: hasPermission('contabilidad.delete_user') ? handleHardDelete : null
-                    }}
-                    pagination={{
-                        currentPage,
-                        totalCount: pageData.count,
-                        pageSize,
-                        onPageChange: handlePageChange,
-                    }}
-                    loading={loading}
-                    isPaginating={isPaginating}
-                    onSearch={handleSearch}
-                />
-            </div>
-
-
-            <FormModal
+            <Modal
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
-                title={editingUPE ? 'Editar UPE' : 'Crear Nueva UPE'}
-                formData={formData}
-                onFormChange={handleInputChange}
-                onSubmit={handleSubmit}
-                fields={upeFormFields}
-                submitText="Guardar UPE"
-            />
+                title={editingUPE ? 'Editar UPE' : 'Nueva UPE'}
+                size="lg"
+                footer={
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+                        <Button variant="outline" onClick={() => setIsFormModalOpen(false)} disabled={isSubmitting} fullWidth className="sm:w-auto">Cancelar</Button>
+                        <Button onClick={handleSubmit} disabled={isSubmitting} fullWidth className="sm:w-auto">
+                            {isSubmitting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Guardando...</>) : ('Guardar UPE')}
+                        </Button>
+                    </div>
+                }
+            >
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="identificador" required>Identificador</Label>
+                            <Input id="identificador" value={formData.identificador} onChange={(e) => setFormData({ ...formData, identificador: e.target.value })} placeholder="Ej: A-101" required fullWidth className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="proyecto" required>Proyecto</Label>
+                            <Select value={formData.proyecto?.toString()} onValueChange={(value) => setFormData({ ...formData, proyecto: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccione proyecto" /></SelectTrigger>
+                                <SelectContent>
+                                    {proyectos.map(p => (<SelectItem key={p.id} value={p.id.toString()}>{p.nombre}</SelectItem>))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="nivel" required>Nivel</Label>
+                            <Input id="nivel" type="number" value={formData.nivel} onChange={(e) => setFormData({ ...formData, nivel: e.target.value })} required fullWidth className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="metros_cuadrados" required>Metros Cuadrados</Label>
+                            <Input id="metros_cuadrados" type="number" step="0.01" value={formData.metros_cuadrados} onChange={(e) => setFormData({ ...formData, metros_cuadrados: e.target.value })} required fullWidth className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="estacionamientos" required>Estacionamientos</Label>
+                            <Input id="estacionamientos" type="number" value={formData.estacionamientos} onChange={(e) => setFormData({ ...formData, estacionamientos: e.target.value })} required fullWidth className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="valor_total" required>Valor Total</Label>
+                            <Input id="valor_total" type="number" step="0.01" value={formData.valor_total} onChange={(e) => setFormData({ ...formData, valor_total: e.target.value })} required fullWidth className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="moneda" required>Moneda</Label>
+                            <Select value={formData.moneda} onValueChange={(value) => setFormData({ ...formData, moneda: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="USD">USD</SelectItem>
+                                    <SelectItem value="MXN">MXN</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="estado" required>Estado</Label>
+                            <Select value={formData.estado} onValueChange={(value) => setFormData({ ...formData, estado: value })}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Disponible">Disponible</SelectItem>
+                                    <SelectItem value="Vendida">Vendida</SelectItem>
+                                    <SelectItem value="Pagada">Pagada</SelectItem>
+                                    <SelectItem value="Bloqueada">Bloqueada</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </form>
+            </Modal>
 
-            <ExportModal
-                isOpen={isExportModalOpen}
-                onClose={() => setIsExportModalOpen(false)}
-                columns={UPE_COLUMNAS_EXPORT}
-                selectedColumns={selectedColumns}
-                onColumnChange={handleColumnChange}
-                onDownload={handleExport}
-                data={pageData.results}
-                withPreview={true}
-            />
-
-            <ImportModal
-                isOpen={isImportModalOpen}
-                onClose={() => setIsImportModalOpen(false)}
-                onImport={importarUPEs}
-                onSuccess={() => fetchData(currentPage, pageSize)}
-                templateUrl="/contabilidad/upes/exportar-plantilla/"
-            />
-
-            <ConfirmationModal
+            <Modal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={handleConfirmDelete}
                 title="Desactivar UPE"
-                message="¿Estás seguro de que deseas desactivar este upe? Ya no aparecerá en las listas principales."
-                confirmText="Desactivar"
-            />
+                size="sm"
+                footer={
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 w-full">
+                        <Button variant="outline" onClick={() => setIsConfirmModalOpen(false)} fullWidth className="sm:w-auto">Cancelar</Button>
+                        <Button variant="destructive" onClick={handleConfirmDelete} fullWidth className="sm:w-auto">Desactivar</Button>
+                    </div>
+                }
+            >
+                <div className="flex items-start gap-3">
+                    <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-gray-700 dark:text-gray-300 mb-2">¿Estás seguro de que deseas desactivar la UPE <span className="font-semibold">{itemToDelete?.identificador}</span>?</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">La UPE ya no aparecerá en las listas principales.</p>
+                    </div>
+                </div>
+            </Modal>
+
+            <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImport={importarUPEs} onSuccess={() => { fetchData(currentPage, pageSize); toast.success('UPEs importadas exitosamente'); }} templateUrl="/contabilidad/upes/exportar-plantilla/" />
+            <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} columns={UPE_COLUMNAS_EXPORT} selectedColumns={selectedColumns} onColumnChange={handleColumnChange} onDownload={handleExport} data={pageData.results} withPreview={true} />
         </div>
     );
 }

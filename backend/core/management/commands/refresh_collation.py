@@ -42,15 +42,21 @@ class Command(BaseCommand):
                 cur.execute(f'ALTER DATABASE "{db_name}" REFRESH COLLATION VERSION;')
                 self.stdout.write(self.style.SUCCESS(f"   ✅ Colación refrescada en '{db_name}'."))
                 
-                # 3. Intentar refrescar 'postgres' (opcional)
-                # Solo lo intentamos una vez, generalmente cuando estamos en el alias default
-                if db_alias == DEFAULT_DB_ALIAS and db_name != 'postgres':
-                    try:
-                        cur.execute('ALTER DATABASE postgres REFRESH COLLATION VERSION;')
-                        self.stdout.write(self.style.SUCCESS("   ✅ Colación refrescada en 'postgres'."))
-                    except Exception:
-                        # Si falla es normal si no somos superusuarios
-                        pass
+                # 3. Intentar refrescar 'postgres' y 'template1'
+                # 'template1' es crucial para poder crear nuevas bases de datos (como el sandbox)
+                if db_alias == DEFAULT_DB_ALIAS:
+                    databases_to_refresh = []
+                    if db_name != 'postgres':
+                        databases_to_refresh.append('postgres')
+                    databases_to_refresh.append('template1')
+
+                    for sys_db in databases_to_refresh:
+                        try:
+                            cur.execute(f'ALTER DATABASE "{sys_db}" REFRESH COLLATION VERSION;')
+                            self.stdout.write(self.style.SUCCESS(f"   ✅ Colación refrescada en '{sys_db}'."))
+                        except Exception:
+                            # Ignorar errores (falta de permisos, etc)
+                            pass
                 
                 cur.close()
                 conn.close()

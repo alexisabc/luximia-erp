@@ -5,6 +5,19 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ============================================
+   MOBILE FIRST DESIGN SYSTEM
+   ============================================
+   
+   Breakpoints:
+   - Mobile:  0-639px (base, sin prefijo)
+   - Tablet:  640px+ (sm:)
+   - Desktop: 1024px+ (lg:)
+   - Wide:    1280px+ (xl:)
+   
+   Todos los estilos base están optimizados para móvil.
+   Usa media queries progresivas (min-width) para pantallas más grandes.
+   ============================================ */
 
 /* --- Estilos para un scrollbar claro por defecto --- */
 ::-webkit-scrollbar {
@@ -186,17 +199,85 @@ body {
   }
 }
 
-/* Utilities */
+/* ============================================
+   UTILITIES - MOBILE FIRST
+   ============================================ */
+
+/* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-gray-300 dark:bg-gray-600 rounded-full;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400 dark:bg-gray-500;
+}
+
+/* Touch Targets - Mínimo 44x44px para móviles */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+.touch-target-lg {
+  @apply min-h-[48px] min-w-[48px];
+}
+
+/* Container Responsive - Mobile First */
+.container-responsive {
+  @apply w-full px-4 mx-auto;
+  @apply sm:px-6;
+  @apply lg:px-8 lg:max-w-7xl;
+}
+
+/* Grid Responsive - Mobile First */
+.grid-responsive {
+  @apply grid grid-cols-1 gap-4;
+  @apply sm:grid-cols-2 sm:gap-6;
+  @apply lg:grid-cols-3;
+  @apply xl:grid-cols-4;
+}
+
+/* Text Responsive - Mobile First */
+.text-responsive {
+  @apply text-sm;
+  @apply sm:text-base;
+  @apply lg:text-lg;
+}
+
+.heading-responsive {
+  @apply text-xl font-bold;
+  @apply sm:text-2xl;
+  @apply lg:text-3xl;
+}
+
+/* Spacing Responsive - Mobile First */
+.spacing-responsive {
+  @apply p-4;
+  @apply sm:p-6;
+  @apply lg:p-8;
+}
+
+/* Hide/Show based on screen size */
+.mobile-only {
+  @apply block lg:hidden;
+}
+
+.desktop-only {
+  @apply hidden lg:block;
+}
+
+.tablet-up {
+  @apply hidden sm:block;
+}
+
+.tablet-only {
+  @apply hidden sm:block lg:hidden;
 }

@@ -6,10 +6,11 @@ from django.db import transaction
 from django.db.models import Sum
 
 from core.permissions import HasPermissionForAction
-from .models import Nomina, ReciboNomina, Empleado
+from .models import Nomina, ReciboNomina, Empleado, BuzonIMSS
 from .serializers_nomina import (
     NominaSerializer, NominaDetailSerializer, 
-    ReciboNominaSerializer, CalculoNominaSerializer
+    ReciboNominaSerializer, CalculoNominaSerializer,
+    BuzonIMSSSerializer
 )
 from .engine import PayrollCalculator
 
@@ -323,3 +324,55 @@ class HistoricoNominaViewSet(viewsets.ReadOnlyModelViewSet):
         qs.delete()
         return Response({"detail": f"Se eliminaron {count} registros del histórico."})
 
+
+class BuzonIMSSViewSet(viewsets.ModelViewSet):
+    queryset = BuzonIMSS.objects.all().order_by("-fecha_recibido")
+    serializer_class = BuzonIMSSSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @decorators.action(detail=False, methods=['post'], url_path='sincronizar')
+    def sincronizar(self, request):
+        """
+        Simula (o ejecuta) la conexión con el IDSE para descargar nuevos mensajes.
+        """
+        from django.utils import timezone
+        import random
+        
+        # Simulación de respuesta del IDSE
+        nuevos = 0
+        if random.random() > 0.7:
+            BuzonIMSS.objects.create(
+                asunto="Emisión Mensual EBA - Octubre",
+                cuerpo="La emisión bimestral anticipada ya se encuentra disponible para su descarga.",
+                fecha_recibido=timezone.now(),
+                leido=False
+            )
+            nuevos = 1
+        
+        return Response({"detail": "Sincronización completada", "nuevos_mensajes": nuevos})
+
+
+class PTUViewSet(viewsets.ViewSet):
+    """
+    Vista para simulación y cálculo de PTU.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @decorators.action(detail=False, methods=['post'], url_path='calcular-proyecto')
+    def calcular_proyecto(self, request):
+        """
+        Recibe anio y monto_repartir.
+        Retorna la lista de empleados y sus montos asignados.
+        """
+        anio = request.data.get('anio')
+        monto = request.data.get('monto')
+
+        if not anio or not monto:
+            return Response({"error": "Año y Monto son requeridos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            from .services.calculo_ptu import CalculoPTUService
+            proyecto = CalculoPTUService.calcular_preliminar(int(anio), float(monto))
+            return Response(proyecto)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

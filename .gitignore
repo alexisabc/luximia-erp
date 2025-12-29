@@ -32,6 +32,17 @@ Desktop.ini
 *.sublime-project
 *.sublime-workspace
 .obsidian/
+.cursor/
+.cursorrules
+
+# ==============================================================================
+# AI & AGENTS
+# ==============================================================================
+.gemini/
+# Note: .agent/workflows is NOT ignored as it contains project workflows
+# If you have local agent logs/memory, add them here specific subpaths, e.g.:
+# .agent/logs/
+# .agent/memory/
 
 # ==============================================================================
 # PYTHON / DJANGO (BACKEND)
@@ -47,6 +58,9 @@ env/
 # Data & Media
 db.sqlite3
 db.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+system_erp_db_sandbox
 backend/media/
 backend/staticfiles/
 
@@ -91,7 +105,10 @@ postgres_data/
 *.sql.gz
 
 # ==============================================================================
-# PROJECT SPECIFIC
+# PROJECT SPECIFIC / SCRIPTS
 # ==============================================================================
 # Temporary or helper scripts
 frontend_permissions_fix.py
+debug_*.py
+fix_*.py
+tmp_*.py

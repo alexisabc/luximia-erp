@@ -20,7 +20,7 @@ import openpyxl
 from django.http import HttpResponse
 
 class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
-    queryset = Proveedor.objects.all()
+    queryset = Proveedor.objects.all().order_by('id')
     serializer_class = ProveedorSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -76,9 +76,39 @@ class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
         wb.save(response)
         return response
 
-class InsumoViewSet(viewsets.ModelViewSet):
+class InsumoViewSet(ExcelImportMixin, viewsets.ModelViewSet):
     queryset = Insumo.objects.all()
     serializer_class = InsumoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
+        if show_inactive and hasattr(Insumo, 'all_objects'):
+            queryset = Insumo.all_objects.all()
+            
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                models.Q(nombre__icontains=search) | 
+                models.Q(codigo__icontains=search)
+            )
+        return queryset
+
+    @decorators.action(detail=False, methods=['get'])
+    def exportar(self, request):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="insumos.xlsx"'
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Insumos"
+        ws.append(['Código', 'Nombre', 'Unidad', 'Costo Unitario', 'Moneda'])
+        
+        for p in self.filter_queryset(self.get_queryset()):
+            ws.append([p.codigo, p.nombre, p.unidad_medida, p.costo_unitario, p.moneda.codigo if p.moneda else ''])
+            
+        wb.save(response)
+        return response
     permission_classes = [permissions.IsAuthenticated]
 
 class OrdenCompraViewSet(viewsets.ModelViewSet):
