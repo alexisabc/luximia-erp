@@ -20,6 +20,7 @@ from .serializers import (
 )
 
 from .services.payment_service import PaymentService
+from .services.conciliacion_service import ConciliacionService
 
 class ContraReciboViewSet(viewsets.ModelViewSet):
     queryset = ContraRecibo.objects.all().order_by('-id')
@@ -149,16 +150,13 @@ class CuentaBancariaViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        cuenta.saldo_bancario = Decimal(saldo_bancario)
-        cuenta.save()
-        
-        diferencia = cuenta.saldo_actual - cuenta.saldo_bancario
+        result = ConciliacionService.conciliar_cuenta(cuenta, saldo_bancario, request.user)
         
         return Response({
-            "detail": "Saldo bancario actualizado",
-            "saldo_sistema": cuenta.saldo_actual,
-            "saldo_bancario": cuenta.saldo_bancario,
-            "diferencia": diferencia
+            "detail": result['mensaje'],
+            "saldo_sistema": result['saldo_sistema'],
+            "saldo_bancario": result['saldo_bancario'],
+            "diferencia": result['diferencia']
         })
 
 
