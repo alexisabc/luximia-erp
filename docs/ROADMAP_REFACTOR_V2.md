@@ -15,12 +15,12 @@
     - [x] Adapter Pattern para PAC (Timbrado Mock).
 - [x] **Frontend Integration:** Dashboard de Nómina, PDF Download.
 
-## 🟡 Fase 2: Cadena de Suministro (EN COLA - Siguientes Sprints)
-### Sprint 7: Compras e Inventarios (Legacy App: `compras`)
-- [ ] **Limpieza:** Absorber app `facturas` si aplica.
-- [ ] **Modelos:** Dividir `compras/models.py` (Producto, Almacen, Movimiento).
-- [ ] **Lógica:** Implementar `KardexService` (Costeo Promedio).
-- [ ] **Frontend:** Interfaz de Recepción de Mercancía.
+## 🟢 Fase 2: Cadena de Suministro (EN PROGRESO)
+### Sprint 7: Compras e Inventarios (Legacy App: `compras`) - ✅ COMPLETADO
+- [x] **Limpieza:** Absorber app `facturas` (Lógica migrada a `contabilidad/services/factura_service.py`).
+- [x] **Modelos:** Dividir `compras/models.py` en paquete estructurado (productos, proveedores, compras, inventario).
+- [x] **Lógica:** Implementar `KardexService` (Costeo Promedio Ponderado) y `RecepcionService`.
+- [x] **Frontend:** Interfaz de Recepción de Mercancía y Kárdex (Auditoría de Movimientos).
 
 ### Sprint 8: Punto de Venta y Facturación (Legacy App: `pos`)
 - [ ] **Arquitectura:** Implementar `VentaService` y `CajaCorteService`.

@@ -6,9 +6,9 @@
 | :--- | :---: | :--- |
 | `contabilidad` | 🟢 **Refactorizado** | Mantener y extender. |
 | `rrhh` | 🟢 **Refactorizado** | Mantener y extender. |
+| `compras` | 🟢 **Refactorizado** | Mantener y extender. Soporte Multi-Almacén activo con Costeo Promedio. |
 | `core` | 🟡 **En Progreso** | Centralizar utilerías y Certificados aquí. |
 | `facturas` | 🔴 **Obsoleto** | **Candidato a ELIMINAR**. Su lógica se movió a `contabilidad` (Fiscal). |
-| `compras` | ⚪ **Pendiente** | Próximo objetivo de refactor (Inventarios). |
 | `pos` | ⚪ **Pendiente** | Refactorizar a `Ventas` + `Caja`. |
 | `tesoreria` | ⚪ **Pendiente** | Refactorizar conneptando con Pólizas. |
 | `users` | ⚪ **Pendiente** | Refactorizar autenticación y perfiles. |
