@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import NotificationViewSet
+from .views import NotificacionViewSet
 
 router = DefaultRouter()
-router.register(r'list', NotificationViewSet, basename='notification')
+router.register(r'buzon', NotificacionViewSet, basename='notificacion')
 
 urlpatterns = [
     path('', include(router.urls)),

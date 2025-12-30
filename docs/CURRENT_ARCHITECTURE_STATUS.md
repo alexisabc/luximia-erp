@@ -14,5 +14,6 @@
 | `facturas` | 🔴 **Obsoleto** | **Candidato a ELIMINAR**. Su lógica se movió a `contabilidad` (Fiscal). |
 | `users` | 🟢 **Refactorizado** | Mantener. RBAC Nativo y Login Passwordless. |
 | `ia`, `juridico` | ⚪ **Pendiente** | Evaluar convertir en Servicios (no apps completas). |
-| `sistemas`, `config` | 🟡 **En Progreso** | Fusionados en el nuevo módulo de Administración y Seguridad. |
-| `notificaciones` | ⚪ **Pendiente** | Migrar a Event Bus (Fase 4). |
+| `sistemas` | 🟢 **Refactorizado** | Integrado en Seguridad (RBAC y Gestión de Usuarios). |
+| `config` | 🟢 **Refactorizado** | Mantener. Singleton activo sirviendo parámetros globales. |
+| `notificaciones` | 🟡 **En Progreso** | Migración a Redis/Celery (Fase 5). |

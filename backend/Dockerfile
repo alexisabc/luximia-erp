@@ -20,6 +20,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libharfbuzz-icu0 \
     locales \
     postgresql-client \
+    build-essential \
+    python3-dev \
+    libssl-dev \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Genera y configura el locale español

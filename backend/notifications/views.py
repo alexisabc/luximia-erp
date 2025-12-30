@@ -1,30 +1,34 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from .models import Notification
-from .serializers import NotificationSerializer
+from .models import Notificacion
+from .serializers import NotificacionSerializer
+from .services import NotificacionService
 
-class NotificationViewSet(viewsets.ModelViewSet):
-    serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
+class NotificacionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para que el usuario consulte y gestione sus notificaciones.
+    """
+    serializer_class = NotificacionSerializer
 
     def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user)
-
-    @action(detail=True, methods=['post'])
-    def mark_as_read(self, request, pk=None):
-        notification = self.get_object()
-        notification.is_read = True
-        notification.save()
-        return Response({'status': 'notification marked as read'})
+        """El usuario solo ve sus propias notificaciones."""
+        return Notificacion.objects.filter(usuario=self.request.user)
 
     @action(detail=False, methods=['post'])
-    def mark_all_as_read(self, request):
-        self.get_queryset().update(is_read=True)
-        return Response({'status': 'all notifications marked as read'})
-    
+    def marcar_leidas(self, request):
+        """
+        Marca notificaciones como leídas.
+        Acepta una lista de ids o 'all'.
+        """
+        ids = request.data.get('ids', 'all')
+        success = NotificacionService.marcar_como_leida(request.user.id, ids)
+        return Response({'status': 'ok', 'updated_count': success})
+
     @action(detail=False, methods=['get'])
     def unread_count(self, request):
-        count = self.get_queryset().filter(is_read=False).count()
+        """
+        Retorna el conteo de no leídas para el badge del frontend.
+        """
+        count = NotificacionService.obtener_conteo_no_leidas(request.user.id)
         return Response({'count': count})

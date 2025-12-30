@@ -49,6 +49,14 @@
 - [x] **Frontend:** Nueva Matriz de Roles (UI Dual con +100 permisos agrupados) y Dashboard de Gestión de Usuarios.
 - [x] **Auth:** Login Passwordless (Passkeys/TOTP) totalmente integrado con la experiencia del "Oso" (Legacy Bear).
 
-### Próximos Pasos (Sprint 12)
-- [ ] **Configuraciones:** Centralizar parámetros globales en app `config`.
-- [ ] **Notificaciones:** Migrar app `notificaciones` a un servicio de Event Bus (Redis/Celery).
+### Sprint 12: Configuración Dinámica (App `config`) - ✅ COMPLETADO
+- [x] **Backend:** Modelo Singleton `ConfiguracionGlobal` con método `get_solo()` y `ConfigService` (Read-through Cache).
+- [x] **API:** `ConfiguracionPublicaView` (Branding) y `ConfiguracionAdminViewSet` (Gestión completa) con auditoría.
+- [x] **Frontend:** `ConfigContext` integrado en el layout raíz con auto-refresh y soporte de metadatos (favicon/título).
+- [x] **Integración:** Branding dinámico en Login y Navbar (Nombre del sistema, Logos y Monogramas).
+
+## 🟢 Fase 5: Comunicación y Escalabilidad (PRÓXIMAMENTE)
+### Sprint 13: Notificaciones Asíncronas (Legacy App: `notificaciones`)
+- [ ] **Infrastructure:** Configuración de Redis y Celery en el stack de Docker.
+- [ ] **Backend:** Migrar lógica de envío de correos y alertas a tareas en segundo plano.
+- [ ] **Frontend:** WebSocket integration para notificaciones en tiempo real (Push).

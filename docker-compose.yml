@@ -47,5 +47,47 @@ services:
       - ./.env
     # En producción, usamos el CMD del Dockerfile (node server.js)
 
+  # ==============================================================================
+  # 4. ASYNCHRONOUS WORKERS & BROKER
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    command: celery -A config beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+
 volumes:
   postgres_data:
