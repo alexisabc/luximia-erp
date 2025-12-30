@@ -16,4 +16,9 @@
 | `ia`, `juridico` | ⚪ **Pendiente** | Evaluar convertir en Servicios (no apps completas). |
 | `sistemas` | 🟢 **Refactorizado** | Integrado en Seguridad (RBAC y Gestión de Usuarios). |
 | `config` | 🟢 **Refactorizado** | Mantener. Singleton activo sirviendo parámetros globales. |
-| `notificaciones` | 🟢 **Refactorizado** | Mantener. Sistema de alertas asíncronas activo. |
+| `notificaciones` | 🟢 **Refactorizado** | Mantener. Sistema de alertas asíncronas activo.
+
+## Infraestructura y DevOps
+*   **Contenerización:** Docker Compose (Development) y `docker-compose.prod.yml` (Production) optimizado.
+*   **Pipeline CI/CD:** GitHub Actions activo (Tests de Backend + Build de Frontend).
+*   **Estado de Despliegue:** Ready for Production (Dokploy/Docker Swarm).
