@@ -9,7 +9,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
-        ('Seguridad ERP', {'fields': ('roles', 'token_version', 'is_active')}),
+        ('Seguridad ERP', {'fields': ('roles', 'token_version')}),
         ('Multi-empresa', {'fields': ('empresa_principal', 'empresas_acceso', 'ultima_empresa_activa')}),
     )
     filter_horizontal = UserAdmin.filter_horizontal + ('roles', 'empresas_acceso')

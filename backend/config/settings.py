@@ -477,6 +477,9 @@ APPEND_SLASH = True
 AUDITED_MODELS = [
     # Core & Config
     'core.Empresa',
+    # Users & Auth
+    'users.CustomUser',
+    'users.Role',
     # RRHH
     'rrhh.Empleado',
     'rrhh.Nomina',
