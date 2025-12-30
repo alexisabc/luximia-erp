@@ -1,13 +1,102 @@
-# docker-compose.prod.yml (Solo para Producción)
 services:
-  backend:
-    # Sobreescribe el comando para usar Gunicorn en producción
-    command: gunicorn --config backend/gunicorn_config.py backend.wsgi:application
-    ports:
-      - "8000:8000" # Expones el puerto de Gunicorn para que un proxy inverso (como Nginx) lo tome
+  # ==============================================================================
+  # 1. DATABASE
+  # ==============================================================================
+  db:
+    image: pgvector/pgvector:pg17
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ==============================================================================
+  # 2. BACKEND API (Production Build)
+  # ==============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    # Volumes removed for production immutability
+
+    # ==============================================================================
+    # 3. FRONTEND UI (Production Build)
+    # ==============================================================================
   frontend:
-    # Sobreescribe el comando para servir la build de producción de Next.js
-    command: npm start
+    build:
+      context: ./frontend/erp_ui
+      dockerfile: Dockerfile.prod
+    restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      - backend
+    env_file:
+      - ./.env
+    # Volumes removed for production immutability
+
+    # ==============================================================================
+    # 4. WORKERS
+    # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    command: celery -A config worker --loglevel=info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    command: celery -A config beat --loglevel=info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env
+
+  # ==============================================================================
+  # 5. UTILS (Optional)
+  # ==============================================================================
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:

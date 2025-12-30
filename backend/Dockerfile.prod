@@ -1,0 +1,66 @@
+# backend/Dockerfile.prod
+
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LANG="es_ES.UTF-8" \
+    LANGUAGE="es_ES:es" \
+    LC_ALL="es_ES.UTF-8"
+
+WORKDIR /app
+
+# Install system dependencies
+# We build a list compatible with Debian Bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    postgresql-client \
+    locales \
+    shared-mime-info \
+    # WeasyPrint dependencies
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libharfbuzz-icu0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Generate locale
+RUN sed -i -e 's/# es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales
+
+# Create appuser
+RUN addgroup --system appgroup && adduser --system --group appuser
+
+# Copy requirements
+COPY backend/requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn
+
+# Copy global assets
+COPY assets /app/assets
+
+# Copy backend code
+COPY backend/ .
+
+# Fix permissions
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Copy entrypoint script
+COPY --chown=appuser:appgroup backend/entrypoint.prod.sh /app/entrypoint.prod.sh
+RUN chmod +x /app/entrypoint.prod.sh
+
+EXPOSE 8000
+
+ENTRYPOINT ["/app/entrypoint.prod.sh"]
