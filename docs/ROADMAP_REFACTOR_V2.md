@@ -27,8 +27,13 @@
 - [x] **Integración:** Conectar con inventarios para descuento automático de stock (Póliza contable pendiente de automatizar).
 - [x] **Frontend:** Interfaz POS optimizada para tablets (Touch) con carrito persistente y flujo de cobro.
 
-## 🟠 Fase 3: Tesorería y Auditoría
-- [ ] **Legacy App `tesoreria`:** Refactorizar conciliación bancaria.
+## � Fase 3: Tesorería y Auditoría (EN PROGRESO)
+### Sprint 9: Tesorería (Legacy App: `tesoreria`) - ✅ COMPLETADO
+- [x] **Backend:** Modelos de Bancos y Movimientos con polimorfismo para trazabilidad.
+- [x] **Lógica:** `MovimientoBancarioService` con procesamiento de cortes de caja del POS.
+- [x] **Conciliación:** Sistema de conciliación bancaria con saldos duales (sistema vs banco).
+- [x] **Frontend:** Dashboard de Tesorería con sección "Dinero en Tránsito" y bitácora de movimientos.
+
 - [ ] **Legacy App `auditoria`:** Implementar Middleware de logging avanzado para acciones sensibles.
 
 ## 🔵 Fase 4: Sistemas y Configuración
