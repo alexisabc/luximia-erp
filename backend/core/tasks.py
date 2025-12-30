@@ -23,6 +23,12 @@ def send_email_async(subject, message, from_email, recipient_list, html_message=
         )
         return f"Email '{subject}' enviado a {recipient_list}"
     except Exception as e:
-        logger.error(f"Error enviando email asíncrono '{subject}' a {recipient_list}: {str(e)}")
-        # Podríamos implementar lógica de reintentos aquí con self.retry()
+        # Check if it's an Anymail exception for better logging
+        if 'anymail' in str(type(e)):
+             logger.error(f"Anymail API Error: {str(e)}")
+        else:
+             logger.error(f"Error enviando email asíncrono '{subject}' a {recipient_list}: {str(e)}")
+        
+        # In a real scenario, we might retry:
+        # raise self.retry(exc=e)
         return f"Error enviando email: {str(e)}"

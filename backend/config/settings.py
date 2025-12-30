@@ -28,6 +28,7 @@ else:
 # --- Application definition ---
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "anymail",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -230,8 +231,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Archivos Estáticos ---
 STATIC_URL = "static/"
-
-# 1. Directorio donde `collectstatic` copiará todos los archivos para producción.
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # 2. Directorios adicionales donde Django buscará archivos estáticos.
@@ -254,13 +253,37 @@ if ASSETS_PATH and os.path.isdir(ASSETS_PATH):
     STATICFILES_DIRS.append(ASSETS_PATH)
 
 # 3. Almacenamiento
-# Usamos WhiteNoise para servir archivos estáticos eficientemente tanto en dev (opcional) como en prod.
-if not DEBUG:
-    # Producción: Compresión y Hashing único (cache-busting)
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+if DEBUG:
+    # Desarrollo: Archivos locales
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    # Default behavior for local dev
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
 else:
-    # Desarrollo: Solo compresión, sin hash para evitar re-colectar constantemente
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    # Producción: Cloudflare R2 (S3 Compatible)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "access_key": os.getenv('R2_ACCESS_KEY_ID'),
+                "secret_key": os.getenv('R2_SECRET_ACCESS_KEY'),
+                "bucket_name": os.getenv('R2_BUCKET_NAME'),
+                "endpoint_url": os.getenv('R2_ENDPOINT_URL'),
+                "custom_domain": os.getenv('R2_CUSTOM_DOMAIN'),
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 
 # --- Opciones de Seguridad ---
@@ -364,13 +387,11 @@ if DEBUG:
     EMAIL_USE_TLS = False
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP Sistema <system@midominio.dev>')
 else:
-    # Resend (Producción)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.resend.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = 'resend'
-    EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
+    # Resend (Producción - API)
+    EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+    ANYMAIL = {
+        "RESEND_API_KEY": os.getenv('RESEND_API_KEY'),
+    }
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP Sistema <system@midominio.com>')
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
