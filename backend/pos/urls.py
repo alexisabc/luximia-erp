@@ -11,14 +11,24 @@ from .views import (
     RechazarCancelacionView,
     ConfigurarTOTPAutorizacionView
 )
+from .views_api import (
+    CajaManagementViewSet,
+    VentaPOSViewSet,
+    CatalogoUnificadoViewSet,
+    AlmacenPOSViewSet
+)
 
 router = DefaultRouter()
 router.register(r'productos', ProductoViewSet)
 router.register(r'cajas', CajaViewSet)
+router.register(r'cajas-management', CajaManagementViewSet, basename='caja-management')
 router.register(r'turnos', TurnoViewSet)
 router.register(r'ventas', VentaViewSet)
+router.register(r'ventas-pos', VentaPOSViewSet, basename='venta-pos')
 router.register(r'cuentas', CuentaClienteViewSet)
 router.register(r'solicitudes-cancelacion', SolicitudCancelacionViewSet)
+router.register(r'catalogo', CatalogoUnificadoViewSet, basename='catalogo')
+router.register(r'almacenes', AlmacenPOSViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

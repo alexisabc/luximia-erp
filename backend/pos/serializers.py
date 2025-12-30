@@ -20,11 +20,41 @@ class CajaSerializer(serializers.ModelSerializer):
 
 class TurnoSerializer(serializers.ModelSerializer):
     usuario_nombre = serializers.ReadOnlyField(source='usuario.username')
+    caja_nombre = serializers.ReadOnlyField(source='caja.nombre')
     
     class Meta:
         model = Turno
-        fields = '__all__'
-        read_only_fields = ['saldo_final_calculado', 'diferencia', 'fecha_fin']
+        fields = ['id', 'caja', 'caja_nombre', 'usuario', 'usuario_nombre', 'fecha_inicio', 'fecha_cierre', 'estado', 'saldo_inicial', 'saldo_final_calculado', 'saldo_final_declarado', 'diferencia']
+        read_only_fields = ['saldo_final_calculado', 'diferencia', 'fecha_cierre']
+
+class ItemVentaSerializer(serializers.Serializer):
+    """Serializer para items individuales en una venta."""
+    tipo = serializers.ChoiceField(choices=['insumo', 'producto'])
+    insumo_id = serializers.IntegerField(required=False, allow_null=True)
+    producto_id = serializers.IntegerField(required=False, allow_null=True)
+    cantidad = serializers.DecimalField(max_digits=10, decimal_places=4)
+    precio_unitario = serializers.DecimalField(max_digits=12, decimal_places=4)
+    
+    def validate(self, data):
+        if data['tipo'] == 'insumo' and not data.get('insumo_id'):
+            raise serializers.ValidationError("Se requiere insumo_id para items tipo 'insumo'")
+        if data['tipo'] == 'producto' and not data.get('producto_id'):
+            raise serializers.ValidationError("Se requiere producto_id para items tipo 'producto'")
+        return data
+
+class CobroVentaSerializer(serializers.Serializer):
+    """Serializer para crear una venta (checkout)."""
+    items = ItemVentaSerializer(many=True)
+    metodo_pago = serializers.ChoiceField(
+        choices=['EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'CREDITO', 'ANTICIPO', 'MIXTO']
+    )
+    almacen_id = serializers.IntegerField(help_text="ID del almacén desde donde se descuenta")
+    cliente_id = serializers.IntegerField(required=False, allow_null=True)
+    
+    def validate_items(self, value):
+        if not value:
+            raise serializers.ValidationError("Debe incluir al menos un item en la venta")
+        return value
 
 class CuentaClienteSerializer(serializers.ModelSerializer):
     credito_disponible = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -34,19 +64,49 @@ class CuentaClienteSerializer(serializers.ModelSerializer):
         model = CuentaCliente
         fields = ['id', 'cliente', 'nombre_cliente', 'limite_credito', 'saldo', 'credito_disponible', 'activo']
 
-class DetalleVentaSerializer(serializers.ModelSerializer):
-    producto_nombre = serializers.ReadOnlyField(source='producto.nombre')
+class DetalleVentaReadSerializer(serializers.ModelSerializer):
+    """Serializer detallado para lectura de detalles de venta."""
+    producto_nombre = serializers.SerializerMethodField()
     
     class Meta:
         model = DetalleVenta
-        fields = ['id', 'producto', 'producto_nombre', 'cantidad', 'precio_unitario', 'subtotal']
+        fields = ['id', 'producto', 'insumo', 'producto_nombre', 'descripcion', 'cantidad', 'precio_unitario', 'subtotal']
+    
+    def get_producto_nombre(self, obj):
+        if obj.producto:
+            return obj.producto.nombre
+        elif obj.insumo:
+            return obj.insumo.descripcion
+        return obj.descripcion or 'Sin descripción'
+
+class VentaReadSerializer(serializers.ModelSerializer):
+    """Serializer completo para lectura de ventas (tickets)."""
+    detalles = DetalleVentaReadSerializer(many=True, read_only=True)
+    cliente_nombre = serializers.SerializerMethodField()
+    cajero_nombre = serializers.ReadOnlyField(source='turno.usuario.username')
+    metodo_pago_display = serializers.CharField(source='get_metodo_pago_display', read_only=True)
+    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    
+    class Meta:
+        model = Venta
+        fields = [
+            'id', 'folio', 'turno', 'cajero_nombre', 'cliente', 'cliente_nombre',
+            'fecha', 'subtotal', 'impuestos', 'total', 'estado', 'estado_display',
+            'metodo_pago', 'metodo_pago_display', 'monto_metodo_principal',
+            'metodo_pago_secundario', 'monto_metodo_secundario', 'detalles'
+        ]
+    
+    def get_cliente_nombre(self, obj):
+        if obj.cliente:
+            return obj.cliente.nombre_completo
+        return 'Público General'
 
 class VentaSerializer(serializers.ModelSerializer):
-    detalles = DetalleVentaSerializer(many=True, read_only=True) # Para lectura
+    detalles = DetalleVentaReadSerializer(many=True, read_only=True)
     items = serializers.ListField(
         child=serializers.DictField(), write_only=True, required=False
-    ) # Para escritura: [{producto_id: 1, cantidad: 5}, ...]
-    cliente_nombre = serializers.ReadOnlyField(source='cliente.nombre_completo')
+    )
+    cliente_nombre = serializers.SerializerMethodField()
     cajero_nombre = serializers.ReadOnlyField(source='turno.usuario.username')
 
     class Meta:
@@ -54,9 +114,14 @@ class VentaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'folio', 'turno', 'cajero_nombre', 'cliente', 'cliente_nombre', 
             'fecha', 'subtotal', 'impuestos', 'total', 'estado', 
-            'metodo_pago_principal', 'detalles', 'items'
+            'metodo_pago', 'detalles', 'items'
         ]
         read_only_fields = ['folio', 'turno', 'fecha', 'subtotal', 'impuestos', 'total']
+    
+    def get_cliente_nombre(self, obj):
+        if obj.cliente:
+            return obj.cliente.nombre_completo
+        return 'Público General'
 
 class MovimientoSaldoClienteSerializer(serializers.ModelSerializer):
     class Meta:
