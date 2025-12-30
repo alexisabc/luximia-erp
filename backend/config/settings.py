@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "axes",  # Protección contra fuerza bruta
     "django_permissions_policy",  # Headers de seguridad del navegador
     "core",
+    "config",
     "ia", # App de Inteligencia Artificial (Source of Truth DB)
     "pos", # Punto de Venta (SICAR-like)
     "contabilidad.apps.ContabilidadConfig",
@@ -477,6 +478,7 @@ APPEND_SLASH = True
 AUDITED_MODELS = [
     # Core & Config
     'core.Empresa',
+    'config.ConfiguracionGlobal',
     # Users & Auth
     'users.CustomUser',
     'users.Role',

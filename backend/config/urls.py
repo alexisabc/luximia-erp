@@ -23,5 +23,13 @@ urlpatterns = [
     path('ia/', include('ia.urls')),
     path('pos/', include('pos.urls')),
 
+    # Configuración Global
+    path('configuracion/publica/', views.ConfiguracionPublicaView.as_view(), name='config-publica'),
+    path('configuracion/admin/', views.ConfiguracionAdminViewSet.as_view({
+        'get': 'list', 
+        'put': 'update', 
+        'patch': 'partial_update'
+    }), name='config-admin'),
+
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

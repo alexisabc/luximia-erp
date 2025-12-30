@@ -78,6 +78,9 @@ def audit_post_save(sender, instance, created, **kwargs):
     
     # Obtener contexto de la petición
     usuario = get_current_user()
+    if usuario and not usuario.is_authenticated:
+        usuario = None
+    
     ip_address = get_client_ip()
     user_agent = get_user_agent()
     
@@ -118,6 +121,9 @@ def audit_post_delete(sender, instance, **kwargs):
     
     # Obtener contexto de la petición
     usuario = get_current_user()
+    if usuario and not usuario.is_authenticated:
+        usuario = None
+        
     ip_address = get_client_ip()
     user_agent = get_user_agent()
     
