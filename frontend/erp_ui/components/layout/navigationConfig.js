@@ -229,6 +229,7 @@ export const MENU_STRUCTURE = [
                 label: 'Configuración',
                 items: [
                     { label: 'Empresas', path: '/sistemas/empresas', permission: 'core.view_empresa' },
+                    { label: 'Configuración Global', path: '/sistemas/configuracion', permission: 'auth.view_group' }, // Using role perm as placeholder or similar admin perm
                 ]
             },
             {

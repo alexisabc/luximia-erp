@@ -3,6 +3,7 @@
 import { getMonogram } from '@/lib/branding';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
+import { useConfig } from '@/context/ConfigContext';
 import { Menu, Search, Bell, Settings, LogOut, ChevronRight, User as UserIcon } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
 import SandboxToggle from './SandboxToggle';
@@ -14,6 +15,7 @@ import { usePathname } from 'next/navigation';
 export default function Navbar() {
     const { toggleSidebar } = useSidebar();
     const { user, logoutUser } = useAuth();
+    const { config } = useConfig();
     const pathname = usePathname();
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
@@ -95,7 +97,7 @@ export default function Navbar() {
                 <div className="flex lg:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                     <Link href="/" className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
-                            {getMonogram()}
+                            {config?.nombre_sistema ? config.nombre_sistema[0].toUpperCase() : 'E'}
                         </div>
                     </Link>
                 </div>

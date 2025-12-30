@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { APP_NAME, getMonogram } from '@/lib/branding';
 import { useAuth } from '@/context/AuthContext';
+import { useConfig } from '@/context/ConfigContext';
 import { useSidebar } from '@/context/SidebarContext';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -16,6 +17,7 @@ const ChevronIcon = ({ isOpen, className = '' }) => (
 
 export default function Sidebar() {
     const { hasPermission } = useAuth();
+    const { config } = useConfig();
     const { isOpen, toggleSidebar } = useSidebar();
     const isCollapsed = !isOpen;
     const pathname = usePathname();
@@ -66,10 +68,10 @@ export default function Sidebar() {
                     {isOpen && (
                         <Link href="/" className="flex items-center gap-3 transition-opacity duration-300">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
-                                {getMonogram()}
+                                {config?.nombre_sistema ? config.nombre_sistema[0].toUpperCase() : 'E'}
                             </div>
                             <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-                                {APP_NAME}
+                                {config?.nombre_sistema || 'ERP System'}
                             </span>
                         </Link>
                     )}
@@ -81,7 +83,7 @@ export default function Sidebar() {
                                 : 'w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:scale-105'
                             }`}
                     >
-                        {isOpen ? <Menu className="h-5 w-5" /> : getMonogram()}
+                        {isOpen ? <Menu className="h-5 w-5" /> : (config?.nombre_sistema ? config.nombre_sistema[0].toUpperCase() : 'E')}
                     </button>
                 </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useConfig } from '@/context/ConfigContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Key, QrCode, ArrowLeft, Loader2, Mail, Sparkles } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
@@ -219,6 +220,8 @@ export default function LoginPage() {
         setHasInteracted(false);
     };
 
+    const { config } = useConfig();
+
     return (
         <div className="relative flex items-center justify-center h-screen w-full overflow-hidden bg-[#020617] selection:bg-cyan-500/30 text-slate-200">
 
@@ -263,11 +266,22 @@ export default function LoginPage() {
 
                     {/* Header */}
                     <div className="text-center mb-8">
+                        {config?.logo_login && (
+                            <div className="flex justify-center mb-4 animate-in fade-in zoom-in duration-700">
+                                <div className="p-2 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl m-1">
+                                    <img
+                                        src={config.logo_login}
+                                        alt={config.nombre_sistema}
+                                        className="h-12 w-auto object-contain"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400 mb-2 tracking-tight drop-shadow-sm">
                             Bienvenido
                         </h2>
                         <p className="text-slate-500 text-xs font-semibold tracking-[0.2em] uppercase">
-                            {process.env.NEXT_PUBLIC_APP_NAME || 'SISTEMA EMPRESARIAL'}
+                            {config?.nombre_sistema || 'SISTEMA EMPRESARIAL'}
                         </p>
                     </div>
 
