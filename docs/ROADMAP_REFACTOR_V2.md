@@ -62,6 +62,8 @@
 - [x] **API:** Endpoints `NotificacionViewSet` (Buzón) seguros y optimizados.
 - [x] **Frontend:** `NotificationContext` con Polling inteligente, Badge dinámico y UI de Campanita interactiva.
 
-### Sprint 14: Comunicaciones Externas y Reportes (Legacy Apps: `correos`, `reportes`)
-- [ ] **Email:** Servicio transaccional asíncrono (SMTP/Resend) integrado con Celery.
-- [ ] **PDF:** Motor de generación de reportes (HTML -> PDF) para Cotizaciones y Nómina.
+### Sprint 14: Comunicaciones Externas y Reportes (Legacy Apps: `correos`, `reportes`) - ✅ COMPLETADO
+- [x] **Infrastructure:** Configuración Híbrida (MailHog/Resend) y Storage (Cloudflare R2/FileSystem).
+- [x] **Email:** `EmailService` transaccional asíncrono con soporte para adjuntos y backend dinámico (Anymail).
+- [x] **PDF:** `PDFService` (WeasyPrint) con inyección de branding global y rutas estáticas inteligentes.
+- [x] **Integración:** Flujo de envío de Órdenes de Compra (PDF + Email + Notificación) totalmente automatizado.
