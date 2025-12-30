@@ -331,6 +331,7 @@ CONTENT_SECURITY_POLICY = {
 # --- Authentication Backends ---
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesBackend", # Debe ser el primero
+    "users.auth_backends.RolePermissionBackend",  # RBAC personalizado
     "django.contrib.auth.backends.ModelBackend",
 ]
 

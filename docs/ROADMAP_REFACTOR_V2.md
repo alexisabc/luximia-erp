@@ -15,7 +15,7 @@
     - [x] Adapter Pattern para PAC (Timbrado Mock).
 - [x] **Frontend Integration:** Dashboard de Nómina, PDF Download.
 
-## 🟢 Fase 2: Cadena de Suministro (EN PROGRESO)
+## 🟢 Fase 2: Cadena de Suministro (COMPLETADO)
 ### Sprint 7: Compras e Inventarios (Legacy App: `compras`) - ✅ COMPLETADO
 - [x] **Limpieza:** Absorber app `facturas` (Lógica migrada a `contabilidad/services/factura_service.py`).
 - [x] **Modelos:** Dividir `compras/models.py` en paquete estructurado (productos, proveedores, compras, inventario).
@@ -27,15 +27,20 @@
 - [x] **Integración:** Conectar con inventarios para descuento automático de stock (Póliza contable pendiente de automatizar).
 - [x] **Frontend:** Interfaz POS optimizada para tablets (Touch) con carrito persistente y flujo de cobro.
 
-## � Fase 3: Tesorería y Auditoría (EN PROGRESO)
+## 🟢 Fase 3: Tesorería y Auditoría (COMPLETADO)
 ### Sprint 9: Tesorería (Legacy App: `tesoreria`) - ✅ COMPLETADO
 - [x] **Backend:** Modelos de Bancos y Movimientos con polimorfismo para trazabilidad.
 - [x] **Lógica:** `MovimientoBancarioService` con procesamiento de cortes de caja del POS.
 - [x] **Conciliación:** Sistema de conciliación bancaria con saldos duales (sistema vs banco).
 - [x] **Frontend:** Dashboard de Tesorería con sección "Dinero en Tránsito" y bitácora de movimientos.
 
-- [ ] **Legacy App `auditoria`:** Implementar Middleware de logging avanzado para acciones sensibles.
+### Sprint 10: Auditoría y Seguridad (Legacy App: `auditoria`) - ✅ COMPLETADO
+- [x] **Backend:** Modelo `AuditLog` polimórfico con GenericForeignKey y JSON Diff.
+- [x] **Infrastructure:** Middleware de Contexto (IP/User-Agent) y Signals automáticos para captura de cambios.
+- [x] **Lógica:** `AuditService` con cálculo de diferencias y serialización de valores complejos.
+- [x] **API:** Endpoints ReadOnly para consulta de logs (solo administradores).
+- [x] **Config:** `AUDITED_MODELS` definido en settings para 13 modelos críticos.
 
-## 🔵 Fase 4: Sistemas y Configuración
+## 🔵 Fase 4: Sistemas y Configuración (PENDIENTE)
 - [ ] **Legacy Apps `sistemas`, `config`, `users`:** Unificar gestión de usuarios y permisos (RBAC) en una arquitectura limpia.
 - [ ] **Notificaciones:** Migrar app `notificaciones` a un servicio de Event Bus (Redis/Celery).
