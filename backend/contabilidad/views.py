@@ -260,6 +260,7 @@ class CentroCostosViewSet(ContabilidadBaseViewSet):
         return response
 
 class PolizaViewSet(ContabilidadBaseViewSet):
+    queryset = Poliza.objects.none() # Dummy for Router
     serializer_class = PolizaSerializer
 
     def get_queryset(self):
