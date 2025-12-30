@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import nominaService from '../../../services/nomina.service';
 import { NominaCard } from '../../../components/molecules/NominaCard';
 
 export default function ControlNominaPage() {
+    const router = useRouter();
     const [nominas, setNominas] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -55,8 +57,7 @@ export default function ControlNominaPage() {
     };
 
     const handleViewDetails = (id) => {
-        // TODO: Implementar navegación a detalle
-        toast.info(`Navegando a detalle de nómina ${id} (Próximamente)`);
+        router.push(`/rrhh/nomina/${id}`);
     };
 
     return (

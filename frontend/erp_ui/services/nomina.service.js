@@ -40,6 +40,10 @@ const nominaService = {
 
     // --- Recibos y Documentos ---
 
+    getRecibos: (nominaId) => {
+        return apiClient.get(ENDPOINT_RECIBOS, { params: { nomina: nominaId } });
+    },
+
     downloadReciboPdf: async (reciboId) => {
         try {
             const response = await apiClient.get(`${ENDPOINT_RECIBOS}${reciboId}/download_pdf/`, {

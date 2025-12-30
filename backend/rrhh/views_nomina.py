@@ -112,6 +112,7 @@ class ReciboNominaViewSet(viewsets.ModelViewSet):
     queryset = ReciboNomina.objects.all()
     serializer_class = ReciboNominaSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['nomina', 'empleado']
 
     @decorators.action(detail=True, methods=['get'])
     def download_pdf(self, request, pk=None):
