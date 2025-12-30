@@ -6,6 +6,8 @@ import { SidebarProvider } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import AppContent from "@/components/layout/AppContent";
 import { ConfigProvider } from "@/context/ConfigContext";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { Toaster } from "sonner";
 
 // Configuración de la fuente Inter
 const inter = Inter({
@@ -19,8 +21,6 @@ export const metadata = {
   description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Sistema de Gestión Integral',
 };
 
-import { Toaster } from "sonner";
-
 export default function RootLayout({ children }) {
   return (
     <html lang="es" suppressHydrationWarning>
@@ -29,10 +29,12 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <ConfigProvider>
               <SidebarProvider>
-                <AppContent>
-                  {children}
-                </AppContent>
-                <Toaster richColors position="top-right" />
+                <NotificationProvider>
+                  <AppContent>
+                    {children}
+                  </AppContent>
+                  <Toaster richColors position="top-right" />
+                </NotificationProvider>
               </SidebarProvider>
             </ConfigProvider>
           </AuthProvider>
