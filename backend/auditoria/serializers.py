@@ -1,20 +1,39 @@
 from rest_framework import serializers
-from auditlog.models import LogEntry
+from auditoria.models import AuditLog
 
 class AuditLogSerializer(serializers.ModelSerializer):
     """
-    Serializer para LogEntry de django-auditlog.
-    Provee información detallada de cambios (valor anterior vs nuevo).
+    Serializer para registros de auditoría del sistema.
+    Provee información detallada de cambios con formato legible.
     """
-
-    user = serializers.CharField(source="actor.get_username", default="Sistema/Desconocido")
-    action = serializers.CharField(source="get_action_display")
-    model_name = serializers.CharField(source="content_type.model")
-    timestamp = serializers.DateTimeField()
-    # changes ya viene como JSON/Dict en versiones recientes con Postgres, 
-    # o string si es sqlite. Rest Framework lo serializa bien si es dict.
-    changes = serializers.JSONField() 
-
+    usuario_nombre = serializers.SerializerMethodField()
+    accion_display = serializers.CharField(source='get_accion_display', read_only=True)
+    content_type_display = serializers.SerializerMethodField()
+    cambios_formatted = serializers.SerializerMethodField()
+    
     class Meta:
-        model = LogEntry
-        fields = ["id", "user", "action", "model_name", "object_pk", "timestamp", "changes", "remote_addr"]
+        model = AuditLog
+        fields = [
+            'id', 'usuario', 'usuario_nombre', 'accion', 'accion_display',
+            'content_type', 'content_type_display', 'object_id', 'object_repr',
+            'cambios', 'cambios_formatted', 'ip_address', 'user_agent',
+            'descripcion', 'fecha'
+        ]
+        read_only_fields = fields  # Todos los campos son read-only
+    
+    def get_usuario_nombre(self, obj):
+        """Retorna el nombre del usuario o 'Sistema' si es None."""
+        if obj.usuario:
+            full_name = obj.usuario.get_full_name()
+            return full_name if full_name else obj.usuario.username
+        return 'Sistema'
+    
+    def get_content_type_display(self, obj):
+        """Retorna el nombre legible del modelo."""
+        if obj.content_type:
+            return f"{obj.content_type.app_label}.{obj.content_type.model}"
+        return None
+    
+    def get_cambios_formatted(self, obj):
+        """Retorna los cambios en formato legible."""
+        return obj.get_cambios_legibles()

@@ -68,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "auditoria.middleware.AuditMiddleware",  # Auditoría de cambios
     "core.middleware.EmpresaMiddleware",  # Multi-empresa
     "auditlog.middleware.AuditlogMiddleware",
     "core.middleware.ThreadLocalMiddleware",
@@ -468,3 +469,27 @@ else:
     }
 
 APPEND_SLASH = True
+
+# ============================================================================
+# AUDITORÍA - Modelos a vigilar
+# ============================================================================
+AUDITED_MODELS = [
+    # Core & Config
+    'core.Empresa',
+    # RRHH
+    'rrhh.Empleado',
+    'rrhh.Nomina',
+    # Compras & Inventario
+    'compras.Insumo',          # ¡Vital para cambios de precios!
+    'compras.OrdenCompra',
+    'compras.Proveedor',
+    # POS
+    'pos.Caja',                # Aperturas/Cierres
+    'pos.Turno',
+    'pos.Venta',               # Cancelaciones o cambios
+    # Tesorería
+    'tesoreria.CuentaBancaria',
+    'tesoreria.MovimientoBancario',
+    # Contabilidad
+    'contabilidad.Poliza',
+]
