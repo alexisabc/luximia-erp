@@ -22,6 +22,8 @@ const withPWA = withPWAInit({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
+    // Empty turbopack config to silence Next.js 16 warning about webpack config from PWA plugin
+    turbopack: {},
     async headers() {
         return [
             {

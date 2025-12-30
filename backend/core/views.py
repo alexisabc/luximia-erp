@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 from .models import Empresa
 from .serializers import EmpresaSerializer
 from .pagination import CustomPagination  # Importar paginación personalizada
@@ -12,9 +13,7 @@ from django.db import transaction
 from django.apps import apps
 from django.db import models
 
-# ... (El mixin no cambia)
-
-class BaseViewSet(ExcelImportMixin, viewsets.ModelViewSet):
+class BaseViewSet(viewsets.ModelViewSet):
     """
     ViewSet base con funcionalidades comunes para todos los módulos.
     Proporciona paginación estandarizada, filtrado y permisos.

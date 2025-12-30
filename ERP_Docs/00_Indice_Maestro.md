@@ -33,6 +33,12 @@ Guías para despliegue y entorno local paso a paso.
 - **Variables de Entorno:** `.env`.
 - **Producción:** Estrategias de deploy.
 
+### 6. [[GUIA_CONVENTIONAL_COMMITS]]
+Estándar de commits para el proyecto.
+- **Formato:** Conventional Commits con validación automática.
+- **Tipos:** feat, fix, docs, style, refactor, test, chore, perf, ci.
+- **Herramientas:** Husky + Commitlint.
+
 ---
 **Nota:** Esta documentación actúa como la fuente de verdad para el desarrollo continuo del proyecto.
-Última actualización: 22 de Diciembre 2025.
+Última actualización: 30 de Diciembre 2025.

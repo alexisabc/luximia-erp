@@ -56,7 +56,8 @@ class TestDatabaseConnection:
         # Recuperar usuario
         user = User.objects.get(username='john')
         assert user.email == 'john@example.com'
-        assert user.is_active is True
+        # Users are created with is_active=False by default (enrollment flow)
+        assert user.is_active is False
 
 
 class TestDjangoTestCase(TestCase):

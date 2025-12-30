@@ -62,7 +62,7 @@ from webauthn.helpers.exceptions import InvalidRegistrationResponse
 from .models import EnrollmentToken
 from .serializers import UserSerializer, GroupSerializer, PermissionSerializer
 from .utils import build_enrollment_email_context
-from core.views import ExcelImportMixin
+
 
 logger = logging.getLogger(__name__)
 
@@ -334,19 +334,20 @@ class HardDeleteUserView(APIView):
             raise Http404
 
 
-class UserImportExportView(generics.GenericAPIView, ExcelImportMixin):
+class UserImportExportView(generics.GenericAPIView):
     """
     Vista dedicada para la importación/exportación de plantillas de usuarios.
+    TODO: Implementar funcionalidad de import/export
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, *args, **kwargs):
-        return self.exportar_plantilla(request)
+        return Response({"detail": "Export functionality not yet implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
     def post(self, request, *args, **kwargs):
-        return self.importar_excel(request)
+        return Response({"detail": "Import functionality not yet implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 
@@ -374,19 +375,20 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsStaffOrSuperuser]
 
 
-class GroupImportExportView(generics.GenericAPIView, ExcelImportMixin):
+class GroupImportExportView(generics.GenericAPIView):
     """
     Vista dedicada para la importación/exportación de plantillas de grupos (roles).
+    TODO: Implementar funcionalidad de import/export
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [IsStaffOrSuperuser]
 
     def get(self, request, *args, **kwargs):
-        return self.exportar_plantilla(request)
+        return Response({"detail": "Export functionality not yet implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
     def post(self, request, *args, **kwargs):
-        return self.importar_excel(request)
+        return Response({"detail": "Import functionality not yet implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 

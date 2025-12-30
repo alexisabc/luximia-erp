@@ -1,8 +1,8 @@
 # Sistema ERP Luximia - Documentación del Proyecto
 
 - **Versión:** 3.0
-- **Fecha de última actualización:** 29 de diciembre de 2025
-- **Última sesión:** Migración completa a Atomic Design + Mobile First + Limpieza de código
+- **Fecha de última actualización:** 30 de diciembre de 2025
+- **Última sesión:** Configuración de Husky + Commitlint para Conventional Commits
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con arquitectura moderna basada en Atomic Design, Mobile First y componentes reutilizables.
 
 ---
@@ -13,24 +13,36 @@ Para acceder a toda la documentación técnica, arquitectura, guías y reportes 
 
 👉 **[Ver Documentación Completa en ERP_Docs/](./ERP_Docs/README.md)**
 
-La carpeta `ERP_Docs/` contiene:
-- Arquitectura del sistema (6 documentos)
-- Documentación de UI/UX (9 documentos)
-- Guías de despliegue y configuración
-- Módulos específicos (Tesorería, POS, etc.)
-- Reportes de progreso e hitos del proyecto
+La carpeta `ERP_Docs/` contiene **66 documentos** organizados por categorías:
 
-### Documentación del Frontend
+### 🏗️ Arquitectura y Sistema
+- Arquitectura del sistema (6 documentos base)
+- Backend API y modelos
+- Frontend y componentes UI
+- Base de datos y migraciones
 
-Para documentación específica del frontend (Atomic Design, componentes, migración):
-
-👉 **[Ver Documentación del Frontend](./frontend/erp_ui/ERP_Docs/README.md)**
-
-Incluye:
-- 41 componentes Atomic Design documentados
-- Guías de migración y limpieza de código
+### 🎨 Frontend y UI/UX
+- Documentación de Atomic Design (41 componentes)
 - Sistema de diseño y Mobile First
-- Mejores prácticas de desarrollo
+- Guías de migración y refactoring
+- Limpieza de código legacy
+
+### 🚀 DevOps y Despliegue
+- Guías de despliegue y configuración
+- Conventional Commits (Husky + Commitlint)
+- Seeds y datos iniciales
+- Seguridad y optimización
+
+### 💼 Módulos de Negocio
+- Tesorería (4 documentos)
+- POS - Punto de Venta (4 documentos)
+- Permisos y roles
+
+### 📊 Reportes y Progreso
+- Hitos del proyecto (5 documentos)
+- Informes ejecutivos (5 documentos)
+- Sesiones de trabajo (5 documentos)
+
 
 ---
 
@@ -199,7 +211,7 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
 ```
 sistema-erp/
 ├── README.md           # Este archivo
-├── ERP_Docs/           # Documentación general (48 archivos)
+├── ERP_Docs/           # Documentación completa (66 archivos)
 ├── backend/            # Django API
 │   ├── contabilidad/   # App: Finanzas y Proyectos
 │   ├── users/          # App: Auth y Usuarios
@@ -215,64 +227,71 @@ sistema-erp/
 │       │   ├── molecules/  # 14 componentes
 │       │   ├── organisms/  # 6 componentes
 │       │   └── templates/  # 6 componentes
-│       ├── services/   # Capa de API Modular
-│       └── ERP_Docs/   # Documentación frontend (17 archivos)
+│       └── services/   # Capa de API Modular
 └── docker-compose.yml  # Orquestación
 ```
 
 ---
 
-## 5. Documentación
+## 5. Flujo de Trabajo (Git)
 
-### 📚 Documentación General
-- **[ERP_Docs/](./ERP_Docs/README.md)** - Documentación completa del proyecto
-  - Arquitectura del sistema
-  - Módulos específicos
-  - Guías de despliegue
-  - Reportes de progreso
+Para mantener la calidad del código, seguimos el flujo de _Feature Branch_ con **Conventional Commits**:
 
-### 🎨 Documentación del Frontend
-- **[Frontend Docs](./frontend/erp_ui/ERP_Docs/README.md)** - Documentación del frontend
-  - 41 componentes Atomic Design
-  - Guías de migración
-  - Sistema de diseño
-  - Mejores prácticas
-
-### 📖 Guías Rápidas
-- **[Guía de Componentes](./frontend/erp_ui/components/COMPONENTS_GUIDE.md)** - Documentación de componentes
-- **[Guía de Despliegue](./ERP_Docs/GUIA_DESPLIEGUE.md)** - Despliegue en producción
-- **[Guía de Permisos](./ERP_Docs/CATALOGO_PERMISOS.md)** - Sistema de permisos
-
----
-
-## 6. Flujo de Trabajo (Git)
-
-Para mantener la calidad del código, seguimos el flujo de _Feature Branch_:
-
+### 5.1. Creación de Ramas
 1.  Crear rama: `git checkout -b feat/nueva-funcionalidad`
-2.  Commit semántico: `git commit -m "feat: agregar reporte de ventas"`
+2.  Desarrollar la funcionalidad
 3.  Push: `git push origin feat/nueva-funcionalidad`
-4.  Pull Request hacia `main`.
+4.  Pull Request hacia `main`
+
+### 5.2. Conventional Commits (Obligatorio)
+
+Este proyecto utiliza **Conventional Commits** validados automáticamente con **Husky** y **Commitlint**.
+
+**Formato:**
+```bash
+<tipo>[scope opcional]: <descripción>
+```
+
+**Tipos permitidos:**
+- `feat`: Nueva funcionalidad
+- `fix`: Corrección de bugs
+- `docs`: Documentación
+- `style`: Formato de código
+- `refactor`: Refactorización
+- `test`: Tests
+- `chore`: Tareas de mantenimiento
+- `perf`: Mejoras de rendimiento
+- `ci`: Integración continua
+
+**Ejemplos:**
+```bash
+git commit -m "feat(pos): agregar sistema de descuentos"
+git commit -m "fix(inventory): corregir cálculo de stock"
+git commit -m "docs: actualizar guía de instalación"
+```
+
+📖 **[Ver Guía Completa de Conventional Commits](./ERP_Docs/GUIA_CONVENTIONAL_COMMITS.md)**
+
 
 ---
 
-## 7. Métricas del Proyecto
+## 6. Métricas del Proyecto
 
 - **Módulos Implementados:** 10+
 - **Componentes UI:** 41 (Atomic Design)
 - **Páginas Migradas:** 6
-- **Archivos de Documentación:** 69
+- **Archivos de Documentación:** 66 (unificados en ERP_Docs/)
 - **Progreso General:** 100% ✅
 - **Estado:** Producción
 
 ---
 
-## 8. Contacto y Soporte
+## 7. Contacto y Soporte
 
 Para más información, consulta la [documentación completa](./ERP_Docs/README.md) o contacta al equipo de desarrollo.
 
 ---
 
-**Última actualización:** 29 de diciembre de 2025  
+**Última actualización:** 30 de diciembre de 2025  
 **Versión:** 3.0  
 **Estado:** ✅ Producción

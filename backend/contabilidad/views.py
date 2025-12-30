@@ -32,7 +32,7 @@ from .services.reportes import ReporteFinancieroService
 from .services.sat_integration import SATIntegrationService
 from django.http import HttpResponse
 import openpyxl
-from core.views import ExcelImportMixin
+
 
 
 
@@ -193,7 +193,7 @@ class ContratoViewSet(ContabilidadBaseViewSet):
 
 
 
-class CuentaContableViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
+class CuentaContableViewSet(ContabilidadBaseViewSet):
     queryset = CuentaContable.objects.all().order_by("codigo")
     serializer_class = CuentaContableSerializer
 
@@ -226,7 +226,7 @@ class CuentaContableViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
         wb.save(response)
         return response
 
-class CentroCostosViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
+class CentroCostosViewSet(ContabilidadBaseViewSet):
     queryset = CentroCostos.objects.all().order_by("codigo")
     serializer_class = CentroCostosSerializer
 
@@ -269,7 +269,7 @@ class DetallePolizaViewSet(ContabilidadBaseViewSet):
 
 
 
-class FacturaViewSet(ContabilidadBaseViewSet, ExcelImportMixin):
+class FacturaViewSet(ContabilidadBaseViewSet):
     queryset = Factura.objects.all().order_by("-fecha_emision")
     serializer_class = FacturaSerializer
 

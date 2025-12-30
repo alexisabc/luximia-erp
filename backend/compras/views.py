@@ -6,7 +6,7 @@ from django.db.models import Sum, F
 from django.db import models
 from django.http import HttpResponse
 import openpyxl
-from core.views import ExcelImportMixin
+
 
 from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra
 from .serializers import (
@@ -15,11 +15,9 @@ from .serializers import (
     DetalleOrdenCompraSerializer
 )
 
-from core.views import ExcelImportMixin
-import openpyxl
-from django.http import HttpResponse
 
-class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
+
+class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = Proveedor.objects.all().order_by('id')
     serializer_class = ProveedorSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -76,7 +74,7 @@ class ProveedorViewSet(ExcelImportMixin, viewsets.ModelViewSet):
         wb.save(response)
         return response
 
-class InsumoViewSet(ExcelImportMixin, viewsets.ModelViewSet):
+class InsumoViewSet(viewsets.ModelViewSet):
     queryset = Insumo.objects.all()
     serializer_class = InsumoSerializer
     permission_classes = [permissions.IsAuthenticated]
