@@ -67,3 +67,14 @@
 - [x] **Email:** `EmailService` transaccional asíncrono con soporte para adjuntos y backend dinámico (Anymail).
 - [x] **PDF:** `PDFService` (WeasyPrint) con inyección de branding global y rutas estáticas inteligentes.
 - [x] **Integración:** Flujo de envío de Órdenes de Compra (PDF + Email + Notificación) totalmente automatizado.
+
+### Sprint 15: Business Intelligence (Dashboard) - ✅ COMPLETADO
+- [x] **Backend:** `DashboardService` con agregaciones nativas (Sum, Count) y Masking de seguridad.
+- [x] **API:** Endpoint `/dashboard/resumen/` optimizado para devolver JSON consolidado.
+- [x] **Frontend:** Dashboard UI con KPIs, Gráfica de Tendencia (Recharts) y Centro de Acción.
+- [x] **UX:** Implementación de Skeleton Screens y Diseño Responsive (Desktop/Mobile).
+
+## 🟢 Fase 6: DevOps & Producción (PRÓXIMAMENTE)
+### Sprint 16: CI/CD y Optimización Docker
+- [ ] **Docker:** Refactor a Multi-stage Builds para reducir tamaño de imágenes.
+- [ ] **CI/CD:** Configuración de GitHub Actions para linter y tests automáticos.

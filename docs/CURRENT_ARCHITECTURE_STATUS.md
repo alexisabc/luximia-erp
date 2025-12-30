@@ -5,12 +5,12 @@
 | App Original | Estado Actual | Destino / Acción |
 | :--- | :---: | :--- |
 | `contabilidad` | 🟢 **Refactorizado** | Mantener y extender. |
-| `rrhh` | 🟢 **Refactorizado** | Mantener y extender. |
-| `compras` | 🟢 **Refactorizado** | Mantener y extender. Soporte Multi-Almacén e Integración con Salida de Documentos (PDF/Email). |
-| `pos` | 🟢 **Refactorizado** | Mantener y extender. UI Touch + Integración Inventarios con descuento automático. |
-| `tesoreria` | 🟢 **Refactorizado** | Mantener y extender. Motor bancario conectado a POS y CxP con conciliación. |
-| `auditoria` | 🟢 **Refactorizado** | Mantener. Middleware activo protegiendo modelos críticos con JSON Diff. |
-| `core` | 🟢 **Refactorizado** | Centraliza utilerías y Motores de Infraestructura (Email, PDF, Storage). |
+| `rrhh` | 🟢 **Refactorizado** | Mantener y extender. Integrado en Dashboard (KPI Nómina). |
+| `compras` | 🟢 **Refactorizado** | Integrado en Dashboard (KPI CxP y Alertas). Soporte Multi-Almacén y Salida de Documentos. |
+| `pos` | 🟢 **Refactorizado** | Integrado en Dashboard (KPI Ventas). UI Touch + Integración Inventarios. |
+| `tesoreria` | 🟢 **Refactorizado** | Integrado en Dashboard (KPI Bancos + Alertas). Motor bancario y Conciliación. |
+| `auditoria` | 🟢 **Refactorizado** | Mantener. Middleware activo protegiendo modelos críticos. |
+| `core` | 🟢 **Refactorizado** | Integrado en Dashboard (API Gateway). Centraliza utilerías y Motores de Infraestructura. |
 | `facturas` | 🔴 **Obsoleto** | **Candidato a ELIMINAR**. Su lógica se movió a `contabilidad` (Fiscal). |
 | `users` | 🟢 **Refactorizado** | Mantener. RBAC Nativo y Login Passwordless. |
 | `ia`, `juridico` | ⚪ **Pendiente** | Evaluar convertir en Servicios (no apps completas). |
