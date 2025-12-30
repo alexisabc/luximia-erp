@@ -12,7 +12,7 @@
 | `auditoria` | 🟢 **Refactorizado** | Mantener. Middleware activo protegiendo modelos críticos con JSON Diff. |
 | `core` | 🟡 **En Progreso** | Centralizar utilerías y Certificados aquí. |
 | `facturas` | 🔴 **Obsoleto** | **Candidato a ELIMINAR**. Su lógica se movió a `contabilidad` (Fiscal). |
-| `users` | ⚪ **Pendiente** | Refactorizar autenticación y perfiles (Fase 4). |
+| `users` | 🟢 **Refactorizado** | Mantener. RBAC Nativo y Login Passwordless. |
 | `ia`, `juridico` | ⚪ **Pendiente** | Evaluar convertir en Servicios (no apps completas). |
-| `sistemas`, `config` | ⚪ **Pendiente** | Fusionar en un módulo de Administración (Fase 4). |
+| `sistemas`, `config` | 🟡 **En Progreso** | Fusionados en el nuevo módulo de Administración y Seguridad. |
 | `notificaciones` | ⚪ **Pendiente** | Migrar a Event Bus (Fase 4). |

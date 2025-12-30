@@ -41,6 +41,14 @@
 - [x] **API:** Endpoints ReadOnly para consulta de logs (solo administradores).
 - [x] **Config:** `AUDITED_MODELS` definido en settings para 13 modelos críticos.
 
-## 🔵 Fase 4: Sistemas y Configuración (PENDIENTE)
-- [ ] **Legacy Apps `sistemas`, `config`, `users`:** Unificar gestión de usuarios y permisos (RBAC) en una arquitectura limpia.
+## 🟢 Fase 4: Sistemas y Configuración (EN PROGRESO)
+### Sprint 11: Seguridad y Gobernanza (RBAC) - ✅ COMPLETADO
+- [x] **Legacy Apps `users` y `sistemas`:** Unificadas en un módulo de Seguridad modular y escalable.
+- [x] **Backend:** Implementación de `RolePermissionBackend`, modelos modulares `Role` y `EnrollmentToken`.
+- [x] **Lógica:** `RBACService` para gestión de asignaciones y rotación de tokens de sesión forzada.
+- [x] **Frontend:** Nueva Matriz de Roles (UI Dual con +100 permisos agrupados) y Dashboard de Gestión de Usuarios.
+- [x] **Auth:** Login Passwordless (Passkeys/TOTP) totalmente integrado con la experiencia del "Oso" (Legacy Bear).
+
+### Próximos Pasos (Sprint 12)
+- [ ] **Configuraciones:** Centralizar parámetros globales en app `config`.
 - [ ] **Notificaciones:** Migrar app `notificaciones` a un servicio de Event Bus (Redis/Celery).
