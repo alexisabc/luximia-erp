@@ -4,6 +4,7 @@ import traceback
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Sum
+from django.http import HttpResponse
 
 from core.permissions import HasPermissionForAction
 from .models import Nomina, ReciboNomina, Empleado, BuzonIMSS
@@ -111,6 +112,19 @@ class ReciboNominaViewSet(viewsets.ModelViewSet):
     queryset = ReciboNomina.objects.all()
     serializer_class = ReciboNominaSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    @decorators.action(detail=True, methods=['get'])
+    def download_pdf(self, request, pk=None):
+        recibo = self.get_object()
+        from .services.pdf_generator import NominaPDFService
+        try:
+            pdf_bytes = NominaPDFService.generar_pdf(recibo)
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            filename = f"Recibo_{recibo.empleado.no_empleado or 'SNE'}_{recibo.nomina.id}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @decorators.action(detail=True, methods=['post'], url_path='recalcular')
     def recalcular(self, request, pk=None):

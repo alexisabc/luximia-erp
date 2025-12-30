@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .section { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border-bottom: 1px solid #eee; padding: 4px; text-align: left; }
+        .amount { text-align: right; }
+        .totals { font-weight: bold; background-color: #f0f0f0; }
+        .neto { font-size: 12px; border-top: 2px solid #000; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>RECIBO DE NÓMINA</h2>
+        <h3>{{ recibo.nomina.razon_social.nombre_o_razon_social }}</h3>
+        <p>RFC: {{ recibo.nomina.razon_social.rfc }}</p>
+    </div>
+
+    <div class="section">
+        <table style="border: none;">
+            <tr>
+                <td style="border: none;">
+                    <strong>Empleado:</strong> {{ recibo.empleado.no_empleado }} - {{ recibo.empleado.nombres }} {{ recibo.empleado.apellido_paterno }}<br>
+                    <strong>RFC:</strong> {{ recibo.empleado.documentacion_oficial.rfc }}<br>
+                    <strong>Puesto:</strong> {{ recibo.empleado.puesto.nombre }}
+                </td>
+                <td style="border: none; text-align: right;">
+                    <strong>Periodo:</strong> {{ recibo.nomina.fecha_inicio|date:"d/m/Y" }} al {{ recibo.nomina.fecha_fin|date:"d/m/Y" }}<br>
+                    <strong>Fecha Pago:</strong> {{ recibo.nomina.fecha_pago|date:"d/m/Y" }}<br>
+                    <strong>Días Pagados:</strong> {{ recibo.dias_pagados }}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="10%">Cve</th>
+                <th width="50%">Concepto</th>
+                <th width="20%" class="amount">Percepción</th>
+                <th width="20%" class="amount">Deducción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in recibo.detalles.all %}
+            <tr>
+                <td>{{ detalle.clave_sat|default:detalle.concepto.codigo }}</td>
+                <td>{{ detalle.nombre_concepto }}</td>
+                <td class="amount">
+                    {% if detalle.concepto.tipo == 'PERCEPCION' %}
+                        {{ detalle.monto_total }}
+                    {% endif %}
+                </td>
+                <td class="amount">
+                    {% if detalle.concepto.tipo == 'DEDUCCION' %}
+                        {{ detalle.monto_total }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            
+            <tr class="totals">
+                <td colspan="2" style="text-align: right;">Totales:</td>
+                <td class="amount">{{ recibo.subtotal }}</td>
+                <td class="amount">{{ recibo.descuentos }}</td>
+            </tr>
+            <tr class="neto">
+                <td colspan="3" style="text-align: right;"><strong>NETO A PAGAR:</strong></td>
+                <td class="amount"><strong>$ {{ recibo.neto }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 80px; text-align: center;">
+        _____________________________________________<br>
+        Recibí de conformidad<br>
+        {{ recibo.empleado.nombres }} {{ recibo.empleado.apellido_paterno }}
+    </div>
+</body>
+</html>
