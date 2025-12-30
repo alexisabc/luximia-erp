@@ -1,7 +1,6 @@
 from decimal import Decimal
 from django.db.models import Sum
-from .models_nomina import Nomina, ReciboNomina, ConceptoNomina, TipoConcepto
-from .models import Empleado
+from rrhh.models import Nomina, ReciboNomina, ConceptoNomina, TipoConcepto, Empleado
 
 class CalculoPTUService:
     @staticmethod
