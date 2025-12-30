@@ -7,6 +7,7 @@ from .models import (
     CentroTrabajo,
     RazonSocial,
     Empleado,
+    Nomina,
 )
 from .serializers import (
     DepartamentoSerializer,
@@ -14,8 +15,10 @@ from .serializers import (
     CentroTrabajoSerializer,
     RazonSocialSerializer,
     EmpleadoSerializer,
+    NominaSerializer,
 )
 from .permissions import HasPermissionForAction
+from .services.nomina_orchestrator import NominaOrchestrator
 
 
 from core.views import BaseViewSet
@@ -98,3 +101,6 @@ class EmpleadoViewSet(RrhhBaseViewSet):
             return Response(proyeccion)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+

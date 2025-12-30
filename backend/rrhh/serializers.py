@@ -12,6 +12,9 @@ from .models import (
     EmpleadoNominaBancaria,
     EmpleadoCreditoInfonavit,
     EmpleadoContactoEmergencia,
+    Nomina,
+    ReciboNomina,
+    DetalleReciboItem,
 )
 
 
@@ -162,3 +165,21 @@ class EmpleadoSerializer(serializers.ModelSerializer):
                 EmpleadoContactoEmergencia.objects.create(empleado=instance, **contacto_data)
 
         return instance
+
+class DetalleReciboItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DetalleReciboItem
+        fields = "__all__"
+
+class ReciboNominaSerializer(serializers.ModelSerializer):
+    detalles = DetalleReciboItemSerializer(many=True, read_only=True)
+    empleado_nombre = serializers.CharField(source='empleado.nombre_completo', read_only=True)
+
+    class Meta:
+        model = ReciboNomina
+        fields = "__all__"
+
+class NominaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nomina
+        fields = "__all__"
