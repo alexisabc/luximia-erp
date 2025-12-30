@@ -22,10 +22,10 @@
 - [x] **Lógica:** Implementar `KardexService` (Costeo Promedio Ponderado) y `RecepcionService`.
 - [x] **Frontend:** Interfaz de Recepción de Mercancía y Kárdex (Auditoría de Movimientos).
 
-### Sprint 8: Punto de Venta y Facturación (Legacy App: `pos`)
-- [ ] **Arquitectura:** Implementar `VentaService` y `CajaCorteService`.
-- [ ] **Integración:** Conectar con `contabilidad` para generar póliza de ingresos automática.
-- [ ] **Frontend:** Interfaz POS optimizada para tablets (Touch).
+### Sprint 8: Punto de Venta y Facturación (Legacy App: `pos`) - ✅ COMPLETADO
+- [x] **Arquitectura:** Implementar `VentaService` y `CajaService` con integración a `KardexService`.
+- [x] **Integración:** Conectar con inventarios para descuento automático de stock (Póliza contable pendiente de automatizar).
+- [x] **Frontend:** Interfaz POS optimizada para tablets (Touch) con carrito persistente y flujo de cobro.
 
 ## 🟠 Fase 3: Tesorería y Auditoría
 - [ ] **Legacy App `tesoreria`:** Refactorizar conciliación bancaria.
