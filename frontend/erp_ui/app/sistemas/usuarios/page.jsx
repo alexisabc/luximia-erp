@@ -1,357 +1,393 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import adminService from '@/services/admin.service';
 import {
-    Users, UserCheck, UserX, Shield,
-    Loader2, AlertCircle, Mail, Key
+    User,
+    Mail,
+    Shield,
+    MoreVertical,
+    Plus,
+    Search,
+    Filter,
+    RefreshCw,
+    UserCheck,
+    UserX,
+    Loader2,
+    Calendar,
+    Smartphone,
+    LogOut,
+    Check
 } from 'lucide-react';
-
-import DataTable from '@/components/organisms/DataTable';
-import UserModal from '@/components/modals/UserModal';
-import { ActionButtonGroup } from '@/components/molecules';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-
-import {
-    getUsers, createUser, updateUser, deleteUser,
-    getInactiveUsers, hardDeleteUser, resendInvite,
-    exportUsuariosExcel, importarUsuarios
-} from '@/services/api';
-import { useAuth } from '@/context/AuthContext';
-
-import ExportModal from '@/components/modals/Export';
-import ImportModal from '@/components/modals/Import';
-import { ConfirmModal } from '@/components/organisms';
-
-const USUARIO_COLUMNAS_EXPORT = [
-    { id: 'id', label: 'ID' },
-    { id: 'username', label: 'Usuario' },
-    { id: 'email', label: 'Email' },
-    { id: 'is_active', label: 'Estado' }
-];
+import { toast } from 'react-hot-toast';
 
 export default function UsuariosPage() {
-    const { hasPermission } = useAuth();
-    const [pageData, setPageData] = useState({ results: [], count: 0 });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [isPaginating, setIsPaginating] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [showInactive, setShowInactive] = useState(false);
-    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
-    const [userToDelete, setUserToDelete] = useState(null);
-    const [selectedColumns, setSelectedColumns] = useState(() => {
-        const cols = {};
-        USUARIO_COLUMNAS_EXPORT.forEach(c => (cols[c.id] = true));
-        return cols;
-    });
-
-    const pageSize = 10;
-    const hasInitialData = useRef(false);
-
-    const stats = [
-        {
-            label: 'Total Usuarios',
-            value: pageData.count || 0,
-            icon: Users,
-            gradient: 'from-cyan-500 to-blue-600 dark:from-cyan-600 dark:to-blue-700'
-        },
-        {
-            label: 'Activos',
-            value: pageData.results?.filter(u => u.is_active).length || 0,
-            icon: UserCheck,
-            gradient: 'from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700'
-        },
-        {
-            label: 'Inactivos',
-            value: pageData.results?.filter(u => !u.is_active).length || 0,
-            icon: UserX,
-            gradient: 'from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700'
-        },
-        {
-            label: 'Con Permisos',
-            value: pageData.results?.filter(u => u.is_staff || u.is_superuser).length || 0,
-            icon: Shield,
-            gradient: 'from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700'
-        }
-    ];
-
-    const fetchData = useCallback(async (page, size, search = searchQuery) => {
-        if (!size || size <= 0) return;
-
-        if (hasInitialData.current) {
-            setIsPaginating(true);
-        } else {
-            setLoading(true);
-        }
-
-        try {
-            const res = showInactive
-                ? await getInactiveUsers(page, size, { search })
-                : await getUsers(page, size, { search });
-            setPageData(showInactive ? { results: res.data, count: res.data.length } : res.data);
-            setCurrentPage(page);
-            hasInitialData.current = true;
-        } catch (err) {
-            console.error(err);
-            toast.error('Error cargando usuarios');
-        } finally {
-            setLoading(false);
-            setIsPaginating(false);
-        }
-    }, [showInactive, searchQuery]);
+    const [usuarios, setUsuarios] = useState([]);
+    const [roles, setRoles] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [inviteData, setInviteData] = useState({ email: '', first_name: '', last_name: '', roles: [] });
+    const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
-        fetchData(1, pageSize);
-    }, [pageSize, fetchData]);
+        fetchData();
+    }, []);
 
-    const handlePageChange = (newPage) => {
-        fetchData(newPage, pageSize);
-    };
-
-    const handleSearch = useCallback((query) => {
-        setSearchQuery(query);
-        fetchData(1, pageSize, query);
-    }, [fetchData, pageSize]);
-
-    const handleCreateClick = () => {
-        setEditingUser(null);
-        setIsUserModalOpen(true);
-    };
-
-    const handleEditClick = (user) => {
-        setEditingUser(user);
-        setIsUserModalOpen(true);
-    };
-
-    const handleDeleteClick = (user) => {
-        setUserToDelete(user);
-        setIsConfirmModalOpen(true);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!userToDelete) return;
+    const fetchData = async () => {
+        setIsLoading(true);
         try {
-            await deleteUser(userToDelete.id);
-            toast.success('Usuario desactivado exitosamente');
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            console.error(err);
-            toast.error('Error al desactivar usuario');
+            const [usersRes, rolesRes] = await Promise.all([
+                adminService.getUsuarios(1, 50),
+                adminService.getRoles()
+            ]);
+            setUsuarios(usersRes.data.results || usersRes.data); // Dependiendo si hay paginación activa
+            setRoles(rolesRes.data);
+        } catch (error) {
+            toast.error('Error al cargar datos');
         } finally {
-            setIsConfirmModalOpen(false);
-            setUserToDelete(null);
+            setIsLoading(false);
         }
     };
 
-    const handleHardDelete = async (id) => {
+    const handleInvite = async (e) => {
+        e.preventDefault();
+        setIsActionLoading(true);
         try {
-            await hardDeleteUser(id);
-            toast.success('Usuario eliminado permanentemente');
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            console.error(err);
-            toast.error('Error al eliminar definitivamente');
+            await adminService.inviteUsuario(inviteData);
+            toast.success('Invitación enviada correctamente');
+            setIsInviteModalOpen(false);
+            setInviteData({ email: '', first_name: '', last_name: '', roles: [] });
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Error al enviar invitación');
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
-    const handleResendInvite = async (userId) => {
+    const handleUpdateRole = async (roleName) => {
+        if (!selectedUser) return;
+        setIsActionLoading(true);
         try {
-            await resendInvite(userId);
-            toast.success('Invitación reenviada exitosamente');
-        } catch (err) {
-            console.error(err);
-            toast.error('Error al reenviar invitación');
+            await adminService.updateUsuario(selectedUser.id, {
+                roles: [roleName] // Nuestro backend espera lista de nombres (slugs)
+            });
+            toast.success('Rol actualizado');
+            setIsRoleModalOpen(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Error al actualizar rol');
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
-    const handleColumnChange = (e) => {
-        const { name, checked } = e.target;
-        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
-    };
-
-    const handleExport = async () => {
-        const columnsToExport = USUARIO_COLUMNAS_EXPORT.filter(c => selectedColumns[c.id]).map(c => c.id);
+    const handleResetSession = async (userId) => {
         try {
-            const response = await exportUsuariosExcel(columnsToExport);
-            const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'usuarios.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            setIsExportModalOpen(false);
-            toast.success('Archivo exportado exitosamente');
-        } catch (err) {
-            console.error(err);
-            toast.error('No se pudo exportar el archivo');
+            await adminService.resetUserSession(userId);
+            toast.success('Sesión invalidada. El usuario deberá loguear de nuevo.');
+        } catch (error) {
+            toast.error('Error al cerrar sesión remota');
         }
     };
 
-    const columns = [
-        {
-            header: 'Usuario',
-            render: (row) => (
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                        {row.username?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <div>
-                        <div className="font-medium text-gray-900 dark:text-white">{row.username}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{row.email}</div>
-                    </div>
-                </div>
-            )
-        },
-        {
-            header: 'Estado',
-            render: (row) => (
-                <Badge variant={row.is_active ? 'success' : 'secondary'}>
-                    {row.is_active ? 'Activo' : 'Inactivo'}
-                </Badge>
-            )
-        },
-        {
-            header: 'Permisos',
-            render: (row) => (
-                <div className="flex gap-1">
-                    {row.is_superuser && (
-                        <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                            <Shield className="w-3 h-3 mr-1" />
-                            Admin
-                        </Badge>
-                    )}
-                    {row.is_staff && !row.is_superuser && (
-                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                            Staff
-                        </Badge>
-                    )}
-                </div>
-            )
-        },
-        {
-            header: 'Última Sesión',
-            render: (row) => (
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {row.last_login ? new Date(row.last_login).toLocaleDateString() : '-'}
-                </div>
-            )
-        }
-    ];
+    const getStatusBadge = (active) => (
+        active ? (
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Activo
+            </span>
+        ) : (
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-500/10 text-slate-500 border border-slate-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                Inactivo
+            </span>
+        )
+    );
+
+    const filteredUsers = Array.isArray(usuarios) ? usuarios.filter(u =>
+        u.username.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase()) ||
+        `${u.first_name} ${u.last_name}`.toLowerCase().includes(search.toLowerCase())
+    ) : [];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8">
-            <div className="mb-6 sm:mb-8">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                            Gestión de Usuarios
-                        </h1>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                            Administra usuarios, permisos y accesos al sistema
-                        </p>
+        <div className="p-6 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tight">
+                        Gestión de Usuarios
+                    </h1>
+                    <p className="text-slate-500 mt-2 flex items-center gap-2">
+                        <UserCheck className="w-4 h-4 text-cyan-500" />
+                        Administra el personal, sus credenciales de seguridad y acceso multi-empresa.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setIsInviteModalOpen(true)}
+                        className="flex items-center gap-3 px-6 py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-2xl transition-all shadow-xl shadow-cyan-500/20 font-bold group"
+                    >
+                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                        Invitar Usuario
+                    </button>
+                </div>
+            </div>
+
+            {/* Content Card */}
+            <div className="bg-[#0f172a]/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl">
+                {/* Table Toolbar */}
+                <div className="p-6 border-b border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="relative w-full sm:w-96 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre, email, usuario..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-[#020617]/40 border border-white/5 rounded-2xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all text-sm"
+                        />
                     </div>
-                    <ActionButtonGroup
-                        showInactive={showInactive}
-                        onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('auth.view_user')}
-                        onCreate={handleCreateClick}
-                        canCreate={hasPermission('auth.add_user')}
-                        onImport={() => setIsImportModalOpen(true)}
-                        canImport={hasPermission('auth.add_user')}
-                        onExport={() => setIsExportModalOpen(true)}
-                        canExport={hasPermission('auth.view_user')}
-                    />
+
+                    <div className="flex items-center gap-2">
+                        <button onClick={fetchData} className="p-3 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-colors">
+                            <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-white transition-colors">
+                            <Filter className="w-4 h-4" />
+                            <span className="text-sm font-bold">Filtros</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                {stats.map((stat, index) => {
-                    const Icon = stat.icon;
-                    return (
-                        <div key={index} className={`bg-gradient-to-br ${stat.gradient} rounded-xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
-                            <div className="flex items-center justify-between mb-2"><Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/80" /></div>
-                            <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">{stat.value}</div>
-                            <div className="text-xs sm:text-sm text-white/80">{stat.label}</div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
+                {/* Main Table */}
                 <div className="overflow-x-auto">
-                    <DataTable
-                        data={pageData.results}
-                        columns={columns}
-                        actions={{
-                            onEdit: hasPermission('auth.change_user') ? handleEditClick : null,
-                            onDelete: hasPermission('auth.delete_user') ? handleDeleteClick : null,
-                            onHardDelete: showInactive && hasPermission('auth.delete_user') ? handleHardDelete : null,
-                            custom: [
-                                {
-                                    icon: Mail,
-                                    label: 'Reenviar Invitación',
-                                    onClick: (row) => handleResendInvite(row.id),
-                                    tooltip: 'Reenviar invitación por email'
-                                }
-                            ]
-                        }}
-                        pagination={{ currentPage, totalCount: pageData.count, pageSize, onPageChange: handlePageChange }}
-                        loading={loading}
-                        isPaginating={isPaginating}
-                        onSearch={handleSearch}
-                        emptyMessage="No hay usuarios disponibles"
-                    />
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-white/[0.02]">
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Usuario</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Rol de Seguridad</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Última Sesión</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Estado</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="5" className="px-8 py-20 text-center">
+                                        <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mx-auto mb-4" />
+                                        <p className="text-slate-500 font-medium">Sincronizando directorio...</p>
+                                    </td>
+                                </tr>
+                            ) : filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" className="px-8 py-20 text-center">
+                                        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Search className="w-8 h-8 text-slate-600" />
+                                        </div>
+                                        <p className="text-slate-500 font-medium">No se encontraron usuarios que coincidan con la búsqueda.</p>
+                                    </td>
+                                </tr>
+                            ) : filteredUsers.map(user => (
+                                <tr key={user.id} className="group/row hover:bg-white/[0.02] transition-colors">
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center text-xl font-black text-cyan-400 shadow-lg shrink-0">
+                                                {user.first_name ? user.first_name[0] : user.username[0].toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-200 group-hover/row:text-white transition-colors">
+                                                    {user.first_name} {user.last_name}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                                    <Mail className="w-3 h-3" />
+                                                    {user.email}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="flex flex-wrap gap-2">
+                                            {user.roles?.length > 0 ? user.roles.map(r => (
+                                                <span key={r} className="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-lg text-[10px] font-black uppercase">
+                                                    {r}
+                                                </span>
+                                            )) : (
+                                                <span className="text-[10px] text-slate-600 font-bold uppercase italic">Sin Rol Asignado</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-2 text-xs text-slate-300 font-medium">
+                                                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                                                {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Nunca'}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                                <Smartphone className="w-3.5 h-3.5" />
+                                                <span className="max-w-[150px] truncate">{user.current_session_device || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        {getStatusBadge(user.is_active)}
+                                    </td>
+                                    <td className="px-8 py-5">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => { setSelectedUser(user); setIsRoleModalOpen(true); }}
+                                                className="p-2.5 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
+                                                title="Asignar Rol"
+                                            >
+                                                <Shield className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleResetSession(user.id)}
+                                                className="p-2.5 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                                title="Cerrar Sesión Remota"
+                                            >
+                                                <LogOut className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <UserModal
-                isOpen={isUserModalOpen}
-                onClose={() => setIsUserModalOpen(false)}
-                editingUser={editingUser}
-                onSuccess={() => {
-                    setIsUserModalOpen(false);
-                    fetchData(currentPage, pageSize);
-                }}
-            />
+            {/* MODAL: INVITAR USUARIO */}
+            {isInviteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsInviteModalOpen(false)} />
+                    <div className="relative w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-white/5 bg-gradient-to-r from-cyan-500/10 to-transparent">
+                            <h2 className="text-2xl font-black text-white">Invitar al Equipo</h2>
+                            <p className="text-slate-500 text-sm mt-1">Se enviará un correo con el token de activación.</p>
+                        </div>
 
-            <ConfirmModal
-                isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={handleConfirmDelete}
-                title="Desactivar Usuario"
-                message={`¿Estás seguro de que deseas desactivar al usuario ${userToDelete?.username}?`}
-            />
+                        <form onSubmit={handleInvite} className="p-8 space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nombre</label>
+                                    <input
+                                        required
+                                        value={inviteData.first_name}
+                                        onChange={e => setInviteData({ ...inviteData, first_name: e.target.value })}
+                                        className="w-full bg-[#020617]/60 border border-white/5 rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50"
+                                        placeholder="Ej. Juan"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Apellido</label>
+                                    <input
+                                        required
+                                        value={inviteData.last_name}
+                                        onChange={e => setInviteData({ ...inviteData, last_name: e.target.value })}
+                                        className="w-full bg-[#020617]/60 border border-white/5 rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50"
+                                        placeholder="Ej. Pérez"
+                                    />
+                                </div>
+                            </div>
 
-            <ImportModal
-                isOpen={isImportModalOpen}
-                onClose={() => setIsImportModalOpen(false)}
-                onImport={importarUsuarios}
-                onSuccess={() => {
-                    fetchData(currentPage, pageSize);
-                    toast.success('Usuarios importados exitosamente');
-                }}
-                templateUrl="/auth/usuarios/exportar-plantilla/"
-            />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Correo Electrónico</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={inviteData.email}
+                                    onChange={e => setInviteData({ ...inviteData, email: e.target.value })}
+                                    className="w-full bg-[#020617]/60 border border-white/5 rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50"
+                                    placeholder="juan.perez@empresa.com"
+                                />
+                            </div>
 
-            <ExportModal
-                isOpen={isExportModalOpen}
-                onClose={() => setIsExportModalOpen(false)}
-                columns={USUARIO_COLUMNAS_EXPORT}
-                selectedColumns={selectedColumns}
-                onColumnChange={handleColumnChange}
-                onDownload={handleExport}
-                data={pageData.results}
-                withPreview={true}
-            />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Rol Inicial</label>
+                                <select
+                                    className="w-full bg-[#020617]/60 border border-white/5 rounded-2xl py-3 px-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 text-slate-300"
+                                    onChange={e => setInviteData({ ...inviteData, roles: [e.target.value] })}
+                                >
+                                    <option value="">Seleccionar rol...</option>
+                                    {roles.map(r => (
+                                        <option key={r.id} value={r.nombre}>{r.nombre}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsInviteModalOpen(false)}
+                                    className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-slate-400 font-bold rounded-2xl transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isActionLoading}
+                                    className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-2xl shadow-xl shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                                    Enviar Invitación
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL: CAMBIAR ROL */}
+            {isRoleModalOpen && selectedUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsRoleModalOpen(false)} />
+                    <div className="relative w-full max-w-md bg-[#0f172a] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-white/5 text-center">
+                            <div className="w-16 h-16 bg-cyan-500/20 rounded-2xl flex items-center justify-center text-cyan-400 mx-auto mb-4 border border-cyan-500/30">
+                                <Shield className="w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white">Asignar Rol</h2>
+                            <p className="text-slate-500 text-sm mt-1">Cambiando permisos para <span className="text-cyan-400 font-bold">{selectedUser.first_name}</span></p>
+                        </div>
+
+                        <div className="p-8 space-y-3">
+                            {roles.map(role => (
+                                <button
+                                    key={role.id}
+                                    onClick={() => handleUpdateRole(role.nombre)}
+                                    disabled={isActionLoading}
+                                    className={`w-full p-4 rounded-2xl border flex items-center justify-between group transition-all ${selectedUser.roles?.includes(role.nombre)
+                                            ? 'bg-cyan-500/10 border-cyan-500/50'
+                                            : 'bg-white/5 border-white/5 hover:border-white/20'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-2 h-2 rounded-full ${selectedUser.roles?.includes(role.nombre) ? 'bg-cyan-500' : 'bg-slate-700'}`} />
+                                        <span className={`font-bold ${selectedUser.roles?.includes(role.nombre) ? 'text-white' : 'text-slate-400'}`}>{role.nombre}</span>
+                                    </div>
+                                    {selectedUser.roles?.includes(role.nombre) && <Check className="w-5 h-5 text-cyan-400" />}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="p-8 bg-white/[0.02]">
+                            <button
+                                onClick={() => setIsRoleModalOpen(false)}
+                                className="w-full py-4 bg-white/5 hover:bg-white/10 text-slate-400 font-bold rounded-2xl transition-all"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

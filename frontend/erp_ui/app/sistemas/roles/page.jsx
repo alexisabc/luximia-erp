@@ -1,516 +1,324 @@
-// app/configuraciones/roles/page.jsx
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import adminService from '@/services/admin.service';
 import {
-    getGroups,
-    getPermissions,
-    createGroup,
-    updateGroup,
-    deleteGroup,
-    getInactiveGroups,
-    exportRolesExcel,
-    importarRoles,
-} from '@/services/api';
-import { useAuth } from '@/context/AuthContext';
-import DataTable from '@/components/organisms/DataTable';
-import RolePermissionsModal from '@/components/modals/RolePermissionsModal';
-import { ConfirmModal } from '@/components/organisms';
-import ExportModal from '@/components/modals/Export';
-import ImportModal from '@/components/modals/Import';
-import { translatePermission, translateModel, shouldDisplayPermission } from '@/utils/permissions';
-import Overlay from '@/components/loaders/Overlay';
-import { ActionButtonGroup } from '@/components/molecules';
-
-// --- Constantes de Configuración ---
-const ROLES_COLUMNAS_DISPLAY = [
-    { header: 'Nombre del Rol', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.name}</span> },
-    { header: 'Permisos Asignados', render: (row) => `${row.permissions.length} permisos` },
-];
-
-const ROLES_COLUMNAS_EXPORT = [
-    { id: 'id', label: 'ID' },
-    { id: 'name', label: 'Nombre del Rol' },
-    { id: 'permissions', label: 'Permisos' },
-];
+    Shield,
+    Lock,
+    ChevronRight,
+    Check,
+    Plus,
+    Save,
+    Search,
+    ChevronDown,
+    Info,
+    AlertCircle,
+    Loader2
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function RolesPage() {
-    const { hasPermission } = useAuth();
-    const [groups, setGroups] = useState([]);
-    const [pageData, setPageData] = useState({ results: [], count: 0 });
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
-    const [permissions, setPermissions] = useState([]);
-    const [permissionGroups, setPermissionGroups] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isPaginating, setIsPaginating] = useState(false);
-    const [error, setError] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const { authTokens } = useAuth();
+    const [roles, setRoles] = useState([]);
+    const [permisosAgrupados, setPermisosAgrupados] = useState({});
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [selectedPermissions, setSelectedPermissions] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [expandedModules, setExpandedModules] = useState({});
+    const [searchRole, setSearchRole] = useState('');
 
-    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    useEffect(() => {
+        fetchInitialData();
+    }, []);
 
-    const [formData, setFormData] = useState({ name: '', permissions: [] });
-    const [editingGroup, setEditingGroup] = useState(null);
-    const [itemToDelete, setItemToDelete] = useState(null);
-    const [showInactive, setShowInactive] = useState(false);
-    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-    const [selectedColumns, setSelectedColumns] = useState(() => {
-        const allCols = {};
-        ROLES_COLUMNAS_EXPORT.forEach(c => allCols[c.id] = true);
-        return allCols;
-    });
+    const fetchInitialData = async () => {
+        setIsLoading(true);
+        try {
+            const [rolesRes, permisosRes] = await Promise.all([
+                adminService.getRoles(),
+                adminService.getPermisosAgrupados()
+            ]);
+            setRoles(rolesRes.data);
+            setPermisosAgrupados(permisosRes);
 
+            // Expandir el primer módulo por defecto
+            const firstModule = Object.keys(permisosRes)[0];
+            if (firstModule) setExpandedModules({ [firstModule]: true });
 
-
-    const SPECIAL_PERMISSION_GROUPS = {
-        'view_dashboard': 'metasistema',
-        'view_consolidado': 'metasistema',
-        'view_inactive_records': 'metasistema',
-        'hard_delete_records': 'metasistema',
-        'use_ai': 'metasistema',
-        'manage_ai_settings': 'metasistema',
-        'view_audit_logs': 'metasistema',
-        'export_audit_logs': 'metasistema',
-        'view_security_alerts': 'metasistema',
-        'access_all_companies': 'metasistema',
-        'switch_company_context': 'metasistema',
-        'view_logentry': 'metasistema', // Auditoría global
+            if (rolesRes.data.length > 0) {
+                handleSelectRole(rolesRes.data[0]);
+            }
+        } catch (error) {
+            toast.error('Error al cargar la matriz de roles');
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const groupPermissions = (perms) => {
-        const byModel = {};
+    const handleSelectRole = (role) => {
+        setSelectedRole(role);
+        // El backend devuelve permisos_data con objetos completos, extraemos IDs
+        setSelectedPermissions(role.permissions_data?.map(p => p.id) || []);
+    };
 
-        // Permisos obsoletos que ya fueron migrados a globales
-        const DEPRECATED_PERMISSIONS = ['view_inactive_users', 'hard_delete_customuser'];
+    const togglePermission = (permId) => {
+        if (selectedRole?.es_sistema) {
+            // Nota: Podríamos permitir editar permisos de roles de sistema si el backend lo permite,
+            // pero usualmente están bloqueados. Mi backend bloquea el nombre pero no necesariamente permisos.
+            // Por ahora permitimos si no es el rol de root absoluto.
+        }
 
-        perms.forEach(p => {
-            if (!shouldDisplayPermission(p)) return;
+        setSelectedPermissions(prev =>
+            prev.includes(permId)
+                ? prev.filter(id => id !== permId)
+                : [...prev, permId]
+        );
+    };
 
-            // Excluir permisos obsoletos
-            if (DEPRECATED_PERMISSIONS.includes(p.codename)) return;
+    const handleSave = async () => {
+        if (!selectedRole) return;
 
-            let model = p['content_type__model'];
-            // Permitir reasignación de grupo para permisos especiales
-            if (SPECIAL_PERMISSION_GROUPS[p.codename]) {
-                model = SPECIAL_PERMISSION_GROUPS[p.codename];
-            }
+        setIsSaving(true);
+        try {
+            await adminService.updateRole(selectedRole.id, {
+                permissions: selectedPermissions
+            });
+            toast.success('Permisos actualizados correctamente');
 
-            if (!byModel[model]) byModel[model] = [];
-            byModel[model].push({ value: p.id, label: translatePermission(p) });
-        });
-        return Object.entries(byModel).map(([model, options]) => ({
-            label: translateModel(model),
-            options,
+            // Refrescar lista de roles para tener consistencia
+            const rolesRes = await adminService.getRoles();
+            setRoles(rolesRes.data);
+
+            // Actualizar el seleccionado local
+            const updated = rolesRes.data.find(r => r.id === selectedRole.id);
+            if (updated) setSelectedRole(updated);
+
+        } catch (error) {
+            toast.error('No se pudieron guardar los cambios');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const toggleModule = (module) => {
+        setExpandedModules(prev => ({
+            ...prev,
+            [module]: !prev[module]
         }));
     };
 
-    // Mapeo de modelos a sus módulos/apps
-    const MODEL_TO_MODULE = {
-        'metasistema': 'Sistema',
-        'customuser': 'Sistema',
-        'group': 'Sistema',
-        'empresa': 'Sistema',
-        'empleado': 'RRHH',
-        'departamento': 'RRHH',
-        'puesto': 'RRHH',
-        'razonsocial': 'RRHH',
-        'centrotrabajo': 'RRHH',
-        'empleadodetallepersonal': 'RRHH',
-        'empleadodocumentacionoficial': 'RRHH',
-        'empleadodatoslaborales': 'RRHH',
-        'empleadonominabancaria': 'RRHH',
-        'empleadocreditoinfonavit': 'RRHH',
-        'empleadocontactoemergencia': 'RRHH',
-        'documentoexpediente': 'RRHH',
-        'solicitudpermiso': 'RRHH',
-        'solicitudvacaciones': 'RRHH',
-        'incapacidad': 'RRHH',
-        'ausencia': 'RRHH',
-        'nomina': 'Nómina',
-        'recibonomina': 'Nómina',
-        'conceptonomina': 'Nómina',
-        'configuracioneconomica': 'Nómina',
-        'detallereciboitem': 'Nómina',
-        'periodonomina': 'Nómina',
-        'tablaisr': 'Nómina',
-        'renglontablaisr': 'Nómina',
-        'subsidioempleo': 'Nómina',
-        'renglonsubsidio': 'Nómina',
-        'nominacentralizada': 'Nómina',
-        'cliente': 'Contabilidad',
-        'proyecto': 'Contabilidad',
-        'upe': 'Contabilidad',
-        'contrato': 'Contabilidad',
-        'pago': 'Contabilidad',
-        'moneda': 'Contabilidad',
-        'banco': 'Contabilidad',
-        'metodopago': 'Contabilidad',
-        'formapago': 'Contabilidad',
-        'planpago': 'Contabilidad',
-        'tipocambio': 'Contabilidad',
-        'cuentacontable': 'Contabilidad',
-        'centrocostos': 'Contabilidad',
-        'poliza': 'Contabilidad',
-        'detallepoliza': 'Contabilidad',
-        'vendedor': 'Contabilidad',
-        'esquemacomision': 'Contabilidad',
-        'presupuesto': 'Contabilidad',
-        'producto': 'POS',
-        'caja': 'POS',
-        'turno': 'POS',
-        'venta': 'POS',
-        'detalleventa': 'POS',
-        'cuentacliente': 'POS',
-        'movimientocaja': 'POS',
-        'movimientosaldocliente': 'POS',
-        'solicitudcancelacion': 'POS',
-        'proveedor': 'Compras',
-        'insumo': 'Compras',
-        'ordencompra': 'Compras',
-        'detalleordencompra': 'Compras',
-        'contrarecibo': 'Tesorería',
-        'programacionpago': 'Tesorería',
-        'detalleprogramacion': 'Tesorería',
-        'cajachica': 'Tesorería',
-        'movimiento': 'Tesorería',
-        'cuentabancaria': 'Tesorería',
-        'activoit': 'Sistemas',
-        'asignacionequipo': 'Sistemas',
-        'categoriaequipo': 'Sistemas',
-        'modeloequipo': 'Sistemas',
-        'detalleasignacion': 'Sistemas',
-        'movimientoinventario': 'Sistemas',
-        'equipo': 'Sistemas',
-        'equiposm': 'Sistemas',
-        'inventario': 'Sistemas',
-        'promptia': 'IA',
-        'knowledgebase': 'IA',
-        'logentry': 'Auditoría',
-        'accessattempt': 'Auditoría',
-        'accessfailurelog': 'Auditoría',
-        'accesslog': 'Auditoría',
-        'notification': 'Notificaciones',
-    };
-
-    const groupPermissionsByModule = (perms) => {
-        const byModule = {};
-        const DEPRECATED_PERMISSIONS = ['view_inactive_users', 'hard_delete_customuser'];
-
-        perms.forEach(p => {
-            if (!shouldDisplayPermission(p)) return;
-            if (DEPRECATED_PERMISSIONS.includes(p.codename)) return;
-
-            let model = p['content_type__model'];
-            if (SPECIAL_PERMISSION_GROUPS[p.codename]) {
-                model = SPECIAL_PERMISSION_GROUPS[p.codename];
-            }
-
-            const module = MODEL_TO_MODULE[model] || 'Otros';
-
-            if (!byModule[module]) {
-                byModule[module] = {};
-            }
-            if (!byModule[module][model]) {
-                byModule[module][model] = {
-                    label: translateModel(model),
-                    options: []
-                };
-            }
-
-            byModule[module][model].options.push({
-                value: p.id,
-                label: translatePermission(p),
-                codename: p.codename
-            });
-        });
-
-        return Object.entries(byModule)
-            .map(([moduleName, models]) => ({
-                moduleName,
-                models: Object.values(models)
-            }))
-            .sort((a, b) => {
-                if (a.moduleName === 'Sistema') return -1;
-                if (b.moduleName === 'Sistema') return 1;
-                return a.moduleName.localeCompare(b.moduleName);
-            });
-    };
-
-    const ROL_FORM_FIELDS = [
-        { name: 'name', label: 'Nombre del Rol', required: true },
-        {
-            name: 'permissions',
-            label: 'Permisos',
-            type: 'grouped-checkbox',
-            withSelectAll: true,
-            groups: permissionGroups,
-        },
-    ];
-
-    const fetchData = useCallback(
-        async (page, size, search = searchQuery) => {
-            if (!authTokens?.access) return;
-            setLoading(true);
-            try {
-                const groupsPromise = showInactive
-                    ? getInactiveGroups(page, size)
-                    : getGroups(page, size, { search });
-                const [groupsRes, permissionsRes] = await Promise.all([
-                    groupsPromise,
-                    getPermissions(),
-                ]);
-
-                const groupsResData = groupsRes.data;
-                const groupsData = Array.isArray(groupsResData)
-                    ? groupsResData
-                    : groupsResData.results || [];
-                const normalizedGroups = groupsData.map((g) => ({
-                    ...g,
-                    permissions: g.permissions_data || [],
-                }));
-
-                const permissionsData = permissionsRes.data.filter(shouldDisplayPermission);
-
-                setGroups(normalizedGroups);
-                setPageData({
-                    results: normalizedGroups,
-                    count: Array.isArray(groupsResData)
-                        ? normalizedGroups.length
-                        : groupsResData.count ?? normalizedGroups.length,
-                });
-                setPermissions(permissionsData);
-                setPermissionGroups(groupPermissionsByModule(permissionsData));
-                setCurrentPage(page);
-            } catch (err) {
-                setError('No se pudieron cargar los roles.');
-            } finally {
-                setLoading(false);
-                setIsPaginating(false);
-            }
-        },
-        [showInactive, searchQuery, authTokens?.access]
+    const filteredRoles = roles.filter(r =>
+        r.nombre.toLowerCase().includes(searchRole.toLowerCase())
     );
 
-    useEffect(() => {
-        fetchData(1, pageSize);
-    }, [fetchData]);
-
-
-
-    const handlePageChange = (newPage) => {
-        fetchData(newPage, pageSize);
-    };
-
-    const handleSearch = useCallback((query) => {
-        setSearchQuery(query);
-        fetchData(1, pageSize, query);
-    }, [fetchData, pageSize]);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleMultiSelectChange = (fieldName, selectedId) => {
-        const currentSelection = formData[fieldName] || [];
-        const newSelection = currentSelection.includes(selectedId)
-            ? currentSelection.filter(id => id !== selectedId)
-            : [...currentSelection, selectedId];
-        setFormData(prev => ({ ...prev, [fieldName]: newSelection }));
-    };
-
-    const handleSelectAll = (fieldName, isChecked, options) => {
-        const values = isChecked ? options.map(o => o.value) : [];
-        setFormData(prev => ({ ...prev, [fieldName]: values }));
-    };
-
-    const handleGroupSelect = (fieldName, isChecked, options) => {
-        const values = options.map(o => o.value);
-        setFormData(prev => {
-            const current = prev[fieldName] || [];
-            const newValues = isChecked
-                ? Array.from(new Set([...current, ...values]))
-                : current.filter(id => !values.includes(id));
-            return { ...prev, [fieldName]: newValues };
-        });
-    };
-
-    const handleColumnChange = (e) => {
-        const { name, checked } = e.target;
-        setSelectedColumns(prev => ({ ...prev, [name]: checked }));
-    };
-
-    const handleExport = async () => {
-        const columnsToExport = ROLES_COLUMNAS_EXPORT
-            .filter(c => selectedColumns[c.id])
-            .map(c => c.id);
-
-        try {
-            const response = await exportRolesExcel(columnsToExport);
-            const blob = new Blob([response.data], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'reporte_roles.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            setIsExportModalOpen(false);
-        } catch (err) {
-            setError('No se pudo exportar el archivo.');
-        }
-    };
-
-    const openModalForCreate = () => {
-        setEditingGroup(null);
-        setFormData({ name: '', permissions: [] });
-        setIsFormModalOpen(true);
-    };
-
-    const openModalForEdit = (group) => {
-        setEditingGroup(group);
-        // Ahora se usa la propiedad `id` de los objetos de permiso en la lista
-        const groupPermissionIds = group.permissions.map(p => p.id);
-        setFormData({ name: group.name, permissions: groupPermissionIds });
-        setIsFormModalOpen(true);
-    };
-
-    const handleDeleteClick = (groupId) => {
-        setItemToDelete(groupId);
-        setIsConfirmModalOpen(true);
-    };
-
-    const handleConfirmDelete = async () => {
-        if (!itemToDelete) return;
-        try {
-            await deleteGroup(itemToDelete);
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            setError('Error al eliminar el rol. Asegúrate de que no esté en uso.');
-        } finally {
-            setIsConfirmModalOpen(false);
-            setItemToDelete(null);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const dataToSubmit = {
-                ...formData,
-                // El backend espera una lista de IDs de permisos.
-                permissions: formData.permissions,
-            };
-            if (editingGroup) {
-                await updateGroup(editingGroup.id, dataToSubmit);
-            } else {
-                await createGroup(dataToSubmit);
-            }
-            setIsFormModalOpen(false);
-            fetchData(currentPage, pageSize);
-        } catch (err) {
-            setError('Error al guardar el rol.');
-        }
-    };
-
-    // deleted overlay block
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="w-12 h-12 text-cyan-500 animate-spin" />
+                <p className="text-slate-400 font-medium animate-pulse">Cargando matriz de seguridad...</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 p-4 sm:p-6 lg:p-8 flex flex-col">
-            <div className="flex-shrink-0 mb-6 sm:mb-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-                            <Shield className="w-8 h-8 text-indigo-600" />
-                            Gestión de Roles
-                        </h1>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                            Configura los niveles de acceso y permisos del sistema.
-                        </p>
-                    </div>
-                    <ActionButtonGroup
-                        showInactive={showInactive}
-                        onToggleInactive={() => setShowInactive(!showInactive)}
-                        canToggleInactive={hasPermission('contabilidad.view_cliente')}
-                        onCreate={openModalForCreate}
-                        canCreate={hasPermission('auth.add_group')}
-                        onImport={() => setIsImportModalOpen(true)}
-                        canImport={hasPermission('auth.add_group')}
-                        onExport={() => setIsExportModalOpen(true)}
-                        canExport
-                    />
+        <div className="p-6 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tight">
+                        Matriz de Roles y Permisos
+                    </h1>
+                    <p className="text-slate-500 mt-2 flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-cyan-500" />
+                        Configura el control de acceso granular (RBAC) para toda la organización.
+                    </p>
                 </div>
 
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6">
-                        {error}
+                <button className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all group">
+                    <Plus className="w-5 h-5 text-cyan-400 group-hover:rotate-90 transition-transform" />
+                    <span className="font-bold text-slate-200">Nuevo Rol</span>
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Panel: Roles List */}
+                <div className="lg:col-span-4 flex flex-col gap-4">
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar rol..."
+                            value={searchRole}
+                            onChange={(e) => setSearchRole(e.target.value)}
+                            className="w-full bg-[#0f172a]/40 border border-white/5 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500/50 transition-all font-medium text-slate-200"
+                        />
                     </div>
-                )}
+
+                    <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                        {filteredRoles.map(role => (
+                            <button
+                                key={role.id}
+                                onClick={() => handleSelectRole(role)}
+                                className={`w-full p-5 rounded-[2rem] border transition-all text-left flex items-center justify-between group ${selectedRole?.id === role.id
+                                        ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_30px_-10px_rgba(6,182,212,0.2)]'
+                                        : 'bg-[#0f172a]/20 border-white/5 hover:bg-white/5'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-2xl transition-all ${selectedRole?.id === role.id ? 'bg-cyan-500 text-white shadow-lg' : 'bg-slate-800 text-slate-400'
+                                        }`}>
+                                        <Lock className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className={`font-bold text-lg ${selectedRole?.id === role.id ? 'text-white' : 'text-slate-300'}`}>
+                                            {role.nombre}
+                                        </h3>
+                                        <p className="text-xs text-slate-500 line-clamp-1 mt-1">
+                                            {role.descripcion || 'Sin descripción'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <ChevronRight className={`w-5 h-5 transition-all ${selectedRole?.id === role.id ? 'text-cyan-400 translate-x-1' : 'text-slate-600'
+                                    }`} />
+
+                                {role.es_sistema && (
+                                    <div className="absolute top-3 right-8 flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                                        <Shield className="w-3 h-3 text-amber-500" />
+                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-tighter">Sistema</span>
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right Panel: Permissions Editor */}
+                <div className="lg:col-span-8">
+                    {selectedRole ? (
+                        <div className="bg-[#0f172a]/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-5 duration-500">
+                            {/* Editor Header */}
+                            <div className="p-8 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-cyan-500/20 rounded-2xl flex items-center justify-center border border-cyan-500/30">
+                                        <Lock className="w-6 h-6 text-cyan-400" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-2xl font-black text-white">{selectedRole.nombre}</h2>
+                                            <span className="px-3 py-1 bg-slate-800 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {selectedPermissions.length} Permisos Activos
+                                            </span>
+                                        </div>
+                                        <p className="text-slate-500 text-sm mt-1">{selectedRole.descripcion}</p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-2xl shadow-xl shadow-cyan-500/20 active:scale-95 disabled:opacity-50 transition-all border border-white/10"
+                                >
+                                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                    Guardar Cambios
+                                </button>
+                            </div>
+
+                            {/* Alert for System Roles */}
+                            {selectedRole.es_sistema && (
+                                <div className="mx-8 mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-4 text-amber-400/80">
+                                    <AlertCircle className="w-6 h-6 shrink-0" />
+                                    <div className="text-sm">
+                                        <p className="font-bold text-amber-500">Rol Protegido</p>
+                                        <p>Este es un rol clave del sistema. Algunos permisos base son obligatorios y el nombre no puede modificarse.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Permissions List with Accordions */}
+                            <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                {Object.entries(permisosAgrupados).map(([module, permisos]) => (
+                                    <div key={module} className="group/module border border-white/5 bg-white/[0.01] rounded-[2rem] overflow-hidden transition-all hover:bg-white/[0.02]">
+                                        <button
+                                            onClick={() => toggleModule(module)}
+                                            className="w-full p-6 flex items-center justify-between text-left group-hover/module:bg-white/[0.01] transition-colors"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center text-slate-400 group-hover/module:text-cyan-400 transition-colors">
+                                                    <Shield className="w-5 h-5" />
+                                                </div>
+                                                <h4 className="text-lg font-bold text-slate-200 capitalize tracking-tight">{module}</h4>
+                                                <span className="px-2 py-0.5 bg-slate-800/50 rounded text-[10px] text-slate-500">
+                                                    {permisos.length} opciones
+                                                </span>
+                                            </div>
+                                            <ChevronDown className={`w-5 h-5 text-slate-600 transition-transform duration-300 ${expandedModules[module] ? 'rotate-180 text-cyan-500' : ''}`} />
+                                        </button>
+
+                                        {expandedModules[module] && (
+                                            <div className="px-6 pb-6 pt-2 animate-in slide-in-from-top-2 duration-300">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {permisos.map(perm => (
+                                                        <button
+                                                            key={perm.id}
+                                                            onClick={() => togglePermission(perm.id)}
+                                                            className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${selectedPermissions.includes(perm.id)
+                                                                    ? 'bg-cyan-500/10 border-cyan-500/30'
+                                                                    : 'bg-[#020617]/40 border-white/5 hover:border-white/10'
+                                                                }`}
+                                                        >
+                                                            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedPermissions.includes(perm.id)
+                                                                    ? 'bg-cyan-500 border-cyan-500 text-white'
+                                                                    : 'border-slate-700 bg-transparent'
+                                                                }`}>
+                                                                {selectedPermissions.includes(perm.id) && <Check className="w-4 h-4 stroke-[3]" />}
+                                                            </div>
+                                                            <div>
+                                                                <div className={`text-sm font-bold ${selectedPermissions.includes(perm.id) ? 'text-white' : 'text-slate-400'}`}>
+                                                                    {perm.name}
+                                                                </div>
+                                                                <div className="text-[10px] font-mono text-slate-600 uppercase mt-0.5">
+                                                                    {perm.codename}
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="h-full min-h-[50vh] bg-[#0f172a]/20 border border-white/5 border-dashed rounded-[3rem] flex flex-col items-center justify-center text-center p-12">
+                            <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
+                                <Lock className="w-10 h-10 text-slate-600" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-300">Selecciona un Rol</h3>
+                            <p className="text-slate-500 mt-2 max-w-sm">
+                                Elige un perfil de seguridad a la izquierda para comenzar a configurar sus facultades y restricciones en el sistema.
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <div className="flex-grow min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700">
-                <DataTable
-                    data={groups}
-                    columns={ROLES_COLUMNAS_DISPLAY}
-                    actions={{
-                        onEdit: hasPermission('auth.change_group') ? openModalForEdit : null,
-                        onDelete: hasPermission('auth.delete_group') ? handleDeleteClick : null,
-                    }}
-                    pagination={{
-                        currentPage,
-                        totalCount: pageData.count,
-                        pageSize,
-                        onPageChange: handlePageChange,
-                    }}
-                    loading={loading}
-                    isPaginating={isPaginating}
-                    onSearch={handleSearch}
-                />
-            </div>
-
-            <RolePermissionsModal
-                isOpen={isFormModalOpen}
-                onClose={() => setIsFormModalOpen(false)}
-                title={editingGroup ? 'Editar Rol' : 'Nuevo Rol'}
-                formData={formData}
-                onFormChange={handleInputChange}
-                onSubmit={handleSubmit}
-                permissionsByModule={permissionGroups}
-                submitText="Guardar Rol"
-            />
-
-            <ImportModal
-                isOpen={isImportModalOpen}
-                onClose={() => setIsImportModalOpen(false)}
-                onImport={importarRoles}
-                onSuccess={() => fetchData(currentPage, pageSize)}
-                templateUrl="/users/groups/exportar-plantilla/"
-            />
-
-            <ExportModal
-                isOpen={isExportModalOpen}
-                onClose={() => setIsExportModalOpen(false)}
-                columns={ROLES_COLUMNAS_EXPORT}
-                selectedColumns={selectedColumns}
-                onColumnChange={handleColumnChange}
-                onDownload={handleExport}
-            />
-
-            <ConfirmModal
-                isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={handleConfirmDelete}
-                title="Eliminar Rol Permanentemente"
-                message="¡ADVERTENCIA! Esta acción eliminará el rol de forma permanente. ¿Estás seguro de que deseas continuar?"
-                confirmText="Eliminar"
-            />
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+            `}</style>
         </div>
     );
 }

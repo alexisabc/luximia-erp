@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Key, QrCode, ArrowLeft, Loader2, Mail, Sparkles } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
-import apiClient from '@/services/api';
+import authService from '@/services/auth.service';
 import LoginAnimation from '@/components/features/auth/LoginAnimation';
 
 export default function LoginPage() {
@@ -42,16 +42,11 @@ export default function LoginPage() {
     useEffect(() => {
         clearTimeout(inactivityTimerRef.current);
         if ((animationState === 'idle' || animationState === 'waiting') && hasInteracted) {
-            // Timer para pasar a "waiting" (mirar a los lados) rápido
-            // Timer para pasar a "bored" (dormir) después de 30s
-
-            // Si estamos en idle, pasamos a waiting en 3s
             if (animationState === 'idle') {
                 inactivityTimerRef.current = setTimeout(() => {
                     setAnimationState('waiting');
                 }, 3000);
             }
-            // Si estamos en waiting, pasamos a bored en 27s (total 30s desde idle)
             else if (animationState === 'waiting') {
                 inactivityTimerRef.current = setTimeout(() => {
                     setAnimationState('bored');
@@ -78,11 +73,6 @@ export default function LoginPage() {
         }
     };
 
-    const startLoginEndpoint = '/users/login/start/';
-    const passkeyChallengeEndpoint = '/users/passkey/login/challenge/';
-    const passkeyVerifyEndpoint = '/users/passkey/login/';
-    const totpVerifyEndpoint = '/users/totp/login/verify/';
-
     const handlePasskeyLogin = async () => {
         setIsLoading(true);
         setError(null);
@@ -90,11 +80,10 @@ export default function LoginPage() {
 
         try {
             // 1. Obtener opciones del servidor
-            const { data: options } = await apiClient.get(passkeyChallengeEndpoint);
+            const { data: options } = await authService.passkeyLoginChallenge();
             if (!options?.challenge) throw new Error('Challenge inválido del servidor');
 
             // 2. Iniciar autenticación con timeout de seguridad (60s)
-            // Esto evita que la UI se quede congelada si una extensión (ej. NordPass) falla silenciosamente
             const assertionPromise = startAuthentication({ optionsJSON: options });
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout: La autenticación tardó demasiado.')), 60000)
@@ -103,25 +92,19 @@ export default function LoginPage() {
             const assertion = await Promise.race([assertionPromise, timeoutPromise]);
 
             // 3. Verificar con el servidor
-            const { data: tokens } = await apiClient.post(passkeyVerifyEndpoint, assertion);
+            const { data: tokens } = await authService.passkeyLoginVerify(assertion);
             setAuthData(tokens);
             setAnimationState('success');
             setTimeout(() => router.push('/'), 1200);
 
         } catch (err) {
-            // Solo loguear errores reales, no cancelaciones intencionales del usuario
             const isCancellation = err?.name === 'NotAllowedError' || err?.name === 'AbortError' || err?.message?.includes('Timeout');
-
-            if (!isCancellation) {
-                console.error(err);
-            }
+            if (!isCancellation) console.error(err);
 
             const detail = err?.response?.data?.detail;
-
             if (detail) {
                 setError(detail);
             } else if (isCancellation) {
-                // Mensaje más amigable y menos alarmista para cancelación
                 setError('Operación cancelada. Intenta de nuevo.');
             } else {
                 setError('No pudimos validar tu acceso.');
@@ -130,7 +113,6 @@ export default function LoginPage() {
             setAnimationState('error');
             setTimeout(() => setAnimationState('idle'), 1400);
         } finally {
-            // Asegurar que siempre se desbloquee la UI
             setIsLoading(false);
         }
     };
@@ -141,7 +123,7 @@ export default function LoginPage() {
         setError(null);
         setAnimationState('authenticating');
         try {
-            const { data: tokens } = await apiClient.post(totpVerifyEndpoint, { code: otp });
+            const { data: tokens } = await authService.totpLoginVerify(otp);
             setAuthData(tokens);
             setAnimationState('success');
             setTimeout(() => router.push('/'), 1200);
@@ -158,17 +140,13 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        setAnimationState('authenticating'); // Breve estado de "pensando"
+        setAnimationState('authenticating');
 
         try {
-            const { data } = await apiClient.post(startLoginEndpoint, { email });
+            const { data } = await authService.loginStart(email);
             if (data.available_methods?.length > 0) {
                 setAvailableMethods(data.available_methods);
-                setAnimationState('idle'); // Volver a idle para elegir
-                // Priorizar passkey si existe
-                if (data.available_methods.includes('passkey')) {
-                    // Opcional: Auto-trigger passkey? Mejor dejar que el usuario elija.
-                }
+                setAnimationState('idle');
             } else {
                 throw new Error('No tienes métodos de acceso configurados.');
             }
