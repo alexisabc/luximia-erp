@@ -23,6 +23,7 @@ Desktop.ini
 *.pem
 *.key
 *.p12
+backend/core/certificates/
 
 # ==============================================================================
 # IDE & TOOLS

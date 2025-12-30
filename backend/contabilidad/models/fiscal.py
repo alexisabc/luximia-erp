@@ -2,6 +2,13 @@ from django.db import models
 from core.models import SoftDeleteModel, register_audit
 from .catalogos import Moneda, MetodoPago, FormaPago, Cliente
 from .proyectos import Proyecto
+import os
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+
+# Secure storage for certificates
+CERT_DIR = os.path.join(settings.BASE_DIR, 'core', 'certificates')
+private_storage = FileSystemStorage(location=CERT_DIR)
 
 class Factura(SoftDeleteModel):
     """Repositorio de Facturas (CFDIs) Emitidas y Recibidas."""
@@ -75,8 +82,8 @@ class CertificadoDigital(SoftDeleteModel):
     tipo = models.CharField(max_length=10, choices=TIPO_CERT_CHOICES, default='CSD')
     
     # Archivos
-    archivo_cer = models.FileField(upload_to='sat/certs/', help_text="Archivo .cer (Público)")
-    archivo_key = models.FileField(upload_to='sat/keys/', help_text="Archivo .key (Privado) - Proteger acceso")
+    archivo_cer = models.FileField(storage=private_storage, upload_to='certs/', help_text="Archivo .cer (Público)")
+    archivo_key = models.FileField(storage=private_storage, upload_to='keys/', help_text="Archivo .key (Privado) - Proteger acceso")
     password = models.CharField(max_length=255, help_text="Contraseña de la clave privada (Encriptada)")
     
     # Metadatos
