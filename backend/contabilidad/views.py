@@ -321,9 +321,8 @@ class FacturaViewSet(ContabilidadBaseViewSet):
         """
         Sube y procesa uno o múltiples archivos XML (CFDI).
         """
-        from .services.xml_parser import parse_cfdi
-        from django.core.files.base import ContentFile
-
+        from .services.factura_service import FacturaService
+        
         archivos = request.FILES.getlist('xmls')
         if not archivos:
             return Response({"detalle": "No se enviaron archivos."}, status=status.HTTP_400_BAD_REQUEST)
@@ -337,70 +336,30 @@ class FacturaViewSet(ContabilidadBaseViewSet):
 
         for archivo in archivos:
             nombre_archivo = archivo.name
-            try:
-                # 1. Leer y Parsear
-                contenido = archivo.read()
-                data = parse_cfdi(contenido)
-                
-                # 2. Verificar Duplicidad
-                if Factura.objects.filter(uuid=data['uuid']).exists():
-                    resultados['duplicados'] += 1
-                    resultados['detalles'].append({
-                        "archivo": nombre_archivo,
-                        "status": "error",
-                        "mensaje": f"UUID {data['uuid']} ya existe."
-                    })
-                    continue
-
-                # 3. Resolver Foreign Keys (Moneda, MetodoPago, etc.)
-                # Intento simple de macheo, idealmente debería ser más robusto
-                moneda, _ = Moneda.objects.get_or_create(
-                    codigo=data['moneda'], 
-                    defaults={'nombre': data['moneda']}
-                )
-                
-                metodo_pago = None
-                if data['metodo_pago']:
-                    metodo_pago = MetodoPago.objects.filter(nombre__icontains=data['metodo_pago']).first()
-
-                # 4. Crear Factura
-                factura = Factura.objects.create(
-                    version=data['version'],
-                    uuid=data['uuid'],
-                    serie=data['serie'],
-                    folio=data['folio'],
-                    fecha_emision=data['fecha_emision'],
-                    fecha_timbrado=data['fecha_timbrado'],
-                    rfc_emisor=data['rfc_emisor'],
-                    nombre_emisor=data['nombre_emisor'],
-                    regimen_emisor=data['regimen_emisor'],
-                    rfc_receptor=data['rfc_receptor'],
-                    nombre_receptor=data['nombre_receptor'],
-                    regimen_receptor=data['regimen_receptor'],
-                    uso_cfdi=data['uso_cfdi'],
-                    total=data['total'],
-                    subtotal=data['subtotal'],
-                    moneda=moneda,
-                    tipo_cambio=data['tipo_cambio'],
-                    tipo_comprobante=data['tipo_comprobante'],
-                    metodo_pago=metodo_pago,
-                    # Guardamos el archivo
-                    xml_archivo=ContentFile(contenido, name=f"{data['uuid']}.xml")
-                )
-                
+            
+            # Procesar usando el servicio
+            resultado = FacturaService.procesar_factura(archivo)
+            
+            if resultado['status'] == 'success':
                 resultados['procesados'] += 1
                 resultados['detalles'].append({
                     "archivo": nombre_archivo,
                     "status": "success",
-                    "uuid": data['uuid']
+                    "uuid": resultado['uuid']
                 })
-
-            except Exception as e:
+            elif resultado['status'] == 'error' and 'ya existe' in resultado.get('mensaje', ''):
+                resultados['duplicados'] += 1
+                resultados['detalles'].append({
+                    "archivo": nombre_archivo,
+                    "status": "error",
+                    "mensaje": resultado['mensaje']
+                })
+            else:
                 resultados['errores'] += 1
                 resultados['detalles'].append({
                     "archivo": nombre_archivo,
                     "status": "error",
-                    "mensaje": str(e)
+                    "mensaje": resultado.get('mensaje', 'Error desconocido')
                 })
 
         return Response(resultados)
