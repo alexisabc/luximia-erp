@@ -1,15 +1,35 @@
 from rest_framework import serializers
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
         fields = '__all__'
 
+class AlmacenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Almacen
+        fields = '__all__'
+
 class InsumoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Insumo
         fields = '__all__'
+
+class MovimientoInventarioSerializer(serializers.ModelSerializer):
+    insumo_nombre = serializers.ReadOnlyField(source='insumo.descripcion')
+    almacen_nombre = serializers.ReadOnlyField(source='almacen.nombre')
+    usuario_nombre = serializers.ReadOnlyField(source='usuario.get_full_name')
+    tipo_movimiento_display = serializers.CharField(source='get_tipo_movimiento_display', read_only=True)
+
+    class Meta:
+        model = MovimientoInventario
+        fields = [
+            'id', 'insumo', 'insumo_nombre', 'almacen', 'almacen_nombre',
+            'cantidad', 'costo_unitario', 'fecha', 'referencia',
+            'tipo_movimiento', 'tipo_movimiento_display', 'usuario', 'usuario_nombre'
+        ]
+        read_only_fields = ['id', 'fecha', 'usuario']
 
 class DetalleOrdenCompraSerializer(serializers.ModelSerializer):
     importe = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)

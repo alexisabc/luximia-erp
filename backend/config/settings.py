@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "csp",  # django-csp para la política de seguridad de contenido
     "rest_framework_simplejwt.token_blacklist",
+    "django_filters",
     "django_extensions",
     "pgvector.django",
 ]
@@ -371,6 +372,11 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "core.pagination.CustomPagination",
     "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "users.authentication.VersionedJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",

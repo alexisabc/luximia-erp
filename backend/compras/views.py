@@ -8,12 +8,14 @@ from django.http import HttpResponse
 import openpyxl
 
 
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen
 from .serializers import (
     ProveedorSerializer, InsumoSerializer, 
     OrdenCompraSerializer, OrdenCompraCreateUpdateSerializer,
-    DetalleOrdenCompraSerializer
+    DetalleOrdenCompraSerializer, MovimientoInventarioSerializer,
+    AlmacenSerializer
 )
+from .services.recepcion_service import RecepcionService
 
 
 
@@ -175,6 +177,48 @@ class OrdenCompraViewSet(viewsets.ModelViewSet):
         oc.motivo_rechazo = motivo
         oc.save()
         return Response({"detail": "Orden rechazada"})
+
+    @decorators.action(detail=True, methods=['post'], url_path='recibir')
+    def recibir(self, request, pk=None):
+        almacen_id = request.data.get('almacen_id')
+        if not almacen_id:
+            return Response({"detail": "Se requiere almacen_id para recibir la mercancía"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            RecepcionService.recibir_orden(pk, almacen_id, request.user)
+            return Response({"detail": "Mercancía recibida exitosamente e inventario actualizado"})
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail": f"Error inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AlmacenViewSet(viewsets.ModelViewSet):
+    queryset = Almacen.objects.all()
+    serializer_class = AlmacenSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class MovimientoInventarioViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para consultar el histórico de movimientos (Kárdex).
+    Sólo lectura para preservar la integridad de la auditoría.
+    """
+    queryset = MovimientoInventario.objects.all().order_by('-fecha')
+    serializer_class = MovimientoInventarioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['insumo', 'almacen', 'tipo_movimiento']
+    search_fields = ['referencia', 'insumo__descripcion', 'insumo__codigo']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        fecha_desde = self.request.query_params.get('fecha_desde')
+        fecha_hasta = self.request.query_params.get('fecha_hasta')
+        
+        if fecha_desde:
+            queryset = queryset.filter(fecha__gte=fecha_desde)
+        if fecha_hasta:
+            queryset = queryset.filter(fecha__lte=fecha_hasta)
+            
+        return queryset
 
 class DetalleOrdenCompraViewSet(viewsets.ModelViewSet):
     queryset = DetalleOrdenCompra.objects.all()

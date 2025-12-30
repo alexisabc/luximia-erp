@@ -37,6 +37,20 @@ export const rechazarOrden = async (id, motivo) => {
     return await api.post(`/compras/ordenes/${id}/rechazar/`, { motivo });
 };
 
+// --- Recepción de Mercancía
+export const recibirOrden = async (ordenId, almacenId) => {
+    return await api.post(`/compras/ordenes/${ordenId}/recibir/`, { almacen_id: almacenId });
+};
+
+// --- Inventarios
+export const getAlmacenes = async (params) => {
+    return await api.get('/compras/almacenes/', { params });
+};
+
+export const getKardex = async (filters) => {
+    return await api.get('/compras/kardex/', { params: filters });
+};
+
 // --- Catalogos
 export const getProveedores = async (params) => {
     return await api.get('/compras/proveedores/', { params });
