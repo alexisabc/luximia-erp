@@ -1,9 +1,13 @@
+import logging
 from rest_framework import viewsets, permissions, status, decorators
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum, Q
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
+
 
 from .models import (
     ContraRecibo, ProgramacionPago, DetalleProgramacion,
@@ -15,9 +19,12 @@ from .serializers import (
     EgresoSerializer, EgresoCreateSerializer
 )
 
+from .services.payment_service import PaymentService
 
 class ContraReciboViewSet(viewsets.ModelViewSet):
     queryset = ContraRecibo.objects.all().order_by('-id')
+    
+
     serializer_class = ContraReciboSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -329,38 +336,20 @@ class EgresoViewSet(viewsets.ModelViewSet):
         
         egreso = self.get_object()
         
-        if egreso.estado != 'AUTORIZADO':
+        try:
+            result = PaymentService.process_payment(egreso, request.user)
+            return Response(result)
+        except ValueError as e:
             return Response(
-                {"detail": "El egreso debe estar autorizado"},
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        with transaction.atomic():
-            # Actualizar estado del egreso
-            egreso.estado = 'PAGADO'
-            egreso.save()
-            
-            # Actualizar saldo de la cuenta bancaria
-            cuenta = egreso.cuenta_bancaria
-            cuenta.saldo_actual -= egreso.monto
-            cuenta.save()
-            
-            # Si está vinculado a un ContraRecibo, actualizar su saldo
-            if egreso.contra_recibo:
-                cr = egreso.contra_recibo
-                cr.saldo_pendiente -= egreso.monto
-                
-                if cr.saldo_pendiente <= 0:
-                    cr.estado = 'PAGADO'
-                elif cr.saldo_pendiente < cr.total:
-                    cr.estado = 'PAGADO_PARCIAL'
-                
-                cr.save()
-        
-        return Response({
-            "detail": "Pago realizado exitosamente",
-            "nuevo_saldo_cuenta": egreso.cuenta_bancaria.saldo_actual
-        })
+        except Exception as e:
+            logger.exception(f"Error procesando pago para egreso {egreso.id}: {str(e)}")
+            return Response(
+                {"detail": "Error al procesar el pago"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @decorators.action(detail=True, methods=['post'])
     def cancelar(self, request, pk=None):
