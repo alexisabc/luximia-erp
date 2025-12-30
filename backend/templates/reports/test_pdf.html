@@ -1,0 +1,45 @@
+{% extends "reports/base_report.html" %}
+
+{% block title %}Prueba de PDF{% endblock %}
+
+{% block content %}
+<h1 class="h1-title">Documento de Prueba</h1>
+
+<p>Este es un documento PDF generado dinámicamente por el sistema ERP <strong>{{ system_name }}</strong>.</p>
+
+<p>Si puedes leer esto, el motor <strong>WeasyPrint</strong> está funcionando correctamente y las dependencias gráficas
+    (Pango, Cairo) están instaladas en el contenedor.</p>
+
+<h3>Datos de Tabla de Ejemplo</h3>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Concepto</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>Consultoría de Software</td>
+            <td>10 hrs</td>
+            <td>$850.00</td>
+            <td>$8,500.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Licencia Servidor</td>
+            <td>1</td>
+            <td>$1,200.00</td>
+            <td>$1,200.00</td>
+        </tr>
+    </tbody>
+</table>
+
+<div style="margin-top: 30px; border: 1px solid #ccc; padding: 10px; background: #fafafa;">
+    <p><strong>Nota Importante:</strong> Este documento es solo para fines de demostración técnica.</p>
+</div>
+{% endblock %}

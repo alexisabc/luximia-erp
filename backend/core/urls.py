@@ -6,6 +6,9 @@ from .views import EmpresaViewSet
 router = DefaultRouter()
 router.register(r'empresas', EmpresaViewSet, basename='empresa')
 
+from .views_pdf import PDFTestView
+
 urlpatterns = [
+    path('test-pdf/', PDFTestView.as_view(), name='test-pdf'),
     path('', include(router.urls)),
 ]

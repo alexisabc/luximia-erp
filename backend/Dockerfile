@@ -24,6 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     libssl-dev \
     libffi-dev \
+    libgdk-pixbuf2.0-0 \
+    shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 # Genera y configura el locale español
