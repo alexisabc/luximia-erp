@@ -23,9 +23,9 @@ class NominaXMLGenerator:
         root.set("Serie", "N")
         root.set("Folio", str(recibo.id))
         root.set("Fecha", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
-        root.set("Sello", "MOCK_SELLO_DIGITAL_DE_PRUEBA_SYSTEMA_ERP_XYZ")
-        root.set("NoCertificado", "30001000000500003416") 
-        root.set("Certificado", "MOCK_CERTIFICADO_BASE64_STRING")
+        root.set("Sello", "Sello_Simulado_Prueba_TDD_12345")
+        root.set("NoCertificado", "30001000000300023456") 
+        root.set("Certificado", "MII_MOCK_CERTIFICADO_BASE64_STRING_SIMULADO_PARA_TIMBRADO_TDD_SYSTEM_ERP")
         
         # Totales
         subtotal = recibo.subtotal

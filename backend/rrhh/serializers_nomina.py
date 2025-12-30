@@ -63,7 +63,7 @@ class ReciboNominaSerializer(serializers.ModelSerializer):
             'id', 'empleado', 'empleado_nombre', 
             'salario_diario', 'sbc', 'dias_pagados', 
             'subtotal', 'impuestos_retenidos', 'imss_retenido', 
-            'descuentos', 'neto', 'uuid_sat', 'detalles'
+            'descuentos', 'neto', 'uuid_sat', 'uuid', 'xml_timbrado', 'detalles'
         ]
 
 class NominaSerializer(serializers.ModelSerializer):

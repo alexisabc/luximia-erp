@@ -97,3 +97,56 @@ class NominaOrchestrator:
             nomina.total_neto = total_neto_global
             nomina.estado = 'CALCULADA'
             nomina.save()
+
+    @staticmethod
+    def timbrar_nomina(nomina_id):
+        """
+        Genera el XML de cada recibo y solicita el timbrado al PAC.
+        """
+        from contabilidad.services.pac.factory import PACFactory
+        from .xml_generator import NominaXMLGenerator
+        from django.utils import timezone
+        
+        with transaction.atomic():
+            nomina = Nomina.objects.select_for_update().get(pk=nomina_id)
+            
+            # Instanciar PAC (Mock o Real según settings)
+            provider = PACFactory.get_provider()
+            
+            recibos = ReciboNomina.objects.filter(nomina=nomina).select_related('empleado', 'nomina', 'empleado__documentacion_oficial', 'nomina__razon_social')
+            
+            timbrados_count = 0
+            
+            for recibo in recibos:
+                if recibo.uuid:
+                    timbrados_count += 1
+                    continue
+                
+                try:
+                    # 1. Generar XML
+                    xml_content = NominaXMLGenerator.generar_xml(recibo)
+                    
+                    # 2. Enviar al PAC
+                    resultado = provider.timbrar(xml_content)
+                    
+                    if resultado['success']:
+                        recibo.uuid = resultado['uuid']
+                        recibo.xml_timbrado = resultado['xml_timbrado']
+                        recibo.fecha_timbrado = timezone.now()
+                        recibo.save()
+                        timbrados_count += 1
+                    else:
+                        # TODO: Manejo de errores granular
+                        print(f"Error PAC: {resultado.get('error')}")
+                        
+                except Exception as e:
+                    print(f"Excepción al timbrar recibo {recibo.id}: {str(e)}")
+            
+            # Actualizar estado de la Nómina
+            if timbrados_count == recibos.count() and recibos.count() > 0:
+                nomina.estado = 'TIMBRADA'
+            elif timbrados_count > 0:
+                nomina.estado = 'PARCIAL' # Estado intermedio si fallaron algunos
+            
+            nomina.save()
+            return {"timbrados": timbrados_count, "total": recibos.count()}

@@ -45,6 +45,16 @@ class NominaViewSet(viewsets.ModelViewSet):
 
         return Response({"detail": "Nómina cerrada exitosamente."})
 
+    @decorators.action(detail=True, methods=['post'], url_path='timbrar', permission_classes=[permissions.IsAuthenticated])
+    def timbrar(self, request, pk=None):
+        """Dispara el proceso de timbrado masivo ante el PAC."""
+        from .services.nomina_orchestrator import NominaOrchestrator
+        try:
+           resultado = NominaOrchestrator.timbrar_nomina(pk)
+           return Response(resultado)
+        except Exception as e:
+           return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @decorators.action(
         detail=False, 
         methods=['post'], 

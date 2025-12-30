@@ -257,6 +257,8 @@ class ReciboNomina(SoftDeleteModel):
     neto = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     uuid_sat = models.CharField(max_length=36, blank=True, null=True, help_text="Folio Fiscal Digital")
+    uuid = models.CharField(max_length=36, blank=True, null=True, help_text="Folio Fiscal SAT (Alias)")
+    xml_timbrado = models.TextField(blank=True, null=True, help_text="XML con el complemento de timbre")
     fecha_timbrado = models.DateTimeField(blank=True, null=True)
 
     class Meta:

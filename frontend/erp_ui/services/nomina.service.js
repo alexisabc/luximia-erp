@@ -38,6 +38,11 @@ const nominaService = {
         return response.data;
     },
 
+    timbrar: async (id) => {
+        const response = await apiClient.post(`${ENDPOINT_NOMINAS}${id}/timbrar/`);
+        return response.data;
+    },
+
     // --- Recibos y Documentos ---
 
     getRecibos: (nominaId) => {
