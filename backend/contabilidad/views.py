@@ -260,8 +260,25 @@ class CentroCostosViewSet(ContabilidadBaseViewSet):
         return response
 
 class PolizaViewSet(ContabilidadBaseViewSet):
-    queryset = Poliza.objects.all().order_by("-fecha", "-numero")
     serializer_class = PolizaSerializer
+
+    def get_queryset(self):
+        from .repositories.poliza_repository import PolizaRepository
+        return PolizaRepository.get_all()
+
+    def create(self, request, *args, **kwargs):
+        from .repositories.poliza_repository import PolizaRepository
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        poliza = PolizaRepository.create(serializer.validated_data)
+        headers = self.get_success_headers(serializer.data)
+        return Response(self.get_serializer(poliza).data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def destroy(self, request, *args, **kwargs):
+        from .repositories.poliza_repository import PolizaRepository
+        pk = kwargs.get('pk')
+        PolizaRepository.delete(pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class DetallePolizaViewSet(ContabilidadBaseViewSet):
     queryset = DetallePoliza.objects.all()

@@ -57,3 +57,7 @@ class PolizaRepository:
         poliza = Poliza.objects.get(pk=uid)
         poliza.activo = False
         poliza.save()
+
+    @staticmethod
+    def get_all():
+        return Poliza.objects.filter(activo=True).order_by('-fecha', '-numero')
