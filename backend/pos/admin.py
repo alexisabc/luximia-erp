@@ -19,8 +19,8 @@ class DetalleVentaInline(admin.TabularInline):
 
 @admin.register(Venta)
 class VentaAdmin(admin.ModelAdmin):
-    list_display = ('folio', 'cliente', 'total', 'estado', 'fecha', 'metodo_pago_principal')
-    list_filter = ('estado', 'metodo_pago_principal', 'fecha')
+    list_display = ('folio', 'cliente', 'total', 'estado', 'fecha', 'metodo_pago')
+    list_filter = ('estado', 'metodo_pago', 'fecha')
     inlines = [DetalleVentaInline]
     date_hierarchy = 'fecha'
 
@@ -31,8 +31,8 @@ class CuentaClienteAdmin(admin.ModelAdmin):
 
 @admin.register(Turno)
 class TurnoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'usuario', 'caja', 'fecha_inicio', 'cerrado', 'diferencia')
-    list_filter = ('cerrado', 'fecha_inicio')
+    list_display = ('id', 'usuario', 'caja', 'fecha_inicio', 'estado', 'diferencia')
+    list_filter = ('estado', 'fecha_inicio')
 
 admin.site.register(MovimientoSaldoCliente)
 admin.site.register(MovimientoCaja)
