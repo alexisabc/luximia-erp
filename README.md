@@ -1,16 +1,43 @@
-# Sistema ERP - Documentación del Proyecto
+# Sistema ERP Luximia - Documentación del Proyecto
 
-- **Versión:** 2.6
-- **Fecha de última actualización:** 27 de diciembre de 2025
-- **Última sesión:** Implementación completa de Tesorería + Sistema de Permisos + IA + Navegación + Seeds
-- **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con un enfoque en automatización financiera, seguridad avanzada y una experiencia de usuario moderna.
+- **Versión:** 3.0
+- **Fecha de última actualización:** 29 de diciembre de 2025
+- **Última sesión:** Migración completa a Atomic Design + Mobile First + Limpieza de código
+- **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con arquitectura moderna basada en Atomic Design, Mobile First y componentes reutilizables.
+
+---
+
+## 📚 Documentación Completa
+
+Para acceder a toda la documentación técnica, arquitectura, guías y reportes del proyecto:
+
+👉 **[Ver Documentación Completa en ERP_Docs/](./ERP_Docs/README.md)**
+
+La carpeta `ERP_Docs/` contiene:
+- Arquitectura del sistema (6 documentos)
+- Documentación de UI/UX (9 documentos)
+- Guías de despliegue y configuración
+- Módulos específicos (Tesorería, POS, etc.)
+- Reportes de progreso e hitos del proyecto
+
+### Documentación del Frontend
+
+Para documentación específica del frontend (Atomic Design, componentes, migración):
+
+👉 **[Ver Documentación del Frontend](./frontend/erp_ui/ERP_Docs/README.md)**
+
+Incluye:
+- 41 componentes Atomic Design documentados
+- Guías de migración y limpieza de código
+- Sistema de diseño y Mobile First
+- Mejores prácticas de desarrollo
 
 ---
 
 ## 1. Visión General del Proyecto
 
 ### 1.1. Objetivo
-Centralizar y optimizar las operaciones empresariales, abarcando desde la gestión contable y financiera hasta Recursos Humanos, Jurídico y Dirección Estratégica.
+Centralizar y optimizar las operaciones empresariales, abarcando desde la gestión contable y financiera hasta Recursos Humanos, Jurídico y Dirección Estratégica, con una interfaz moderna, responsive y optimizada para dispositivos móviles.
 
 ### 1.2. Módulos Principales
 El sistema está estructurado en módulos interconectados, accesibles según roles y permisos:
@@ -52,9 +79,16 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
 
 ## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025)
 
-Hemos realizado una actualización mayor enfocada en la experiencia de usuario, seguridad y flexibilidad de marca:
+### 🎨 Migración a Atomic Design + Mobile First (NUEVO - 100% Completo)
+-   **41 Componentes Atomic Design:** Átomos (8), Moléculas (14), Organismos (6), Templates (6).
+-   **6 Páginas Migradas:** Empleados, Departamentos, Puestos, Monedas, Clientes.
+-   **116 Archivos Actualizados:** Importaciones migradas a nuevos componentes.
+-   **9 Componentes Legacy Eliminados:** Sin duplicación de código.
+-   **Mobile First:** Todos los componentes optimizados para móviles primero.
+-   **Accesibilidad:** ARIA labels, focus management, keyboard navigation.
+-   **Documentación Completa:** 69 archivos de documentación técnica.
 
-### 💰 Módulo de Tesorería (NUEVO - 100% Completo)
+### 💰 Módulo de Tesorería (100% Completo)
 -   **Gestión de Cuentas Bancarias:** CRUD completo con conciliación bancaria automática.
 -   **Control de Egresos:** Flujo de autorización multinivel (Borrador → Autorizado → Pagado).
 -   **Cajas Chicas:** Gestión de fondos fijos con registro de gastos y reembolsos.
@@ -62,7 +96,6 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Programaciones de Pago:** Lotes de pagos y generación de layouts bancarios.
 -   **18 Endpoints API REST** con acciones personalizadas.
 -   **5 Páginas UI** con diseño premium y 23 cards de estadísticas.
--   **4 Permisos personalizados** para control granular de operaciones.
 
 ### 🔐 Sistema de Permisos Mejorado
 -   **401 Permisos Gestionados:** 367 estándar + 34 personalizados.
@@ -76,32 +109,28 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 -   **Comando `index_models`:** Gestión de indexación por app o modelo.
 -   **Integración Lista:** Preparado para chat IA con contexto del sistema.
 
-### 🎨 UX/UI & Branding "White-Label"
--   **Normalización de Marca:** Se ha refactorizado todo el código para eliminar referencias hardcodeadas ("Luximia"), convirtiendo el sistema en un producto **White-Label** adaptable a cualquier identidad corporativa.
--   **Tema "Nebula":** Nueva paleta de colores premium y modo oscuro refinado.
--   **Animaciones Interactivas:** Implementación de "El Oso" (Login Avatar) utilizando **SVG Dinámico + CSS Animations**, que reacciona en tiempo real al cursor y al tipeo de contraseñas.
--   **Dashboard v2:** Gráficos interactivos con `recharts` y transiciones fluidas.
+### 🎨 UX/UI & Branding
+-   **Atomic Design:** Arquitectura escalable y mantenible de componentes.
+-   **Mobile First:** Diseño responsive optimizado para móviles.
+-   **Tema Premium:** Paleta de colores moderna y modo oscuro refinado.
+-   **Animaciones Interactivas:** Transiciones fluidas y micro-interacciones.
+-   **Dashboard v2:** Gráficos interactivos con `recharts`.
 
 ### 🛡️ Seguridad Avanzada (Identity-First)
--   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID) utilizando `@simplewebauthn` y `webauthn` en backend.
--   **2FA/TOTP:** Integración nativa de Doble Factor de Autenticación (Google Authenticator) con `pyotp`.
--   **Auditoría Granular:** Rastreo completo de acciones críticas (Creación/Edición/Eliminado) mediante `django-auditlog`.
--   **NGINX Hardening:** Implementación de **Reverse Proxy Seguro** con headers anti-XSS (`HttpOnly` cookies, `SameSite=Lax`, `X-Frame-Options`).
+-   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID).
+-   **2FA/TOTP:** Doble Factor de Autenticación (Google Authenticator).
+-   **Auditoría Granular:** Rastreo completo de acciones críticas.
+-   **NGINX Hardening:** Reverse Proxy Seguro con headers anti-XSS.
 
 ### ⚙️ Funcionalidad y Estabilidad
 -   **Motor de Nómina 2025:**
-    -   Cálculo preciso de **IMSS Patronal y Obrero** (Desglose por ramas: Enfermedades, RCV, Invalidez, etc.).
-    -   Proyección de **Presupuesto Anual** (Carga Social + ISN + Prestaciones).
-    -   Calculadora inversa (Neto a Bruto) y timbrado (Mock) CFDI 4.0.
+    -   Cálculo preciso de **IMSS Patronal y Obrero**.
+    -   Proyección de **Presupuesto Anual**.
+    -   Calculadora inversa (Neto a Bruto) y timbrado CFDI 4.0.
     -   Importación/Exportación de layouts **SUA e IDSE**.
--   **Selector Multi-Empresa:** Restauración de funcionalidad para superusuarios que gestionan múltiples entidades legales.
--   **POS Terminal:** Corrección de layout y scrollbars en la terminal de punto de venta.
--   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios vía SendGrid.
-
-### 📚 Documentación
--   **Reestructuración:** Renombrado de carpeta de documentación a `ERP_Docs` para estandarización.
--   **Limpieza de Código:** Depuración de servicios redundantes en `rrhh`.
--   **7 Documentos Técnicos Nuevos:** Guías completas de Tesorería, Permisos e IA.
+-   **Selector Multi-Empresa:** Gestión de múltiples entidades legales.
+-   **POS Terminal:** Terminal de punto de venta optimizada.
+-   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios.
 
 ---
 
@@ -116,18 +145,20 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
     -   **DB:** PostgreSQL 17 + `pgvector` (0.4.2).
     -   **Procesamiento:** `polars` (1.36.1) para alto rendimiento en datos.
     -   **IA:** `openai` (2.9.0) para chatbot RAG.
--   **Reportes:** `weasyprint` (67.0) para generación de PDFs pixel-perfect.
+-   **Reportes:** `weasyprint` (67.0) para generación de PDFs.
 -   **Infra:** `gunicorn` (23.0.0), `celery` (Async Tasks).
 
 ### Frontend
--   **Framework:** **Next.js 16.0.8** (App Router, Server Actions, Standalone Output).
+-   **Framework:** **Next.js 16.0.8** (App Router, Server Actions).
 -   **Biblioteca UI:** **React 19.2.1**
 -   **Estilos:** **Tailwind CSS 4.1.18** + `tailwindcss-animate`.
 -   **Componentes:**
+    -   **Atomic Design:** 41 componentes (Átomos, Moléculas, Organismos, Templates).
     -   `lucide-react` (0.560.0) - Iconografía.
     -   `sonner` (1.5.0) - Notificaciones Toast.
     -   `recharts` (3.5.1) - Visualización de datos.
     -   `react-hook-form` (7.53.0) - Gestión de formularios.
+    -   `shadcn/ui` - Componentes base.
 -   **Cliente HTTP:** `axios` (1.13.2) con interceptores modulares.
 
 ### Infraestructura
@@ -152,7 +183,6 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
     cd sistema-erp
     ```
 2.  **Configurar variables de entorno:**
-    Crea un archivo `.env` en la raíz basado en `.env.example`.
     ```bash
     cp .env.example .env
     ```
@@ -168,24 +198,54 @@ Hemos realizado una actualización mayor enfocada en la experiencia de usuario, 
 ### 4.3. Estructura de Proyecto
 ```
 sistema-erp/
+├── README.md           # Este archivo
+├── ERP_Docs/           # Documentación general (48 archivos)
 ├── backend/            # Django API
 │   ├── contabilidad/   # App: Finanzas y Proyectos
 │   ├── users/          # App: Auth y Usuarios
 │   ├── rrhh/           # App: Recursos Humanos
+│   ├── tesoreria/      # App: Tesorería
 │   ├── auditoria/      # App: Logs y Seguridad
 │   └── ...
 ├── frontend/           # Next.js App
 │   └── erp_ui/
 │       ├── app/        # App Router (Páginas)
-│       ├── components/ # UI Reutilizable
-│       └── services/   # Capa de API Modular
-├── docs/               # Documentación del Proyecto
+│       ├── components/ # UI Atomic Design
+│       │   ├── atoms/      # 8 componentes
+│       │   ├── molecules/  # 14 componentes
+│       │   ├── organisms/  # 6 componentes
+│       │   └── templates/  # 6 componentes
+│       ├── services/   # Capa de API Modular
+│       └── ERP_Docs/   # Documentación frontend (17 archivos)
 └── docker-compose.yml  # Orquestación
 ```
 
 ---
 
-## 5. Flujo de Trabajo (Git)
+## 5. Documentación
+
+### 📚 Documentación General
+- **[ERP_Docs/](./ERP_Docs/README.md)** - Documentación completa del proyecto
+  - Arquitectura del sistema
+  - Módulos específicos
+  - Guías de despliegue
+  - Reportes de progreso
+
+### 🎨 Documentación del Frontend
+- **[Frontend Docs](./frontend/erp_ui/ERP_Docs/README.md)** - Documentación del frontend
+  - 41 componentes Atomic Design
+  - Guías de migración
+  - Sistema de diseño
+  - Mejores prácticas
+
+### 📖 Guías Rápidas
+- **[Guía de Componentes](./frontend/erp_ui/components/COMPONENTS_GUIDE.md)** - Documentación de componentes
+- **[Guía de Despliegue](./ERP_Docs/GUIA_DESPLIEGUE.md)** - Despliegue en producción
+- **[Guía de Permisos](./ERP_Docs/CATALOGO_PERMISOS.md)** - Sistema de permisos
+
+---
+
+## 6. Flujo de Trabajo (Git)
 
 Para mantener la calidad del código, seguimos el flujo de _Feature Branch_:
 
@@ -193,3 +253,26 @@ Para mantener la calidad del código, seguimos el flujo de _Feature Branch_:
 2.  Commit semántico: `git commit -m "feat: agregar reporte de ventas"`
 3.  Push: `git push origin feat/nueva-funcionalidad`
 4.  Pull Request hacia `main`.
+
+---
+
+## 7. Métricas del Proyecto
+
+- **Módulos Implementados:** 10+
+- **Componentes UI:** 41 (Atomic Design)
+- **Páginas Migradas:** 6
+- **Archivos de Documentación:** 69
+- **Progreso General:** 100% ✅
+- **Estado:** Producción
+
+---
+
+## 8. Contacto y Soporte
+
+Para más información, consulta la [documentación completa](./ERP_Docs/README.md) o contacta al equipo de desarrollo.
+
+---
+
+**Última actualización:** 29 de diciembre de 2025  
+**Versión:** 3.0  
+**Estado:** ✅ Producción

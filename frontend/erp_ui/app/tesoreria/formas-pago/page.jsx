@@ -12,12 +12,12 @@ import {
   importarFormasPago // Imported
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import'; // Imported
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 const COLUMNS_DISPLAY = [
   { header: 'Enganche (%)', render: (row) => row.enganche },
@@ -206,7 +206,7 @@ export default function FormasPagoPage() {
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Configura las opciones de financiamiento y plazos.</p>
           </div>
-          <ActionButtons
+          <ActionButtonGroup
             showInactive={showInactive}
             onToggleInactive={() => setShowInactive(!showInactive)}
             canToggleInactive={hasPermission('contabilidad.view_cliente')}
@@ -227,7 +227,7 @@ export default function FormasPagoPage() {
       )}
 
       <div className="flex-grow min-h-0">
-        <ReusableTable
+        <DataTable
           data={pageData.results}
           columns={COLUMNS_DISPLAY}
           actions={{
@@ -257,7 +257,7 @@ export default function FormasPagoPage() {
         onFormChange={handleInputChange}
       />
 
-      <ConfirmationModal
+      <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}

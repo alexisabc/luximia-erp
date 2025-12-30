@@ -5,9 +5,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Building2, Loader2, TrendingUp, AlertCircle, Target } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,7 +128,7 @@ export default function CentrosCostosPage() {
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">Centros de Costos</h1>
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Gestión de centros de costos contables</p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={true}
@@ -153,7 +153,7 @@ export default function CentrosCostosPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={data}
                         columns={columns}
                         loading={loading}
@@ -167,7 +167,7 @@ export default function CentrosCostosPage() {
                 </div>
             </div>
 
-            <ReusableModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? "Editar Centro de Costos" : "Nuevo Centro de Costos"} size="md">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? "Editar Centro de Costos" : "Nuevo Centro de Costos"} size="md">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
                         <Label htmlFor="codigo">Código <span className="text-red-500">*</span></Label>
@@ -184,9 +184,9 @@ export default function CentrosCostosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
-            <ReusableModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Centro de Costos" size="sm">
+            <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Centro de Costos" size="sm">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -200,7 +200,7 @@ export default function CentrosCostosPage() {
                         <Button variant="destructive" onClick={handleDelete}>Desactivar</Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

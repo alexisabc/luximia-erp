@@ -14,14 +14,14 @@ import {
     importarRoles,
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import RolePermissionsModal from '@/components/modals/RolePermissionsModal';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
 import { translatePermission, translateModel, shouldDisplayPermission } from '@/utils/permissions';
 import Overlay from '@/components/loaders/Overlay';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 // --- Constantes de Configuración ---
 const ROLES_COLUMNAS_DISPLAY = [
@@ -435,7 +435,7 @@ export default function RolesPage() {
                             Configura los niveles de acceso y permisos del sistema.
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={hasPermission('contabilidad.view_cliente')}
@@ -456,7 +456,7 @@ export default function RolesPage() {
             </div>
 
             <div className="flex-grow min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700">
-                <ReusableTable
+                <DataTable
                     data={groups}
                     columns={ROLES_COLUMNAS_DISPLAY}
                     actions={{
@@ -503,7 +503,7 @@ export default function RolesPage() {
                 onDownload={handleExport}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}

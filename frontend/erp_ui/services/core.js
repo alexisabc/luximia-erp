@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'sonner';
 
 // =================== Base URL ===================
 const isServer = typeof window === 'undefined';
@@ -74,13 +75,26 @@ apiClient.interceptors.response.use(
     (res) => res,
     (error) => {
         const status = error?.response?.status;
+        const data = error?.response?.data;
+
         if (typeof window !== 'undefined') {
+            // Manejo de Auth
             if (status === 401) {
-                // Token inválido o no provisto
                 localStorage.removeItem('authTokens');
                 window.dispatchEvent(new Event('auth:logout'));
+            }
+
+            // Estandarización de Errores con Backend
+            // Si el backend envía nuestro formato estándar { detail: "..." }
+            if (data?.detail) {
+                // Evitamos toast automáticos en 404 para no spammear si es lógica interna
+                if (status !== 404) {
+                    toast.error(data.detail);
+                }
             } else if (status === 403) {
-                console.error("Acceso prohibido (403). Podría ser un problema de permisos o CSRF.");
+                toast.error("No tienes permisos para realizar esta acción.");
+            } else if (status >= 500) {
+                toast.error("Error del servidor. Por favor intenta más tarde.");
             }
         }
         return Promise.reject(error);

@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 
 import ImportModal from '@/components/modals/Import';
 import ExportModal from '@/components/modals/Export';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Badge } from '@/components/ui/badge';
 
 import {
@@ -208,7 +208,7 @@ export default function FacturacionPage() {
                         Consulta y gestión de CFDIs emitidos.
                     </p>
                 </div>
-                <ActionButtons
+                <ActionButtonGroup
                     // Visual Toggle
                     showInactive={showInactive}
                     onToggleInactive={handleToggleInactive}
@@ -225,7 +225,7 @@ export default function FacturacionPage() {
             </div>
 
             <div className="flex-grow min-h-0 relative">
-                <ReusableTable
+                <DataTable
                     data={facturas}
                     columns={columns}
                     loading={loading}

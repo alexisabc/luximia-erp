@@ -9,7 +9,7 @@ import {
 
 import DataTable from '@/components/organisms/DataTable';
 import Modal from '@/components/organisms/Modal';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import Label from '@/components/atoms/Label';
@@ -303,7 +303,7 @@ export default function UPEsPage() {
                                 Administra las unidades privativas y su disponibilidad
                             </p>
                         </div>
-                        <ActionButtons
+                        <ActionButtonGroup
                             showInactive={showInactive}
                             onToggleInactive={() => setShowInactive(!showInactive)}
                             canToggleInactive={hasPermission('contabilidad.view_upe')}

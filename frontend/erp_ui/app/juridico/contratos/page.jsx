@@ -5,9 +5,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { getContratos, exportContratosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import Loader from '@/components/loaders/Overlay'; // Usamos el Overlay para la carga
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 import { formatCurrency } from '@/utils/formatters';
 
 export default function ContratosPage() {
@@ -138,7 +138,7 @@ export default function ContratosPage() {
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">Administra los contratos de venta y sus estados de cuenta.</p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         importHref="/importar/contratos"
                         canImport
                         onExport={handleExport}
@@ -152,7 +152,7 @@ export default function ContratosPage() {
                 )}
             </div>
             <div className="flex-grow min-h-0">
-                <ReusableTable
+                <DataTable
                     data={pageData.results}
                     columns={CONTRATOS_COLUMNAS}
                     pagination={{

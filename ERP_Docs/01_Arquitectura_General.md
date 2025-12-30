@@ -3,9 +3,8 @@
 ## 🔄 Flujo de Información
 El sistema sigue una arquitectura **Client-Server desacoplada (Headless)**:
 
-1.  **Frontend (Cliente):** Next.js (Standalone) consume datos vía REST API.
-2.  **Reverse Proxy (NGINX):** Maneja la seguridad (Headers, SSL Termination en Prod), compresión Gzip y enruta peticiones al Frontend o Backend.
-3.  **API Gateway (Django):** Recibe las peticiones, valida autenticación (JWT/Passkeys) y permisos.
+1.  **Frontend (Cliente):** Next.js consume datos vía REST API. No hay renderizado de plantillas HTML en Django.
+2.  **API Gateway (Nginx/Django):** Django recibe las peticiones, valida autenticación (JWT) y permisos.
 3.  **Lógica de Negocio:** ViewSets de DRF procesan la solicitud.
 4.  **Persistencia:** PostgreSQL guarda datos relacionales y vectores (para IA).
 
@@ -33,5 +32,5 @@ El sistema sigue una arquitectura **Client-Server desacoplada (Headless)**:
 - **Soft Delete:** Los registros nunca se borran físicamente (`activo=False`) excepto por superusuarios (`hard_delete`).
 
 ### 3. Protección de Datos
-- **Audit Logs:** Cada acción de escritura deja rastro (Quién, Qué, Cuándo).
+- **Audit Logs:** Cada acción de escritura deja rastro (Quién, Qué, Cuándo) en la app `auditoria`.
 - **Frontend Validations:** Zod/React Hook Form para validar datos antes de enviar.

@@ -1,4 +1,4 @@
-import Spinner from '@/components/loaders/Spinner';
+import Spinner from '@/components/atoms/Spinner';
 
 export default function Overlay({ show = true, children = null, className = "" }) {
     if (!show) return null;
@@ -11,7 +11,7 @@ export default function Overlay({ show = true, children = null, className = "" }
         >
             {children ?? (
                 <div className="flex flex-col items-center gap-6 p-8 bg-white/20 dark:bg-black/20 rounded-3xl backdrop-blur-xl border border-white/20 shadow-2xl">
-                    <Spinner size={56} className="text-slate-800 dark:text-white" />
+                    <Spinner size="xl" variant="default" className="text-slate-800 dark:text-white" />
                     <p className="text-xs font-semibold tracking-widest uppercase text-slate-800/70 dark:text-white/70 animate-pulse">
                         Cargando
                     </p>

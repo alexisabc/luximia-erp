@@ -14,7 +14,7 @@ import { getActivoIT, updateActivoIT, deleteActivoIT, getModelosEquipo } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 
 export default function EditarActivoPage() {
     const router = useRouter();
@@ -388,7 +388,7 @@ export default function EditarActivoPage() {
                 </div>
             </form>
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleDelete}

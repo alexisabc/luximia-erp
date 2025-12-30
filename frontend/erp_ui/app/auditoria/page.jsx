@@ -2,8 +2,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getAuditLogs, downloadAuditLogExcel } from '@/services/api';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Badge } from "@/components/ui/badge";
 import { Clock, ShieldAlert } from 'lucide-react';
 import moment from 'moment';
@@ -130,14 +130,14 @@ export default function AuditoriaPage() {
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Registro detallado de actividades y seguridad.</p>
         </div>
-        <ActionButtons
+        <ActionButtonGroup
           onExport={handleExport}
           canExport={true}
         />
       </div>
 
       <div className="flex-grow min-h-0">
-        <ReusableTable
+        <DataTable
           data={auditLogs}
           columns={columns}
           loading={loading}

@@ -7,9 +7,9 @@ import {
     Building2, Plus, Loader2, TrendingUp, TrendingDown,
     AlertCircle, DollarSign, RefreshCw
 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -225,7 +225,7 @@ export default function CuentasBancariasPage() {
                     </p>
                 </div>
 
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={true}
                     onCreate={() => { reset(); setSelectedCuenta(null); setIsModalOpen(true); }}
                     canImport={false}
@@ -278,7 +278,7 @@ export default function CuentasBancariasPage() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={cuentas}
                     columns={columns}
                     loading={loading}
@@ -298,7 +298,7 @@ export default function CuentasBancariasPage() {
             </div>
 
             {/* Modal Crear/Editar */}
-            <ReusableModal
+            <Modal
                 title={selectedCuenta ? "Editar Cuenta Bancaria" : "Nueva Cuenta Bancaria"}
                 description="Ingresa los datos de la cuenta bancaria"
                 isOpen={isModalOpen}
@@ -472,10 +472,10 @@ export default function CuentasBancariasPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
             {/* Modal Conciliar */}
-            <ReusableModal
+            <Modal
                 title="Conciliar Cuenta Bancaria"
                 description={`Actualiza el saldo bancario de ${selectedCuenta?.banco_data?.nombre_corto || ''} - ${selectedCuenta?.numero_cuenta || ''}`}
                 isOpen={isConciliarModalOpen}
@@ -513,7 +513,7 @@ export default function CuentasBancariasPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

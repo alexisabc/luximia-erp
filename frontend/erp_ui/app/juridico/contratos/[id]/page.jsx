@@ -5,9 +5,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getContratoById, createPago, updatePago, deletePago, descargarEstadoDeCuentaPDF, descargarEstadoDeCuentaExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form'; // Asumo que tienes un FormModal
-import ConfirmationModal from '@/components/modals/Confirmation'; // Asumo que tienes este modal
+import { ConfirmModal } from '@/components/organisms'; // Asumo que tienes este modal
 import ExportModal from '@/components/modals/Export'; // Asumo que tienes este modal
 import { formatCurrency } from '@/utils/formatters';
 import { SquarePen, Trash, FileDown, Download } from 'lucide-react';
@@ -284,11 +284,11 @@ export default function ContratoDetallePage() {
             <div className="flex flex-col space-y-8">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex-shrink-0">Plan de Pagos Programado</h2>
-                    <ReusableTable data={contrato.plan_de_pagos || []} columns={planPagosColumns} />
+                    <DataTable data={contrato.plan_de_pagos || []} columns={planPagosColumns} />
                 </div>
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex-shrink-0">Historial de Transacciones</h2>
-                    <div className="flex-grow overflow-y-auto"><ReusableTable data={contrato.historial_con_saldo || []} columns={historialPagosColumns} /></div>
+                    <div className="flex-grow overflow-y-auto"><DataTable data={contrato.historial_con_saldo || []} columns={historialPagosColumns} /></div>
                 </div>
             </div>
 
@@ -302,7 +302,7 @@ export default function ContratoDetallePage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}

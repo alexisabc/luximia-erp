@@ -7,7 +7,7 @@ import {
     AlertCircle, CheckCircle, Loader2
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -160,7 +160,7 @@ export default function BuzonIMSSPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={messages}
                         columns={columns}
                         loading={loading}

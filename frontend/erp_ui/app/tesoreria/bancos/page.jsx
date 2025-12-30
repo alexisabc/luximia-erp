@@ -12,12 +12,12 @@ import {
   importarBancos // Imported
 } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import'; // Imported
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 const BANCO_COLUMNAS_DISPLAY = [
   { header: 'Clave', render: (row) => <span className="font-medium text-gray-900 dark:text-white">{row.clave}</span> },
@@ -198,7 +198,7 @@ export default function BancosPage() {
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Administra el catálogo de instituciones bancarias.</p>
           </div>
-          <ActionButtons
+          <ActionButtonGroup
             showInactive={showInactive}
             onToggleInactive={() => setShowInactive(!showInactive)}
             canToggleInactive={hasPermission('contabilidad.view_cliente')}
@@ -218,7 +218,7 @@ export default function BancosPage() {
       </div>
 
       <div className="flex-grow min-h-0">
-        <ReusableTable
+        <DataTable
           data={pageData.results}
           columns={BANCO_COLUMNAS_DISPLAY}
           actions={{
@@ -256,7 +256,7 @@ export default function BancosPage() {
         templateUrl="/contabilidad/bancos/exportar-plantilla/"
       />
 
-      <ConfirmationModal
+      <ConfirmModal
         isOpen={isConfirmModalOpen}
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}

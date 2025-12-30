@@ -9,7 +9,7 @@ import {
     ShoppingCart, TrendingUp, AlertCircle, Loader2
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -200,7 +200,7 @@ export default function HistorialVentasPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={ventas}
                         columns={columns}
                         loading={loading}

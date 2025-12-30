@@ -18,7 +18,7 @@ import {
     uploadDocumentoExpediente
 } from '@/services/rrhh';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
 import Overlay from '@/components/loaders/Overlay';
 
@@ -250,7 +250,7 @@ export default function EmployeePortal() {
                         <div className="mb-4 flex items-center gap-2 text-gray-900 dark:text-white font-bold text-lg">
                             <Clock className="w-5 h-5 text-primary" /> Historial Reciente
                         </div>
-                        <ReusableTable
+                        <DataTable
                             data={historyData}
                             columns={columns}
                             search={false} // Small list, search might be overkill but can be enabled

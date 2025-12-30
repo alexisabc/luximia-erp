@@ -15,8 +15,8 @@ import {
     rechazarCancelacion,
     getSolicitudesCancelacion
 } from '@/services/pos';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -344,7 +344,7 @@ export default function CancelacionesPage() {
             {/* Contenido de Pestañas */}
             {activeTab === 'pendientes' && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in duration-300">
-                    <ReusableTable
+                    <DataTable
                         data={pendientes}
                         columns={columns}
                         loading={loading}
@@ -379,7 +379,7 @@ export default function CancelacionesPage() {
 
             {activeTab === 'historial' && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in duration-300">
-                    <ReusableTable
+                    <DataTable
                         data={historial}
                         columns={[
                             ...columns,
@@ -403,7 +403,7 @@ export default function CancelacionesPage() {
             )}
 
             {/* Modal de Autorización */}
-            <ReusableModal
+            <Modal
                 isOpen={showAuthModal}
                 onClose={() => setShowAuthModal(false)}
                 title="Autorizar Cancelación"
@@ -488,10 +488,10 @@ export default function CancelacionesPage() {
                         </div>
                     </div>
                 )}
-            </ReusableModal>
+            </Modal>
 
             {/* Modal de Rechazo */}
-            <ReusableModal
+            <Modal
                 isOpen={showRejectModal}
                 onClose={() => setShowRejectModal(false)}
                 title="Rechazar Solicitud"
@@ -532,7 +532,7 @@ export default function CancelacionesPage() {
                         </Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

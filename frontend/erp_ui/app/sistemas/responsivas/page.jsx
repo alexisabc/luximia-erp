@@ -16,8 +16,8 @@ import {
     getAsignacionPdfUrl
 } from '@/services/sistemas';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Badge } from '@/components/ui/badge';
 
 export default function HistorialResponsivasPage() {
@@ -169,7 +169,7 @@ export default function HistorialResponsivasPage() {
                         <Plus className="w-5 h-5" />
                         Nueva Responsiva
                     </Button>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={hasPermission('sistemas.view_asignacionequipo')}
@@ -206,7 +206,7 @@ export default function HistorialResponsivasPage() {
 
             {/* Tabla Listado */}
             <div className="flex-grow min-h-0 bg-white/70 dark:bg-gray-900/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-2xl p-6">
-                <ReusableTable
+                <DataTable
                     data={responsivas}
                     columns={columns}
                     loading={loading}

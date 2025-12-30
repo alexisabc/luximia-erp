@@ -6,7 +6,7 @@ import {
 } from '@/services/pos';
 import { useAuth } from '@/context/AuthContext';
 import FormModal from '@/components/modals/Form';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import { Button } from '@/components/ui/button';
 import { Wallet, DollarSign, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +150,7 @@ export default function CuentasClientesPage() {
                     <CardTitle className="text-xl font-semibold">Cartera de Clientes</CardTitle>
                 </CardHeader>
                 <CardContent className="px-0">
-                    <ReusableTable
+                    <DataTable
                         data={data.results}
                         columns={COLUMNS}
                         loading={loading}

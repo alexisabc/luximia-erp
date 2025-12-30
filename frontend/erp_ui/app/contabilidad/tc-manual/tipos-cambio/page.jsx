@@ -4,9 +4,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getTiposCambio, createTipoCambio, updateTipoCambio, deleteTipoCambio } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 
 const FORM_FIELDS = [
@@ -137,7 +137,7 @@ export default function TiposCambioPage() {
             {error && <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4" role="alert">{error}</div>}
 
             <div className="flex-grow min-h-0">
-                <ReusableTable
+                <DataTable
                     data={pageData.results}
                     columns={columns}
                     actions={{
@@ -166,7 +166,7 @@ export default function TiposCambioPage() {
                 fields={FORM_FIELDS}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={confirmDelete}

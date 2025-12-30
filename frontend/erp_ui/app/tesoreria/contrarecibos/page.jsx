@@ -7,9 +7,9 @@ import {
     FileText, Plus, Loader2, CheckCircle, XCircle,
     Clock, AlertCircle, Upload, FileCheck
 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -250,7 +250,7 @@ export default function ContraRecibosPage() {
                     </p>
                 </div>
 
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={true}
                     onCreate={() => { reset(); setIsModalOpen(true); }}
                     canImport={false}
@@ -345,7 +345,7 @@ export default function ContraRecibosPage() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={contraRecibos}
                     columns={columns}
                     loading={loading}
@@ -357,7 +357,7 @@ export default function ContraRecibosPage() {
             </div>
 
             {/* Modal Crear ContraRecibo */}
-            <ReusableModal
+            <Modal
                 title="Nuevo ContraRecibo"
                 description="Registra una factura o documento para pago"
                 isOpen={isModalOpen}
@@ -499,7 +499,7 @@ export default function ContraRecibosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

@@ -7,9 +7,9 @@ import {
     Wallet, Plus, Loader2, TrendingDown, TrendingUp,
     Lock, Unlock, DollarSign, Receipt
 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -282,7 +282,7 @@ export default function CajasChicasPage() {
                     </p>
                 </div>
 
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={true}
                     onCreate={() => { reset(); setIsModalOpen(true); }}
                     canImport={false}
@@ -335,7 +335,7 @@ export default function CajasChicasPage() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={cajas}
                     columns={columns}
                     loading={loading}
@@ -347,7 +347,7 @@ export default function CajasChicasPage() {
             </div>
 
             {/* Modal Crear Caja */}
-            <ReusableModal
+            <Modal
                 title="Nueva Caja Chica"
                 description="Crea un nuevo fondo de caja chica"
                 isOpen={isModalOpen}
@@ -425,10 +425,10 @@ export default function CajasChicasPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
             {/* Modal Registrar Movimiento */}
-            <ReusableModal
+            <Modal
                 title="Registrar Movimiento"
                 description={`Registra un gasto o reembolso en ${selectedCaja?.nombre || ''}`}
                 isOpen={isMovimientoModalOpen}
@@ -491,7 +491,7 @@ export default function CajasChicasPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

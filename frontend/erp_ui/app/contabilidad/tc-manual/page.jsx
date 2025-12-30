@@ -8,9 +8,9 @@ import {
     DollarSign, AlertCircle
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -149,7 +149,7 @@ export default function TiposCambioManualPage() {
                             Registro manual de tipos de cambio pactados
                         </p>
                     </div>
-                    <ActionButtons onCreate={() => setIsModalOpen(true)} canCreate={true} />
+                    <ActionButtonGroup onCreate={() => setIsModalOpen(true)} canCreate={true} />
                 </div>
             </div>
 
@@ -168,11 +168,11 @@ export default function TiposCambioManualPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable data={rates} columns={columns} loading={loading} emptyMessage="No hay tipos de cambio registrados" />
+                    <DataTable data={rates} columns={columns} loading={loading} emptyMessage="No hay tipos de cambio registrados" />
                 </div>
             </div>
 
-            <ReusableModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Registrar Tipo de Cambio" size="md">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Registrar Tipo de Cambio" size="md">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
                         <Label htmlFor="fecha">Fecha <span className="text-red-500">*</span></Label>
@@ -221,7 +221,7 @@ export default function TiposCambioManualPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

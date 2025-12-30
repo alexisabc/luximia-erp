@@ -12,12 +12,12 @@ import {
     importarEmpresas
 } from '@/services/core';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 const EMPRESA_COLUMNAS_DISPLAY = [
     { header: 'Código', render: (row) => <span className="font-bold text-blue-600">{row.codigo}</span> },
@@ -242,7 +242,7 @@ export default function EmpresasPage() {
                             Configuración multi-empresa y datos fiscales.
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={canView}
@@ -262,7 +262,7 @@ export default function EmpresasPage() {
             </div>
 
             <div className="flex-grow min-h-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-100 dark:border-gray-700">
-                <ReusableTable
+                <DataTable
                     data={pageData.results}
                     columns={EMPRESA_COLUMNAS_DISPLAY}
                     actions={{
@@ -309,7 +309,7 @@ export default function EmpresasPage() {
                 onExport={handleExport}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}

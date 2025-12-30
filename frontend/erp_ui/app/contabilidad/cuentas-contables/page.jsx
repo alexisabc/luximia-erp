@@ -7,9 +7,9 @@ import {
     DollarSign, Building
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -215,7 +215,7 @@ export default function CuentasContablesPage() {
                             Gestiona la estructura contable de la organización
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={true}
@@ -244,7 +244,7 @@ export default function CuentasContablesPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={data}
                         columns={columns}
                         loading={loading}
@@ -256,7 +256,7 @@ export default function CuentasContablesPage() {
                 </div>
             </div>
 
-            <ReusableModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? "Editar Cuenta" : "Nueva Cuenta"} size="lg">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingItem ? "Editar Cuenta" : "Nueva Cuenta"} size="lg">
                 <form onSubmit={handleSave} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -298,9 +298,9 @@ export default function CuentasContablesPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
-            <ReusableModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Desactivar Cuenta" size="sm">
+            <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Desactivar Cuenta" size="sm">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -314,7 +314,7 @@ export default function CuentasContablesPage() {
                         <Button variant="destructive" onClick={handleDelete}>Desactivar</Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
 
             <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImport={handleImportar} onSuccess={() => { loadData(); toast.success('Cuentas importadas exitosamente'); }} templateUrl="/contabilidad/cuentas-contables/exportar-plantilla/" />
         </div>

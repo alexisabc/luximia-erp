@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getPagos, createPago, getContratos, getMetodosPago, exportPagosExcel } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import { useResponsivePageSize } from '@/hooks/useResponsivePageSize';
 import Link from 'next/link';
 import Overlay from '@/components/loaders/Overlay';
 import Modal from '@/components/modals';
 import { formatCurrency } from '@/utils/formatters';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 const PAGO_COLUMNAS_EXPORT = [
     { id: 'fecha_pago', label: 'Fecha de Pago' },
@@ -171,7 +171,7 @@ export default function PagosPage() {
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">Consulta y registra los pagos recibidos.</p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         onCreate={handleCreateClick}
                         canCreate={hasPermission('contabilidad.add_pago')}
                         importHref="/importar/pagos"
@@ -187,7 +187,7 @@ export default function PagosPage() {
                 )}
             </div>
             <div className="flex-grow min-h-0 relative">
-                <ReusableTable
+                <DataTable
                     data={pageData.results}
                     columns={columns}
                     pagination={{

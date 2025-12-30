@@ -7,8 +7,8 @@ import moment from 'moment';
 
 import { useAuth } from '@/context/AuthContext';
 import { getNominas, deleteNomina, createNomina, getPeriodos } from '@/services/rrhh';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Badge } from "@/components/ui/badge";
 import FormModal from '@/components/modals/Form';
 import { Eye, FileText, Upload, CalendarRange } from 'lucide-react';
@@ -204,7 +204,7 @@ export default function NominasPage() {
                         <CalendarRange className="w-4 h-4" />
                         Gestionar Periodos
                     </button>
-                    <ActionButtons
+                    <ActionButtonGroup
                         onCreate={() => setIsCreateModalOpen(true)}
                         canCreate={hasPermission('rrhh.add_nomina')}
                     />
@@ -212,7 +212,7 @@ export default function NominasPage() {
             </div>
 
             <div className="flex-grow min-h-0">
-                <ReusableTable
+                <DataTable
                     data={nominas}
                     columns={columns}
                     loading={loading}

@@ -32,9 +32,9 @@ import {
 } from 'lucide-react';
 
 // Componentes reutilizables
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 
 // Componentes UI base
 import { Button } from '@/components/ui/button';
@@ -284,7 +284,7 @@ export default function TemplatePage() {
 
                 {/* Tabla */}
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         columns={columns}
                         data={data}
                         loading={loading}
@@ -319,7 +319,7 @@ export default function TemplatePage() {
             </div>
 
             {/* ========== MODAL DE FORMULARIO ========== */}
-            <ReusableModal
+            <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={selectedItem ? 'Editar Elemento' : 'Nuevo Elemento'}
@@ -389,7 +389,7 @@ export default function TemplatePage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

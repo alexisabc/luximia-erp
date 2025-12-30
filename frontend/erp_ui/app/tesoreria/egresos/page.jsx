@@ -7,9 +7,9 @@ import {
     Receipt, Plus, Loader2, CheckCircle, XCircle,
     Clock, DollarSign, FileText, AlertTriangle
 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -251,7 +251,7 @@ export default function EgresosPage() {
                     </p>
                 </div>
 
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={true}
                     onCreate={() => { reset(); setIsModalOpen(true); }}
                     canImport={false}
@@ -346,7 +346,7 @@ export default function EgresosPage() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={egresos}
                     columns={columns}
                     loading={loading}
@@ -358,7 +358,7 @@ export default function EgresosPage() {
             </div>
 
             {/* Modal Crear Egreso */}
-            <ReusableModal
+            <Modal
                 title="Nuevo Egreso"
                 description="Registra un nuevo egreso o pago"
                 isOpen={isModalOpen}
@@ -454,7 +454,7 @@ export default function EgresosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

@@ -7,9 +7,9 @@ import {
     Loader2
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -263,7 +263,7 @@ export default function EsquemasComisionPage() {
                             Configura las reglas de comisiones para vendedores
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={hasPermission('contabilidad.view_cliente')}
@@ -290,7 +290,7 @@ export default function EsquemasComisionPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={pageData.results}
                         columns={columns}
                         actions={{
@@ -307,7 +307,7 @@ export default function EsquemasComisionPage() {
                 </div>
             </div>
 
-            <ReusableModal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title={editingItem ? 'Editar Esquema' : 'Nuevo Esquema'} size="md">
+            <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title={editingItem ? 'Editar Esquema' : 'Nuevo Esquema'} size="md">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <Label htmlFor="esquema">Esquema <span className="text-red-500">*</span></Label>
@@ -334,9 +334,9 @@ export default function EsquemasComisionPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
-            <ReusableModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Esquema" size="sm">
+            <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Esquema" size="sm">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -350,7 +350,7 @@ export default function EsquemasComisionPage() {
                         <Button variant="destructive" onClick={handleConfirmDelete}>Desactivar</Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
 
             <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} columns={ESQUEMA_COLUMNAS_EXPORT} selectedColumns={selectedColumns} onColumnChange={handleColumnChange} onDownload={handleExport} data={pageData.results} withPreview={true} />
         </div>

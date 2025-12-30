@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { RefreshCw, Calendar, Search, ArrowLeft } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { getPeriodos, generarPeriodos } from '@/services/rrhh';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import Modal from '@/components/modals';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,7 +179,7 @@ export default function PeriodosNominaPage() {
             </Card>
 
             {/* Table */}
-            <ReusableTable
+            <DataTable
                 data={periodos}
                 columns={columns}
                 loading={loading}

@@ -7,9 +7,9 @@ import {
     Clock, CheckCircle, DollarSign
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -218,7 +218,7 @@ export default function PosTurnosPage() {
                         </p>
                     </div>
                     {activeTab === 'cajas' && (
-                        <ActionButtons onCreate={openCreate} canCreate={true} />
+                        <ActionButtonGroup onCreate={openCreate} canCreate={true} />
                     )}
                 </div>
             </div>
@@ -251,18 +251,18 @@ export default function PosTurnosPage() {
                 <div className="overflow-x-auto">
                     {activeTab === 'cajas' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <ReusableTable data={cajas} columns={cajasColumns} loading={loadingCajas} actions={{ onEdit: openEdit, onDelete: openDelete }} emptyMessage="No hay cajas configuradas" />
+                            <DataTable data={cajas} columns={cajasColumns} loading={loadingCajas} actions={{ onEdit: openEdit, onDelete: openDelete }} emptyMessage="No hay cajas configuradas" />
                         </div>
                     )}
                     {activeTab === 'turnos' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                            <ReusableTable data={turnosData.results} columns={turnosColumns} loading={loadingTurnos} pagination={{ currentPage: turnosPage, totalCount: turnosData.count, pageSize: turnosPageSize, onPageChange: setTurnosPage }} emptyMessage="No hay turnos registrados" />
+                            <DataTable data={turnosData.results} columns={turnosColumns} loading={loadingTurnos} pagination={{ currentPage: turnosPage, totalCount: turnosData.count, pageSize: turnosPageSize, onPageChange: setTurnosPage }} emptyMessage="No hay turnos registrados" />
                         </div>
                     )}
                 </div>
             </div>
 
-            <ReusableModal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={editingId ? "Editar Caja" : "Nueva Caja"} size="md">
+            <Modal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={editingId ? "Editar Caja" : "Nueva Caja"} size="md">
                 <form onSubmit={handleSaveCaja} className="space-y-4">
                     <div>
                         <Label htmlFor="nombre">Nombre de la Caja <span className="text-red-500">*</span></Label>
@@ -279,9 +279,9 @@ export default function PosTurnosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
-            <ReusableModal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Eliminar Caja" size="sm">
+            <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Eliminar Caja" size="sm">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -295,7 +295,7 @@ export default function PosTurnosPage() {
                         <Button variant="destructive" onClick={handleDeleteCaja}>Eliminar</Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

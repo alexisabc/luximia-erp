@@ -385,6 +385,7 @@ REST_FRAMEWORK = {
         "user": "100000/day",
         "login_start": "10/minute", # Límite estricto para evitar enumeración y spam
     },
+    "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
 }
 
 SIMPLE_JWT = {

@@ -7,9 +7,9 @@ import {
     Loader2, AlertCircle, Mail, Key
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import UserModal from '@/components/modals/UserModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -22,7 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
-import ConfirmationModal from '@/components/modals/Confirmation';
+import { ConfirmModal } from '@/components/organisms';
 
 const USUARIO_COLUMNAS_EXPORT = [
     { id: 'id', label: 'ID' },
@@ -259,7 +259,7 @@ export default function UsuariosPage() {
                             Administra usuarios, permisos y accesos al sistema
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={hasPermission('auth.view_user')}
@@ -288,7 +288,7 @@ export default function UsuariosPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={pageData.results}
                         columns={columns}
                         actions={{
@@ -323,7 +323,7 @@ export default function UsuariosPage() {
                 }}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 onConfirm={handleConfirmDelete}

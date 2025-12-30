@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '@/services/api';
 import { toast } from 'sonner';
 import { Play, FileText, Loader2, Wand2 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 export default function GeneradorPolizasPage() {
     const [facturas, setFacturas] = useState([]);
@@ -142,7 +142,7 @@ export default function GeneradorPolizasPage() {
                     </p>
                 </div>
                 {/* Reusing ActionButtons just for consistency, even if some props are unused */}
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={false}
                     canImport={false}
                     canExport={false}
@@ -151,7 +151,7 @@ export default function GeneradorPolizasPage() {
             </div>
 
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={facturas}
                     columns={columns}
                     loading={loading}
@@ -160,7 +160,7 @@ export default function GeneradorPolizasPage() {
                 />
             </div>
 
-            <ReusableModal
+            <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title="Generar Póliza Contable"
@@ -202,7 +202,7 @@ export default function GeneradorPolizasPage() {
                         </p>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

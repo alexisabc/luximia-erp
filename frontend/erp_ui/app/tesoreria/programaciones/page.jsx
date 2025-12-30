@@ -7,9 +7,9 @@ import {
     Calendar, Plus, Loader2, CheckCircle, FileDown,
     Clock, DollarSign, Building2
 } from 'lucide-react';
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -240,7 +240,7 @@ export default function ProgramacionesPagoPage() {
                     </p>
                 </div>
 
-                <ActionButtons
+                <ActionButtonGroup
                     canCreate={true}
                     onCreate={() => { reset(); setIsModalOpen(true); }}
                     canImport={false}
@@ -303,7 +303,7 @@ export default function ProgramacionesPagoPage() {
 
             {/* Table */}
             <div className="flex-1 min-h-0 bg-white dark:bg-gray-800/50 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 p-1">
-                <ReusableTable
+                <DataTable
                     data={programaciones}
                     columns={columns}
                     loading={loading}
@@ -315,7 +315,7 @@ export default function ProgramacionesPagoPage() {
             </div>
 
             {/* Modal Crear Programación */}
-            <ReusableModal
+            <Modal
                 title="Nueva Programación de Pago"
                 description="Crea un lote de pagos para dispersión"
                 isOpen={isModalOpen}
@@ -380,7 +380,7 @@ export default function ProgramacionesPagoPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

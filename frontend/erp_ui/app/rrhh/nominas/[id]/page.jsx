@@ -10,7 +10,7 @@ import moment from 'moment';
 
 import { getNominaById, calcularNomina, cerrarNomina, updateNomina } from '@/services/rrhh';
 import { Button } from '@/components/ui/button';
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import FormModal from '@/components/modals/Form';
 import NominaReciboModal from '@/components/modals/NominaReciboModal';
 import { Badge } from "@/components/ui/badge"
@@ -228,7 +228,7 @@ export default function NominaDetailPage() {
                 </div>
                 {/* ReusableTable for details */}
                 <div className="flex-grow min-h-0">
-                    <ReusableTable
+                    <DataTable
                         data={nomina.recibos || []}
                         columns={columns}
                         loading={false}

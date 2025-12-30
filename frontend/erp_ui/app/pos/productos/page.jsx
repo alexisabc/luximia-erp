@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 
 // Componentes
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -237,7 +237,7 @@ export default function ProductosPage() {
                         </p>
                     </div>
 
-                    <ActionButtons
+                    <ActionButtonGroup
                         onCreate={openCreate}
                         canCreate={true}
                     />
@@ -276,7 +276,7 @@ export default function ProductosPage() {
             {/* Main Content */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={data.results}
                         columns={COLUMNS}
                         loading={loading}
@@ -300,7 +300,7 @@ export default function ProductosPage() {
             </div>
 
             {/* Modal de Formulario */}
-            <ReusableModal
+            <Modal
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 title={editingId ? "Editar Producto" : "Nuevo Producto"}
@@ -458,10 +458,10 @@ export default function ProductosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
             {/* Modal de Confirmación */}
-            <ReusableModal
+            <Modal
                 isOpen={isDeleteOpen}
                 onClose={() => setIsDeleteOpen(false)}
                 title="Eliminar Producto"
@@ -489,7 +489,7 @@ export default function ProductosPage() {
                         </Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

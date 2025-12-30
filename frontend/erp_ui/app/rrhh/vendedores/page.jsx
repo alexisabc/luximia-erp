@@ -7,9 +7,9 @@ import {
     AlertCircle, Phone, Mail
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
-import ActionButtons from '@/components/common/ActionButtons';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
+import { ActionButtonGroup } from '@/components/molecules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -270,7 +270,7 @@ export default function VendedoresPage() {
                             Administra el equipo comercial y sus datos de contacto
                         </p>
                     </div>
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={() => setShowInactive(!showInactive)}
                         canToggleInactive={hasPermission('contabilidad.view_cliente')}
@@ -299,7 +299,7 @@ export default function VendedoresPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={pageData.results}
                         columns={VENDEDOR_COLUMNAS_DISPLAY}
                         actions={{
@@ -316,7 +316,7 @@ export default function VendedoresPage() {
                 </div>
             </div>
 
-            <ReusableModal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title={editingVendedor ? 'Editar Vendedor' : 'Nuevo Vendedor'} size="md">
+            <Modal isOpen={isFormModalOpen} onClose={() => setIsFormModalOpen(false)} title={editingVendedor ? 'Editar Vendedor' : 'Nuevo Vendedor'} size="md">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <Label htmlFor="tipo">Tipo <span className="text-red-500">*</span></Label>
@@ -341,9 +341,9 @@ export default function VendedoresPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
-            <ReusableModal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Vendedor" size="sm">
+            <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Desactivar Vendedor" size="sm">
                 <div className="space-y-4">
                     <div className="flex items-start gap-3">
                         <AlertCircle className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -357,7 +357,7 @@ export default function VendedoresPage() {
                         <Button variant="destructive" onClick={handleConfirmDelete}>Desactivar</Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
 
             <ImportModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImport={importarVendedores} onSuccess={() => { fetchData(currentPage, pageSize); toast.success('Vendedores importados exitosamente'); }} templateUrl="/contabilidad/vendedores/exportar-plantilla/" />
             <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} columns={VENDEDOR_COLUMNAS_EXPORT} selectedColumns={selectedColumns} onColumnChange={handleColumnChange} onDownload={handleExport} data={pageData.results} withPreview={true} />

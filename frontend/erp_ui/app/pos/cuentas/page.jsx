@@ -8,8 +8,8 @@ import {
     CreditCard, Loader2
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
-import ReusableModal from '@/components/modals/ReusableModal';
+import DataTable from '@/components/organisms/DataTable';
+import Modal from '@/components/organisms/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -195,7 +195,7 @@ export default function PosCuentasPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={data.results}
                         columns={columns}
                         loading={loading}
@@ -216,7 +216,7 @@ export default function PosCuentasPage() {
                 </div>
             </div>
 
-            <ReusableModal isOpen={isAbonoOpen} onClose={() => setIsAbonoOpen(false)} title={`Registrar Abono - ${selectedCuenta?.nombre_cliente}`} size="md">
+            <Modal isOpen={isAbonoOpen} onClose={() => setIsAbonoOpen(false)} title={`Registrar Abono - ${selectedCuenta?.nombre_cliente}`} size="md">
                 <form onSubmit={handleAbonoSubmit} className="space-y-4">
                     <div>
                         <Label htmlFor="monto">Monto a Abonar ($) <span className="text-red-500">*</span></Label>
@@ -243,7 +243,7 @@ export default function PosCuentasPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
         </div>
     );
 }

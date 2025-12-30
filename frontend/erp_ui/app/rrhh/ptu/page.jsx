@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Calculator, Download, Users, DollarSign, TrendingUp, RefreshCw } from 'lucide-react';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 
 export default function PTUPage() {
     const [anio, setAnio] = useState(new Date().getFullYear() - 1);
@@ -71,7 +71,7 @@ export default function PTUPage() {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <ActionButtons
+                    <ActionButtonGroup
                         canCreate={false}
                         canImport={false}
                         canExport={proyecto.length > 0}

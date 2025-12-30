@@ -1,6 +1,6 @@
 # 🦅 Sistema ERP - Documentación Maestra
 
-Bienvenido a la documentación técnica del sistema ERP. Este _vault_ está estructurado para facilitar el mantenimiento, escalabilidad y comprensión del sistema.
+Bienvenido a la documentación técnica del Sistema ERP Corporativo. Este _vault_ está estructurado para facilitar el mantenimiento, escalabilidad y comprensión del sistema.
 
 ## 🗂 Estructura del Vault
 
@@ -13,12 +13,14 @@ Visión de alto nivel del stack tecnológico, diagrama de flujo de datos y princ
 Documentación profunda del servidor Django REST Framework.
 - **Apps:** Contabilidad, RRHH, Usuarios, Auditoría.
 - **Lógica:** Serializadores, Vistas, Permisos personalizados.
+- **Guía:** Pasos para crear nuevos endpoints.
 
 ### 3. [[03_Frontend_UI]]
 Guía del cliente web Next.js App Router.
 - **Arquitectura:** Server Components vs Client Components.
 - **Servicios:** Capa de abstracción de API modular (`services/`).
 - **UI:** Componentes reutilizables (Tablas, Modales, Inputs).
+- **Guía:** Pasos para crear nuevas páginas.
 
 ### 4. [[04_Base_Datos]]
 Esquemas y relaciones de datos.
@@ -26,10 +28,11 @@ Esquemas y relaciones de datos.
 - **Migraciones:** Estrategia de versionado de DB.
 
 ### 5. [[05_Deployment_DevOps]]
-Guías para despliegue y entorno local.
+Guías para despliegue y entorno local paso a paso.
 - **Docker:** Comandos y configuración.
 - **Variables de Entorno:** `.env`.
+- **Producción:** Estrategias de deploy.
 
 ---
-**Nota:** Esta documentación se actualiza automáticamente con cambios mayores en la arquitectura.
-Última actualización: 15 de Diciembre 2025.
+**Nota:** Esta documentación actúa como la fuente de verdad para el desarrollo continuo del proyecto.
+Última actualización: 22 de Diciembre 2025.

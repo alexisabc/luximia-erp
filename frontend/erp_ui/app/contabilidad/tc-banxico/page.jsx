@@ -7,7 +7,7 @@ import {
     Banknote, Loader2
 } from 'lucide-react';
 
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import { Button } from '@/components/ui/button';
 
 import { getTiposDeCambio, actualizarTipoDeCambioHoy } from '@/services/api';
@@ -182,7 +182,7 @@ export default function TiposDeCambioPage() {
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={pageData.results}
                         columns={columns}
                         pagination={{ currentPage, totalCount: pageData.count, pageSize, onPageChange: handlePageChange }}

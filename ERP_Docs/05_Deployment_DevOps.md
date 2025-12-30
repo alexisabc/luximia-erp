@@ -1,4 +1,6 @@
-# 🚀 Despliegue y DevOps
+# 🚀 Despliegue y DevOps - Guía Paso a Paso
+
+Esta guía detalla cómo levantar el sistema desde cero en un entorno de desarrollo.
 
 ## 🐳 Docker (Entorno Local)
 
@@ -8,58 +10,84 @@ El proyecto utiliza `docker-compose` para orquestar los servicios.
 1.  **db (PostgreSQL 17):** Persistencia de datos. Puerto `5432`.
 2.  **backend (Django):** API REST. Puerto `8000`.
 3.  **frontend (Next.js):** UI. Puerto `3000`.
-4.  **redis:** Broker de mensajes para Celery (Tareas en segundo plano).
-5.  **worker:** Ejecuta tareas pesadas (envío de emails, reportes largos).
-6.  **mailhog:** Servidor SMTP falso para pruebas de correo (`http://localhost:8025`).
+4.  **redis:** Broker de mensajes.
+5.  **worker:** Ejecuta tareas en segundo plano.
+6.  **mailhog:** SMTP falso para pruebas (`http://localhost:8025`).
 
-### Comandos Útiles
+### 👨‍💻 Paso a Paso: Iniciar el Proyecto
 
-**Iniciar sistema:**
+#### Paso 1: Requisitos Previos
+Asegúrate de tener instalado:
+- **Docker Desktop** (o Docker Engine + Compose).
+- **Git**.
+
+#### Paso 2: Clonar y Configurar
+```bash
+# 1. Clonar
+git clone <url-del-repo>
+cd sistema-erp
+
+# 2. Configurar Variables de Entorno
+# Copia el ejemplo para crear tu archivo .env local
+cp .env.example .env
+```
+
+#### Paso 3: Arrancar Contenedores
 ```bash
 docker-compose up -d --build
 ```
-*(La bandera `-d` corre los contenedores en segundo plano)*.
+*Espera unos minutos a que se descarguen las imágenes y se construyan los contenedores.*
 
-**Ver logs (en vivo):**
+#### Paso 4: Migraciones y Superusuario
+Una vez que los contenedores estén corriendo (`docker ps` para verificar):
+
+```bash
+# 1. Aplicar migraciones a la Base de Datos
+docker-compose exec backend python manage.py migrate
+
+# 2. Crear un usuario administrador
+docker-compose exec backend python manage.py createsuperuser
+# Sigue las instrucciones en pantalla (usuario, email, password)
+```
+
+#### Paso 5: Verificar Acceso
+- **Frontend:** Abre `http://localhost:3000`
+- **Backend API:** Abre `http://localhost:8000`
+- **Admin Panel:** Abre `http://localhost:8000/admin` e ingresa con tu superusuario.
+- **Mailhog:** Abre `http://localhost:8025` para ver correos salientes.
+
+---
+
+## 🌐 Mantenimiento Común
+
+### Ver Logs
+Para ver qué está pasando en el backend:
 ```bash
 docker-compose logs -f backend
 ```
 
-**Ejecutar migraciones manuales:**
+### Reiniciar un servicio
+Si cambias código de Python, a veces es útil reiniciar si el autoreload falla:
 ```bash
-docker-compose exec backend python manage.py migrate
+docker-compose restart backend
 ```
 
-**Crear superusuario:**
+### Detener todo
 ```bash
-docker-compose exec backend python manage.py createsuperuser
+docker-compose down
 ```
-
-## 🛡️ NGINX Reverse Proxy (Híbrido)
-
-El sistema utiliza NGINX como un **Reverse Proxy** seguro y optimizado, compatible con Next.js Standalone (SSR).
-
-### Características
-- **Hybrid Mode:** Funciona tanto en local (`localhost:3000`) como en producción.
-- **Seguridad:** Inyecta headers anti-XSS (`HttpOnly`, `SameSite=Lax`) y `X-Frame-Options`.
-- **Performance:** Habilita **Gzip** para compresión de assets y maneja el caching.
-- **HMR Support:** Soporta Hot-Module-Reloading para desarrollo local (WebSockets).
-
-### Configuración
-El archivo de configuración se encuentra en `frontend/erp_ui/nginx.conf`.
-Si necesitas ajustar los tiempos de espera o el tamaño máximo de subida, edita este archivo y reconstruye el contenedor.
 
 ---
 
-## 🌐 Variables de Entorno (`.env`)
-
+## 🔒 Variables de Entorno Críticas
 ¡NUNCA SUBIR EL `.env` AL REPOSITORIO!
 
-**Variables Críticas:**
 - `SECRET_KEY`: Llave criptográfica de Django.
 - `POSTGRES_PASSWORD`: Contraseña de la DB.
 - `SENDGRID_API_KEY`: Para envío de correos reales.
 - `OPENAI_API_KEY`: Para funcionalidad de IA.
 
 ---
-**Producción:** El despliegue se realiza en una arquitectura Serverless/Containerizada (ej. Render.com o AWS ECS) usando las imágenes de Docker optimizadas (`target: production`).
+
+## 🌍 Producción
+El despliegue se realiza en una arquitectura Serverless/Containerizada (ej. Render.com o AWS ECS) usando las imágenes de Docker reservadas para producción.

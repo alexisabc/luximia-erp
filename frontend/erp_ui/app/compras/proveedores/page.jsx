@@ -20,10 +20,10 @@ import {
 } from 'lucide-react';
 
 // Componentes
-import ReusableTable from '@/components/tables/ReusableTable';
+import DataTable from '@/components/organisms/DataTable';
 import ProveedorModal from '@/components/modals/ProveedorModal';
-import ConfirmationModal from '@/components/modals/Confirmation';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ConfirmModal } from '@/components/organisms';
+import { ActionButtonGroup } from '@/components/molecules';
 import ExportModal from '@/components/modals/Export';
 import ImportModal from '@/components/modals/Import';
 import { Badge } from '@/components/ui/badge';
@@ -311,7 +311,7 @@ export default function ProveedoresPage() {
                         </p>
                     </div>
 
-                    <ActionButtons
+                    <ActionButtonGroup
                         showInactive={showInactive}
                         onToggleInactive={handleToggleInactive}
                         canToggleInactive={true}
@@ -357,7 +357,7 @@ export default function ProveedoresPage() {
             {/* Main Content */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 lg:p-8">
                 <div className="overflow-x-auto">
-                    <ReusableTable
+                    <DataTable
                         data={proveedores}
                         columns={columns}
                         loading={loading}
@@ -386,7 +386,7 @@ export default function ProveedoresPage() {
                 initialData={editingProveedor}
             />
 
-            <ConfirmationModal
+            <ConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}

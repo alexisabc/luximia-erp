@@ -23,7 +23,7 @@ import {
 // Componentes Atomic Design
 import DataTable from '@/components/organisms/DataTable';
 import Modal from '@/components/organisms/Modal';
-import ActionButtons from '@/components/common/ActionButtons';
+import { ActionButtonGroup } from '@/components/molecules';
 import Button from '@/components/atoms/Button';
 import Input from '@/components/atoms/Input';
 import Label from '@/components/atoms/Label';
@@ -391,7 +391,7 @@ export default function ProyectosPage() {
                                 Administra el catálogo de proyectos activos e inactivos
                             </p>
                         </div>
-                        <ActionButtons
+                        <ActionButtonGroup
                             showInactive={showInactive}
                             onToggleInactive={() => setShowInactive(!showInactive)}
                             canToggleInactive={hasPermission('contabilidad.view_proyecto')}
@@ -456,7 +456,7 @@ export default function ProyectosPage() {
             </div>
 
             {/* Modal de Formulario */}
-            <ReusableModal
+            <Modal
                 isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
                 title={editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}
@@ -606,10 +606,10 @@ export default function ProyectosPage() {
                         </Button>
                     </div>
                 </form>
-            </ReusableModal>
+            </Modal>
 
             {/* Modal de Confirmación */}
-            <ReusableModal
+            <Modal
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 title="Desactivar Proyecto"
@@ -638,7 +638,7 @@ export default function ProyectosPage() {
                         </Button>
                     </div>
                 </div>
-            </ReusableModal>
+            </Modal>
 
             {/* Modales de Import/Export */}
             <ImportModal
