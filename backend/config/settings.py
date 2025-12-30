@@ -214,7 +214,7 @@ USE_TZ = True
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -357,16 +357,21 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # --- Configuración de Email ---
 if DEBUG:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.getenv("EMAIL_HOST", "mailhog")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", 1025))
+    # MailHog (Local)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'mailhog'
+    EMAIL_PORT = 1025
     EMAIL_USE_TLS = False
-    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "system@local.dev")
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP Sistema <system@midominio.dev>')
 else:
-    EMAIL_BACKEND = "config.emails.ResendEmailBackend"
-    DEFAULT_FROM_EMAIL = os.getenv(
-        "RESEND_FROM_EMAIL", os.getenv("DEFAULT_FROM_EMAIL", "noreply@system.app")
-    )
+    # Resend (Producción)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'resend'
+    EMAIL_HOST_PASSWORD = os.getenv('RESEND_API_KEY')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP Sistema <system@midominio.com>')
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 

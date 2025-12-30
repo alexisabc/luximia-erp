@@ -47,14 +47,14 @@ services:
       - ./.env
     # En producción, usamos el CMD del Dockerfile (node server.js)
 
-  # ==============================================================================
-  # 4. ASYNCHRONOUS WORKERS & BROKER
-  # ==============================================================================
+    # ==============================================================================
+    # 4. ASYNCHRONOUS WORKERS & BROKER
+    # ==============================================================================
   redis:
     image: redis:7-alpine
     restart: always
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -88,6 +88,16 @@ services:
         condition: service_healthy
     env_file:
       - ./.env
+
+  # ==============================================================================
+  # 5. EMAIL SERVICES
+  # ==============================================================================
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025" # SMTP Port
+      - "8025:8025" # Web UI
 
 volumes:
   postgres_data:

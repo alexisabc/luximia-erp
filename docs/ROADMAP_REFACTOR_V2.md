@@ -56,7 +56,12 @@
 - [x] **Integración:** Branding dinámico en Login y Navbar (Nombre del sistema, Logos y Monogramas).
 
 ## 🟢 Fase 5: Comunicación y Escalabilidad (PRÓXIMAMENTE)
-### Sprint 13: Notificaciones Asíncronas (Legacy App: `notificaciones`)
-- [ ] **Infrastructure:** Configuración de Redis y Celery en el stack de Docker.
-- [ ] **Backend:** Migrar lógica de envío de correos y alertas a tareas en segundo plano.
-- [ ] **Frontend:** WebSocket integration para notificaciones en tiempo real (Push).
+### Sprint 13: Event Bus & Notificaciones (Legacy App: `notificaciones`) - ✅ COMPLETADO
+- [x] **Infrastructure:** Infraestructura asíncrona desplegada: Redis (Broker) y Celery (Worker + Beat).
+- [x] **Backend:** Refactorización de app `notificaciones` con `NotificacionService` y Tareas Compartidas (`@shared_task`).
+- [x] **API:** Endpoints `NotificacionViewSet` (Buzón) seguros y optimizados.
+- [x] **Frontend:** `NotificationContext` con Polling inteligente, Badge dinámico y UI de Campanita interactiva.
+
+### Sprint 14: Comunicaciones Externas y Reportes (Legacy Apps: `correos`, `reportes`)
+- [ ] **Email:** Servicio transaccional asíncrono (SMTP/Resend) integrado con Celery.
+- [ ] **PDF:** Motor de generación de reportes (HTML -> PDF) para Cotizaciones y Nómina.

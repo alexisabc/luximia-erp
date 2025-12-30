@@ -16,4 +16,4 @@
 | `ia`, `juridico` | ⚪ **Pendiente** | Evaluar convertir en Servicios (no apps completas). |
 | `sistemas` | 🟢 **Refactorizado** | Integrado en Seguridad (RBAC y Gestión de Usuarios). |
 | `config` | 🟢 **Refactorizado** | Mantener. Singleton activo sirviendo parámetros globales. |
-| `notificaciones` | 🟡 **En Progreso** | Migración a Redis/Celery (Fase 5). |
+| `notificaciones` | 🟢 **Refactorizado** | Mantener. Sistema de alertas asíncronas activo. |
