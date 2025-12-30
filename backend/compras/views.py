@@ -192,6 +192,19 @@ class OrdenCompraViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"detail": f"Error inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @decorators.action(detail=True, methods=['post'], url_path='enviar-correo')
+    def enviar_correo(self, request, pk=None):
+        from .services.envio_service import EnvioOrdenService
+        try:
+            # Importación local para evitar ciclos si services importa views/models recursivamente
+            success = EnvioOrdenService.enviar_orden_proveedor(pk, request.user.id)
+            if success:
+                return Response({"detail": "Orden de compra enviada correctamente al proveedor."})
+            else:
+                return Response({"detail": "No se pudo enviar el correo. Revise si el proveedor tiene email o contacte a soporte."}, status=500)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=500)
+
 class AlmacenViewSet(viewsets.ModelViewSet):
     queryset = Almacen.objects.all()
     serializer_class = AlmacenSerializer

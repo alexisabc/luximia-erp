@@ -42,6 +42,10 @@ export const recibirOrden = async (ordenId, almacenId) => {
     return await api.post(`/compras/ordenes/${ordenId}/recibir/`, { almacen_id: almacenId });
 };
 
+export const enviarOrdenCorreo = async (ordenId) => {
+    return await api.post(`/compras/ordenes/${ordenId}/enviar-correo/`);
+};
+
 // --- Inventarios
 export const getAlmacenes = async (params) => {
     return await api.get('/compras/almacenes/', { params });

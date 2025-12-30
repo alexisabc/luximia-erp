@@ -1,0 +1,90 @@
+{% extends "reports/base_report.html" %}
+{% load humanize %}
+
+{% block title %}Orden de Compra {{ orden.folio }}{% endblock %}
+
+{% block content %}
+<h1 class="h1-title">Orden de Compra</h1>
+
+<table style="width: 100%; margin-bottom: 20px;">
+    <tr>
+        <td style="width: 50%; vertical-align: top;">
+            <strong>Proveedor:</strong><br>
+            {{ orden.proveedor.nombre_fiscal }}<br>
+            RFC: {{ orden.proveedor.rfc }}<br>
+            {{ orden.proveedor.direccion|default:"Dirección no disponible" }}
+        </td>
+        <td style="width: 50%; vertical-align: top; text-align: right;">
+            <strong>Folio:</strong> {{ orden.folio }}<br>
+            <strong>Fecha Solicitud:</strong> {{ orden.fecha_solicitud|date:"d/m/Y" }}<br>
+            <strong>Depto:</strong> {{ orden.departamento|default:"General" }}<br>
+            <strong>Solicitado por:</strong> {{ orden.solicitante.get_full_name|default:orden.solicitante.username }}
+        </td>
+    </tr>
+</table>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th style="text-align: right;">Cantidad</th>
+            <th style="text-align: right;">Precio Unit.</th>
+            <th style="text-align: right;">Importe</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detalle in orden.detalles.all %}
+        <tr>
+            <td>{{ detalle.insumo.codigo }}</td>
+            <td>
+                {{ detalle.insumo.descripcion }}
+                {% if detalle.descripcion_personalizada %}
+                <br><small>({{ detalle.descripcion_personalizada }})</small>
+                {% endif %}
+            </td>
+            <td style="text-align: right;">{{ detalle.cantidad|floatformat:2 }} {{ detalle.insumo.unidad_medida }}</td>
+            <td style="text-align: right;">${{ detalle.precio_unitario|intcomma }}</td>
+            <td style="text-align: right;">${{ detalle.importe|intcomma }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="width: 100%; margin-top: 20px;">
+    <table style="width: 40%; float: right; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 5px; text-align: right;"><strong>Subtotal:</strong></td>
+            <td style="padding: 5px; text-align: right;">${{ orden.subtotal|intcomma }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px; text-align: right;"><strong>IVA (16%):</strong></td>
+            <td style="padding: 5px; text-align: right;">${{ orden.iva|intcomma }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px; text-align: right; background-color: #eee;"><strong>TOTAL ({{ orden.moneda.codigo
+                    }}):</strong></td>
+            <td style="padding: 5px; text-align: right; background-color: #eee;"><strong>${{ orden.total|intcomma
+                    }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+<div style="clear: both; margin-top: 50px; padding-top: 20px; border-top: 1px dotted #ccc;">
+    <p><strong>Observaciones:</strong></p>
+    <p>{{ orden.notas|default:"Sin observaciones adicionales." }}</p>
+</div>
+
+<div style="margin-top: 50px;">
+    <table style="width: 100%;">
+        <tr>
+            <td style="text-align: center; width: 50%;">
+                {% if orden.vobo_por %}Authorized By: {{ orden.vobo_por.get_short_name }}{% endif %}
+            </td>
+            <td style="text-align: center; width: 50%;">
+                {% if orden.autorizado_por %}Approved By: {{ orden.autorizado_por.get_short_name }}{% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Package, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
-import { getOrdenCompra, recibirOrden, getAlmacenes } from '@/services/compras';
+import { ArrowLeft, Package, CheckCircle, XCircle, Clock, AlertCircle, Mail } from 'lucide-react';
+import { getOrdenCompra, recibirOrden, getAlmacenes, enviarOrdenCorreo } from '@/services/compras';
 
 export default function OrdenCompraDetailPage() {
     const params = useParams();
@@ -58,6 +58,21 @@ export default function OrdenCompraDetailPage() {
             fetchData(); // Recargar para mostrar estado COMPLETADA
         } catch (error) {
             const errorMsg = error.response?.data?.detail || 'Error al procesar la recepción';
+            toast.error(errorMsg, { id: toastId });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleEnviarCorreo = async () => {
+        setProcessing(true);
+        const toastId = toast.loading('Generando PDF y enviando correo...');
+        try {
+            await enviarOrdenCorreo(params.id);
+            toast.success('Correo enviado exitosamente al proveedor', { id: toastId });
+        } catch (error) {
+            console.error(error);
+            const errorMsg = error.response?.data?.detail || 'Error al enviar el correo';
             toast.error(errorMsg, { id: toastId });
         } finally {
             setProcessing(false);
@@ -192,18 +207,29 @@ export default function OrdenCompraDetailPage() {
                             </div>
                         </div>
 
-                        {/* Action Button */}
-                        {orden.estado === 'AUTORIZADA' && (
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={() => setShowRecepcionModal(true)}
-                                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                                >
-                                    <Package size={20} />
-                                    Recibir Mercancía
-                                </button>
-                            </div>
-                        )}
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-3">
+                            {orden.estado === 'AUTORIZADA' && (
+                                <>
+                                    <button
+                                        onClick={handleEnviarCorreo}
+                                        disabled={processing}
+                                        className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 transition-all duration-200"
+                                    >
+                                        <Mail size={20} />
+                                        Enviar al Proveedor
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowRecepcionModal(true)}
+                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                                    >
+                                        <Package size={20} />
+                                        Recibir Mercancía
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

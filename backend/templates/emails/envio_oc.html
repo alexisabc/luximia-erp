@@ -1,0 +1,21 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<p>Estimado Proveedor,</p>
+
+<p>Por medio de la presente, adjuntamos la <strong>Orden de Compra Folio {{ folio }}</strong> para su procesamiento.</p>
+
+<div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+    <p style="margin: 0;"><strong>Folio:</strong> {{ folio }}</p>
+    <p style="margin: 0;"><strong>Fecha Solicitud:</strong> {{ fecha_solicitud }}</p>
+    <p style="margin: 0;"><strong>Total:</strong> ${{ total }} {{ moneda }}</p>
+</div>
+
+<p>Favor de confirmar la recepción de este pedido y notificarnos cualquier duda o aclaración sobre los tiempos de
+    entrega.</p>
+
+<p>Quedamos atentos a su respuesta.</p>
+
+<p>Atentamente,<br>
+    El Equipo de Compras</p>
+{% endblock %}
