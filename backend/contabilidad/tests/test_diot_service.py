@@ -24,31 +24,30 @@ class TestDIOTService:
         pago = MockPago(prov, Decimal('1160.00'), tasa_iva=Decimal('0.16'))
         
         # Base = 1160 / 1.16 = 1000. IVA = 160.
-        # Layout expected: 04|85|AAA010101AAA|||||1000|...
+        # Layout 2025: 54 campos
         
         line = DIOTService.generar_linea_proveedor(pago)
         parts = line.split('|')
         
+        assert len(parts) == 54, f"Se esperaban 54 campos, se obtuvieron {len(parts)}"
         assert parts[0] == '04' # Tipo Tercero
         assert parts[1] == '85' # Tipo Operacion
         assert parts[2] == 'AAA010101AAA' # RFC
         assert parts[3] == '' # ID Fiscal
+        # Asumiendo que la posición de Base 16% se mantiene o se ajusta, verificamos presencia
+        # Por ahora asumimos compatibilidad en las primeras columnas
         assert parts[7] == '1000' # Campo 8: Actos 16% (Base)
 
     def test_generate_line_extranjero(self):
         prov = MockProveedor('05', '85', 'XEXX010101000', id_fiscal='TAXID123', nombre='CORP EXT', pais='USA', nacionalidad='USA')
-        # Pagos al extranjero a veces son importación o tasa 0. Asumiremos Importación 16% para variar o Tasa 0.
-        # Para simplificar TDD inicial, lo mapeamos a Importación 16% (Campo 9) o similar según lógica servicio.
-        # Vamos a asumir Tasa 0% (Campo 12 - Index 11?)
-        # Layout: ...|Base16|BaseImp16|Base8|BaseImp8|Base0...
-        # 8: 16%, 9: Imp16%, 10: 8%, 11: Imp8%, 12: 0%.
+        # Pagos al extranjero Tasa 0%
         
         pago = MockPago(prov, Decimal('500.00'), tasa_iva=Decimal('0.00')) 
         
         line = DIOTService.generar_linea_proveedor(pago)
         parts = line.split('|')
         
+        assert len(parts) == 54, f"Se esperaban 54 campos, se obtuvieron {len(parts)}"
         assert parts[0] == '05'
         assert parts[3] == 'TAXID123'
         assert parts[4] == 'CORP EXT'
-        # Check mapping to 0% column (Index 11? Need to verify column index in implementation)

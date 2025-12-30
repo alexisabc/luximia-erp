@@ -44,13 +44,18 @@ class DIOTService:
             
         cols = [
             c1_tipo_tercero, c2_tipo_oper, c3_rfc, c4_id_fiscal, c5_nombre, c6_pais, c7_nacionalidad,
-            c8_base16, # 7
+            c8_base16, # 7 (Base 16%)
             '',        # 8
             '',        # 9
             '',        # 10
-            c11_base0, # 11
-            '', '', '', '', '', '', '', '', '', '', '' # Filler to 24
+            c11_base0, # 11 (Base 0%)
         ]
+        
+        # Rrellenar hasta 54 columnas (Layout 2025)
+        # Se asume que los campos adicionales están vacíos por defecto dado que el modelo actual
+        # no soporta desglose de 8% Frontera o Importaciones detalladas aún.
+        TARGET_LEN = 54
+        cols.extend([''] * (TARGET_LEN - len(cols)))
         
         return "|".join(cols)
 
