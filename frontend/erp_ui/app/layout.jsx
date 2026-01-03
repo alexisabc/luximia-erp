@@ -5,7 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import AppContent from "@/components/layout/AppContent";
-import { ConfigProvider } from "@/context/ConfigContext";
+import { ConfigProvider } from "@/contexts/ConfigContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { Toaster } from "sonner";
 
