@@ -17,7 +17,7 @@ const ChevronIcon = ({ isOpen, className = '' }) => (
 
 export default function Sidebar() {
     const { hasPermission } = useAuth();
-    const { config } = useConfig();
+    const { config, isFeatureEnabled } = useConfig();
     const { isOpen, toggleSidebar } = useSidebar();
     const isCollapsed = !isOpen;
     const pathname = usePathname();
@@ -48,6 +48,12 @@ export default function Sidebar() {
     const checkPermission = (perm) => {
         if (!perm) return true;
         return hasPermission(perm);
+    };
+
+    // Helper feature check
+    const checkFeature = (feature) => {
+        if (!feature) return true;
+        return isFeatureEnabled(feature);
     };
 
     return (
@@ -107,6 +113,11 @@ export default function Sidebar() {
 
                     {/* Modules Recursive */}
                     {MENU_STRUCTURE.map((module) => {
+                        // Check Feature Flag
+                        if (module.featureFlag && !checkFeature(module.featureFlag)) {
+                            return null;
+                        }
+
                         if (!checkPermission(module.permission) && !module.items.some(sub => sub.items?.some(i => checkPermission(i.permission)))) {
                             return null;
                         }

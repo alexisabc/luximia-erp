@@ -73,6 +73,7 @@ export const MENU_STRUCTURE = [
         key: 'contabilidad',
         label: 'Contabilidad',
         icon: FileText,
+        featureFlag: 'MODULE_FISCAL',
         permission: 'contabilidad.view_cliente',
         items: [
             {
@@ -123,6 +124,22 @@ export const MENU_STRUCTURE = [
                     { label: 'Estados Financieros', path: '/contabilidad/reportes', permission: 'contabilidad.view_reportefinanciero' },
                 ]
             },
+        ]
+    },
+    {
+        key: 'obras',
+        label: 'Obras',
+        icon: HardHat,
+        featureFlag: 'MODULE_OBRAS',
+        items: [
+            {
+                label: 'Gestión',
+                items: [
+                    { label: 'Tablero de Control', path: '/obras/dashboard' },
+                    { label: 'Proyectos', path: '/obras/proyectos' },
+                    { label: 'Estimaciones', path: '/obras/estimaciones' },
+                ]
+            }
         ]
     },
     {
@@ -194,6 +211,7 @@ export const MENU_STRUCTURE = [
         key: 'rrhh',
         label: 'RRHH',
         icon: Users,
+        featureFlag: 'MODULE_RRHH',
         permission: 'rrhh.view_empleado', // Base permission for module
         items: [
             {

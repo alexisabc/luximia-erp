@@ -300,6 +300,20 @@ class Command(BaseCommand):
         
         features = [
             {
+                'code': 'MODULE_FISCAL',
+                'name': 'Módulo Fiscal y Contabilidad',
+                'description': 'Habilita funciones de contabilidad, fiscal y facturación',
+                'is_active': True,
+                'rollout_percentage': 100,
+            },
+            {
+                'code': 'MODULE_RRHH',
+                'name': 'Módulo RRHH',
+                'description': 'Habilita gestión de personal y nómina',
+                'is_active': True,
+                'rollout_percentage': 100,
+            },
+            {
                 'code': 'MODULE_OBRAS',
                 'name': 'Módulo de Obras y Construcción',
                 'description': 'Habilita el módulo de gestión de obras',
