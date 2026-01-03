@@ -1,11 +1,13 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from .proveedores import Proveedor
 from .productos import Insumo
 
-class OrdenCompra(SoftDeleteModel):
+class OrdenCompra(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     """
     Header de la Orden de Compra.
     Maneja el flujo de autorización de 2 niveles.

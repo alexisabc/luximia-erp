@@ -28,3 +28,15 @@
     - Limpieza de branding en scripts de semillas y prompts de IA.
     - Cambio de `storageKey` en ThemeProvider para independencia de marca.
 - **Resultado**: El sistema es ahora una plataforma de marca blanca (White-label) configurable.
+
+## 2026-01-03: Arquitectura Multi-Empresa y Sandbox (Sprint 23)
+- **Módulos Afectados**: Infraestructura, Usuarios, Core, POS, Compras, Obras.
+- **Cambios**:
+    - Implementación de `db_sandbox` (Docker/Postgres).
+    - Ruteo dinámico de base de datos vía `SandboxRouter` y header `X-Environment`.
+    - Mixin `EmpresaOwnedModel` con filtrado automático de querysets.
+    - Actualización de `CustomUser` para soporte de múltiples empresas.
+    - Frontend: `CompanySwitcher` dinámico y tema visual naranja para modo Sandbox.
+- **Validación**:
+    - Pruebas de shell confirmaron ruteo a DB sandbox con header activo.
+    - Pruebas de shell confirmaron aislamiento de datos entre empresas (Tenant Isolation).

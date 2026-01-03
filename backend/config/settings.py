@@ -202,6 +202,15 @@ else:
         SANDBOX_DB_NAME = f"{default_name}_sandbox"
 
     DATABASES["sandbox"]["NAME"] = SANDBOX_DB_NAME
+    
+    # Allow separate host/port for sandbox (useful when using separate Docker services)
+    sandbox_host = os.getenv("POSTGRES_HOST_SANDBOX")
+    if sandbox_host:
+        DATABASES["sandbox"]["HOST"] = sandbox_host
+        
+    sandbox_port = os.getenv("POSTGRES_PORT_SANDBOX")
+    if sandbox_port:
+        DATABASES["sandbox"]["PORT"] = sandbox_port
 
 DATABASE_ROUTERS = ["config.routers.SandboxRouter"]
 

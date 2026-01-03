@@ -6,16 +6,18 @@ import { useAuth } from '@/context/AuthContext';
 import { useConfig } from '@/context/ConfigContext';
 import { Menu, Search, Bell, Settings, LogOut, ChevronRight, User as UserIcon } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
-import SandboxToggle from './SandboxToggle';
+import CompanySwitcher from './CompanySwitcher';
 import NotificationsBell from './NotificationsBell';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { useEmpresa } from '@/context/EmpresaContext';
 
 export default function Navbar() {
     const { toggleSidebar } = useSidebar();
     const { user, logoutUser } = useAuth();
     const { config } = useConfig();
+    const { sandboxMode } = useEmpresa();
     const pathname = usePathname();
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const userMenuRef = useRef(null);
@@ -47,19 +49,21 @@ export default function Navbar() {
     const breadcrumbs = getBreadcrumbs();
     const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.username || 'Usuario';
 
-    const [isSandbox, setIsSandbox] = useState(false);
-    useEffect(() => {
-        setIsSandbox(localStorage.getItem('sandboxMode') === 'true');
-    }, []);
-
     return (
         <>
-            {isSandbox && (
-                <div className="w-full bg-amber-500 text-white text-xs font-bold text-center py-1 uppercase tracking-widest sticky top-0 z-30 shadow-md">
-                    Modo Sandbox Activo — Datos de prueba
+            {sandboxMode && (
+                <div className="w-full bg-orange-600 text-white text-[10px] font-black text-center py-1 uppercase tracking-[0.2em] sticky top-0 z-[60] shadow-lg flex items-center justify-center gap-3">
+                    <span className="animate-pulse">🧪 MODO SANDBOX ACTIVO</span>
+                    <span className="opacity-70 text-[8px]">ESTÁS EN ENTORNO DE PRUEBAS — NADA ES REAL</span>
+                    <span className="animate-pulse">🧪</span>
                 </div>
             )}
-            <header className={`sticky ${isSandbox ? 'top-6' : 'top-0'} z-20 flex h-16 w-full items-center justify-between border-b border-gray-200/50 bg-white/80 px-4 backdrop-blur-xl dark:border-gray-800/50 dark:bg-gray-900/80 transition-all duration-300`}>
+            <header className={`
+                sticky ${sandboxMode ? 'top-6' : 'top-0'} z-20 flex h-16 w-full items-center justify-between border-b px-4 backdrop-blur-xl transition-all duration-300
+                ${sandboxMode
+                    ? 'border-orange-200 bg-orange-50/90 dark:border-orange-900/50 dark:bg-orange-950/80 shadow-inner'
+                    : 'border-gray-200/50 bg-white/80 dark:border-gray-800/50 dark:bg-gray-900/80'}
+            `}>
                 {/* Left: Sidebar Toggle & Breadcrumbs */}
                 <div className="flex items-center gap-4">
                     <button
@@ -116,8 +120,8 @@ export default function Navbar() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2 sm:gap-3">
-                    <SandboxToggle condensed className="h-10 w-10" />
-                    <ThemeSwitcher showLabel={false} className="h-10 w-10 rounded-xl hover:bg-gray-100 text-gray-500 dark:hover:bg-gray-800 dark:text-gray-400 justify-center" />
+                    <CompanySwitcher />
+                    <ThemeSwitcher showLabel={false} className="h-10 w-10 rounded-xl" />
 
                     <NotificationsBell />
 

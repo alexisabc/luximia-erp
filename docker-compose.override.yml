@@ -51,27 +51,9 @@ services:
       - "8025:8025"
     restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: luximia-pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - db
-    logging:
-      driver: "none"
-
 # Definimos los volúmenes para que aparezcan con nombre en Docker Desktop
 volumes:
   backend_pycache:
   backend_internal_pycache:
   frontend_node_modules:
   frontend_next_cache:
-  pgadmin_data:

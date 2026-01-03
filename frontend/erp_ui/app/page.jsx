@@ -26,6 +26,7 @@ import {
   Area
 } from 'recharts';
 import Link from 'next/link';
+import DailyBriefingWidget from '@/components/DailyBriefingWidget';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -70,12 +71,19 @@ export default function DashboardPage() {
   return (
     <div className="p-6 md:p-8 min-h-screen bg-gray-50/50">
       {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Hola, <span className="text-blue-600">{user?.first_name || user?.username}</span> 👋
-        </h1>
-        <p className="text-gray-500 mt-1 capitalize-first">{formattedDate}</p>
+      <header className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Hola, <span className="text-blue-600">{user?.first_name || user?.username}</span> 👋
+          </h1>
+          <p className="text-gray-500 mt-1 capitalize-first">{formattedDate}</p>
+        </div>
       </header>
+
+      {/* AI Daily Briefing - NEW */}
+      <div className="mb-8">
+        <DailyBriefingWidget />
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -167,8 +175,8 @@ export default function DashboardPage() {
                         'border-blue-500 bg-blue-50/50'}`}>
                     <div className="flex justify-between items-start">
                       <p className={`text-sm font-medium ${accion.tipo === 'warning' ? 'text-yellow-800' :
-                          accion.tipo === 'error' ? 'text-red-800' :
-                            'text-blue-800'
+                        accion.tipo === 'error' ? 'text-red-800' :
+                          'text-blue-800'
                         }`}>
                         {accion.mensaje}
                       </p>

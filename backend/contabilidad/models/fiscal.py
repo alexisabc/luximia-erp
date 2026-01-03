@@ -1,5 +1,5 @@
 from django.db import models
-from core.models import SoftDeleteModel, register_audit, Empresa
+from core.models import SoftDeleteModel, register_audit, Empresa, EmpresaOwnedModel, MultiTenantManager
 from core.encryption import encrypt_text, decrypt_text, encrypt_data, decrypt_data
 from .sat_catalogs import SATRegimenFiscal
 from .catalogos import Moneda, MetodoPago, FormaPago, Cliente
@@ -26,7 +26,9 @@ class EmpresaFiscal(SoftDeleteModel):
 
 register_audit(EmpresaFiscal)
 
-class Factura(SoftDeleteModel):
+class Factura(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     """Repositorio de Facturas (CFDIs) Emitidas y Recibidas."""
     TIPO_COMPROBANTE_CHOICES = [
         ('I', 'Ingreso'),

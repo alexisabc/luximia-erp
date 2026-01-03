@@ -36,3 +36,16 @@ class Notificacion(models.Model):
 
     def __str__(self):
         return f"{self.tipo} para {self.usuario.username}: {self.titulo}"
+
+class WebhookConfig(models.Model):
+    """Configuración de integraciones externas (ej: n8n, Zapier)."""
+    empresa = models.ForeignKey('core.Empresa', on_delete=models.CASCADE, related_name='webhooks')
+    url = models.URLField(help_text="URL donde se enviará el POST")
+    activo = models.BooleanField(default=True)
+    eventos = models.JSONField(default=list, help_text="Lista de eventos: ['ALERT_OBRA', 'DAILY_BRIEFING', 'STOCK_CRITICAL']")
+    secret_token = models.CharField(max_length=100, blank=True, help_text="Token para validar autenticidad en el destino")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Webhook {self.empresa.nombre_comercial} -> {self.url[:30]}"

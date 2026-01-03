@@ -1,5 +1,11 @@
 from auditlog.registry import auditlog
-from .base import BaseModel, SoftDeleteModel, SoftDeleteManager
+from .base import (
+    BaseModel, 
+    SoftDeleteModel, 
+    SoftDeleteManager,
+    EmpresaOwnedModel,
+    MultiTenantManager
+)
 from .config import SystemSetting, FeatureFlag
 from .empresa import Empresa
 
@@ -21,6 +27,8 @@ __all__ = [
     'BaseModel',
     'SoftDeleteModel',
     'SoftDeleteManager',
+    'EmpresaOwnedModel',
+    'MultiTenantManager',
     'SystemSetting',
     'FeatureFlag',
     'Empresa',

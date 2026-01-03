@@ -18,3 +18,11 @@
 
 ## 5. Frontend Atomic y Mobile First
 - **Implementación**: Componentes React reutilizables y layouts responsivos con TailwindCSS.
+
+## 6. Aislamiento Multi-Empresa (Lógico)
+- **Implementación**: Mixin `EmpresaOwnedModel` y `MultiTenantManager` para filtrado automático por `empresa_id`.
+- **Ejemplo**: Las ventas creadas para la Empresa A son invisibles para la Empresa B mediante middleware que inyecta el contexto en el hilo de ejecución.
+
+## 7. Entorno Sandbox (Físico)
+- **Implementación**: Ruteo dinámico de Base de Datos (`X-Environment` header).
+- **Aislamiento**: Uso de una instancia de PostgreSQL separada (`db_sandbox`) para garantizar que las pruebas no afecten datos de producción.

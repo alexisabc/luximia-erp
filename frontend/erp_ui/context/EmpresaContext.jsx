@@ -11,6 +11,7 @@ export function EmpresaProvider({ children }) {
     const [empresas, setEmpresas] = useState([]);
     const [empresaActual, setEmpresaActual] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [sandboxMode, setSandboxMode] = useState(false);
     const router = useRouter();
 
     const refreshEmpresas = useCallback(async () => {
@@ -34,7 +35,27 @@ export function EmpresaProvider({ children }) {
 
     useEffect(() => {
         refreshEmpresas();
+        // Cargar sandbox de localStorage
+        const storedSandbox = localStorage.getItem('sandboxMode') === 'true';
+        setSandboxMode(storedSandbox);
     }, [refreshEmpresas]);
+
+    // Sincronizar empresaActual con localStorage para el interceptor
+    useEffect(() => {
+        if (empresaActual?.id) {
+            localStorage.setItem('activeCompanyId', empresaActual.id.toString());
+        }
+    }, [empresaActual]);
+
+    const toggleSandboxMode = () => {
+        const newValue = !sandboxMode;
+        setSandboxMode(newValue);
+        localStorage.setItem('sandboxMode', newValue.toString());
+        // Recargar para que los interceptores tomen el nuevo valor y el router de Django actúe
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+    };
 
     const cambiarEmpresa = async (empresaId) => {
         try {
@@ -60,6 +81,8 @@ export function EmpresaProvider({ children }) {
             empresas,
             empresaActual,
             loading,
+            sandboxMode,
+            toggleSandboxMode,
             cambiarEmpresa,
             refreshEmpresas
         }}>

@@ -66,12 +66,20 @@ class CustomUser(AbstractUser, BaseModel):
         blank=True,
         help_text="Empresa por defecto al iniciar sesión"
     )
-    empresas_acceso = models.ManyToManyField(
+    # Multi-empresa core
+    empresas = models.ManyToManyField(
         'core.Empresa',
         related_name='usuarios_con_acceso',
         blank=True,
+        db_table='users_customuser_empresas',
         help_text="Empresas a las que tiene acceso este usuario"
     )
+    
+    # Campo legado/alias para compatibilidad si es necesario, 
+    # pero el usuario pidió explícitamente empresas = ManyToManyField(Empresa)
+    @property
+    def empresas_acceso(self):
+        return self.empresas
     
     ultima_empresa_activa = models.ForeignKey(
         'core.Empresa',

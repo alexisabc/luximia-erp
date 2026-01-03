@@ -1,9 +1,11 @@
 from django.db import models
 from django.conf import settings
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from .sesiones import Turno
 
-class Venta(SoftDeleteModel):
+class Venta(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     """
     Ticket de Venta (Cabecera).
     """

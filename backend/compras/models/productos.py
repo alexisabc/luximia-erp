@@ -16,6 +16,7 @@ class Insumo(SoftDeleteModel):
     descripcion = models.CharField(max_length=200)
     unidad_medida = models.CharField(max_length=20, default='PZA')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='SERVICIO')
+    stock_minimo = models.DecimalField(max_digits=12, decimal_places=4, default=0, help_text="Alerta si la existencia global cae debajo de este valor")
     
     # Costeo
     costo_promedio = models.DecimalField(max_digits=14, decimal_places=4, default=0)

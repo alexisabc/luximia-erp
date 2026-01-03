@@ -219,16 +219,17 @@ class ModelIndexer:
                 
                 # Guardar o actualizar en KnowledgeBase
                 with transaction.atomic():
-                    kb, created = KnowledgeBase.objects.update_or_create(
-                        source_app=app_label,
-                        source_model=model_name,
-                        source_id=str(obj.pk),
-                        defaults={
-                            'content': content,
-                            'required_permissions': ','.join(config['permissions']),
-                            'embedding': embedding
-                        }
-                    )
+                        kb, created = KnowledgeBase.objects.update_or_create(
+                            source_app=app_label,
+                            source_model=model_name,
+                            source_id=str(obj.pk),
+                            empresa=getattr(obj, 'empresa', None),
+                            defaults={
+                                'content': content,
+                                'required_permissions': ','.join(config['permissions']),
+                                'embedding': embedding
+                            }
+                        )
                     indexed_count += 1
                     
                     if created:
@@ -272,14 +273,20 @@ class ModelIndexer:
         user_permissions = set(user.get_all_permissions())
         
         # Buscar en la base de conocimientos
-        # Nota: Esto requiere pgvector y la extensión vector en PostgreSQL
+        from core.middleware import get_current_company_id
+        company_id = get_current_company_id()
+        
         try:
             from django.db.models import F
             from pgvector.django import CosineDistance
             
-            results = KnowledgeBase.objects.annotate(
+            queryset = KnowledgeBase.objects.all()
+            if company_id:
+                queryset = queryset.filter(empresa_id=company_id)
+                
+            results = queryset.annotate(
                 distance=CosineDistance('embedding', query_embedding)
-            ).order_by('distance')[:limit * 2]  # Traer más para filtrar por permisos
+            ).order_by('distance')[:limit * 2]
             
             # Filtrar por permisos
             filtered_results = []

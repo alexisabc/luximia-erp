@@ -1,7 +1,9 @@
 from django.db import models
-from core.models import SoftDeleteModel
+from core.models import SoftDeleteModel, EmpresaOwnedModel, MultiTenantManager
 
-class Obra(SoftDeleteModel):
+class Obra(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     nombre = models.CharField(max_length=200, verbose_name="Nombre de la Obra")
     codigo = models.SlugField(max_length=50, unique=True, verbose_name="Código")
     fecha_inicio = models.DateField(verbose_name="Fecha de Inicio")

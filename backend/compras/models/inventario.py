@@ -1,8 +1,10 @@
 from django.db import models
 from django.conf import settings
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 
-class Almacen(SoftDeleteModel):
+class Almacen(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     nombre = models.CharField(max_length=100)
     codigo = models.CharField(max_length=20, unique=True)
     direccion = models.TextField(blank=True, null=True)

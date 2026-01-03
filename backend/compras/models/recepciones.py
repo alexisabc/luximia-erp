@@ -1,11 +1,13 @@
 from django.db import models
 from django.conf import settings
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from .compras import OrdenCompra
 from .productos import Insumo
 from .inventario import Almacen
 
-class RecepcionCompra(SoftDeleteModel):
+class RecepcionCompra(SoftDeleteModel, EmpresaOwnedModel):
+    # Manager combinando SoftDelete y Empresa
+    objects = MultiTenantManager()
     orden_compra = models.ForeignKey(OrdenCompra, on_delete=models.PROTECT, related_name='recepciones')
     fecha_recepcion = models.DateTimeField(auto_now_add=True)
     usuario_recibe = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)

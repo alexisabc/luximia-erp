@@ -88,6 +88,7 @@ def index_instance(instance: models.Model):
             source_app=app_label,
             source_model=model_name,
             source_id=str(instance.pk),
+            empresa=getattr(instance, 'empresa', None), # Inyectar empresa si existe
             defaults={
                 'content': content,
                 'embedding': embedding,
@@ -119,10 +120,19 @@ def retrieve_relevant_context(query: str, user, k: int = 5) -> List[str]:
     if not query_emb:
         return []
 
-    # 1. Búsqueda semántica pura
-    candidates = KnowledgeBase.objects.order_by(
+    # 1. Búsqueda semántica
+    # Filtrar por empresa del usuario (o empresa activa)
+    # Si el usuario no tiene empresa activa, el resultado será limitado o nulo
+    from core.middleware import get_current_company_id
+    company_id = get_current_company_id()
+    
+    queryset = KnowledgeBase.objects.all()
+    if company_id:
+        queryset = queryset.filter(empresa_id=company_id)
+    
+    candidates = queryset.order_by(
         CosineDistance('embedding', query_emb)
-    )[:k*3] # Traemos candidatos de sobra para filtrar por permisos después en Python (postgres filter a veces es limitado con listas dinámicas)
+    )[:k*3]
 
     valid_context = []
     count = 0

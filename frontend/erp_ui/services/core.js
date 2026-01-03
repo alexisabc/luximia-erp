@@ -59,11 +59,16 @@ apiClient.interceptors.request.use(async (req) => {
         }
     }
 
-    // --- SANDBOX MODE CHECK ---
+    // --- MULTI-COMPANY & SANDBOX HEADERS ---
     if (typeof window !== 'undefined') {
-        const isSandbox = localStorage.getItem('sandboxMode') === 'true';
-        if (isSandbox) {
-            req.headers['X-Sandbox-Mode'] = 'true';
+        // Sandbox environment
+        const env = localStorage.getItem('sandboxMode') === 'true' ? 'sandbox' : 'prod';
+        req.headers['X-Environment'] = env;
+
+        // Active Company
+        const activeCompanyId = localStorage.getItem('activeCompanyId');
+        if (activeCompanyId) {
+            req.headers['X-Company-ID'] = activeCompanyId;
         }
     }
 

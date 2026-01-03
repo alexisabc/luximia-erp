@@ -9,6 +9,11 @@ def get_current_user():
     from ..middleware import get_current_user as _get_current_user
     return _get_current_user()
 
+def get_current_company_id():
+    """Importación lazy del middleware para evitar dependencias circulares"""
+    from ..middleware import get_current_company_id as _get_current_company_id
+    return _get_current_company_id()
+
 
 class BaseModel(models.Model):
     """
@@ -70,6 +75,36 @@ class SoftDeleteManager(models.Manager):
     def deleted(self):
         # Solo los eliminados
         return super().get_queryset().filter(activo=False)
+
+
+class MultiTenantManager(SoftDeleteManager):
+    """
+    Manager que combina filtrado de Soft Delete y aislamiento por Empresa.
+    """
+    def get_queryset(self):
+        queryset = super().get_queryset() # Ya aplica el filtro 'activo=True'
+        company_id = get_current_company_id()
+        if company_id:
+            return queryset.filter(empresa_id=company_id)
+        return queryset
+
+
+class EmpresaOwnedModel(models.Model):
+    """
+    Mixin abstracto para asociar un registro a una Empresa.
+    IMPORTANTE: Si el modelo también usa SoftDeleteModel, debe redeclarar 'objects = MultiTenantManager()'.
+    """
+    empresa = models.ForeignKey(
+        'core.Empresa',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_related',
+        verbose_name="Empresa",
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        abstract = True
 
 
 class SoftDeleteModel(BaseModel):
