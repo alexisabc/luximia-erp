@@ -8,7 +8,7 @@
 
 ## 📊 Resumen Ejecutivo
 
-El Sistema Sistema ERP ha completado exitosamente su migración a una arquitectura moderna basada en **Atomic Design** y **Mobile First**, consolidando toda su documentación y eliminando código duplicado. El sistema está ahora en producción con una base sólida, escalable y mantenible.
+El Sistema ERP ha completado exitosamente su migración a una arquitectura moderna basada en **Atomic Design** y **Mobile First**, consolidando toda su documentación y eliminando código duplicado. El sistema está ahora en producción con una base sólida, escalable y mantenible.
 
 ---
 
@@ -241,7 +241,7 @@ Las siguientes páginas pueden migrarse usando los mismos patrones establecidos:
 
 ## 🏆 Conclusión
 
-El Sistema Sistema ERP ha alcanzado un hito importante con la migración completa a Atomic Design y Mobile First. El sistema ahora cuenta con:
+El Sistema ERP ha alcanzado un hito importante con la migración completa a Atomic Design y Mobile First. El sistema ahora cuenta con:
 
 - ✅ **Arquitectura escalable** y mantenible
 - ✅ **Componentes reutilizables** y documentados

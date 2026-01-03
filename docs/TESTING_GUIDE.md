@@ -1,4 +1,4 @@
-# Guía de Testing - Sistema Sistema ERP
+# Guía de Testing - Sistema ERP
 
 > **Versión:** 1.0  
 > **Fecha:** 30 de diciembre de 2025  

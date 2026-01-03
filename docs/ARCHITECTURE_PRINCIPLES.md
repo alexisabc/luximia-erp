@@ -1,4 +1,4 @@
-# Principios de Arquitectura - Sistema Sistema ERP
+# Principios de Arquitectura - Sistema ERP
 
 > **Versión:** 1.0  
 > **Fecha:** 30 de diciembre de 2025  
@@ -21,7 +21,7 @@
 
 ## Visión General
 
-Este documento establece los **principios arquitectónicos fundamentales** que guiarán el desarrollo y mantenimiento del Sistema Sistema ERP. Todos los desarrolladores deben familiarizarse con estos principios antes de contribuir al proyecto.
+Este documento establece los **principios arquitectónicos fundamentales** que guiarán el desarrollo y mantenimiento del Sistema ERP. Todos los desarrolladores deben familiarizarse con estos principios antes de contribuir al proyecto.
 
 ### Objetivos Clave
 

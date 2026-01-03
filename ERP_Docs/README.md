@@ -1,6 +1,6 @@
-# 📚 Documentación del Sistema Sistema ERP
+# 📚 Documentación del Sistema ERP
 
-Bienvenido a la documentación completa del Sistema Sistema ERP. Esta carpeta contiene toda la documentación técnica, arquitectura, guías, reportes y análisis del proyecto.
+Bienvenido a la documentación completa del Sistema ERP. Esta carpeta contiene toda la documentación técnica, arquitectura, guías, reportes y análisis del proyecto.
 
 ---
 
