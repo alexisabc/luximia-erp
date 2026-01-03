@@ -127,7 +127,7 @@ class Command(BaseCommand):
                 )
                 try:
                     emails_sent = send_mail(
-                        "Invitación para Administrador de Luximia ERP",
+                        "Invitación para Administrador de Sistema ERP",
                         plain_message,
                         settings.DEFAULT_FROM_EMAIL,
                         [email],

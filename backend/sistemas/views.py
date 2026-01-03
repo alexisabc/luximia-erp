@@ -114,7 +114,7 @@ class AsignacionEquipoViewSet(BaseViewSet):
         
         # Header
         p.setFont("Helvetica-Bold", 16)
-        p.drawString(50, h - 50, "LUXIMIA ERP - CARTA RESPONSIVA")
+        p.drawString(50, h - 50, "SISTEMA ERP - CARTA RESPONSIVA")
         
         p.setFont("Helvetica", 12)
         p.drawString(50, h - 80, f"Folio: {asignacion.id}")

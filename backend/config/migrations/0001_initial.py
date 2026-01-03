@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='ConfiguracionGlobal',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nombre_sistema', models.CharField(default='Luximia ERP', max_length=100)),
+                ('nombre_sistema', models.CharField(default='Sistema ERP', max_length=100)),
                 ('logo_login', models.ImageField(blank=True, null=True, upload_to='config/logos/')),
                 ('logo_ticket', models.ImageField(blank=True, help_text='Logo B/N optimizado para impresión térmica', null=True, upload_to='config/logos/')),
                 ('favicon', models.ImageField(blank=True, null=True, upload_to='config/logos/')),

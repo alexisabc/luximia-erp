@@ -11,7 +11,7 @@ print("✅ Feature MODULE_OBRAS activado")
 obra, created = Obra.objects.get_or_create(
     codigo='TOR-LUX',
     defaults={
-        'nombre': 'Torre Luximia',
+        'nombre': 'Torre Corporativa',
         'presupuesto_total': 1000000,
         'fecha_inicio': '2026-01-01'
     }

@@ -20,7 +20,7 @@ def _truncate_words(text: str, limit: int) -> str:
 
 class AIAssistantView(APIView):
     """
-    Asistente Central de Luximia ERP.
+    Asistente Central de Sistema ERP.
     Responde preguntas basándose en la base de conocimientos vectorial (DB),
     respetando los permisos del usuario solicitante.
     """
@@ -46,7 +46,7 @@ class AIAssistantView(APIView):
         # 2. Construir Prompt del Sistema
         # "Persona" del asistente
         system_prompt = (
-            "Eres el Asistente IA oficial de Luximia ERP. Tu objetivo es ayudar a los usuarios "
+            "Eres el Asistente IA oficial de Sistema ERP. Tu objetivo es ayudar a los usuarios "
             "con información precisa basada EXCLUSIVAMENTE en el contexto proporcionado que proviene de la base de datos. "
             "Tienes prohibido inventar datos. Si el contexto no tiene la respuesta, dilo claramente. "
             "Formatea tus respuestas usando Markdown para mejor legibilidad (tablas, listas, negritas). "

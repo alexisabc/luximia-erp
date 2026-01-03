@@ -1,4 +1,4 @@
-// luximia_erp_ui/postcss.config.js
+// erp_ui/postcss.config.js
 
 export default {
   plugins: {

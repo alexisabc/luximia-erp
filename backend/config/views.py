@@ -9,7 +9,7 @@ from .services import get_global_config
 
 def home(request):
     """Simple root view to avoid 404 warnings."""
-    return JsonResponse({"message": "Luximia ERP API", "api": "/api/"})
+    return JsonResponse({"message": "Sistema ERP API", "api": "/api/"})
 
 class ConfiguracionPublicaView(APIView):
     """

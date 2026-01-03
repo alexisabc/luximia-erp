@@ -7,7 +7,7 @@ class ConfiguracionGlobal(models.Model):
     Solo permite una instancia (ID=1) y utiliza caché para optimizar el rendimiento.
     """
     # Identidad Visual
-    nombre_sistema = models.CharField(max_length=100, default="Luximia ERP")
+    nombre_sistema = models.CharField(max_length=100, default="Sistema ERP")
     logo_login = models.ImageField(upload_to='config/logos/', blank=True, null=True)
     logo_ticket = models.ImageField(upload_to='config/logos/', blank=True, null=True, help_text="Logo B/N optimizado para impresión térmica")
     favicon = models.ImageField(upload_to='config/logos/', blank=True, null=True)

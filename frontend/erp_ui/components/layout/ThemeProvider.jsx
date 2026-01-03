@@ -9,7 +9,7 @@ export function ThemeProvider({ children, ...props }) {
       attribute="class" // <-- Usa la clase para Tailwind
       defaultTheme="system" // <-- Tema por defecto
       enableSystem // <-- Habilita la preferencia del sistema
-      storageKey="luximia-erp-theme" // <-- Clave para localStorage
+      storageKey="erp-theme" // <-- Clave para localStorage
       {...props}
     >
       {children}

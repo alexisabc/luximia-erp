@@ -9,7 +9,7 @@ const ConfigContext = createContext();
 export const ConfigProvider = ({ children }) => {
     const { user } = useAuth();
     const [config, setConfig] = useState({
-        nombre_sistema: 'Luximia ERP',
+        nombre_sistema: 'Sistema ERP',
         logo_login: null,
         logo_ticket: null,
         favicon: null,

@@ -57,12 +57,12 @@ class Command(BaseCommand):
 
         # Centros de Trabajo y Razones Sociales
         self.centro, _ = CentroTrabajo.objects.get_or_create(
-            nombre="Torre Luximia", 
+            nombre="Corporativo Central", 
             defaults={"direccion": "Blvd. Kukulcan Km 12, Zona Hotelera, Cancún, Q.R."}
         )
         
         self.razon_social, _ = RazonSocial.objects.get_or_create(
-            nombre_o_razon_social="Luximia Developments S.A. de C.V.",
+            nombre_o_razon_social="Empresa de Desarrollo S.A. de C.V.",
             defaults={"rfc": "LDE150101XYZ"}
         )
 
@@ -74,7 +74,7 @@ class Command(BaseCommand):
         
         # Usuario normalizado
         username = f"{nombre[:1]}{apellido}{random.randint(10,99)}".lower().replace(" ", "")
-        email = f"{username}@luximia.mx"
+        email = f"{username}@empresa.mx"
         
         User = get_user_model()
         user, created = User.objects.get_or_create(
@@ -87,7 +87,7 @@ class Command(BaseCommand):
             }
         )
         if created:
-            user.set_password("luximia123")
+            user.set_password("admin123")
             user.save()
 
         # Empleado

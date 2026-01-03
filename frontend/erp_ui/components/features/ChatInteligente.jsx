@@ -1,4 +1,4 @@
-// frontend/luximia_erp_ui/components/features/ChatInteligente.jsx
+// frontend/erp_ui/components/features/ChatInteligente.jsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -149,7 +149,7 @@ export default function ChatInteligente() {
             >
                 <div className={`relative p-2 rounded-full overflow-hidden ${isOpen ? '' : 'ring-4 ring-indigo-500/30 shadow-lg shadow-indigo-500/20'}`}>
                     <Image
-                        src="/icon-luximia-ia-new.png"
+                        src="/icon-ia-assistant.png"
                         alt="Asistente IA"
                         width={48}
                         height={48}

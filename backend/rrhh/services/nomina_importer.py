@@ -448,7 +448,7 @@ class NominaImporter:
                 normalized_name = sheet_name.upper().strip()
                 
                 # Filtros básicos
-                target_sheets = ["LUXIMIA", "SHARK", "PETREOS"]
+                target_sheets = ["EMPRESA_A", "EMPRESA_B", "EMPRESA_C"]
                 if any(exclude in normalized_name for exclude in ["RESUMEN", "YUKAWA"]):
                      continue
                 if not any(target in normalized_name for target in target_sheets):

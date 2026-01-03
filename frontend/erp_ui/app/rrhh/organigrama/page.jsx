@@ -22,7 +22,7 @@ export default function OrganigramaPage() {
                         rootNode = formatNode(data[0]);
                     } else {
                         rootNode = {
-                            name: 'Luximia Developments',
+                            name: 'Empresa Central',
                             attributes: { title: 'Corporativo' },
                             children: data.map(formatNode)
                         };

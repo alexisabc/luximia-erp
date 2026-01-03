@@ -115,3 +115,6 @@ El sistema está listo para "Go Live".
 # 🏁 FIN DE LA EXPANSIÓN ENTERPRISE (V 2.0)
 El sistema ha migrado de una arquitectura modular a una Plataforma Enterprise Full-Stack.
 Estado Actual: **Provisional Release Candidate (RC1)**.
+
+---
+**Sistema ERP - Potencia Enterprise a tu alcance.**

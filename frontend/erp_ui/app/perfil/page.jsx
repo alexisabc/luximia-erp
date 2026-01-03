@@ -195,7 +195,7 @@ export default function ProfilePage() {
                             <div className="relative group">
                                 <div className="w-32 h-32 rounded-full overflow-hidden bg-muted relative ring-4 ring-background shadow-lg">
                                     <Image
-                                        src={profileImage || '/icon-luximia.png'}
+                                        src={profileImage || '/icon-erp.png'}
                                         alt="Profile"
                                         fill
                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                                     <Key className="w-7 h-7 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground">Biometría Luximia</h3>
+                                    <h3 className="text-xl font-bold text-foreground">Biometría Corporativa</h3>
                                     <p className="text-sm text-muted-foreground mt-0.5 font-medium">Acceso sin contraseñas mediante FaceID o Huella.</p>
                                 </div>
                             </div>

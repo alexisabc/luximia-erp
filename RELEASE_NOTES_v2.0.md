@@ -1,6 +1,6 @@
-# Luximia ERP V2.0 - The Enterprise Update 🚀
+# Sistema ERP V2.0 - The Enterprise Update 🚀
 
-Estamos orgullosos de presentar la versión **V2.0 (Release Candidate 1)** de Luximia ERP. Esta actualización transforma el sistema de un ERP modular básico a una plataforma de clase empresarial completa, diseñada para manejar operaciones complejas de construcción, ventas de alto volumen y cumplimiento fiscal nativo.
+Estamos orgullosos de presentar la versión **V2.0 (Release Candidate 1)** de Sistema ERP. Esta actualización transforma el sistema de un ERP modular básico a una plataforma de clase empresarial completa, diseñada para manejar operaciones complejas de construcción, ventas de alto volumen y cumplimiento fiscal nativo.
 
 ## 🌟 Highlights de la Versión
 
@@ -36,4 +36,4 @@ Estamos orgullosos de presentar la versión **V2.0 (Release Candidate 1)** de Lu
 - App Móvil Nativa para residentes de obra.
 
 ---
-**Luximia ERP - Potencia Enterprise a tu alcance.**
+**Sistema ERP - Potencia Enterprise a tu alcance.**

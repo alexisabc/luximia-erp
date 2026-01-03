@@ -137,7 +137,8 @@ El sistema soporta ahora personalización dinámica y activación selectiva de m
 ### 🎨 UX/UI & Branding
 -   **Atomic Design:** Arquitectura escalable y mantenible de componentes.
 -   **Mobile First:** Diseño responsive optimizado para móviles.
--   **Tema Premium:** Paleta de colores moderna y modo oscuro refinado.
+-   **Tema# Sistema ERP Modular v2.0
+Sistema de gestión empresarial (ERP) moderno, modular y reactivo.
 -   **Animaciones Interactivas:** Transiciones fluidas y micro-interacciones.
 -   **Dashboard v2:** Gráficos interactivos con `recharts`.
 

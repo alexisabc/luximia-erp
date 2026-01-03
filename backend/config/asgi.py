@@ -1,5 +1,5 @@
 """
-ASGI config for crm_luximia project.
+ASGI config for sistema_erp project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
