@@ -1,6 +1,5 @@
 from rest_framework import viewsets, status, permissions, decorators
 from rest_framework.response import Response
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 import pyotp
@@ -91,131 +90,56 @@ class VentaViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        """
+        Crea una venta delegando toda la lógica de negocio al servicio.
+        """
+        from .services.venta_service import VentaService
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         idata = serializer.validated_data
         
+        # Extraer datos de la request
         items = request.data.get('items', [])
-        cliente = idata.get('cliente')
         turno = idata.get('turno')
+        cliente = idata.get('cliente')
         metodo_principal = idata.get('metodo_pago_principal')
         metodo_secundario = request.data.get('metodo_pago_secundario')
-        monto_principal = Decimal(str(request.data.get('monto_metodo_principal', 0)))
-        monto_secundario = Decimal(str(request.data.get('monto_metodo_secundario', 0)))
+        monto_principal = request.data.get('monto_metodo_principal')
+        monto_secundario = request.data.get('monto_metodo_secundario')
         
-        if not items:
-            return Response({"detail": "La venta no tiene productos"}, status=400)
-        
-        # Calcular Total
-        total_venta = Decimal(0)
-        productos_map = {}
-        for item in items:
-            prod = get_object_or_404(Producto, pk=item['producto_id'])
-            qty = Decimal(str(item['cantidad']))
-            line_total = prod.precio_final * qty
-            total_venta += line_total
-            productos_map[prod.id] = {'prod': prod, 'qty': qty, 'price': prod.precio_final}
-
-        # Validar montos de pago
-        if metodo_secundario:
-            if monto_principal + monto_secundario != total_venta:
-                return Response({"detail": "La suma de los montos debe ser igual al total"}, status=400)
-        else:
-            monto_principal = total_venta
-            monto_secundario = Decimal(0)
-
-        # Obtener cuenta del cliente si existe
-        cuenta = None
-        if cliente:
-            cuenta, _ = CuentaCliente.objects.get_or_create(cliente=cliente)
-        
-        # Validar disponibilidad para cada método
-        def validar_metodo(metodo, monto):
-            if metodo in ['CREDITO', 'ANTICIPO'] and not cuenta:
-                return False, "Cliente requerido para crédito/anticipo"
-            
-            if metodo == 'CREDITO' and cuenta.credito_disponible < monto:
-                return False, f"Crédito insuficiente. Disponible: ${cuenta.credito_disponible}"
-            
-            if metodo == 'ANTICIPO' and cuenta.saldo < monto:
-                return False, f"Anticipo insuficiente. Disponible: ${cuenta.saldo}"
-            
-            return True, None
-        
-        # Validar método principal
-        valid, error = validar_metodo(metodo_principal, monto_principal)
-        if not valid:
-            return Response({"detail": error}, status=400)
-        
-        # Validar método secundario si existe
-        if metodo_secundario:
-            valid, error = validar_metodo(metodo_secundario, monto_secundario)
-            if not valid:
-                return Response({"detail": error}, status=400)
-
-        with transaction.atomic():
-            # Crear venta
-            venta = Venta.objects.create(
+        try:
+            # Delegar al servicio
+            venta = VentaService.crear_venta_pos(
                 turno=turno,
+                items=items,
+                metodo_principal=metodo_principal,
                 cliente=cliente,
-                subtotal=total_venta / Decimal('1.16'),
-                impuestos=total_venta - (total_venta / Decimal('1.16')),
-                total=total_venta,
-                metodo_pago_principal=metodo_principal,
-                monto_metodo_principal=monto_principal,
-                metodo_pago_secundario=metodo_secundario,
-                monto_metodo_secundario=monto_secundario,
-                estado='PAGADA'
+                metodo_secundario=metodo_secundario,
+                monto_principal=monto_principal,
+                monto_secundario=monto_secundario
             )
             
-            # Crear detalles
-            for pid, info in productos_map.items():
-                DetalleVenta.objects.create(
-                    venta=venta,
-                    producto=info['prod'],
-                    cantidad=info['qty'],
-                    precio_unitario=info['price'],
-                    subtotal=info['price'] * info['qty']
-                )
+            # Retornar respuesta
+            serializer = self.get_serializer(venta)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
             
-            # Aplicar movimientos de cuenta para método principal
-            def aplicar_movimiento(metodo, monto):
-                if not cuenta or metodo not in ['CREDITO', 'ANTICIPO']:
-                    return
-                
-                saldo_anterior = cuenta.saldo
-                
-                if metodo == 'CREDITO':
-                    cuenta.saldo -= monto
-                    tipo_mov = 'CARGO_VENTA'
-                elif metodo == 'ANTICIPO':
-                    cuenta.saldo -= monto
-                    tipo_mov = 'CARGO_USO_ANTICIPO'
-                
-                cuenta.save()
-                
-                MovimientoSaldoCliente.objects.create(
-                    cuenta=cuenta,
-                    tipo=tipo_mov,
-                    monto=monto,
-                    referencia_venta=venta,
-                    saldo_anterior=saldo_anterior,
-                    saldo_nuevo=cuenta.saldo,
-                    comentarios=f"Pago {metodo} - Venta {venta.folio}"
-                )
-            
-            aplicar_movimiento(metodo_principal, monto_principal)
-            if metodo_secundario:
-                aplicar_movimiento(metodo_secundario, monto_secundario)
-
-        return Response(VentaSerializer(venta).data, status=201)
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     @decorators.action(detail=True, methods=['post'])
     def cancelar(self, request, pk=None):
+        """
+        Cancela una venta con autorización de supervisor vía TOTP.
+        Delega la lógica de cancelación al servicio.
+        """
+        from .services.venta_service import VentaService
+        
         venta = self.get_object()
-        if venta.estado == 'CANCELADA':
-             return Response({"detail": "Ya está cancelada"}, status=400)
-
+        
         # Autenticación Supervisor
         sup_user = request.data.get('supervisor_username')
         sup_code = request.data.get('supervisor_code')
@@ -223,42 +147,41 @@ class VentaViewSet(viewsets.ModelViewSet):
         
         try:
             supervisor = User.objects.get(username=sup_user, is_active=True)
-            # Solo supervisors o admins? Asumamos is_staff por ahora o permiso especial
-            if not supervisor.is_staff: 
-                return Response({"detail": "Usuario no autorizado para supervisar"}, status=403)
-                
+            
+            if not supervisor.is_staff:
+                return Response(
+                    {"detail": "Usuario no autorizado para supervisar"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
             if not supervisor.totp_secret:
-                return Response({"detail": "Supervisor sin TOTP configurado"}, status=400)
-                
+                return Response(
+                    {"detail": "Supervisor sin TOTP configurado"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             totp = pyotp.TOTP(supervisor.totp_secret)
             if not totp.verify(sup_code, valid_window=1):
-                return Response({"detail": "Código TOTP inválido"}, status=403)
-                
-        except User.DoesNotExist:
-            return Response({"detail": "Supervisor no encontrado"}, status=404)
-
-        with transaction.atomic():
-            venta.estado = 'CANCELADA'
-            venta.cancelado_por = supervisor
-            venta.motivo_cancelacion = motivo
-            venta.save()
-            
-            # Revertir Movimientos de Saldo si aplica
-            if venta.metodo_pago_principal in ['CREDITO', 'ANTICIPO'] and venta.cliente:
-                cuenta = CuentaCliente.objects.get(cliente=venta.cliente)
-                cuenta.saldo += venta.total # Se regresa el dinero/crédito
-                cuenta.save()
-                MovimientoSaldoCliente.objects.create(
-                    cuenta=cuenta,
-                    tipo='CANCELACION',
-                    monto=venta.total,
-                    referencia_venta=venta,
-                    saldo_anterior=cuenta.saldo - venta.total,
-                    saldo_nuevo=cuenta.saldo,
-                    comentarios=f"Cancelación venta {venta.folio}"
+                return Response(
+                    {"detail": "Código TOTP inválido"},
+                    status=status.HTTP_403_FORBIDDEN
                 )
-
-        return Response({"detail": "Venta cancelada exitosamente"})
+        
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Supervisor no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Delegar cancelación al servicio
+        try:
+            VentaService.cancelar_venta(venta, supervisor, motivo)
+            return Response({"detail": "Venta cancelada exitosamente"})
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class CuentaClienteViewSet(viewsets.ModelViewSet):
