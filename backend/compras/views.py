@@ -5,10 +5,11 @@ from django.db import transaction
 from django.db.models import Sum, F
 from django.db import models
 from django.http import HttpResponse
+from django.core.exceptions import ValidationError
 import openpyxl
 
 
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen, RecepcionCompra, DetalleRecepcion
 from .serializers import (
     ProveedorSerializer, InsumoSerializer, 
     OrdenCompraSerializer, OrdenCompraCreateUpdateSerializer,
@@ -179,15 +180,37 @@ class OrdenCompraViewSet(viewsets.ModelViewSet):
         return Response({"detail": "Orden rechazada"})
 
     @decorators.action(detail=True, methods=['post'], url_path='recibir')
+    @decorators.action(detail=True, methods=['post'], url_path='recibir')
     def recibir(self, request, pk=None):
-        almacen_id = request.data.get('almacen_id')
-        if not almacen_id:
-            return Response({"detail": "Se requiere almacen_id para recibir la mercancía"}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        almacen_id = data.get('almacen_id')
+        items = data.get('items', [])
+        folio_remision = data.get('folio_remision')
+        notas = data.get('notas', '')
+
+        # Retrocompatibilidad: Si no envían items, asumimos recepción TOTAL de lo pendiente
+        if not items and almacen_id:
+             oc = self.get_object()
+             items = []
+             for d in oc.detalles.all():
+                 pendiente = d.cantidad - d.cantidad_recibida
+                 if pendiente > 0:
+                     items.append({'producto_id': d.insumo.id, 'cantidad': pendiente, 'almacen_id': almacen_id})
+
+        if not items:
+            return Response({"detail": "Se requiere lista de items o confirmación total con almacen_id"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            RecepcionService.recibir_orden(pk, almacen_id, request.user)
-            return Response({"detail": "Mercancía recibida exitosamente e inventario actualizado"})
-        except ValueError as e:
+            recepcion = RecepcionService.recibir_orden(
+                orden_id=pk,
+                items_recibidos=items,
+                usuario=request.user,
+                almacen_id_global=almacen_id,
+                folio_remision=folio_remision,
+                notas=notas
+            )
+            return Response({"detail": "Mercancía recibida exitosamente", "recepcion_id": recepcion.id})
+        except ValidationError as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": f"Error inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -265,4 +288,58 @@ class DetalleOrdenCompraViewSet(viewsets.ModelViewSet):
         orden.subtotal = subtotal
         orden.iva = iva_total
         orden.total = total
+        orden.total = total
         orden.save()
+
+# --- Requisiciones ---
+from .models import Requisicion
+from .serializers import RequisicionSerializer
+from .services.requisicion_service import RequisicionService
+
+class RequisicionViewSet(viewsets.ModelViewSet):
+    queryset = Requisicion.objects.all().order_by('-id')
+    serializer_class = RequisicionSerializer
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        obra = self.request.query_params.get('obra')
+        if obra:
+            qs = qs.filter(obra_id=obra)
+        return qs
+
+    def create(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            req = RequisicionService.crear_requisicion(data, request.user)
+            serializer = self.get_serializer(req)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @decorators.action(detail=True, methods=['post'])
+    def aprobar(self, request, pk=None):
+        try:
+            req = RequisicionService.aprobar_requisicion(pk, request.user)
+            return Response(self.get_serializer(req).data)
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @decorators.action(detail=True, methods=['post'])
+    def convertir(self, request, pk=None):
+        from .services.conversion_service import ConversionService
+        proveedor_id = request.data.get('proveedor_id')
+        items = request.data.get('items', [])
+        
+        if not proveedor_id or not items:
+             return Response({"detail": "Faltan datos (proveedor_id, items)"}, status=status.HTTP_400_BAD_REQUEST)
+             
+        try:
+            oc = ConversionService.convertir_req_a_oc(pk, proveedor_id, items, request.user)
+            return Response({"id": oc.id, "folio": oc.folio, "detail": "Orden generada exitosamente"})
+        except ValidationError as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

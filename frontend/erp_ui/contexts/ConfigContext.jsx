@@ -2,41 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Interfaces
-interface SystemSetting {
-    key: string;
-    value: any;
-    category: string;
-    description: string;
-    is_public: boolean;
-}
-
-interface FeatureFlag {
-    code: string;
-    name: string;
-    is_active: boolean;
-    rollout_percentage: number;
-}
-
-interface ConfigContextType {
-    settings: Record<string, any>;
-    features: Record<string, boolean>;
-    isLoading: boolean;
-    error: string | null;
-    getSetting: (key: string, defaultValue?: any) => any;
-    isFeatureEnabled: (code: string) => boolean;
-    refreshConfig: () => Promise<void>;
-}
-
 // Contexto
-const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
+const ConfigContext = createContext(undefined);
 
 // Provider
-export function ConfigProvider({ children }: { children: React.ReactNode }) {
-    const [settings, setSettings] = useState<Record<string, any>>({});
-    const [features, setFeatures] = useState<Record<string, boolean>>({});
+export function ConfigProvider({ children }) {
+    const [settings, setSettings] = useState({});
+    const [features, setFeatures] = useState({});
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
 
     // Función para cargar configuraciones
     const loadConfig = useCallback(async () => {
@@ -98,7 +72,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
     // Helper: Obtener un setting
     const getSetting = useCallback(
-        (key: string, defaultValue: any = null) => {
+        (key, defaultValue = null) => {
             return settings[key] !== undefined ? settings[key] : defaultValue;
         },
         [settings]
@@ -106,7 +80,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
 
     // Helper: Verificar si un feature está habilitado
     const isFeatureEnabled = useCallback(
-        (code: string) => {
+        (code) => {
             return features[code] === true;
         },
         [features]
@@ -117,7 +91,7 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
         await loadConfig();
     }, [loadConfig]);
 
-    const value: ConfigContextType = {
+    const value = {
         settings,
         features,
         isLoading,
@@ -140,19 +114,19 @@ export function useConfig() {
 }
 
 // Hook helper para un setting específico
-export function useSetting<T = any>(key: string, defaultValue?: T): T {
+export function useSetting(key, defaultValue) {
     const { getSetting } = useConfig();
     return getSetting(key, defaultValue);
 }
 
 // Hook helper para un feature flag
-export function useFeature(code: string): boolean {
+export function useFeature(code) {
     const { isFeatureEnabled } = useConfig();
     return isFeatureEnabled(code);
 }
 
 // Hook para verificar si está cargando
-export function useConfigLoading(): boolean {
+export function useConfigLoading() {
     const { isLoading } = useConfig();
     return isLoading;
 }

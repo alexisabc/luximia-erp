@@ -37,7 +37,9 @@ import openpyxl
 
 
 from core.permissions import HasPermissionForAction
-from .utils import sincronizar_tipo_cambio_banxico
+from .utils import sincronizar_tipo_cambio_banxico, validate_private_key, parse_certificate
+from core.encryption import encrypt_data, encrypt_text
+from django.core.files.base import ContentFile
 from .models import (
     Banco,
     Proyecto,
@@ -59,6 +61,9 @@ from .models import (
     Poliza,
     DetallePoliza,
     Factura,
+    # Added via replace above in previous step, but I need to match EXACTLY what's there now.
+    # Previous step added EmpresaFiscal.
+    EmpresaFiscal,
 )
 
 from .serializers import (
@@ -81,6 +86,8 @@ from .serializers import (
     PolizaSerializer,
     DetallePolizaSerializer,
     FacturaSerializer,
+    EmpresaFiscalSerializer,
+    CSDUploadSerializer,
 )
 
 
@@ -473,6 +480,42 @@ class FacturaViewSet(ContabilidadBaseViewSet):
         except Exception as e:
              return Response({"detalle": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['get'], url_path='pdf')
+    def descargar_pdf(self, request, pk=None):
+        """
+        Genera y descarga el PDF de la factura.
+        GET /api/contabilidad/facturas/{id}/pdf/
+        """
+        from .services.pdf_service import generar_pdf_factura
+        from django.http import FileResponse
+        from io import BytesIO
+        
+        factura = self.get_object()
+        
+        if not factura.uuid:
+            return Response(
+                {"error": "Factura no timbrada. Debe timbrar la factura antes de generar el PDF."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            pdf_bytes = generar_pdf_factura(factura.id)
+            
+            response = FileResponse(
+                BytesIO(pdf_bytes),
+                content_type='application/pdf'
+            )
+            filename = f"Factura_{factura.serie}_{factura.folio}.pdf"
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            
+            return response
+        except Exception as e:
+            return Response(
+                {"error": f"Error generando PDF: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class PlantillaAsientoViewSet(ContabilidadBaseViewSet):
     from .models_automation import PlantillaAsiento
     from .serializers import PlantillaAsientoSerializer
@@ -702,3 +745,73 @@ class OpinionCumplimientoViewSet(ContabilidadBaseViewSet):
              
         opinion = SATIntegrationService.consultar_opinion_cumplimiento(rfc)
         return Response(self.get_serializer(opinion).data)
+
+class EmpresaFiscalViewSet(ContabilidadBaseViewSet):
+    queryset = EmpresaFiscal.objects.all()
+    serializer_class = EmpresaFiscalSerializer
+    
+    def get_queryset(self):
+        return EmpresaFiscal.objects.all()
+
+    @action(detail=False, methods=['post'])
+    def upload_csd(self, request):
+        serializer = CSDUploadSerializer(data=request.data)
+        if serializer.is_valid():
+            cer_file = serializer.validated_data['cer_file']
+            key_file = serializer.validated_data['key_file']
+            password = serializer.validated_data['password']
+            
+            cer_content = cer_file.read()
+            key_content = key_file.read()
+            
+            try:
+                validate_private_key(key_content, password)
+            except ValueError as e:
+                return Response(
+                    {"error": f"Validación fallida: {str(e)}", "detail": "La contraseña no corresponde a la llave privada o el archivo es inválido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            try:
+                metadata = parse_certificate(cer_content)
+            except Exception as e:
+                return Response({"error": "Error al leer el certificado (.cer)"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            encrypted_key = encrypt_data(key_content)
+            encrypted_pass = encrypt_text(password)
+            
+            empresa_fiscal = EmpresaFiscal.objects.first()
+            if not empresa_fiscal:
+                return Response({"error": "No existe configuración de Empresa Fiscal base."}, status=status.HTTP_404_NOT_FOUND)
+                
+            rfc = empresa_fiscal.empresa.rfc
+            
+            # Create Cert
+            # Fix: CertificadoDigital import is available (line 18)
+            
+            cert = CertificadoDigital.objects.create(
+                nombre=f"CSD {rfc}",
+                rfc=rfc,
+                tipo='CSD',
+                archivo_key=encrypted_key,
+                password_key=encrypted_pass,
+                fecha_inicio_validez=metadata['fecha_inicio'],
+                fecha_fin_validez=metadata['fecha_fin'],
+                numero_serie=metadata.get('serial'),
+                activo=True
+            )
+            file_name = f"{rfc}_{metadata.get('serial', 'unknown')}.cer"
+            cert.archivo_cer.save(file_name, ContentFile(cer_content))
+            cert.save()
+            
+            old_cert = empresa_fiscal.certificado_sello
+            if old_cert and old_cert != cert:
+                old_cert.activo = False
+                old_cert.save()
+                
+            empresa_fiscal.certificado_sello = cert
+            empresa_fiscal.save()
+            
+            return Response({"status": "Certificado cargado y validado correctamente", "fecha_vencimiento": metadata['fecha_fin']})
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

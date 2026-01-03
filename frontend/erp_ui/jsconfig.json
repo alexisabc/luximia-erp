@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "jsx": "preserve",
+    "checkJs": false
   },
   "exclude": [
     "node_modules",
     ".next",
-    "out",
-    "tailwind.config.js"
+    "out"
   ]
 }

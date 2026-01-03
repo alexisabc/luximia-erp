@@ -1,0 +1,77 @@
+[
+    {
+        "model": "contabilidad.SATRegimenFiscal",
+        "pk": "601",
+        "fields": {
+            "descripcion": "General de Ley Personas Morales",
+            "fisica": false,
+            "moral": true
+        }
+    },
+    {
+        "model": "contabilidad.SATRegimenFiscal",
+        "pk": "626",
+        "fields": {
+            "descripcion": "Régimen Simplificado de Confianza",
+            "fisica": true,
+            "moral": true
+        }
+    },
+    {
+        "model": "contabilidad.SATRegimenFiscal",
+        "pk": "605",
+        "fields": {
+            "descripcion": "Sueldos y Salarios e Ingresos Asimilados a Salarios",
+            "fisica": true,
+            "moral": false
+        }
+    },
+    {
+        "model": "contabilidad.SATUsoCFDI",
+        "pk": "G03",
+        "fields": {
+            "descripcion": "Gastos en general",
+            "fisica": true,
+            "moral": true
+        }
+    },
+    {
+        "model": "contabilidad.SATUsoCFDI",
+        "pk": "G01",
+        "fields": {
+            "descripcion": "Adquisición de mercancías",
+            "fisica": true,
+            "moral": true
+        }
+    },
+    {
+        "model": "contabilidad.SATFormaPago",
+        "pk": "01",
+        "fields": {
+            "descripcion": "Efectivo",
+            "bancarizado": false
+        }
+    },
+    {
+        "model": "contabilidad.SATFormaPago",
+        "pk": "04",
+        "fields": {
+            "descripcion": "Tarjeta de crédito",
+            "bancarizado": true
+        }
+    },
+    {
+        "model": "contabilidad.SATMetodoPago",
+        "pk": "PUE",
+        "fields": {
+            "descripcion": "Pago en una sola exhibición"
+        }
+    },
+    {
+        "model": "contabilidad.SATMetodoPago",
+        "pk": "PPD",
+        "fields": {
+            "descripcion": "Pago en parcialidades o diferido"
+        }
+    }
+]

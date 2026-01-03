@@ -25,6 +25,29 @@ class ProductoViewSet(viewsets.ModelViewSet):
     serializer_class = ProductoSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @decorators.action(detail=False, methods=['get'], url_path='productos-fast')
+    def productos_fast(self, request):
+        """
+        Retorna listado optimizado para caché offline (IndexDB).
+        """
+        productos = self.get_queryset().filter(deleted_at__isnull=True)
+        data = []
+        for p in productos:
+            item = {
+                'id': p.id,
+                'nombre': p.nombre,
+                'barcode': p.codigo,
+                'precio': float(p.precio_final),
+                'impuesto': float(p.impuestos_porcentaje),
+                'unidad': p.unidad_medida,
+                'search_terms': f"{p.nombre} {p.codigo}".lower()
+            }
+            if hasattr(p, 'stock_actual'):
+                item['stock'] = float(p.stock_actual)
+            
+            data.append(item)
+        return Response(data)
+
 class CajaViewSet(viewsets.ModelViewSet):
     queryset = Caja.objects.all()
     serializer_class = CajaSerializer

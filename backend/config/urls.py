@@ -22,6 +22,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('ia/', include('ia.urls')),
     path('pos/', include('pos.urls')),
+    path('obras/', include('obras.urls')),
 
     # Configuración Global
     path('configuracion/publica/', views.ConfiguracionPublicaView.as_view(), name='config-publica'),

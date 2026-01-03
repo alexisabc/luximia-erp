@@ -2,15 +2,15 @@
 
 import React, { useState } from 'react';
 
-interface FeatureCardProps {
-    code: string;
-    name: string;
-    description: string;
-    isActive: boolean;
-    onToggle: (code: string, isActive: boolean) => Promise<void>;
-    icon?: string;
-}
-
+/**
+ * @param {Object} props
+ * @param {string} props.code
+ * @param {string} props.name
+ * @param {string} props.description
+ * @param {boolean} props.isActive
+ * @param {function} props.onToggle
+ * @param {string} [props.icon]
+ */
 export function FeatureCard({
     code,
     name,
@@ -18,10 +18,10 @@ export function FeatureCard({
     isActive,
     onToggle,
     icon = '🚀',
-}: FeatureCardProps) {
+}) {
     const [isOptimistic, setIsOptimistic] = useState(isActive);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
 
     const handleToggle = async () => {
         if (isLoading) return;

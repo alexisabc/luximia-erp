@@ -24,7 +24,9 @@ from .models import (
     CertificadoDigital,
     BuzonMensaje,
     OpinionCumplimiento,
+    EmpresaFiscal,
 )
+from core.models import Empresa
 
 
 class BancoSerializer(serializers.ModelSerializer):
@@ -474,6 +476,28 @@ class ReglaAsientoSerializer(serializers.ModelSerializer):
 
 class PlantillaAsientoSerializer(serializers.ModelSerializer):
     reglas = ReglaAsientoSerializer(many=True, read_only=True)
+    
     class Meta:
         model = PlantillaAsiento
         fields = '__all__'
+
+class EmpresaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Empresa
+        fields = ['id', 'razon_social', 'rfc', 'codigo_postal']
+
+class EmpresaFiscalSerializer(serializers.ModelSerializer):
+    empresa = EmpresaSerializer(read_only=True)
+    # Use existing CertificadoDigitalSerializer or define new one? 
+    # Existing one at line 449 has password write_only.
+    certificado_sello = CertificadoDigitalSerializer(read_only=True)
+    regimen_fiscal_codigo = serializers.CharField(source='regimen_fiscal.codigo', read_only=True)
+    
+    class Meta:
+        model = EmpresaFiscal
+        fields = ['id', 'empresa', 'regimen_fiscal', 'regimen_fiscal_codigo', 'codigo_postal', 'certificado_sello']
+
+class CSDUploadSerializer(serializers.Serializer):
+    cer_file = serializers.FileField()
+    key_file = serializers.FileField()
+    password = serializers.CharField(write_only=True)

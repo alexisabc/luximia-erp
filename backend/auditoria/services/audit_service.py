@@ -48,6 +48,9 @@ class AuditService:
             object_id = str(obj.pk)
             object_repr = str(obj)[:500]  # Limitar a 500 caracteres
         
+        if user_agent is None:
+            user_agent = "System"
+            
         audit_log = AuditLog.objects.create(
             usuario=usuario,
             accion=accion,

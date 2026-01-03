@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura {{ comprobante.serie }}-{{ comprobante.folio }}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            color: #000;
+        }
+        
+        .container {
+            width: 100%;
+        }
+        
+        /* Header */
+        .header {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .header-grid {
+            display: table;
+            width: 100%;
+        }
+        
+        .header-left {
+            display: table-cell;
+            width: 60%;
+            vertical-align: top;
+        }
+        
+        .header-right {
+            display: table-cell;
+            width: 40%;
+            vertical-align: top;
+            text-align: right;
+        }
+        
+        .company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .folio-fiscal {
+            background-color: #f0f0f0;
+            padding: 8px;
+            border: 1px solid #000;
+            margin-top: 5px;
+        }
+        
+        .folio-fiscal-label {
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        
+        .folio-fiscal-value {
+            font-size: 10pt;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        /* Info sections */
+        .info-section {
+            border: 1px solid #000;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            font-size: 10pt;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3px;
+        }
+        
+        .info-row {
+            margin: 3px 0;
+        }
+        
+        .label {
+            font-weight: bold;
+        }
+        
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        
+        th {
+            background-color: #e0e0e0;
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        
+        td {
+            border: 1px solid #000;
+            padding: 5px;
+            font-size: 8pt;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        /* Totals */
+        .totals-section {
+            width: 50%;
+            margin-left: auto;
+            border: 1px solid #000;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .total-row {
+            display: table;
+            width: 100%;
+            margin: 3px 0;
+        }
+        
+        .total-label {
+            display: table-cell;
+            width: 60%;
+            font-weight: bold;
+        }
+        
+        .total-value {
+            display: table-cell;
+            width: 40%;
+            text-align: right;
+        }
+        
+        .grand-total {
+            font-size: 11pt;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        
+        /* Fiscal footer */
+        .fiscal-footer {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .fiscal-grid {
+            display: table;
+            width: 100%;
+        }
+        
+        .qr-section {
+            display: table-cell;
+            width: 150px;
+            vertical-align: top;
+            text-align: center;
+        }
+        
+        .qr-image {
+            width: 150px;
+            height: 150px;
+        }
+        
+        .stamps-section {
+            display: table-cell;
+            vertical-align: top;
+            padding-left: 10px;
+        }
+        
+        .stamp-block {
+            margin-bottom: 8px;
+            font-size: 7pt;
+            word-break: break-all;
+        }
+        
+        .stamp-label {
+            font-weight: bold;
+            font-size: 8pt;
+        }
+        
+        .fiscal-legend {
+            text-align: center;
+            font-size: 8pt;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 5px;
+            background-color: #f0f0f0;
+        }
+        
+        .small-text {
+            font-size: 7pt;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-grid">
+                <div class="header-left">
+                    <div class="company-name">{{ emisor.nombre }}</div>
+                    <div><span class="label">RFC:</span> {{ emisor.rfc }}</div>
+                    <div><span class="label">Régimen Fiscal:</span> {{ emisor.regimen_fiscal }}</div>
+                    <div><span class="label">Lugar de Expedición:</span> {{ comprobante.lugar_expedicion }}</div>
+                </div>
+                <div class="header-right">
+                    <div class="folio-fiscal">
+                        <div class="folio-fiscal-label">FOLIO FISCAL</div>
+                        <div class="folio-fiscal-value">{{ timbre.uuid }}</div>
+                    </div>
+                    <div style="margin-top: 5px;">
+                        <div><span class="label">Serie:</span> {{ comprobante.serie }}</div>
+                        <div><span class="label">Folio:</span> {{ comprobante.folio }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoice Info -->
+        <div class="info-section">
+            <div class="info-title">INFORMACIÓN DE LA FACTURA</div>
+            <div class="info-row"><span class="label">Fecha de Emisión:</span> {{ comprobante.fecha }}</div>
+            <div class="info-row"><span class="label">Fecha de Certificación:</span> {{ timbre.fecha_timbrado }}</div>
+            <div class="info-row"><span class="label">Tipo de Comprobante:</span> {{ comprobante.tipo_comprobante }} - Ingreso</div>
+            <div class="info-row"><span class="label">Método de Pago:</span> {{ comprobante.metodo_pago }}</div>
+            <div class="info-row"><span class="label">Forma de Pago:</span> {{ comprobante.forma_pago }}</div>
+            <div class="info-row"><span class="label">Moneda:</span> {{ comprobante.moneda }}</div>
+        </div>
+        
+        <!-- Receptor -->
+        <div class="info-section">
+            <div class="info-title">RECEPTOR</div>
+            <div class="info-row"><span class="label">Nombre/Razón Social:</span> {{ receptor.nombre }}</div>
+            <div class="info-row"><span class="label">RFC:</span> {{ receptor.rfc }}</div>
+            <div class="info-row"><span class="label">Domicilio Fiscal:</span> {{ receptor.domicilio_fiscal }}</div>
+            <div class="info-row"><span class="label">Régimen Fiscal:</span> {{ receptor.regimen_fiscal }}</div>
+            <div class="info-row"><span class="label">Uso CFDI:</span> {{ receptor.uso_cfdi }}</div>
+        </div>
+        
+        <!-- Conceptos -->
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center" style="width: 8%;">Cant.</th>
+                    <th class="text-center" style="width: 10%;">Unidad</th>
+                    <th class="text-center" style="width: 12%;">Clave</th>
+                    <th style="width: 40%;">Descripción</th>
+                    <th class="text-right" style="width: 15%;">Precio Unit.</th>
+                    <th class="text-right" style="width: 15%;">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for concepto in conceptos %}
+                <tr>
+                    <td class="text-center">{{ concepto.cantidad }}</td>
+                    <td class="text-center">{{ concepto.clave_unidad }}</td>
+                    <td class="text-center">{{ concepto.clave_prod_serv }}</td>
+                    <td>{{ concepto.descripcion }}</td>
+                    <td class="text-right">${{ concepto.valor_unitario }}</td>
+                    <td class="text-right">${{ concepto.importe }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <div class="totals-section">
+            <div class="total-row">
+                <div class="total-label">Subtotal:</div>
+                <div class="total-value">${{ comprobante.subtotal }}</div>
+            </div>
+            
+            {% for traslado in impuestos.traslados %}
+            <div class="total-row">
+                <div class="total-label">IVA ({{ traslado.tasa_cuota }}):</div>
+                <div class="total-value">${{ traslado.importe }}</div>
+            </div>
+            {% endfor %}
+            
+            <div class="total-row grand-total">
+                <div class="total-label">TOTAL:</div>
+                <div class="total-value">${{ comprobante.total }}</div>
+            </div>
+            
+            <div style="margin-top: 10px; font-size: 8pt; text-align: center;">
+                <strong>{{ total_letra }}</strong>
+            </div>
+        </div>
+        
+        <!-- Fiscal Footer -->
+        <div class="fiscal-footer">
+            <div class="fiscal-grid">
+                <div class="qr-section">
+                    <img src="{{ qr_image }}" alt="Código QR" class="qr-image">
+                </div>
+                <div class="stamps-section">
+                    <div class="stamp-block">
+                        <div class="stamp-label">CADENA ORIGINAL DEL COMPLEMENTO DE CERTIFICACIÓN DIGITAL DEL SAT:</div>
+                        <div>{{ timbre.cadena_original }}</div>
+                    </div>
+                    
+                    <div class="stamp-block">
+                        <div class="stamp-label">SELLO DIGITAL DEL CFDI:</div>
+                        <div>{{ timbre.sello_cfd }}</div>
+                    </div>
+                    
+                    <div class="stamp-block">
+                        <div class="stamp-label">SELLO DEL SAT:</div>
+                        <div>{{ timbre.sello_sat }}</div>
+                    </div>
+                    
+                    <div class="stamp-block">
+                        <div class="stamp-label">CERTIFICADOS:</div>
+                        <div>No. Certificado Emisor: {{ comprobante.no_certificado }}</div>
+                        <div>No. Certificado SAT: {{ timbre.no_certificado_sat }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fiscal-legend">
+                Este documento es una representación impresa de un CFDI
+            </div>
+        </div>
+    </div>
+</body>
+</html>

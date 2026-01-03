@@ -6,24 +6,6 @@ import { SettingInput } from '@/components/config/SettingInput';
 import { FeatureCard } from '@/components/config/FeatureCard';
 import { useConfig } from '@/contexts/ConfigContext';
 
-interface Setting {
-    id: number;
-    key: string;
-    value: any;
-    category: string;
-    description: string;
-    is_public: boolean;
-}
-
-interface Feature {
-    id: number;
-    code: string;
-    name: string;
-    description: string;
-    is_active: boolean;
-    rollout_percentage: number;
-}
-
 const CATEGORIES = [
     { id: 'GENERAL', name: 'General', icon: '⚙️' },
     { id: 'FISCAL', name: 'Fiscal (Contpaqi)', icon: '💰' },
@@ -36,8 +18,8 @@ const CATEGORIES = [
 export default function ConfigPanel() {
     const { refreshConfig } = useConfig();
     const [activeTab, setActiveTab] = useState('GENERAL');
-    const [settings, setSettings] = useState<Setting[]>([]);
-    const [features, setFeatures] = useState<Feature[]>([]);
+    const [settings, setSettings] = useState([]);
+    const [features, setFeatures] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Cargar configuraciones
@@ -77,7 +59,7 @@ export default function ConfigPanel() {
     };
 
     // Actualizar un setting
-    const updateSetting = async (id: number, value: any) => {
+    const updateSetting = async (id, value) => {
         const response = await fetch(`/api/core/settings/${id}/update_value/`, {
             method: 'PATCH',
             headers: {
@@ -101,7 +83,7 @@ export default function ConfigPanel() {
     };
 
     // Activar/desactivar feature
-    const toggleFeature = async (code: string, isActive: boolean) => {
+    const toggleFeature = async (code, isActive) => {
         const feature = features.find((f) => f.code === code);
         if (!feature) return;
 
@@ -131,7 +113,7 @@ export default function ConfigPanel() {
     const filteredSettings = settings.filter((s) => s.category === activeTab);
 
     // Renderizar un setting según su tipo
-    const renderSetting = (setting: Setting) => {
+    const renderSetting = (setting) => {
         const { id, key, value, description } = setting;
 
         if (typeof value === 'boolean') {

@@ -3,15 +3,14 @@
 import { useConfig } from '@/contexts/ConfigContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { ReactNode } from 'react';
 
-interface FeatureGuardProps {
-    feature: string;
-    children: ReactNode;
-    fallback?: ReactNode;
-}
-
-export default function FeatureGuard({ feature, children, fallback = null }: FeatureGuardProps) {
+/**
+ * @param {Object} props
+ * @param {string} props.feature
+ * @param {React.ReactNode} props.children
+ * @param {React.ReactNode} [props.fallback]
+ */
+export default function FeatureGuard({ feature, children, fallback = null }) {
     const { isFeatureEnabled, isLoading } = useConfig();
     const router = useRouter();
 

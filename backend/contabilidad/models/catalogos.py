@@ -45,6 +45,13 @@ class Cliente(SoftDeleteModel):
     nombre_completo = models.CharField(max_length=200)
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Datos Fiscales
+    rfc = models.CharField(max_length=13, blank=True, null=True, help_text="Para facturación")
+    razon_social = models.CharField(max_length=200, blank=True, null=True)
+    codigo_postal = models.CharField(max_length=5, blank=True, null=True)
+    regimen_fiscal = models.ForeignKey('contabilidad.SATRegimenFiscal', on_delete=models.SET_NULL, null=True, blank=True)
+    uso_cfdi = models.ForeignKey('contabilidad.SATUsoCFDI', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.nombre_completo

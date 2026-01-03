@@ -86,6 +86,8 @@ class VentaReadSerializer(serializers.ModelSerializer):
     cajero_nombre = serializers.ReadOnlyField(source='turno.usuario.username')
     metodo_pago_display = serializers.CharField(source='get_metodo_pago_display', read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    factura_id = serializers.SerializerMethodField()
+    factura_uuid = serializers.SerializerMethodField()
     
     class Meta:
         model = Venta
@@ -93,13 +95,22 @@ class VentaReadSerializer(serializers.ModelSerializer):
             'id', 'folio', 'turno', 'cajero_nombre', 'cliente', 'cliente_nombre',
             'fecha', 'subtotal', 'impuestos', 'total', 'estado', 'estado_display',
             'metodo_pago', 'metodo_pago_display', 'monto_metodo_principal',
-            'metodo_pago_secundario', 'monto_metodo_secundario', 'detalles'
+            'metodo_pago_secundario', 'monto_metodo_secundario', 'detalles',
+            'factura_id', 'factura_uuid'
         ]
     
     def get_cliente_nombre(self, obj):
         if obj.cliente:
             return obj.cliente.nombre_completo
         return 'Público General'
+
+    def get_factura_id(self, obj):
+        factura = obj.facturas.filter(estado_sat='VIGENTE').first()
+        return factura.id if factura else None
+
+    def get_factura_uuid(self, obj):
+        factura = obj.facturas.filter(estado_sat='VIGENTE').first()
+        return factura.uuid if factura else None
 
 class VentaSerializer(serializers.ModelSerializer):
     detalles = DetalleVentaReadSerializer(many=True, read_only=True)

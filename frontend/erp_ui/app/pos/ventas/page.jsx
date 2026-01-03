@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import moment from 'moment';
 import {
     XCircle, Printer, Terminal, DollarSign,
-    ShoppingCart, TrendingUp, AlertCircle, Loader2
+    ShoppingCart, TrendingUp, AlertCircle, Loader2, FileText
 } from 'lucide-react';
 
 import DataTable from '@/components/organisms/DataTable';
@@ -212,6 +212,19 @@ export default function HistorialVentasPage() {
                                     label: 'Imprimir',
                                     onClick: (row) => toast.info("Imprimiendo Ticket " + row.folio),
                                     tooltip: 'Imprimir Ticket'
+                                },
+                                {
+                                    icon: FileText,
+                                    label: 'Factura PDF',
+                                    onClick: (row) => {
+                                        if (row.factura_id) {
+                                            window.open(`/api/contabilidad/facturas/${row.factura_id}/pdf/`, '_blank');
+                                        } else {
+                                            toast.warning("Esta venta no tiene factura timbrada vinculada.");
+                                        }
+                                    },
+                                    tooltip: 'Descargar Factura PDF',
+                                    show: (row) => !!row.factura_id
                                 },
                                 {
                                     icon: XCircle,

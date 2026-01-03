@@ -29,6 +29,7 @@ class OrdenCompra(SoftDeleteModel):
     
     departamento = models.CharField(max_length=100, blank=True, null=True) # O FK a rrhh.Departamento
     proyecto = models.ForeignKey('contabilidad.Proyecto', on_delete=models.SET_NULL, null=True, blank=True)
+    requisicion = models.ForeignKey('compras.Requisicion', on_delete=models.SET_NULL, null=True, blank=True, related_name='ordenes_generadas')
     
     motivo_compra = models.TextField()
     notas = models.TextField(blank=True, null=True)
@@ -70,6 +71,7 @@ class DetalleOrdenCompra(SoftDeleteModel):
     descripcion_personalizada = models.CharField(max_length=255, blank=True, null=True) # Por si la descripción del insumo no basta
     
     cantidad = models.DecimalField(max_digits=12, decimal_places=4, validators=[MinValueValidator(0.0001)])
+    cantidad_recibida = models.DecimalField(max_digits=12, decimal_places=4, default=0) 
     precio_unitario = models.DecimalField(max_digits=14, decimal_places=4)
     descuento = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     impuesto_tasa = models.DecimalField(max_digits=5, decimal_places=2, default=0.16) # 0.16

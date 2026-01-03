@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge";
 import ConnectivityIndicator from '@/components/ui/ConnectivityIndicator';
+import { usePOS } from '@/hooks/usePOS';
+import { useCatalogSync } from '@/hooks/useCatalogSync';
+import BackgroundSyncer from '@/components/pos/BackgroundSyncer';
 
 export default function POSTerminalPage() {
     const router = useRouter();
@@ -61,6 +64,10 @@ export default function POSTerminalPage() {
 
     // Estado para feedback visual
     const [recentlyAdded, setRecentlyAdded] = useState(null);
+
+    // Offline Hooks
+    const { isOnline, searchProductsLocal, processSale, pendingCount } = usePOS();
+    const { isSyncing: isCatalogSyncing } = useCatalogSync();
 
     // 1. Inicialización: Buscar Turno Activo
     useEffect(() => {
@@ -172,28 +179,18 @@ export default function POSTerminalPage() {
         }
     };
 
-    // 2. Buscador de Productos (Optimizado)
+    // 2. Buscador de Productos (Offline First)
     useEffect(() => {
-        const controller = new AbortController();
         const delayDebounceFn = setTimeout(async () => {
             if (searchTerm.length > 2) {
-                try {
-                    const { data } = await getProductosPOS(searchTerm);
-                    setSearchResults(data.results || []);
-                } catch (error) {
-                    if (error.name !== 'AbortError') {
-                        console.error(error);
-                    }
-                }
+                const results = await searchProductsLocal(searchTerm);
+                setSearchResults(results);
             } else {
                 setSearchResults([]);
             }
-        }, 300); // Reducido de 500ms a 300ms para mayor velocidad
+        }, 100);
 
-        return () => {
-            clearTimeout(delayDebounceFn);
-            controller.abort();
-        };
+        return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
     const addToCart = (producto) => {
@@ -291,8 +288,11 @@ export default function POSTerminalPage() {
                 payload.monto_metodo_secundario = parseFloat(montoPago2);
             }
 
-            await createVenta(payload);
-            toast.success("Venta registrada correctamente");
+            const result = await processSale(payload);
+            const msg = result.offline
+                ? "Venta guardada (Offline) 📡"
+                : "Venta registrada correctamente ✅";
+            toast[result.offline ? 'warning' : 'success'](msg);
             setShowCobrarModal(false);
             setItems([]);
             setCliente(null);
@@ -357,7 +357,19 @@ export default function POSTerminalPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <ConnectivityIndicator />
+                    <div className="flex items-center gap-2">
+                        <ConnectivityIndicator />
+                        {pendingCount > 0 && (
+                            <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse">
+                                {pendingCount} Pend
+                            </Badge>
+                        )}
+                        {isCatalogSyncing && (
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200 animate-pulse">
+                                Sincronizando
+                            </Badge>
+                        )}
+                    </div>
                     <Badge className={`${turno ? "bg-green-600 hover:bg-green-700 border-none text-white" : "bg-red-600 hover:bg-red-700 border-none text-white"} text-sm px-3 py-1`}>
                         {turno ? 'CAJA ABIERTA' : 'CAJA CERRADA'}
                     </Badge>
@@ -826,6 +838,8 @@ export default function POSTerminalPage() {
                 </DialogContent>
             </Dialog>
 
+            {/* Componente Invisible para Sincronización */}
+            <BackgroundSyncer />
         </div>
     );
 }

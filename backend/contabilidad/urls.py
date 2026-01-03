@@ -27,6 +27,7 @@ from .views import (
     ReporteFinancieroViewSet,
     BuzonMensajeViewSet,
     OpinionCumplimientoViewSet,
+    EmpresaFiscalViewSet,
 )
 
 router = DefaultRouter()
@@ -55,6 +56,7 @@ router.register(r"certificados-digitales", CertificadoDigitalViewSet)
 router.register(r"reportes-financieros", ReporteFinancieroViewSet, basename="reportes-financieros")
 router.register(r"buzon-tributario", BuzonMensajeViewSet)
 router.register(r"opinion-cumplimiento", OpinionCumplimientoViewSet)
+router.register(r"configuracion-fiscal", EmpresaFiscalViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

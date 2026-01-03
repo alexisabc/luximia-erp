@@ -1,5 +1,7 @@
 from django.db import models
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, Empresa
+from core.encryption import encrypt_text, decrypt_text, encrypt_data, decrypt_data
+from .sat_catalogs import SATRegimenFiscal
 from .catalogos import Moneda, MetodoPago, FormaPago, Cliente
 from .proyectos import Proyecto
 import os
@@ -9,6 +11,20 @@ from django.core.files.storage import FileSystemStorage
 # Secure storage for certificates
 CERT_DIR = os.path.join(settings.BASE_DIR, 'core', 'certificates')
 private_storage = FileSystemStorage(location=CERT_DIR)
+
+class EmpresaFiscal(SoftDeleteModel):
+    """Configuración fiscal vinculada a la Empresa."""
+    empresa = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='configuracion_fiscal')
+    regimen_fiscal = models.ForeignKey(SATRegimenFiscal, on_delete=models.PROTECT)
+    codigo_postal = models.CharField(max_length=5, help_text="Lugar de expedición")
+    
+    # Certificado Activo
+    certificado_sello = models.ForeignKey('CertificadoDigital', on_delete=models.SET_NULL, null=True, blank=True, related_name='empresa_asociada')
+    
+    def __str__(self):
+        return f"Fiscal: {self.empresa.razon_social}"
+
+register_audit(EmpresaFiscal)
 
 class Factura(SoftDeleteModel):
     """Repositorio de Facturas (CFDIs) Emitidas y Recibidas."""
@@ -66,6 +82,7 @@ class Factura(SoftDeleteModel):
     # Relaciones internas (opcionales para vincular con operación)
     cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='facturas')
     proyecto = models.ForeignKey(Proyecto, on_delete=models.SET_NULL, null=True, blank=True, related_name='facturas')
+    venta = models.ForeignKey('pos.Venta', on_delete=models.SET_NULL, null=True, blank=True, related_name='facturas')
     
     def __str__(self):
         return f"{self.serie or ''}{self.folio or ''} - {self.receptor_nombre} - ${self.total}"
@@ -82,9 +99,11 @@ class CertificadoDigital(SoftDeleteModel):
     tipo = models.CharField(max_length=10, choices=TIPO_CERT_CHOICES, default='CSD')
     
     # Archivos
+    # Archivos
     archivo_cer = models.FileField(storage=private_storage, upload_to='certs/', help_text="Archivo .cer (Público)")
-    archivo_key = models.FileField(storage=private_storage, upload_to='keys/', help_text="Archivo .key (Privado) - Proteger acceso")
-    password = models.CharField(max_length=255, help_text="Contraseña de la clave privada (Encriptada)")
+    # Encriptados en BD, no files
+    archivo_key = models.BinaryField(help_text="Archivo .key (Privado) ENCRIPTADO")
+    password_key = models.CharField(max_length=500, help_text="Contraseña de la clave privada (Encriptada)")
     
     # Metadatos
     fecha_inicio_validez = models.DateTimeField(null=True, blank=True)

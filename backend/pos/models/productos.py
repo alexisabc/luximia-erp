@@ -18,6 +18,11 @@ class Producto(SoftDeleteModel):
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
     unidad_medida = models.CharField(max_length=20, choices=UNIDAD_CHOICES, default='M3')
+
+    # SAT - CFDI 4.0
+    clave_sat_producto = models.CharField(max_length=20, blank=True, null=True, help_text="Clave ProdServ SAT")
+    clave_sat_unidad = models.CharField(max_length=20, blank=True, null=True, help_text="Clave Unidad SAT")
+
     precio_lista = models.DecimalField(
         max_digits=12, 
         decimal_places=2, 

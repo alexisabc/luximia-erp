@@ -2,24 +2,24 @@
 
 import React, { useState } from 'react';
 
-interface SettingSwitchProps {
-    label: string;
-    description?: string;
-    value: boolean;
-    onChange: (value: boolean) => Promise<void>;
-    disabled?: boolean;
-}
-
+/**
+ * @param {Object} props
+ * @param {string} props.label
+ * @param {string} [props.description]
+ * @param {boolean} props.value
+ * @param {function} props.onChange
+ * @param {boolean} [props.disabled]
+ */
 export function SettingSwitch({
     label,
     description,
     value,
     onChange,
     disabled = false,
-}: SettingSwitchProps) {
+}) {
     const [isOptimistic, setIsOptimistic] = useState(value);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
 
     const handleToggle = async () => {
         if (disabled || isLoading) return;

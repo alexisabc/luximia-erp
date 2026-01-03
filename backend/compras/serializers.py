@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen, Requisicion, DetalleRequisicion
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,3 +71,27 @@ class OrdenCompraCreateUpdateSerializer(serializers.ModelSerializer):
         model = OrdenCompra
         fields = '__all__'
         read_only_fields = ['folio', 'fecha_solicitud', 'solicitante', 'estado', 'subtotal', 'iva', 'total']
+
+class DetalleRequisicionSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.ReadOnlyField(source='producto.descripcion')
+    total_estimado = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    
+    class Meta:
+        model = DetalleRequisicion
+        fields = '__all__'
+        read_only_fields = ['requisicion']
+
+class RequisicionSerializer(serializers.ModelSerializer):
+    detalles = DetalleRequisicionSerializer(many=True, read_only=True)
+    usuario_nombre = serializers.ReadOnlyField(source='usuario_solicitante.get_full_name')
+    obra_nombre = serializers.ReadOnlyField(source='obra.nombre')
+    centro_costo_path = serializers.ReadOnlyField(source='centro_costo.nombre')
+    
+    class Meta:
+        model = Requisicion
+        fields = [
+            'id', 'usuario_solicitante', 'usuario_nombre', 'fecha_solicitud',
+            'obra', 'obra_nombre', 'centro_costo', 'centro_costo_path',
+            'estado', 'prioridad', 'observaciones', 'detalles'
+        ]
+        read_only_fields = ['usuario_solicitante', 'fecha_solicitud', 'estado']

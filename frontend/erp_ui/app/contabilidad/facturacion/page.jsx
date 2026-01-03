@@ -187,8 +187,14 @@ export default function FacturacionPage() {
                             <FileCode className="w-4 h-4" />
                         </a>
                     )}
-                    {row.pdf_archivo && (
-                        <a href={row.pdf_archivo} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-gray-100 rounded text-red-600" title="Descargar PDF">
+                    {(row.pdf_archivo || row.uuid) && (
+                        <a
+                            href={row.pdf_archivo || `/api/contabilidad/facturas/${row.id}/pdf/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 hover:bg-gray-100 rounded text-red-600"
+                            title="Descargar PDF"
+                        >
                             <FileText className="w-4 h-4" />
                         </a>
                     )}

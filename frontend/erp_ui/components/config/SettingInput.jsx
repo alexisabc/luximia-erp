@@ -2,18 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 
-interface SettingInputProps {
-    label: string;
-    description?: string;
-    value: string | number;
-    type?: 'text' | 'number' | 'email';
-    onChange: (value: string | number) => Promise<void>;
-    disabled?: boolean;
-    min?: number;
-    max?: number;
-    placeholder?: string;
-}
-
+/**
+ * @param {Object} props
+ * @param {string} props.label
+ * @param {string} [props.description]
+ * @param {string|number} props.value
+ * @param {'text'|'number'|'email'} [props.type]
+ * @param {function} props.onChange
+ * @param {boolean} [props.disabled]
+ * @param {number} [props.min]
+ * @param {number} [props.max]
+ * @param {string} [props.placeholder]
+ */
 export function SettingInput({
     label,
     description,
@@ -24,10 +24,10 @@ export function SettingInput({
     min,
     max,
     placeholder,
-}: SettingInputProps) {
+}) {
     const [localValue, setLocalValue] = useState(value);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState(null);
     const [hasChanges, setHasChanges] = useState(false);
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export function SettingInput({
         setHasChanges(false);
     }, [value]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e) => {
         const newValue = type === 'number' ? parseFloat(e.target.value) : e.target.value;
         setLocalValue(newValue);
         setHasChanges(true);
@@ -59,7 +59,7 @@ export function SettingInput({
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleSave();
         } else if (e.key === 'Escape') {
