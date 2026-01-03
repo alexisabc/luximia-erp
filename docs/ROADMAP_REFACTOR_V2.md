@@ -55,7 +55,7 @@
 - [x] **Frontend:** `ConfigContext` integrado en el layout raíz con auto-refresh y soporte de metadatos (favicon/título).
 - [x] **Integración:** Branding dinámico en Login y Navbar (Nombre del sistema, Logos y Monogramas).
 
-## 🟢 Fase 5: Comunicación y Escalabilidad (PRÓXIMAMENTE)
+## 🟢 Fase 5: Comunicación y Escalabilidad (COMPLETADO)
 ### Sprint 13: Event Bus & Notificaciones (Legacy App: `notificaciones`) - ✅ COMPLETADO
 - [x] **Infrastructure:** Infraestructura asíncrona desplegada: Redis (Broker) y Celery (Worker + Beat).
 - [x] **Backend:** Refactorización de app `notificaciones` con `NotificacionService` y Tareas Compartidas (`@shared_task`).
@@ -83,3 +83,11 @@
 # 🏁 FIN DEL PROYECTO DE REFACTORIZACIÓN (V 1.0)
 Todos los módulos legacy han sido migrados. La arquitectura es Clean, Modular y Segura.
 El sistema está listo para "Go Live".
+
+# 🔵 V2.0: Expansión Enterprise (EN PROGRESO)
+
+### Fase 1: Infraestructura de Configuración (Config Engine) - ✅ COMPLETADO
+- [x] **Backend:** Modelos `SystemSetting` y `FeatureFlag` + `ConfigService` con Redis Cache.
+- [x] **Frontend:** `ConfigContext`, `useConfig` hook y `FeatureGuard` (Protección de Rutas).
+- [x] **Admin UI:** Panel de Control `/configuracion/panel` con Toggles y Optimistic UI.
+- [x] **UX:** Sidebar dinámico reactivo a los flags.

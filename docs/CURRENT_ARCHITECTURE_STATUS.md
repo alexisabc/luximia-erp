@@ -22,3 +22,11 @@
 *   **Contenerización:** Docker Compose (Development) y `docker-compose.prod.yml` (Production) optimizado.
 *   **Pipeline CI/CD:** GitHub Actions activo (Tests de Backend + Build de Frontend).
 *   **Estado de Despliegue:** Ready for Production (Dokploy/Docker Swarm).
+
+## Arquitectura de Software - Componentes Clave (V2.0)
+
+### Motor de Configuración Dinámica (Config Engine)
+Sistema híbrido (DB + Redis) para gestión centralizada de configuraciones y feature flags.
+- **Backend:** `ConfigService` con estrategia Cache-First (TTL 15min) y modelos `SystemSetting`/`FeatureFlag`.
+- **Frontend:** `ConfigContext` con sincronización automática y Optimistic UI.
+- **Capacidades:** Activación modular (SaaS style), personalización de reglas de negocio sin deploy, y protección de rutas.

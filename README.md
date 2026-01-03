@@ -1,8 +1,8 @@
 # Sistema ERP - Documentación del Proyecto
 
-- **Versión:** 3.0
-- **Fecha de última actualización:** 30 de diciembre de 2025
-- **Última sesión:** Configuración de Husky + Commitlint para Conventional Commits
+- **Versión:** 3.1
+- **Fecha de última actualización:** 03 de enero de 2026
+- **Última sesión:** Implementación de Infraestructura V2.0 (Config Engine)
 - **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con arquitectura moderna basada en Atomic Design, Mobile First y componentes reutilizables.
 
 ---
@@ -89,7 +89,14 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
 
 ---
 
-## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025)
+## 🚀 HITO V2.0: Infraestructura de Configuración (Enero 2026)
+
+**V2.0 Infraestructura (Config Engine) desplegada.** 
+El sistema soporta ahora personalización dinámica y activación selectiva de módulos (Fiscal, Obras, POS) mediante un sistema híbrido de Feature Flags y Settings con caché Redis.
+
+---
+
+## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025 - Ene 2026)
 
 ### 🎨 Migración a Atomic Design + Mobile First (NUEVO - 100% Completo)
 -   **41 Componentes Atomic Design:** Átomos (8), Moléculas (14), Organismos (6), Templates (6).
@@ -99,6 +106,12 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
 -   **Mobile First:** Todos los componentes optimizados para móviles primero.
 -   **Accesibilidad:** ARIA labels, focus management, keyboard navigation.
 -   **Documentación Completa:** 69 archivos de documentación técnica.
+
+### ⚙️ Motor de Configuración Dinámica (V2.0 - NUEVO)
+-   **Panel de Administración:** Control total sobre reglas de negocio y features activas.
+-   **ConfigContext:** Estados globales sincronizados y persistentes.
+-   **Feature Guard:** Protección de rutas para módulos desactivados.
+-   **Optimistic UI:** Experiencia de usuario ultra-rápida.
 
 ### 💰 Módulo de Tesorería (100% Completo)
 -   **Gestión de Cuentas Bancarias:** CRUD completo con conciliación bancaria automática.
@@ -146,7 +159,7 @@ El sistema está estructurado en módulos interconectados, accesibles según rol
 
 ---
 
-## 3. Stack Tecnológico (Actualizado: Dic 2025)
+## 3. Stack Tecnológico (Actualizado: Ene 2026)
 
 ### Backend
 -   **Core:** Python 3.12+
@@ -277,9 +290,9 @@ git commit -m "docs: actualizar guía de instalación"
 
 ## 6. Métricas del Proyecto
 
-- **Módulos Implementados:** 10+
+- **Módulos Implementados:** 11+ (Incluyendo Config)
 - **Componentes UI:** 41 (Atomic Design)
-- **Páginas Migradas:** 6
+- **Páginas Migradas:** 7
 - **Archivos de Documentación:** 66 (unificados en ERP_Docs/)
 - **Progreso General:** 100% ✅
 - **Estado:** Producción
@@ -292,6 +305,6 @@ Para más información, consulta la [documentación completa](./ERP_Docs/README.
 
 ---
 
-**Última actualización:** 30 de diciembre de 2025  
-**Versión:** 3.0  
+**Última actualización:** 03 de enero de 2026  
+**Versión:** 3.1  
 **Estado:** ✅ Producción
