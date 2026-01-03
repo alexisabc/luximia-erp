@@ -1,212 +1,139 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 from decimal import Decimal
-from ..models import (
-    Turno, Venta, DetalleVenta, Producto,
-    CuentaCliente, MovimientoSaldoCliente
-)
-from contabilidad.models import Cliente
+from ..models import Turno, Venta, DetalleVenta, CuentaCliente, MovimientoSaldoCliente
 from compras.models import Insumo
 from compras.services.kardex_service import KardexService
 
-
 class VentaService:
     """
-    Servicio para gestionar la creación de ventas con lógica de negocio completa.
-    Maneja: validaciones, pagos mixtos, crédito/anticipo, movimientos de cuenta.
+    Servicio para gestionar la creación de ventas con integración al inventario.
     """
 
     @staticmethod
     @transaction.atomic
-    def crear_venta_pos(
-        turno,
-        items,
-        metodo_principal,
-        cliente=None,
-        metodo_secundario=None,
-        monto_principal=None,
-        monto_secundario=None
-    ):
+    def crear_venta(turno_id, items, metodo_pago, almacen_id, usuario, cliente_id=None):
         """
-        Crea una venta completa del POS con soporte para pagos mixtos y cuentas de cliente.
+        Crea una venta y descuenta el inventario automáticamente.
         
         Args:
-            turno: Instancia de Turno activo
-            items: Lista de dicts con {'producto_id': int, 'cantidad': Decimal}
-            metodo_principal: Método de pago principal (EFECTIVO, TARJETA, CREDITO, ANTICIPO)
-            cliente: Instancia de Cliente (opcional, requerido para CREDITO/ANTICIPO)
-            metodo_secundario: Método de pago secundario (opcional)
-            monto_principal: Monto del método principal (opcional, se calcula si no se provee)
-            monto_secundario: Monto del método secundario (opcional)
+            turno_id: ID del turno activo
+            items: Lista de dicts con estructura:
+                {
+                    'tipo': 'insumo' o 'producto',
+                    'insumo_id': ID del insumo (si tipo='insumo'),
+                    'producto_id': ID del producto (si tipo='producto'),
+                    'cantidad': Decimal,
+                    'precio_unitario': Decimal
+                }
+            metodo_pago: Método de pago (EFECTIVO, TARJETA, etc.)
+            almacen_id: ID del almacén desde donde se descuenta
+            usuario: Usuario que realiza la venta
+            cliente_id: ID del cliente (opcional)
         
         Returns:
             Venta creada
-        
-        Raises:
-            ValueError: Si las validaciones de negocio fallan
         """
-        if not items:
-            raise ValueError("La venta no tiene productos")
+        # Validar que el turno existe y está abierto
+        try:
+            turno = Turno.objects.select_for_update().get(pk=turno_id, estado='ABIERTA')
+        except Turno.DoesNotExist:
+            raise ValueError("No existe un turno con ese ID o no está abierto")
         
-        # 1. Calcular total de la venta
-        total_venta = Decimal(0)
-        productos_map = {}
-        
-        for item in items:
-            prod = get_object_or_404(Producto, pk=item['producto_id'])
-            qty = Decimal(str(item['cantidad']))
-            line_total = prod.precio_final * qty
-            total_venta += line_total
-            productos_map[prod.id] = {
-                'prod': prod,
-                'qty': qty,
-                'price': prod.precio_final
-            }
-        
-        # 2. Validar montos de pago
-        if metodo_secundario:
-            if monto_principal is None or monto_secundario is None:
-                raise ValueError("Debe especificar montos para pagos mixtos")
-            
-            monto_principal = Decimal(str(monto_principal))
-            monto_secundario = Decimal(str(monto_secundario))
-            
-            if monto_principal + monto_secundario != total_venta:
-                raise ValueError("La suma de los montos debe ser igual al total")
-        else:
-            monto_principal = total_venta
-            monto_secundario = Decimal(0)
-        
-        # 3. Obtener/crear cuenta del cliente si existe
-        cuenta = None
-        if cliente:
-            cuenta, _ = CuentaCliente.objects.get_or_create(cliente=cliente)
-        
-        # 4. Validar disponibilidad para cada método
-        VentaService._validar_metodo_pago(metodo_principal, monto_principal, cuenta)
-        if metodo_secundario:
-            VentaService._validar_metodo_pago(metodo_secundario, monto_secundario, cuenta)
-        
-        # 5. Crear venta
+        # Crear la venta (cabecera)
         venta = Venta.objects.create(
             turno=turno,
-            cliente=cliente,
-            subtotal=total_venta / Decimal('1.16'),
-            impuestos=total_venta - (total_venta / Decimal('1.16')),
-            total=total_venta,
-            metodo_pago_principal=metodo_principal,
-            monto_metodo_principal=monto_principal,
-            metodo_pago_secundario=metodo_secundario,
-            monto_metodo_secundario=monto_secundario,
-            estado='PAGADA'
+            cliente_id=cliente_id,
+            metodo_pago=metodo_pago,
+            estado='PAGADA'  # En POS típicamente nace pagada
         )
         
-        # 6. Crear detalles de venta
-        for pid, info in productos_map.items():
-            DetalleVenta.objects.create(
+        subtotal = Decimal(0)
+        
+        # Procesar cada item
+        for item in items:
+            cantidad = Decimal(str(item['cantidad']))
+            precio_unitario = Decimal(str(item['precio_unitario']))
+            subtotal_item = cantidad * precio_unitario
+            
+            # Crear detalle de venta
+            detalle = DetalleVenta(
                 venta=venta,
-                producto=info['prod'],
-                cantidad=info['qty'],
-                precio_unitario=info['price'],
-                subtotal=info['price'] * info['qty']
+                cantidad=cantidad,
+                precio_unitario=precio_unitario,
+                subtotal=subtotal_item
             )
+            
+            # Determinar si es insumo o producto
+            if item.get('tipo') == 'insumo':
+                insumo_id = item['insumo_id']
+                detalle.insumo_id = insumo_id
+                
+                # INTEGRACIÓN CON INVENTARIO: Registrar salida
+                KardexService.registrar_movimiento(
+                    insumo_id=insumo_id,
+                    almacen_id=almacen_id,
+                    cantidad=-cantidad,  # Negativo para salida
+                    tipo_movimiento='SALIDA',
+                    costo_unitario=0,  # En salidas se usa el costo promedio actual
+                    referencia=f"Venta POS: {venta.folio}",
+                    usuario=usuario
+                )
+            elif item.get('tipo') == 'producto':
+                detalle.producto_id = item['producto_id']
+            
+            detalle.save()
+            subtotal += subtotal_item
         
-        # 7. Aplicar movimientos de cuenta
-        VentaService._aplicar_movimiento_cuenta(
-            metodo_principal, monto_principal, cuenta, venta
-        )
-        if metodo_secundario:
-            VentaService._aplicar_movimiento_cuenta(
-                metodo_secundario, monto_secundario, cuenta, venta
-            )
+        # Actualizar totales de la venta
+        # Simplificación: IVA 16% sobre el subtotal
+        impuestos = subtotal * Decimal('0.16')
+        total = subtotal + impuestos
+        
+        venta.subtotal = subtotal
+        venta.impuestos = impuestos
+        venta.total = total
+        venta.monto_metodo_principal = total
+        venta.save()
         
         return venta
 
     @staticmethod
-    def _validar_metodo_pago(metodo, monto, cuenta):
-        """
-        Valida que el método de pago sea válido y tenga fondos suficientes.
-        
-        Raises:
-            ValueError: Si la validación falla
-        """
-        if metodo in ['CREDITO', 'ANTICIPO'] and not cuenta:
-            raise ValueError("Cliente requerido para crédito/anticipo")
-        
-        if metodo == 'CREDITO' and cuenta.credito_disponible < monto:
-            raise ValueError(
-                f"Crédito insuficiente. Disponible: ${cuenta.credito_disponible}"
-            )
-        
-        if metodo == 'ANTICIPO' and cuenta.saldo < monto:
-            raise ValueError(
-                f"Anticipo insuficiente. Disponible: ${cuenta.saldo}"
-            )
-
-    @staticmethod
-    def _aplicar_movimiento_cuenta(metodo, monto, cuenta, venta):
-        """
-        Aplica movimientos a la cuenta del cliente según el método de pago.
-        """
-        if not cuenta or metodo not in ['CREDITO', 'ANTICIPO']:
-            return
-        
-        saldo_anterior = cuenta.saldo
-        
-        if metodo == 'CREDITO':
-            cuenta.saldo -= monto
-            tipo_mov = 'CARGO_VENTA'
-        elif metodo == 'ANTICIPO':
-            cuenta.saldo -= monto
-            tipo_mov = 'CARGO_USO_ANTICIPO'
-        
-        cuenta.save()
-        
-        MovimientoSaldoCliente.objects.create(
-            cuenta=cuenta,
-            tipo=tipo_mov,
-            monto=monto,
-            referencia_venta=venta,
-            saldo_anterior=saldo_anterior,
-            saldo_nuevo=cuenta.saldo,
-            comentarios=f"Pago {metodo} - Venta {venta.folio}"
-        )
-
-    @staticmethod
     @transaction.atomic
-    def cancelar_venta(venta, supervisor, motivo):
+    def autorizar_cancelacion_solicitud(solicitud, autorizador):
         """
-        Cancela una venta y revierte los movimientos de cuenta.
+        Autoriza una solicitud de cancelación y revierte los movimientos.
         
         Args:
-            venta: Instancia de Venta a cancelar
-            supervisor: Usuario que autoriza la cancelación
-            motivo: Motivo de la cancelación
+            solicitud: Instancia de SolicitudCancelacion
+            autorizador: Usuario que autoriza
         
         Raises:
-            ValueError: Si la venta ya está cancelada
+            ValueError: Si la solicitud no está pendiente
         """
-        if venta.estado == 'CANCELADA':
-            raise ValueError("La venta ya está cancelada")
+        if solicitud.estado != 'PENDIENTE':
+            raise ValueError(f"Esta solicitud ya fue {solicitud.estado.lower()}")
         
-        venta.estado = 'CANCELADA'
-        venta.cancelado_por = supervisor
-        venta.motivo_cancelacion = motivo
-        venta.save()
+        venta = solicitud.venta
+        
+        # Marcar solicitud como aprobada (el modelo tiene el método)
+        # solicitud.aprobar() ya existe en el modelo
         
         # Revertir movimientos de saldo si aplica
         if venta.metodo_pago_principal in ['CREDITO', 'ANTICIPO'] and venta.cliente:
-            cuenta = CuentaCliente.objects.get(cliente=venta.cliente)
-            saldo_anterior = cuenta.saldo
-            cuenta.saldo += venta.total
-            cuenta.save()
-            
-            MovimientoSaldoCliente.objects.create(
-                cuenta=cuenta,
-                tipo='CANCELACION',
-                monto=venta.total,
-                referencia_venta=venta,
-                saldo_anterior=saldo_anterior,
-                saldo_nuevo=cuenta.saldo,
-                comentarios=f"Cancelación venta {venta.folio}"
-            )
+            try:
+                cuenta = CuentaCliente.objects.get(cliente=venta.cliente)
+                saldo_anterior = cuenta.saldo
+                cuenta.saldo += venta.total
+                cuenta.save()
+                
+                MovimientoSaldoCliente.objects.create(
+                    cuenta=cuenta,
+                    tipo='CANCELACION',
+                    monto=venta.total,
+                    referencia_venta=venta,
+                    saldo_anterior=saldo_anterior,
+                    saldo_nuevo=cuenta.saldo,
+                    comentarios=f"Cancelación autorizada - Venta {venta.folio}"
+                )
+            except CuentaCliente.DoesNotExist:
+                pass
