@@ -1,4 +1,4 @@
-# 🎉 Luximia ERP - Release Notes V1.0.0
+# 🎉 Sistema ERP - Release Notes V1.0.0
 
 **Versión:** 1.0.0 Gold Master  
 **Fecha de Release:** 2026-01-03  
@@ -9,7 +9,7 @@
 
 ## 🚀 Resumen Ejecutivo
 
-Esta es la primera versión estable de **Luximia ERP**, un sistema de gestión empresarial modular y escalable construido con tecnologías modernas. El sistema ha sido completamente refactorizado siguiendo principios de Clean Architecture y está listo para su despliegue en producción.
+Esta es la primera versión estable de **Sistema ERP**, un sistema de gestión empresarial modular y escalable construido con tecnologías modernas. El sistema ha sido completamente refactorizado siguiendo principios de Clean Architecture y está listo para su despliegue en producción.
 
 ---
 
@@ -245,7 +245,7 @@ Para reportar bugs o solicitar características:
 
 ---
 
-**¡Gracias por usar Luximia ERP!** 🎉
+**¡Gracias por usar Sistema ERP!** 🎉
 
 ---
 

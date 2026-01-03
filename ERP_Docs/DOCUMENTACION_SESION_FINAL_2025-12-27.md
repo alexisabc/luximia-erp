@@ -301,7 +301,7 @@ docker-compose exec backend python manage.py seed_empresas
 ```
 
 ### Seeds Actualizados
-- ✅ `seed_empresas.py` - Sin branding "Luximia"
+- ✅ `seed_empresas.py` - Sin branding "Sistema ERP"
 - ✅ `seed_all.py` - Comando global funcional
 
 ---
@@ -316,7 +316,7 @@ docker-compose exec backend python manage.py seed_empresas
 
 ### Backend
 1. ✅ **Warning de paginación** - Ordering agregado a ProveedorViewSet
-2. ✅ **Branding "Luximia"** - Removido de emails y sistema
+2. ✅ **Branding "Sistema ERP"** - Removido de emails y sistema
 
 ---
 

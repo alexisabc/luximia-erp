@@ -1,4 +1,4 @@
-# Estructura de Assets - Luximia ERP
+# Estructura de Assets - Sistema ERP
 
 ## 📁 Ubicaciones de Assets
 

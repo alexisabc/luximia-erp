@@ -1,4 +1,4 @@
-# Implementación Multi-Empresa - Luximia ERP
+# Implementación Multi-Empresa - Sistema ERP
 
 ## Objetivo
 Implementar lógica multi-empresa para manejar 5 razones sociales diferentes, permitiendo:
@@ -259,7 +259,7 @@ python manage.py shell
 >>> Empresa.objects.create(
 ...     codigo='LUX01',
 ...     razon_social='LUXIMIA SA DE CV',
-...     nombre_comercial='Luximia',
+...     nombre_comercial='Sistema ERP',
 ...     rfc='LUX010101XXX'
 ... )
 # ... crear las otras 4

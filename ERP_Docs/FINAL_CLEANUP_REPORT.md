@@ -23,7 +23,7 @@
 ### Carpetas Eliminadas (5):
 1. ✅ `components/cards/` - Vacía
 2. ✅ `components/tables/` - Duplicada
-3. ✅ `Luximia_Docs/` (raíz) - Vacía
+3. ✅ `Sistema ERP_Docs/` (raíz) - Vacía
 4. ✅ `docs/` (raíz) - Consolidada en ERP_Docs
 5. ✅ `frontend/erp_ui/README.md` - Movido a ERP_Docs
 

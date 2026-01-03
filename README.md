@@ -1,4 +1,4 @@
-# Sistema ERP Luximia - Documentación del Proyecto
+# Sistema Sistema ERP - Documentación del Proyecto
 
 - **Versión:** 3.0
 - **Fecha de última actualización:** 30 de diciembre de 2025

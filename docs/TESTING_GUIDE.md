@@ -1,4 +1,4 @@
-# Guía de Testing - Sistema ERP Luximia
+# Guía de Testing - Sistema Sistema ERP
 
 > **Versión:** 1.0  
 > **Fecha:** 30 de diciembre de 2025  
@@ -8,7 +8,7 @@
 
 ## 📋 Resumen
 
-Este documento describe la infraestructura de testing configurada para el proyecto ERP Luximia, incluyendo herramientas, configuración y ejemplos de uso.
+Este documento describe la infraestructura de testing configurada para el proyecto Sistema ERP, incluyendo herramientas, configuración y ejemplos de uso.
 
 ---
 

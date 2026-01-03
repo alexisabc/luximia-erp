@@ -55,7 +55,7 @@ El usuario ahora puede:
 ┌─────────────────────────────────┐
 │ ● LUX01                         │ ← Indicador de color
 │   Empresa                       │
-│   Luximia Desarrollos           │
+│   Sistema ERP Desarrollos           │
 │                              ▼  │
 └─────────────────────────────────┘
 ```
@@ -66,13 +66,13 @@ El usuario ahora puede:
 │ Cambiar Empresa                 │
 ├─────────────────────────────────┤
 │ ● LUX01                      ✓  │ ← Activa
-│   Luximia Desarrollos           │
+│   Sistema ERP Desarrollos           │
 ├─────────────────────────────────┤
 │ ● LUX02                         │
-│   Luximia Materiales            │
+│   Sistema ERP Materiales            │
 ├─────────────────────────────────┤
 │ ● LUX03                         │
-│   Luximia Constructora          │
+│   Sistema ERP Constructora          │
 └─────────────────────────────────┘
 ```
 

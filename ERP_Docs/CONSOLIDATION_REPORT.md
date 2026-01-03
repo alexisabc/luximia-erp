@@ -13,7 +13,7 @@
 
 ```
 sistema-erp/
-├── Luximia_Docs/        ❌ Solo carpeta .obsidian (vacía)
+├── Sistema ERP_Docs/        ❌ Solo carpeta .obsidian (vacía)
 ├── docs/                ❌ 6 archivos de arquitectura
 ├── ERP_Docs/            ✅ 41 archivos de documentación
 └── frontend/erp_ui/
@@ -50,7 +50,7 @@ sistema-erp/
 - **Resultado**: 47 archivos en `ERP_Docs/` (41 + 6)
 
 ### 2. ✅ Eliminación de Duplicados
-- **Eliminado**: `Luximia_Docs/` (solo .obsidian, sin contenido útil)
+- **Eliminado**: `Sistema ERP_Docs/` (solo .obsidian, sin contenido útil)
 - **Eliminado**: `docs/` (contenido ya copiado a ERP_Docs)
 
 ### 3. ✅ Creación de Índices

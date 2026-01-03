@@ -28,7 +28,7 @@
 ### 4. ✅ Correcciones y Mejoras
 - Fix 404 en `/tipos-cambio-manual/`
 - Fix warning de paginación en Proveedores
-- Renombrado de documentación (Luximia → Sistema ERP)
+- Renombrado de documentación (Sistema ERP → Sistema ERP)
 - Eliminación de branding en Passkeys/TOTP
 
 ---
@@ -225,7 +225,7 @@
 2. ✅ **Warning de paginación en Proveedores**
    - Agregado `.order_by('id')`
    
-3. ✅ **Branding "Luximia" en Passkeys**
+3. ✅ **Branding "Sistema ERP" en Passkeys**
    - Cambiado a "Sistema ERP"
    
 4. ✅ **Conflicto `services.py` vs `services/`**

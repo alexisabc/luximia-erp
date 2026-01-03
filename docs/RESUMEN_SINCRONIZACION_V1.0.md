@@ -58,7 +58,7 @@ docs/
 
 **Tag Creado:**
 ```
-v1.0.0 - Luximia ERP Gold Master - Refactor Completed
+v1.0.0 - Sistema ERP Gold Master - Refactor Completed
 ```
 
 **Commits Incluidos en V1.0.0:**

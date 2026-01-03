@@ -1,4 +1,4 @@
-# Roadmap de Refactorización - Sistema ERP Luximia
+# Roadmap de Refactorización - Sistema Sistema ERP
 
 > **Versión:** 1.0  
 > **Fecha:** 30 de diciembre de 2025  

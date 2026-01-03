@@ -57,7 +57,7 @@ Esta sesión ha sido una de las más productivas, completando la implementación
 - ❌ → ✅ Error 404 en `/tipos-cambio-manual/`
 - ❌ → ✅ Warning de paginación en Proveedores
 - ❌ → ✅ Componente Switch no encontrado
-- ❌ → ✅ Branding "Luximia" removido
+- ❌ → ✅ Branding "Sistema ERP" removido
 
 ---
 

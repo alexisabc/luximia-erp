@@ -8,7 +8,7 @@
 
 ## 🎯 Objetivo
 
-Este documento presenta una radiografía completa del proyecto Luximia ERP V1.0, evaluando la conformidad arquitectónica de cada archivo de código fuente contra los principios de Clean Architecture y detectando código legacy o muerto.
+Este documento presenta una radiografía completa del proyecto Sistema ERP V1.0, evaluando la conformidad arquitectónica de cada archivo de código fuente contra los principios de Clean Architecture y detectando código legacy o muerto.
 
 ---
 
@@ -396,7 +396,7 @@ Este documento presenta una radiografía completa del proyecto Luximia ERP V1.0,
 
 ## 🏆 CONCLUSIÓN
 
-**El proyecto Luximia ERP V1.0.0 presenta una salud de código del 97.0% y una conformidad arquitectónica del 98.8%.**
+**El proyecto Sistema ERP V1.0.0 presenta una salud de código del 97.0% y una conformidad arquitectónica del 98.8%.**
 
 **Veredicto:** ✅ **APTO PARA PRODUCCIÓN**
 

@@ -28,27 +28,27 @@ docker compose exec backend python manage.py shell
 
 Las siguientes 5 empresas serán creadas:
 
-1. **LUX01 - Luximia Desarrollos**
+1. **LUX01 - Sistema ERP Desarrollos**
    - RFC: LDE010101XXX
    - Enfoque: Desarrollo inmobiliario
    - Color: Azul (#3B82F6)
 
-2. **LUX02 - Luximia Materiales**
+2. **LUX02 - Sistema ERP Materiales**
    - RFC: MPL020202XXX
    - Enfoque: Venta de materiales pétreos (POS)
    - Color: Verde (#10B981)
 
-3. **LUX03 - Luximia Constructora**
+3. **LUX03 - Sistema ERP Constructora**
    - RFC: CLU030303XXX
    - Enfoque: Construcción de proyectos
    - Color: Naranja (#F59E0B)
 
-4. **LUX04 - Luximia Inmobiliaria**
+4. **LUX04 - Sistema ERP Inmobiliaria**
    - RFC: ILU040404XXX
    - Enfoque: Venta de lotes y departamentos
    - Color: Morado (#8B5CF6)
 
-5. **LUX05 - Luximia Servicios**
+5. **LUX05 - Sistema ERP Servicios**
    - RFC: SAL050505XXX
    - Enfoque: Servicios administrativos
    - Color: Rojo (#EF4444)
