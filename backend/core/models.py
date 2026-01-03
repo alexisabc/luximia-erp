@@ -203,3 +203,10 @@ class Empresa(SoftDeleteModel):
 
 # Registrar modelo en auditoría
 register_audit(Empresa)
+
+# Importar modelos de configuración dinámica (V2.0)
+from .models.config import SystemSetting, FeatureFlag
+
+# Registrar en auditoría
+register_audit(SystemSetting)
+register_audit(FeatureFlag)

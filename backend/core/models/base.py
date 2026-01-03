@@ -1,0 +1,107 @@
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from auditlog.registry import auditlog
+
+
+def get_current_user():
+    """Importación lazy del middleware para evitar dependencias circulares"""
+    from ..middleware import get_current_user as _get_current_user
+    return _get_current_user()
+
+
+class BaseModel(models.Model):
+    """
+    Modelo base abstracto que añade campos de trazabilidad (timestamps y usuarios)
+    y configura auditoría básica.
+    """
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Fecha de creación")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Última actualización")
+    
+    # Usamos string reference para evitar importaciones circulares si el modelo de usuario cambia
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='%(app_label)s_%(class)s_created',
+        verbose_name="Creado por"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='%(app_label)s_%(class)s_updated',
+        verbose_name="Actualizado por"
+    )
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        """
+        Sobreescribimos save para asignar automáticamente created_by y updated_by
+        usando el usuario del request actual (vía middleware).
+        """
+        user = get_current_user()
+        
+        # Solo asignamos si hay un usuario autenticado real
+        if user and user.is_authenticated:
+            if not self.pk:  # Si es creación
+                self.created_by = user
+            self.updated_by = user
+            
+        super().save(*args, **kwargs)
+
+
+class SoftDeleteManager(models.Manager):
+    """
+    Manager que por defecto solo muestra registros activos.
+    """
+    def get_queryset(self):
+        # Por defecto filtramos los no eliminados
+        return super().get_queryset().filter(activo=True)
+
+    def all_with_deleted(self):
+        # Permite acceder a todos, incluidos los eliminados
+        return super().get_queryset()
+
+    def deleted(self):
+        # Solo los eliminados
+        return super().get_queryset().filter(activo=False)
+
+
+class SoftDeleteModel(BaseModel):
+    """
+    Modelo abstracto para implementar borrado lógico (Soft Delete).
+    Sustituye el borrado físico por un flag de inactivo.
+    """
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+    
+    # Managers
+    objects = SoftDeleteManager() # Manager por defecto (solo activos)
+    all_objects = models.Manager() # Manager sin filtros (Django standard)
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        """
+        Realiza un borrado lógico (soft delete).
+        """
+        self.activo = False
+        self.save(using=using)
+
+    def hard_delete(self, using=None, keep_parents=False):
+        """
+        Realiza un borrado físico real de la base de datos.
+        """
+        super().delete(using=using, keep_parents=keep_parents)
+
+    def restore(self):
+        """
+        Restaura un registro eliminado lógicamente.
+        """
+        self.activo = True
+        self.save()
