@@ -13,6 +13,7 @@ from .views_portal import (
     PortalVacacionesViewSet, PortalPermisosViewSet, PortalIncapacidadViewSet, PortalDocumentosViewSet,
     AdminVacacionesViewSet, AdminPermisosViewSet, AdminIncapacidadViewSet, AdminDocumentosViewSet
 )
+from .views.asistencia_views import AsistenciaViewSet
 
 router = DefaultRouter()
 router.register(r"departamentos", DepartamentoViewSet)
@@ -25,6 +26,7 @@ router.register(r"historico-nomina", HistoricoNominaViewSet)
 router.register(r"recibos-nomina", ReciboNominaViewSet)
 router.register(r"conceptos-nomina", ConceptoNominaViewSet)
 router.register(r"periodos-nomina", PeriodoNominaViewSet)
+router.register(r"asistencias", AsistenciaViewSet)
 # Portal Empleado
 router.register(r"portal-vacaciones", PortalVacacionesViewSet, basename="portal-vacaciones")
 router.register(r"portal-permisos", PortalPermisosViewSet, basename="portal-permisos")

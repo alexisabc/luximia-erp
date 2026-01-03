@@ -125,3 +125,4 @@ export const getAdminDocumentos = () => apiClient.get('/rrhh/gestion-documentos/
 export const aprobarDocumento = (id) => apiClient.post(`/rrhh/gestion-documentos/${id}/aprobar/`);
 export const rechazarDocumento = (id, data) => apiClient.post(`/rrhh/gestion-documentos/${id}/rechazar/`, data);
 
+export const simularNomina = (id, data = { dias: 15 }) => apiClient.post(`/rrhh/empleados/${id}/simular-nomina/`, data);

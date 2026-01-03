@@ -1,27 +1,65 @@
-# backend/Dockerfile.prod
+# ============================================================================
+# Multi-stage Dockerfile for Django Backend (Production)
+# Compatible with Podman/Buildah - OCI Compliant
+# ============================================================================
 
-FROM python:3.11-slim-bookworm
+# Stage 1: Builder
+FROM python:3.11-slim-bookworm as builder
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    LANG="es_ES.UTF-8" \
-    LANGUAGE="es_ES:es" \
-    LC_ALL="es_ES.UTF-8"
+LABEL maintainer="Sistema ERP <dev@erp.com>"
+LABEL description="Django Backend - Production Build Stage"
 
-WORKDIR /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies
-# We build a list compatible with Debian Bookworm
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     libssl-dev \
     libffi-dev \
+    libxml2-dev \
+    libxslt1-dev \
     python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Copy and install Python dependencies
+COPY backend/requirements.txt ./
+RUN pip install --user --no-warn-script-location -r requirements.txt && \
+    pip install --user --no-warn-script-location gunicorn
+
+# ============================================================================
+# Stage 2: Runtime
+FROM python:3.11-slim-bookworm
+
+LABEL maintainer="Sistema ERP <dev@erp.com>"
+LABEL description="Django Backend - Production Runtime"
+LABEL version="1.0"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LANG="es_ES.UTF-8" \
+    LANGUAGE="es_ES:es" \
+    LC_ALL="es_ES.UTF-8" \
+    DJANGO_SETTINGS_MODULE=config.settings \
+    PATH="/home/appuser/.local/bin:$PATH"
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    libssl3 \
+    libffi8 \
+    libxml2 \
+    libxslt1.1 \
     postgresql-client \
     locales \
     shared-mime-info \
-    # WeasyPrint dependencies
+    curl \
+    # WeasyPrint runtime dependencies
     libcairo2 \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
@@ -30,37 +68,42 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libharfbuzz-icu0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Generate locale
-RUN sed -i -e 's/# es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen \
-    && dpkg-reconfigure --frontend=noninteractive locales
+# Generate Spanish locale
+RUN sed -i -e 's/# es_ES.UTF-8 UTF-8/es_ES.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales
 
-# Create appuser
-RUN addgroup --system appgroup && adduser --system --group appuser
+# Create non-root user with specific UID 1000 (required for Podman rootless)
+RUN groupadd -g 1000 appuser && \
+    useradd -m -u 1000 -g appuser -s /bin/bash appuser
 
-# Copy requirements
-COPY backend/requirements.txt .
+# Create application directories with proper permissions
+RUN mkdir -p /app/static /app/media /app/logs /app/staticfiles /app/mediafiles && \
+    chown -R appuser:appuser /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn
+WORKDIR /app
+
+# Copy Python dependencies from builder
+COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
 # Copy global assets
-COPY assets /app/assets
+COPY --chown=appuser:appuser assets /app/assets
 
 # Copy backend code
-COPY backend/ .
+COPY --chown=appuser:appuser backend/ .
 
-# Fix permissions
-RUN chown -R appuser:appgroup /app
-
-# Switch to non-root user
-USER appuser
-
-# Copy entrypoint script
-COPY --chown=appuser:appgroup backend/entrypoint.prod.sh /app/entrypoint.prod.sh
+# Copy and set entrypoint permissions
+COPY --chown=appuser:appuser backend/entrypoint.prod.sh /app/entrypoint.prod.sh
 RUN chmod +x /app/entrypoint.prod.sh
 
+# Switch to non-root user (CRITICAL for rootless Podman)
+USER appuser
+
+# Expose port (informational)
 EXPOSE 8000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Entrypoint
 ENTRYPOINT ["/app/entrypoint.prod.sh"]

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { X, User, Briefcase, DollarSign, Activity, CreditCard, FileText, Calendar, History, ClipboardList, Building2 } from 'lucide-react';
+import { X, User, Briefcase, DollarSign, Activity, CreditCard, FileText, Calendar, History, ClipboardList, Building2, Calculator, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
+import { simularNomina } from '@/services/rrhh';
+import { toast } from 'sonner';
 import Image from 'next/image';
 
 const TabButton = ({ id, label, icon: Icon, active, onClick }) => (
     <button
         onClick={() => onClick(id)}
         className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-t-lg border-b-2 transition-all ${active
-                ? 'border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ? 'border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
     >
         <Icon className="w-4 h-4" />
@@ -35,6 +36,9 @@ const InfoField = ({ label, value, icon: Icon }) => (
 
 export default function EmployeeDetailModal({ employee, onClose }) {
     const [activeTab, setActiveTab] = useState('generales');
+    const [simLoading, setSimLoading] = useState(false);
+    const [simResult, setSimResult] = useState(null);
+    const [diasSim, setDiasSim] = useState(15);
 
     if (!employee) return null;
 
@@ -44,10 +48,8 @@ export default function EmployeeDetailModal({ employee, onClose }) {
         { id: 'salariales', label: 'Cond. Salariales', icon: DollarSign },
         { id: 'medica', label: 'Ficha Médica', icon: Activity },
         { id: 'bancarios', label: 'D. Bancarios', icon: CreditCard },
+        { id: 'simulacion', label: 'Simular Nómina', icon: Calculator },
         { id: 'expediente', label: 'Expediente', icon: FileText },
-        // { id: 'solicitudes', label: 'Permisos y Vac.', icon: Calendar },
-        // { id: 'history', label: 'Hist. Pagos', icon: History },
-        // { id: 'kardex', label: 'Kardex', icon: ClipboardList },
     ];
 
     const dp = employee.detalle_personal || {};
@@ -217,6 +219,91 @@ export default function EmployeeDetailModal({ employee, onClose }) {
                                 <InfoField label="No. Cuenta" value={nb.numero_cuenta} />
                                 <InfoField label="CLABE" value={nb.clabe} />
                             </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'simulacion' && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom-2">
+                            <div className="bg-blue-600 rounded-2xl p-6 text-white shadow-xl shadow-blue-600/20">
+                                <h4 className="text-xl font-bold flex items-center gap-2 mb-4">
+                                    <Calculator className="w-6 h-6" />
+                                    Simulador de Nómina Quincenal
+                                </h4>
+                                <div className="flex flex-col md:flex-row items-end gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-xs font-bold uppercase opacity-80 mb-2 block">Días a Pagar</label>
+                                        <input
+                                            type="number"
+                                            value={diasSim}
+                                            onChange={(e) => setDiasSim(e.target.value)}
+                                            className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 font-bold"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            setSimLoading(true);
+                                            try {
+                                                const res = await simularNomina(employee.id, { dias: diasSim });
+                                                setSimResult(res.data);
+                                                toast.success('Cálculo completado');
+                                            } catch (err) {
+                                                console.error(err);
+                                                toast.error('Error al simular nómina');
+                                            } finally {
+                                                setSimLoading(false);
+                                            }
+                                        }}
+                                        disabled={simLoading}
+                                        className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {simLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <TrendingUp className="w-5 h-5" />}
+                                        Calcular Ahora
+                                    </button>
+                                </div>
+                            </div>
+
+                            {simResult && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
+                                    <div className="space-y-4">
+                                        <SectionTitle title="Percepciones" />
+                                        {simResult.percepciones.map((p, i) => (
+                                            <div key={i} className="flex justify-between p-3 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-lg">
+                                                <span className="font-bold text-gray-700 dark:text-gray-300">{p.nombre}</span>
+                                                <span className="font-bold text-green-600">${p.monto.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border-t-2 border-green-500">
+                                            <span className="font-extrabold text-gray-900 dark:text-white uppercase text-xs">Total Percepciones</span>
+                                            <span className="font-extrabold text-green-600">${simResult.total_percepciones.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <SectionTitle title="Deducciones" />
+                                        {simResult.deducciones.map((d, i) => (
+                                            <div key={i} className="flex justify-between p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg">
+                                                <span className="font-bold text-gray-700 dark:text-gray-300">{d.nombre}</span>
+                                                <span className="font-bold text-red-600">-${d.monto.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border-t-2 border-red-500">
+                                            <span className="font-extrabold text-gray-900 dark:text-white uppercase text-xs">Total Deducciones</span>
+                                            <span className="font-extrabold text-red-600">-${simResult.total_deducciones.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="md:col-span-2 bg-gradient-to-br from-gray-900 to-slate-800 rounded-2xl p-8 text-center shadow-2xl">
+                                        <p className="text-gray-400 uppercase font-black tracking-widest text-sm mb-2">Neto Estimado a Pagar</p>
+                                        <h3 className="text-5xl font-black text-white">
+                                            ${simResult.neto_pagar.toLocaleString()}
+                                            <span className="text-lg text-gray-500 ml-2 font-normal">MXN</span>
+                                        </h3>
+                                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 text-gray-400 text-xs font-bold border border-white/10 uppercase">
+                                            Calculado con Tabla ISR 2025 Quincenal
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

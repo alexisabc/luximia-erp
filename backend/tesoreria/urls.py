@@ -5,7 +5,9 @@ from .views import (
     MovimientoBancarioViewSet,
     TurnoPorRecolectarView,
     EgresoViewSet,
-    ContraReciboViewSet
+    ContraReciboViewSet,
+    DeudasView,
+    RegistrarPagoView
 )
 
 router = DefaultRouter()
@@ -17,4 +19,6 @@ router.register(r'contrarecibos', ContraReciboViewSet, basename='contrarecibo')
 urlpatterns = [
     path('', include(router.urls)),
     path('turnos-pendientes/', TurnoPorRecolectarView.as_view(), name='turnos-pendientes'),
+    path('deudas/', DeudasView.as_view(), name='deudas'),
+    path('registrar-pago/', RegistrarPagoView.as_view(), name='registrar-pago'),
 ]

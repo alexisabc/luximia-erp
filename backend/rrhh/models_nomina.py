@@ -1,15 +1,12 @@
 from django.db import models
-from core.models import BaseModel, SoftDeleteModel, register_audit
+from core.models import BaseModel, SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # ---------------------------------------------------------------------------
 # Catálogos y Parámetros de Nómina (Configuración Dinámica)
 # ---------------------------------------------------------------------------
 
-class TipoConcepto(models.TextChoices):
-    PERCEPCION = 'PERCEPCION', 'Percepción'
-    DEDUCCION = 'DEDUCCION', 'Deducción'
-    OTRO_PAGO = 'OTRO_PAGO', 'Otro Pago'
+from .models.conceptos import ConceptoNomina, TipoConcepto
 
 class ClasificacionFiscal(models.TextChoices):
     # --- PERCEPCIONES (Catálogo c_TipoPercepcion) ---
@@ -63,28 +60,7 @@ class ClasificacionFiscal(models.TextChoices):
     VIATICOS_ENTREGADOS = '003_OP', '003 - Viáticos (entregados al trabajador)'
     APLICACION_SALDO_FAVOR = '004_OP', '004 - Aplicación de saldo a favor compensación anual'
 
-class ConceptoNomina(SoftDeleteModel):
-    """
-    Define los conceptos que pueden aparecer en una nómina.
-    Ej: Sueldo, Bono Puntualidad (Fiscal), Bono Especial (Interno), ISR, IMSS.
-    """
-    codigo = models.CharField(max_length=20, unique=True, help_text="Código interno (ej. P001)")
-    nombre = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=20, choices=TipoConcepto.choices)
-    
-    # Configuración Fiscal vs Interna
-    es_fiscal = models.BooleanField(default=True, help_text="Si es false, es solo para control interno (Pagadora).")
-    clave_sat = models.CharField(max_length=20, blank=True, null=True, help_text="Clave Agrupadora SAT (c_TipoPercepcion/Deduccion)")
-    
-    # Comportamiento de Cálculo
-    es_periodico = models.BooleanField(default=True, help_text="Se aplica en cada nómina ordinaria automáticamente.")
-    grava_isr = models.BooleanField(default=True, help_text="Si suma a la base gravable de ISR.")
-    grava_imss = models.BooleanField(default=True, help_text="Si integra al Salario Base de Cotización (SBC).")
-
-    cuenta_contable = models.CharField(max_length=50, blank=True, null=True, help_text="Integración con Contabilidad.")
-
-    def __str__(self):
-        return f"{self.codigo} - {self.nombre} ({'Fiscal' if self.es_fiscal else 'Interno'})"
+# ConceptoNomina is now imported from .models.conceptos
 
 
 class TablaISR(SoftDeleteModel):
@@ -204,10 +180,11 @@ class RenglonSubsidio(models.Model):
 # Modelos Transaccionales (Ejecución de Nómina)
 # ---------------------------------------------------------------------------
 
-class Nomina(SoftDeleteModel):
+class Nomina(SoftDeleteModel, EmpresaOwnedModel):
     """
     Cabecera de un cálculo de nómina (ej. Quincena 1 Enero 2025).
     """
+    objects = MultiTenantManager()
     ESTADO_NOMINA = [
         ('BORRADOR', 'Borrador'),
         ('CALCULADA', 'Calculada'),

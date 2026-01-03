@@ -65,17 +65,17 @@ Este documento describe la infraestructura de testing configurada para el proyec
 #### Ejecutar Tests Backend
 
 ```bash
-# Desde la raíz del proyecto (con Docker)
-docker-compose exec backend pytest
+# Desde la raíz del proyecto (con Podman)
+podman exec luximia-backend pytest
 
 # Con cobertura
-docker-compose exec backend pytest --cov
+podman exec luximia-backend pytest --cov
 
 # Tests específicos
-docker-compose exec backend pytest core/tests/test_sanity.py
+podman exec luximia-backend pytest core/tests/test_sanity.py
 
 # Con verbose
-docker-compose exec backend pytest -v
+podman exec luximia-backend pytest -v
 ```
 
 #### Estructura de Tests Backend
@@ -118,16 +118,16 @@ backend/
 #### Ejecutar Tests Frontend
 
 ```bash
-# Desde frontend/erp_ui (con Docker)
-docker-compose exec frontend npm test
+# Desde frontend/erp_ui (con Podman)
+podman exec luximia-frontend npm test
 
 # Modo watch (desarrollo)
-docker-compose exec frontend npm run test:watch
+podman exec luximia-frontend npm run test:watch
 
 # Con cobertura
-docker-compose exec frontend npm run test:coverage
+podman exec luximia-frontend npm run test:coverage
 
-# Sin Docker (local)
+# Sin Podman (local)
 cd frontend/erp_ui
 npm test
 ```
@@ -378,11 +378,11 @@ describe('useResource Hook', () => {
 
 ```bash
 # Backend
-docker-compose exec backend pytest --cov --cov-report=html
+podman exec luximia-backend pytest --cov --cov-report=html
 # Abrir: backend/htmlcov/index.html
 
 # Frontend
-docker-compose exec frontend npm run test:coverage
+podman exec luximia-frontend npm run test:coverage
 # Abrir: frontend/erp_ui/coverage/lcov-report/index.html
 ```
 
@@ -405,8 +405,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Backend Tests
         run: |
-          docker-compose up -d db
-          docker-compose run backend pytest --cov
+          podman-compose up -d db
+          podman-compose run backend pytest --cov
   
   test-frontend:
     runs-on: ubuntu-latest

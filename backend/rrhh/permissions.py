@@ -18,6 +18,8 @@ class HasPermissionForAction(permissions.BasePermission):
             "inactivos": "view", # Add custom actions mapping
             "hard_destroy": "delete",
             "organigrama": "view",
+            "proyeccion_costo": "view",
+            "simular_nomina": "view",
             "exportar_excel": "view",
             "importar_excel": "add",
             "exportar_plantilla": "view",

@@ -1,16 +1,28 @@
+# ============================================================================
+# Production Docker Compose for Podman Rootless
+# Compatible with podman-compose
+# SELinux-ready with :Z flags on volumes
+# ============================================================================
+
+version: '3.8'
+
 services:
   # ==============================================================================
-  # 1. DATABASE
+  # 1. DATABASE (PostgreSQL with pgvector)
   # ==============================================================================
   db:
     image: pgvector/pgvector:pg17
-    restart: always
+    container_name: erp_db
+    # No restart policy - managed by Systemd
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data:Z
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=es_ES.UTF-8"
+    networks:
+      - erp_network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
@@ -18,54 +30,79 @@ services:
       retries: 5
 
   # ==============================================================================
-  # 2. BACKEND API (Production Build)
+  # 2. REDIS (Cache & Message Broker)
   # ==============================================================================
-  backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile.prod
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - ./.env
-    # Volumes removed for production immutability
-
-    # ==============================================================================
-    # 3. FRONTEND UI (Production Build)
-    # ==============================================================================
-  frontend:
-    build:
-      context: ./frontend/erp_ui
-      dockerfile: Dockerfile.prod
-    restart: always
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    env_file:
-      - ./.env
-    # Volumes removed for production immutability
-
-    # ==============================================================================
-    # 4. WORKERS
-    # ==============================================================================
   redis:
     image: redis:7-alpine
-    restart: always
+    container_name: erp_redis
+    # No restart policy - managed by Systemd
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data:Z
+    networks:
+      - erp_network
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ==============================================================================
+  # 3. BACKEND API (Django)
+  # ==============================================================================
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-luximia/sistema-erp}/backend:${IMAGE_TAG:-latest}
+    container_name: erp_backend
+    # No restart policy - managed by Systemd
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./.env.prod
+    volumes:
+      - static_files:/app/staticfiles:Z
+      - media_files:/app/mediafiles:Z
+      - logs:/app/logs:Z
+    networks:
+      - erp_network
+    # Ports exposed only internally, Caddy handles external access
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==============================================================================
+  # 4. FRONTEND UI (Next.js)
+  # ==============================================================================
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-luximia/sistema-erp}/frontend:${IMAGE_TAG:-latest}
+    container_name: erp_frontend
+    # No restart policy - managed by Systemd
+    depends_on:
+      - backend
+    env_file:
+      - ./.env.prod
+    networks:
+      - erp_network
+    # Ports exposed only internally, Caddy handles external access
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==============================================================================
+  # 5. CELERY WORKER
+  # ==============================================================================
   celery_worker:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile.prod
+    image: ghcr.io/${GITHUB_REPOSITORY:-luximia/sistema-erp}/backend:${IMAGE_TAG:-latest}
+    container_name: erp_celery_worker
+    # No restart policy - managed by Systemd
     command: celery -A config worker --loglevel=info
     depends_on:
       db:
@@ -74,11 +111,18 @@ services:
         condition: service_healthy
     env_file:
       - ./.env
+    volumes:
+      - logs:/app/logs:Z
+    networks:
+      - erp_network
 
+  # ==============================================================================
+  # 6. CELERY BEAT (Scheduler)
+  # ==============================================================================
   celery_beat:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile.prod
+    image: ghcr.io/${GITHUB_REPOSITORY:-luximia/sistema-erp}/backend:${IMAGE_TAG:-latest}
+    container_name: erp_celery_beat
+    # No restart policy - managed by Systemd
     command: celery -A config beat --loglevel=info
     depends_on:
       db:
@@ -87,16 +131,78 @@ services:
         condition: service_healthy
     env_file:
       - ./.env
+    volumes:
+      - logs:/app/logs:Z
+    networks:
+      - erp_network
 
   # ==============================================================================
-  # 5. UTILS (Optional)
+  # 7. MAILHOG (Development Email Testing - Optional)
   # ==============================================================================
   mailhog:
     image: mailhog/mailhog
-    restart: always
+    container_name: erp_mailhog
+    restart: unless-stopped
+    networks:
+      - erp_network
     ports:
       - "1025:1025"
       - "8025:8025"
 
+  # ==============================================================================
+  # 8. CADDY (Reverse Proxy with Automatic HTTPS)
+  # ==============================================================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: erp_caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+      - caddy_data:/data:Z
+      - caddy_config:/config:Z
+      - caddy_logs:/var/log/caddy:Z
+    networks:
+      - erp_network
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# ==============================================================================
+# VOLUMES (Stored in ~/.local/share/containers/storage/volumes/ for rootless)
+# ==============================================================================
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_files:
+    driver: local
+  media_files:
+    driver: local
+  logs:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+  caddy_logs:
+    driver: local
+
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
+networks:
+  erp_network:
+    driver: bridge

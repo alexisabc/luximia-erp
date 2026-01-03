@@ -1,9 +1,10 @@
 from django.db import models
 from django.conf import settings
-from core.models import SoftDeleteModel, register_audit
+from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from .organizacion import Departamento, Puesto, CentroTrabajo, RazonSocial
 
-class Empleado(SoftDeleteModel):
+class Empleado(SoftDeleteModel, EmpresaOwnedModel):
+    objects = MultiTenantManager()
     GENERO_CHOICES = [('M', 'Masculino'), ('F', 'Femenino'), ('O', 'Otro')]
 
     # Identificación y Relaciones
@@ -61,7 +62,7 @@ class EmpleadoDocumentacionOficial(SoftDeleteModel):
     rfc = models.CharField(max_length=13, unique=True, blank=True, null=True)
     nss = models.CharField(max_length=11, unique=True, blank=True, null=True)
     fecha_alta_imss = models.DateField(blank=True, null=True)
-    tipo_regimen = models.CharField(max_length=100, blank=True, null=True)
+    tipo_regimen = models.CharField(max_length=100, blank=True, null=True, help_text="Ej: Sueldos y Salarios")
 
     def __str__(self):
         return f"Documentación de {self.empleado}"
@@ -72,6 +73,7 @@ class EmpleadoDatosLaborales(SoftDeleteModel):
     empleado = models.OneToOneField(Empleado, on_delete=models.CASCADE, related_name="datos_laborales")
     fecha_ingreso = models.DateField(blank=True, null=True)
     tipo_contrato = models.CharField(max_length=100, blank=True, null=True)
+    regimen_contratacion = models.CharField(max_length=100, blank=True, null=True, help_text="Catálogo SAT c_RegimenContratacion")
     periodicidad_pago = models.CharField(max_length=50, blank=True, null=True)
     jornada = models.CharField(max_length=50, blank=True, null=True) # Tipo de Jornada
     horario_turno = models.CharField(max_length=100, blank=True, null=True, verbose_name="Horario o Turno")

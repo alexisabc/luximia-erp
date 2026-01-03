@@ -15,6 +15,8 @@ from .models import (
     Nomina,
     ReciboNomina,
     DetalleReciboItem,
+    Asistencia,
+    DistribucionCosto,
 )
 
 
@@ -182,4 +184,20 @@ class ReciboNominaSerializer(serializers.ModelSerializer):
 class NominaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nomina
+        fields = "__all__"
+
+class DistribucionCostoSerializer(serializers.ModelSerializer):
+    obra_nombre = serializers.CharField(source='obra.nombre', read_only=True)
+    centro_costo_nombre = serializers.CharField(source='centro_costo.nombre', read_only=True)
+
+    class Meta:
+        model = DistribucionCosto
+        fields = "__all__"
+
+class AsistenciaSerializer(serializers.ModelSerializer):
+    distribuciones = DistribucionCostoSerializer(many=True, read_only=True)
+    empleado_nombre = serializers.CharField(source='empleado.nombre_completo', read_only=True)
+
+    class Meta:
+        model = Asistencia
         fields = "__all__"

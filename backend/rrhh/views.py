@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from .services.nomina_engine import NominaEngine
 from .models import (
     Departamento,
     Puesto,
@@ -68,7 +69,7 @@ class EmpleadoViewSet(RrhhBaseViewSet):
         for e in empleados:
             node = {
                 "id": e.id,
-                "label": f"{e.nombres} {e.apellidos}",
+                "label": f"{e.nombres} {e.apellido_paterno}",
                 "title": e.puesto.nombre if e.puesto else "Sin Puesto",
                 "department": e.departamento.nombre if e.departamento else "General",
                 "email": e.user.email if e.user else "",
@@ -101,6 +102,37 @@ class EmpleadoViewSet(RrhhBaseViewSet):
             return Response(proyeccion)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='simular-nomina')
+    def simular_nomina(self, request, pk=None):
+        """
+        Simula el cálculo de nómina quincenal para el empleado.
+        """
+        empleado = self.get_object()
+        fecha_inicio_str = request.data.get('fecha_inicio')
+        fecha_fin_str = request.data.get('fecha_fin')
+        
+        # Default a la quincena actual si no se proporciona
+        from django.utils import timezone
+        now = timezone.now()
+        if not fecha_inicio_str or not fecha_fin_str:
+            if now.day <= 15:
+                fecha_inicio = now.replace(day=1)
+                fecha_fin = now.replace(day=15)
+            else:
+                fecha_inicio = now.replace(day=16)
+                import calendar
+                _, last_day = calendar.monthrange(now.year, now.month)
+                fecha_fin = now.replace(day=last_day)
+        else:
+            fecha_inicio = timezone.datetime.fromisoformat(fecha_inicio_str).date()
+            fecha_fin = timezone.datetime.fromisoformat(fecha_fin_str).date()
+
+        try:
+            resultado = NominaEngine.calcular_prenomina(empleado, fecha_inicio, fecha_fin)
+            return Response(resultado)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -82,7 +82,7 @@ services:
       dockerfile: ./backend/Dockerfile
     command: celery -A config worker --loglevel=info
     volumes:
-      - ./backend:/app
+      - ./backend:/app:Z
     depends_on:
       db:
         condition: service_healthy
@@ -97,7 +97,7 @@ services:
       dockerfile: ./backend/Dockerfile
     command: celery -A config beat --loglevel=info
     volumes:
-      - ./backend:/app
+      - ./backend:/app:Z
     depends_on:
       db:
         condition: service_healthy

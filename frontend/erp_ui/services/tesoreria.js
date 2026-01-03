@@ -32,3 +32,11 @@ export const getEgresos = async (params) => {
 export const getContraRecibos = async (params) => {
     return await api.get('/tesoreria/contrarecibos/', { params });
 };
+
+export const getDeudas = async () => {
+    return await api.get('/tesoreria/deudas/');
+};
+
+export const registrarPago = async (data) => {
+    return await api.post('/tesoreria/registrar-pago/', data);
+};

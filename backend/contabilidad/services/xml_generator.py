@@ -161,3 +161,83 @@ class CFDIBuilder:
         traslado_g.set("Importe", f"{importe_iva_16:.2f}")
 
         return ET.tostring(root, encoding='UTF-8').decode('UTF-8')
+    def construir_rep(self, pagos_data):
+        """
+        Construye un Complemento de Pago (REP 2.0).
+        pagos_data: list of dicts {monto, fecha, forma_pago, uuid_factura, saldo_anterior, saldo_insoluto, num_parcialidad}
+        """
+        CFDI_NS = "http://www.sat.gob.mx/cfd/4"
+        PAGO_NS = "http://www.sat.gob.mx/Pagos20"
+        XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+        
+        ET.register_namespace('cfdi', CFDI_NS)
+        ET.register_namespace('pago20', PAGO_NS)
+        ET.register_namespace('xsi', XSI_NS)
+        
+        root = ET.Element(f"{{{CFDI_NS}}}Comprobante")
+        root.set("Version", "4.0")
+        root.set("Fecha", timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        root.set("Sello", "")
+        root.set("NoCertificado", "")
+        root.set("Certificado", "")
+        root.set("SubTotal", "0")
+        root.set("Moneda", "XXX")
+        root.set("Total", "0")
+        root.set("TipoDeComprobante", "P")
+        root.set("Exportacion", "01")
+        root.set("LugarExpedicion", self.empresa_fiscal.codigo_postal)
+        root.set(f"{{{XSI_NS}}}schemaLocation", f"{CFDI_NS} http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd {PAGO_NS} http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd")
+
+        # Emisor / Receptor (Igual que factura)
+        emisor = ET.SubElement(root, f"{{{CFDI_NS}}}Emisor")
+        emisor.set("Rfc", self.empresa_fiscal.empresa.rfc)
+        emisor.set("Nombre", self.empresa_fiscal.empresa.razon_social)
+        emisor.set("RegimenFiscal", self.empresa_fiscal.regimen_fiscal.codigo)
+        
+        receptor = ET.SubElement(root, f"{{{CFDI_NS}}}Receptor")
+        receptor.set("Rfc", self.cliente.rfc)
+        receptor.set("Nombre", self.cliente.razon_social or self.cliente.nombre_completo)
+        receptor.set("DomicilioFiscalReceptor", self.cliente.codigo_postal)
+        receptor.set("RegimenFiscalReceptor", self.cliente.regimen_fiscal.codigo if self.cliente.regimen_fiscal else "616")
+        receptor.set("UsoCFDI", "CP01") # UsoCFDI para pagos
+
+        # Concepto (Especial para REP)
+        conceptos = ET.SubElement(root, f"{{{CFDI_NS}}}Conceptos")
+        concepto = ET.SubElement(conceptos, f"{{{CFDI_NS}}}Concepto")
+        concepto.set("ClaveProdServ", "84111506")
+        concepto.set("Cantidad", "1")
+        concepto.set("ClaveUnidad", "ACT")
+        concepto.set("Descripcion", "Pago")
+        concepto.set("ValorUnitario", "0")
+        concepto.set("Importe", "0")
+        concepto.set("ObjetoImp", "01")
+
+        # Complemento
+        complemento = ET.SubElement(root, f"{{{CFDI_NS}}}Complemento")
+        pagos_root = ET.SubElement(complemento, f"{{{PAGO_NS}}}Pagos")
+        pagos_root.set("Version", "2.0")
+        
+        # Totales del pago
+        monto_total_pagos = sum(p['monto'] for p in pagos_data)
+        totales = ET.SubElement(pagos_root, f"{{{PAGO_NS}}}Totales")
+        totales.set("MontoTotalPagos", f"{monto_total_pagos:.2f}")
+        
+        for p_info in pagos_data:
+            pago_elem = ET.SubElement(pagos_root, f"{{{PAGO_NS}}}Pago")
+            pago_elem.set("FechaPago", p_info['fecha'])
+            pago_elem.set("FormaDePagoP", p_info['forma_pago'])
+            pago_elem.set("MonedaP", "MXN")
+            pago_elem.set("TipoCambioP", "1")
+            pago_elem.set("Monto", f"{p_info['monto']:.2f}")
+            
+            docto_relacionado = ET.SubElement(pago_elem, f"{{{PAGO_NS}}}DoctoRelacionado")
+            docto_relacionado.set("IdDocumento", p_info['uuid_factura'])
+            docto_relacionado.set("MonedaDR", "MXN")
+            docto_relacionado.set("EquivalenciaDR", "1")
+            docto_relacionado.set("NumParcialidad", str(p_info['num_parcialidad']))
+            docto_relacionado.set("ImpSaldoAnt", f"{p_info['saldo_anterior']:.2f}")
+            docto_relacionado.set("ImpPagado", f"{p_info['monto']:.2f}")
+            docto_relacionado.set("ImpSaldoInsoluto", f"{p_info['saldo_insoluto']:.2f}")
+            docto_relacionado.set("ObjetoImpDR", "02") # Si la factura tiene impuestos
+
+        return ET.tostring(root, encoding='UTF-8').decode('UTF-8')

@@ -1,0 +1,145 @@
+name: Deploy to Production (Podman)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Buildah
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y buildah podman
+      
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u ${{ github.actor }} --password-stdin $REGISTRY
+      
+      - name: Build Backend Image
+        run: |
+          buildah bud \
+            -f backend/Dockerfile.prod \
+            -t $REGISTRY/$IMAGE_NAME/backend:latest \
+            -t $REGISTRY/$IMAGE_NAME/backend:${{ github.sha }} \
+            .
+      
+      - name: Build Frontend Image
+        run: |
+          buildah bud \
+            -f frontend/erp_ui/Dockerfile.prod \
+            -t $REGISTRY/$IMAGE_NAME/frontend:latest \
+            -t $REGISTRY/$IMAGE_NAME/frontend:${{ github.sha }} \
+            frontend/erp_ui
+      
+      - name: Push Backend Images
+        run: |
+          buildah push $REGISTRY/$IMAGE_NAME/backend:latest
+          buildah push $REGISTRY/$IMAGE_NAME/backend:${{ github.sha }}
+      
+      - name: Push Frontend Images
+        run: |
+          buildah push $REGISTRY/$IMAGE_NAME/frontend:latest
+          buildah push $REGISTRY/$IMAGE_NAME/frontend:${{ github.sha }}
+      
+      - name: Image Digest
+        run: |
+          echo "Backend: $REGISTRY/$IMAGE_NAME/backend:${{ github.sha }}"
+          echo "Frontend: $REGISTRY/$IMAGE_NAME/frontend:${{ github.sha }}"
+
+  deploy:
+    name: Deploy to VPS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd ~/sistema-erp
+            
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git pull origin main
+            
+            # Login to GHCR
+            echo "🔐 Logging in to GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | podman login -u ${{ github.actor }} --password-stdin ghcr.io
+            
+            # Pull latest images
+            echo "📦 Pulling latest images..."
+            podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
+            podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:latest
+            
+            # Stop and remove old containers
+            echo "🛑 Stopping old containers..."
+            podman-compose -f docker-compose.prod.yml down || true
+            
+            # Start new containers
+            echo "▶️  Starting new containers..."
+            podman-compose -f docker-compose.prod.yml up -d
+            
+            # Wait for backend to be ready
+            echo "⏳ Waiting for backend to be ready..."
+            sleep 15
+            
+            # Run migrations
+            echo "🔄 Running database migrations..."
+            podman exec erp_backend python manage.py migrate --noinput
+            
+            # Collect static files
+            echo "📦 Collecting static files..."
+            podman exec erp_backend python manage.py collectstatic --noinput
+            
+            # Health check
+            echo "🏥 Running health check..."
+            for i in {1..10}; do
+              if curl -f http://localhost:8000/health/ > /dev/null 2>&1; then
+                echo "✅ Backend is healthy!"
+                break
+              fi
+              echo "Attempt $i/10 failed, retrying in 5s..."
+              sleep 5
+            done
+            
+            # Verify frontend
+            if curl -f http://localhost:3000/ > /dev/null 2>&1; then
+              echo "✅ Frontend is healthy!"
+            else
+              echo "⚠️  Frontend health check failed"
+            fi
+            
+            # Show running containers
+            echo "📊 Running containers:"
+            podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo "✨ Deployment completed successfully!"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Check the logs above for details."

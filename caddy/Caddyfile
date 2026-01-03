@@ -1,0 +1,121 @@
+# ============================================================================
+# Caddyfile - Reverse Proxy Configuration
+# Automatic HTTPS with Let's Encrypt
+# ============================================================================
+
+# Global options
+{
+    # Email for Let's Encrypt notifications
+    email {$ACME_EMAIL}
+    
+    # Use staging for testing (comment out for production)
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+    
+    # Admin API (optional, disable in production)
+    # admin off
+}
+
+# Main domain
+{$DOMAIN} {
+    # Enable automatic HTTPS
+    tls {$ACME_EMAIL}
+    
+    # Security headers
+    header {
+        # Enable HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        
+        # Prevent MIME sniffing
+        X-Content-Type-Options "nosniff"
+        
+        # XSS Protection
+        X-XSS-Protection "1; mode=block"
+        
+        # Referrer Policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # Content Security Policy (adjust as needed)
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ws: wss:;"
+        
+        # Remove server header
+        -Server
+    }
+    
+    # Logging
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 10
+        }
+        format json
+    }
+    
+    # Frontend (Next.js)
+    handle /* {
+        reverse_proxy frontend:3000 {
+            # Health check
+            health_uri /
+            health_interval 30s
+            health_timeout 10s
+            
+            # Headers
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+    
+    # Backend API
+    handle /api/* {
+        reverse_proxy backend:8000 {
+            # Health check
+            health_uri /health/
+            health_interval 30s
+            health_timeout 10s
+            
+            # Headers
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+    
+    # Django Admin
+    handle /admin/* {
+        reverse_proxy backend:8000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+    
+    # Static files (served by backend)
+    handle /static/* {
+        reverse_proxy backend:8000 {
+            header_up Host {host}
+        }
+    }
+    
+    # Media files (served by backend)
+    handle /media/* {
+        reverse_proxy backend:8000 {
+            header_up Host {host}
+        }
+    }
+}
+
+# WWW redirect
+www.{$DOMAIN} {
+    redir https://{$DOMAIN}{uri} permanent
+}
+
+# Health check endpoint (for monitoring)
+:8080 {
+    respond /health 200
+}

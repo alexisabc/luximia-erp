@@ -1,311 +1,380 @@
-# Sistema ERP - Documentación del Proyecto
+# Sistema ERP - Luximia
 
-- **Versión:** 3.1
-- **Fecha de última actualización:** 03 de enero de 2026
-- **Última sesión:** Implementación de Infraestructura V2.0 (Config Engine)
-- **Resumen:** Sistema Integral de Planificación de Recursos Empresariales (ERP) diseñado para **Gestión Corporativa**, con arquitectura moderna basada en Atomic Design, Mobile First y componentes reutilizables.
+![Podman](https://img.shields.io/badge/Podman-892CA0?style=for-the-badge&logo=podman&logoColor=white)
+![Rootless](https://img.shields.io/badge/Rootless-✓-success?style=for-the-badge)
+![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
----
+**Sistema Integral de Planificación de Recursos Empresariales (ERP)** diseñado para Gestión Corporativa con arquitectura moderna, segura y cloud-native.
 
-## 📚 Documentación Completa
-
-Para acceder a toda la documentación técnica, arquitectura, guías y reportes del proyecto:
-
-👉 **[Ver Documentación Completa en ERP_Docs/](./ERP_Docs/README.md)**
-
-La carpeta `ERP_Docs/` contiene **66 documentos** organizados por categorías:
-
-### 🏗️ Arquitectura y Sistema
-- Arquitectura del sistema (6 documentos base)
-- Backend API y modelos
-- Frontend y componentes UI
-- Base de datos y migraciones
-
-### 🎨 Frontend y UI/UX
-- Documentación de Atomic Design (41 componentes)
-- Sistema de diseño y Mobile First
-- Guías de migración y refactoring
-- Limpieza de código legacy
-
-### 🚀 DevOps y Despliegue
-- Guías de despliegue y configuración
-- Conventional Commits (Husky + Commitlint)
-- Seeds y datos iniciales
-- Seguridad y optimización
-
-### 💼 Módulos de Negocio
-- Tesorería (4 documentos)
-- POS - Punto de Venta (4 documentos)
-- Permisos y roles
-
-### 📊 Reportes y Progreso
-- Hitos del proyecto (5 documentos)
-- Informes ejecutivos (5 documentos)
-- Sesiones de trabajo (5 documentos)
-
+- **Versión:** 3.2
+- **Última actualización:** 03 de enero de 2026
+- **Arquitectura:** Podman Rootless + Systemd + Caddy
 
 ---
 
-## 1. Visión General del Proyecto
+## 🎯 Características Principales
 
-### 1.1. Objetivo
-Centralizar y optimizar las operaciones empresariales, abarcando desde la gestión contable y financiera hasta Recursos Humanos, Jurídico y Dirección Estratégica, con una interfaz moderna, responsive y optimizada para dispositivos móviles.
-
-### 1.2. Módulos Principales
-El sistema está estructurado en módulos interconectados, accesibles según roles y permisos:
-
-*   **📊 Dirección:** Dashboards estratégicos e indicadores clave de rendimiento (KPIs) en tiempo real.
-*   **💰 Contabilidad:**
-    *   **Proyectos y UPEs:** Gestión detallada de unidades privativas (inventario inmobiliario).
-    *   **Cuentas por Cobrar (CxC):** Control de clientes, presupuestos, contratos y pagos.
-    *   **Divisas:** Consulta de tipos de cambio manuales y **sincronización automática diaria con Banxico (SAT)**.
-*   **🏦 Tesorería:**
-    *   **Cuentas Bancarias:** Gestión completa con conciliación automática (Sistema vs Banco).
-    *   **Egresos:** Flujo de autorización multinivel con control de pagos.
-    *   **Cajas Chicas:** Fondos fijos con registro de gastos y reembolsos.
-    *   **ContraRecibos:** Gestión de facturas y documentos para pago.
-    *   **Programaciones de Pago:** Lotes de pagos y dispersión bancaria.
-*   **👥 Recursos Humanos (RRHH):**
-    *   Expedientes digitales de empleados.
-    *   Organigramas, Departamentos y Puestos.
-    *   Esquemas de Comisión y seguimiento de asesores/vendedores.
-    *   **Motor de Nómina 2025** con cálculo IMSS, ISR y PTU.
-*   **⚖️ Jurídico:**
-    *   Repositorio de contratos legales y expedientes.
-*   **🛒 Compras:**
-    *   Órdenes de Compra con flujo de autorización.
-    *   Gestión de Proveedores e Insumos.
-*   **🛍️ Punto de Venta (POS):**
-    *   Terminal de venta con gestión de productos.
-    *   Control de turnos y cortes de caja.
-*   **💻 Sistemas:**
-    *   **Auditoría:** Bitácora completa de cambios (Audit Logs) para trazabilidad.
-    *   Gestión de Usuarios, Roles y Permisos granulares.
-    *   Importación/Exportación masiva de datos (Excel).
-*   **🤖 IA:**
-    *   Asistente inteligente con búsqueda semántica.
-    *   Indexación de 15 modelos del sistema.
-    *   Filtrado automático por permisos.
+- ✅ **Seguridad Máxima**: Contenedores rootless (sin privilegios de root)
+- ✅ **Cloud-Native**: Arquitectura OCI-compliant sin daemon
+- ✅ **HTTPS Automático**: Caddy con Let's Encrypt integrado
+- ✅ **Mobile First**: UI responsive con Atomic Design
+- ✅ **CI/CD Automatizado**: GitHub Actions + GHCR
+- ✅ **Multi-tenancy**: Soporte para múltiples empresas
+- ✅ **Fiscal Compliance**: Generación de CFDI 4.0 y complementos
 
 ---
 
-## 🚀 HITO V2.0: Infraestructura de Configuración (Enero 2026)
+## 📋 Prerrequisitos
 
-**V2.0 Infraestructura (Config Engine) desplegada.** 
-El sistema soporta ahora personalización dinámica y activación selectiva de módulos (Fiscal, Obras, POS) mediante un sistema híbrido de Feature Flags y Settings con caché Redis.
+### Para Desarrollo Local
 
----
+- **Podman** v4.0+ ([Guía de instalación](docs/migration/DOCKER_TO_PODMAN.md))
+- **Podman Compose** v1.0+
+- **Python** 3.11+
+- **Node.js** 20+
+- **PostgreSQL** 15+ (via Podman)
+- **Sistema Operativo**: Linux/WSL2 (Recomendado: Pop!_OS/Ubuntu 22.04+)
 
-## 2. 🚀 Últimas Implementaciones y Mejoras (Dic 2025 - Ene 2026)
+### Para Producción
 
-### 🎨 Migración a Atomic Design + Mobile First (NUEVO - 100% Completo)
--   **41 Componentes Atomic Design:** Átomos (8), Moléculas (14), Organismos (6), Templates (6).
--   **6 Páginas Migradas:** Empleados, Departamentos, Puestos, Monedas, Clientes.
--   **116 Archivos Actualizados:** Importaciones migradas a nuevos componentes.
--   **9 Componentes Legacy Eliminados:** Sin duplicación de código.
--   **Mobile First:** Todos los componentes optimizados para móviles primero.
--   **Accesibilidad:** ARIA labels, focus management, keyboard navigation.
--   **Documentación Completa:** 69 archivos de documentación técnica.
-
-### ⚙️ Motor de Configuración Dinámica (V2.0 - NUEVO)
--   **Panel de Administración:** Control total sobre reglas de negocio y features activas.
--   **ConfigContext:** Estados globales sincronizados y persistentes.
--   **Feature Guard:** Protección de rutas para módulos desactivados.
--   **Optimistic UI:** Experiencia de usuario ultra-rápida.
-
-### 💰 Módulo de Tesorería (100% Completo)
--   **Gestión de Cuentas Bancarias:** CRUD completo con conciliación bancaria automática.
--   **Control de Egresos:** Flujo de autorización multinivel (Borrador → Autorizado → Pagado).
--   **Cajas Chicas:** Gestión de fondos fijos con registro de gastos y reembolsos.
--   **ContraRecibos:** Registro de facturas y documentos para pago con validación.
--   **Programaciones de Pago:** Lotes de pagos y generación de layouts bancarios.
--   **18 Endpoints API REST** con acciones personalizadas.
--   **5 Páginas UI** con diseño premium y 23 cards de estadísticas.
-
-### 🔐 Sistema de Permisos Mejorado
--   **401 Permisos Gestionados:** 367 estándar + 34 personalizados.
--   **Traducciones al Español:** 100% de permisos traducidos.
--   **Comando `update_permissions`:** Gestión automática de permisos y traducciones.
--   **Documentación Completa:** Guía de permisos y roles con ejemplos de uso.
-
-### 🤖 Sistema de IA Actualizado
--   **Indexación de Modelos:** 15 modelos del sistema indexados para búsqueda semántica.
--   **Búsqueda Contextual:** Embeddings con OpenAI y filtrado automático por permisos.
--   **Comando `index_models`:** Gestión de indexación por app o modelo.
--   **Integración Lista:** Preparado para chat IA con contexto del sistema.
-
-### 🎨 UX/UI & Branding
--   **Atomic Design:** Arquitectura escalable y mantenible de componentes.
--   **Mobile First:** Diseño responsive optimizado para móviles.
--   **Tema# Sistema ERP Modular v2.0
-Sistema de gestión empresarial (ERP) moderno, modular y reactivo.
--   **Animaciones Interactivas:** Transiciones fluidas y micro-interacciones.
--   **Dashboard v2:** Gráficos interactivos con `recharts`.
-
-### 🛡️ Seguridad Avanzada (Identity-First)
--   **Passkeys (WebAuthn):** Login biométrico sin contraseña (Huella/FaceID).
--   **2FA/TOTP:** Doble Factor de Autenticación (Google Authenticator).
--   **Auditoría Granular:** Rastreo completo de acciones críticas.
--   **NGINX Hardening:** Reverse Proxy Seguro con headers anti-XSS.
-
-### ⚙️ Funcionalidad y Estabilidad
--   **Motor de Nómina 2025:**
-    -   Cálculo preciso de **IMSS Patronal y Obrero**.
-    -   Proyección de **Presupuesto Anual**.
-    -   Calculadora inversa (Neto a Bruto) y timbrado CFDI 4.0.
-    -   Importación/Exportación de layouts **SUA e IDSE**.
--   **Selector Multi-Empresa:** Gestión de múltiples entidades legales.
--   **POS Terminal:** Terminal de punto de venta optimizada.
--   **Invitaciones por Email:** Flujo automatizado de enrolamiento de usuarios.
+- **VPS Ubuntu** 22.04+ con kernel 5.11+
+- **Podman** + **Buildah** + **Cockpit**
+- **Dominio** con DNS configurado
+- **GitHub Container Registry** (GHCR) access
 
 ---
 
-## 3. Stack Tecnológico (Actualizado: Ene 2026)
+## 🚀 Quick Start (Desarrollo Local)
 
-### Backend
--   **Core:** Python 3.12+
--   **Framework:** **Django 6.0**
--   **API:** Django Rest Framework (DRF) 3.16.1
--   **Autenticación:** `webauthn` (2.7.0), `pyotp` (2.9.0), `djangorestframework-simplejwt` (5.5.1).
--   **Datos & IA:**
-    -   **DB:** PostgreSQL 17 + `pgvector` (0.4.2).
-    -   **Procesamiento:** `polars` (1.36.1) para alto rendimiento en datos.
-    -   **IA:** `openai` (2.9.0) para chatbot RAG.
--   **Reportes:** `weasyprint` (67.0) para generación de PDFs.
--   **Infra:** `gunicorn` (23.0.0), `celery` (Async Tasks).
+### 1. Clonar Repositorio
 
-### Frontend
--   **Framework:** **Next.js 16.0.8** (App Router, Server Actions).
--   **Biblioteca UI:** **React 19.2.1**
--   **Estilos:** **Tailwind CSS 4.1.18** + `tailwindcss-animate`.
--   **Componentes:**
-    -   **Atomic Design:** 41 componentes (Átomos, Moléculas, Organismos, Templates).
-    -   `lucide-react` (0.560.0) - Iconografía.
-    -   `sonner` (1.5.0) - Notificaciones Toast.
-    -   `recharts` (3.5.1) - Visualización de datos.
-    -   `react-hook-form` (7.53.0) - Gestión de formularios.
-    -   `shadcn/ui` - Componentes base.
--   **Cliente HTTP:** `axios` (1.13.2) con interceptores modulares.
-
-### Infraestructura
--   **Gateway:** **NGINX Reverse Proxy** (Gzip, Caching, Security Headers).
--   **Contenedores:** Docker & Docker Compose.
--   **Almacenamiento:** Cloudflare R2 (compatible con S3).
--   **Email:** SendGrid API.
-
----
-
-## 4. Instalación y Despliegue
-
-### 4.1. Requisitos Previos
-- Docker Desktop instalado y corriendo.
-- Clave de API de OpenAI (opcional para funciones de IA).
-- Credenciales de Banxico (para tipo de cambio).
-
-### 4.2. Configuración Local
-1.  **Clonar el repositorio:**
-    ```bash
-    git clone <url-del-repo>
-    cd sistema-erp
-    ```
-2.  **Configurar variables de entorno:**
-    ```bash
-    cp .env.example .env
-    ```
-3.  **Iniciar con Docker:**
-    ```bash
-    docker-compose up -d --build
-    ```
-4.  **Acceso:**
-    - **Frontend:** `http://localhost:3000`
-    - **Backend API:** `http://localhost:8000`
-    - **Admin Panel:** `http://localhost:8000/admin/`
-
-### 4.3. Estructura de Proyecto
-```
-sistema-erp/
-├── README.md           # Este archivo
-├── ERP_Docs/           # Documentación completa (66 archivos)
-├── backend/            # Django API
-│   ├── contabilidad/   # App: Finanzas y Proyectos
-│   ├── users/          # App: Auth y Usuarios
-│   ├── rrhh/           # App: Recursos Humanos
-│   ├── tesoreria/      # App: Tesorería
-│   ├── auditoria/      # App: Logs y Seguridad
-│   └── ...
-├── frontend/           # Next.js App
-│   └── erp_ui/
-│       ├── app/        # App Router (Páginas)
-│       ├── components/ # UI Atomic Design
-│       │   ├── atoms/      # 8 componentes
-│       │   ├── molecules/  # 14 componentes
-│       │   ├── organisms/  # 6 componentes
-│       │   └── templates/  # 6 componentes
-│       └── services/   # Capa de API Modular
-└── docker-compose.yml  # Orquestación
-```
-
----
-
-## 5. Flujo de Trabajo (Git)
-
-Para mantener la calidad del código, seguimos el flujo de _Feature Branch_ con **Conventional Commits**:
-
-### 5.1. Creación de Ramas
-1.  Crear rama: `git checkout -b feat/nueva-funcionalidad`
-2.  Desarrollar la funcionalidad
-3.  Push: `git push origin feat/nueva-funcionalidad`
-4.  Pull Request hacia `main`
-
-### 5.2. Conventional Commits (Obligatorio)
-
-Este proyecto utiliza **Conventional Commits** validados automáticamente con **Husky** y **Commitlint**.
-
-**Formato:**
 ```bash
-<tipo>[scope opcional]: <descripción>
+git clone https://github.com/your-org/sistema-erp.git
+cd sistema-erp
 ```
 
-**Tipos permitidos:**
-- `feat`: Nueva funcionalidad
-- `fix`: Corrección de bugs
-- `docs`: Documentación
-- `style`: Formato de código
-- `refactor`: Refactorización
-- `test`: Tests
-- `chore`: Tareas de mantenimiento
-- `perf`: Mejoras de rendimiento
-- `ci`: Integración continua
+### 2. Instalar Podman
 
-**Ejemplos:**
+**Pop!_OS/Ubuntu:**
 ```bash
-git commit -m "feat(pos): agregar sistema de descuentos"
-git commit -m "fix(inventory): corregir cálculo de stock"
-git commit -m "docs: actualizar guía de instalación"
+sudo apt-get update
+sudo apt-get install -y podman podman-compose podman-docker
 ```
 
-📖 **[Ver Guía Completa de Conventional Commits](./ERP_Docs/GUIA_CONVENTIONAL_COMMITS.md)**
+**Fedora/RHEL:**
+```bash
+sudo dnf install -y podman podman-compose
+```
 
+Para migrar desde Docker, consulta: [`docs/migration/DOCKER_TO_PODMAN.md`](docs/migration/DOCKER_TO_PODMAN.md)
+
+### 3. Configurar Entorno
+
+```bash
+# Copiar variables de entorno
+cp .env.example .env
+
+# Editar configuración
+nano .env
+```
+
+### 4. Levantar Servicios
+
+```bash
+# Iniciar todos los servicios
+podman-compose up -d
+
+# Verificar contenedores
+podman ps
+```
+
+### 5. Aplicar Migraciones
+
+```bash
+# Ejecutar migraciones de base de datos
+podman exec -it luximia-backend python manage.py migrate
+
+# Crear superusuario
+podman exec -it luximia-backend python manage.py createsuperuser
+
+# Cargar datos iniciales
+podman exec -it luximia-backend python manage.py loaddata initial_data
+```
+
+### 6. Acceder a la Aplicación
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **Admin Django**: http://localhost:8000/admin
+- **Mailhog**: http://localhost:8025
 
 ---
 
-## 6. Métricas del Proyecto
+## 🏗️ Arquitectura
 
-- **Módulos Implementados:** 11+ (Incluyendo Config)
-- **Componentes UI:** 41 (Atomic Design)
-- **Páginas Migradas:** 7
-- **Archivos de Documentación:** 66 (unificados en ERP_Docs/)
-- **Progreso General:** 100% ✅
-- **Estado:** Producción
+### Stack Tecnológico
+
+**Backend:**
+- Django 5.0 + Django REST Framework
+- PostgreSQL 17 con pgvector
+- Celery + Redis para tareas asíncronas
+- Gunicorn (producción)
+
+**Frontend:**
+- Next.js 16 (App Router)
+- React 19
+- TailwindCSS
+- Atomic Design pattern
+
+**Infraestructura:**
+- **Runtime**: Podman Rootless (OCI-compliant, daemonless)
+- **Orquestación**: Systemd + Podman Compose
+- **Reverse Proxy**: Caddy (HTTPS automático)
+- **CI/CD**: GitHub Actions + GHCR
+- **Monitoreo**: Cockpit
+
+### Arquitectura Segura
+
+```
+Internet → Caddy (80/443) → Internal Network
+                ↓
+        Backend (8000) ← Frontend (3000)
+                ↓
+        PostgreSQL (5432) + Redis (6379)
+                ↓
+        Celery Worker + Beat
+```
+
+**Características de Seguridad:**
+- ✅ Contenedores rootless (UID 1000)
+- ✅ Sin daemon privilegiado
+- ✅ SELinux/AppArmor ready
+- ✅ HTTPS obligatorio en producción
+- ✅ Security headers (HSTS, CSP)
+- ✅ Firewall UFW configurado
 
 ---
 
-## 7. Contacto y Soporte
+## 📚 Documentación
 
-Para más información, consulta la [documentación completa](./ERP_Docs/README.md) o contacta al equipo de desarrollo.
+### Para Desarrolladores
+
+- **[Migración Docker → Podman](docs/migration/DOCKER_TO_PODMAN.md)** - Guía completa de migración
+- **[Arquitectura del Sistema](ERP_Docs/README.md)** - Documentación técnica completa (66 documentos)
+- **[Atomic Design](ERP_Docs/frontend/)** - Sistema de componentes UI
+- **[API Documentation](docs/API.md)** - Endpoints y schemas
+
+### Para DevOps
+
+- **[Despliegue en Producción](docs/PRODUCTION_DEPLOYMENT.md)** - Guía completa de deployment
+- **[Setup del VPS](scripts/prod/setup_vps.sh)** - Script de configuración automática
+- **[Cockpit Monitoring](docs/COCKPIT.md)** - Monitoreo web-based
+- **[CI/CD Pipeline](.github/workflows/deploy.yml)** - Workflow de GitHub Actions
+
+### Módulos de Negocio
+
+- **[Tesorería](ERP_Docs/tesoreria/)** - CXC, CXP, pagos y REP
+- **[POS](ERP_Docs/pos/)** - Punto de venta
+- **[Contabilidad](ERP_Docs/contabilidad/)** - CFDI 4.0 y fiscal
+- **[RRHH](ERP_Docs/rrhh/)** - Nómina y empleados
 
 ---
 
-**Última actualización:** 03 de enero de 2026  
-**Versión:** 3.1  
-**Estado:** ✅ Producción
+## 🛠️ Comandos Útiles
+
+### Desarrollo
+
+```bash
+# Ver logs
+podman logs -f luximia-backend
+podman logs -f luximia-frontend
+
+# Reiniciar servicio
+podman-compose restart backend
+
+# Ejecutar tests
+podman exec luximia-backend pytest
+
+# Shell de Django
+podman exec -it luximia-backend python manage.py shell
+
+# Detener todo
+podman-compose down
+
+# Limpiar volúmenes
+podman-compose down -v
+```
+
+### Producción
+
+```bash
+# Pull de imágenes
+podman-compose -f docker-compose.prod.yml pull
+
+# Deploy
+podman-compose -f docker-compose.prod.yml up -d
+
+# Ver estado
+podman ps
+
+# Logs de producción
+podman logs -f erp_backend
+
+# Health check
+curl https://your-domain.com/api/health/
+```
+
+---
+
+## 🚢 Despliegue en Producción
+
+### Opción 1: Despliegue Automático (CI/CD)
+
+1. Configurar GitHub Secrets:
+   - `VPS_HOST`
+   - `VPS_USER` (erp_user)
+   - `SSH_PRIVATE_KEY`
+
+2. Push a `main`:
+   ```bash
+   git push origin main
+   ```
+
+3. GitHub Actions automáticamente:
+   - Construye imágenes con Buildah
+   - Push a GHCR
+   - Despliega al VPS
+   - Ejecuta migraciones
+   - Verifica health
+
+### Opción 2: Despliegue Manual
+
+Ver guía completa: [`docs/PRODUCTION_DEPLOYMENT.md`](docs/PRODUCTION_DEPLOYMENT.md)
+
+```bash
+# 1. Setup VPS
+sudo bash scripts/prod/setup_vps.sh
+
+# 2. Como erp_user
+sudo su - erp_user
+cd ~/sistema-erp
+
+# 3. Configurar
+cp .env.prod.example .env.prod
+nano .env.prod
+
+# 4. Deploy
+podman-compose -f docker-compose.prod.yml pull
+podman-compose -f docker-compose.prod.yml up -d
+```
+
+---
+
+## 🔐 Seguridad
+
+### Buenas Prácticas Implementadas
+
+- **Rootless Containers**: Todos los contenedores corren sin privilegios de root
+- **No Daemon**: Podman no requiere daemon privilegiado
+- **Systemd Management**: Reinicio automático gestionado por el sistema operativo
+- **HTTPS Automático**: Caddy gestiona certificados Let's Encrypt
+- **Security Headers**: HSTS, CSP, X-Frame-Options configurados
+- **Firewall**: UFW configurado (solo puertos necesarios)
+- **Secrets Management**: Variables de entorno y GitHub Secrets
+- **Audit Trail**: Logs completos de todas las operaciones
+
+### Verificación de Seguridad
+
+```bash
+# Verificar que contenedores corren como usuario no-root
+podman top erp_backend
+
+# Verificar SELinux labels
+podman inspect erp_backend | grep -i selinux
+
+# Verificar firewall
+sudo ufw status
+```
+
+---
+
+## 📊 Monitoreo
+
+### Cockpit (Producción)
+
+Accede a `https://vps-ip:9090` para:
+- Ver contenedores en tiempo real
+- Logs streaming
+- Uso de recursos (CPU, RAM, Disk)
+- Gestión de servicios Systemd
+
+### Comandos de Monitoreo
+
+```bash
+# Uso de recursos
+podman stats
+
+# Estado de servicios
+systemctl --user status 'container-erp_*'
+
+# Logs en tiempo real
+journalctl --user -u container-erp_backend.service -f
+```
+
+---
+
+## 🤝 Contribuir
+
+### Workflow de Desarrollo
+
+1. Fork del repositorio
+2. Crear branch: `git checkout -b feature/nueva-funcionalidad`
+3. Commit con Conventional Commits: `git commit -m "feat: nueva funcionalidad"`
+4. Push: `git push origin feature/nueva-funcionalidad`
+5. Crear Pull Request
+
+### Conventional Commits
+
+Usamos [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` Nueva funcionalidad
+- `fix:` Corrección de bug
+- `docs:` Cambios en documentación
+- `refactor:` Refactorización de código
+- `test:` Agregar o modificar tests
+- `chore:` Tareas de mantenimiento
+
+---
+
+## 📝 Licencia
+
+Este proyecto es privado y propietario.
+
+---
+
+## 📞 Soporte
+
+Para soporte técnico o consultas:
+- **Email**: dev@luximia.com
+- **Documentación**: [ERP_Docs/](./ERP_Docs/README.md)
+- **Issues**: GitHub Issues (solo equipo interno)
+
+---
+
+## 🎯 Roadmap
+
+- [x] Migración a Podman Rootless
+- [x] CI/CD con GitHub Actions
+- [x] HTTPS automático con Caddy
+- [x] Módulo de Tesorería
+- [ ] Módulo de Inventario
+- [ ] Módulo de Compras
+- [ ] Dashboard Analytics
+- [ ] Mobile App (React Native)
+
+---
+
+**Hecho con ❤️ por el equipo de Luximia**

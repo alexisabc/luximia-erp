@@ -1,6 +1,8 @@
 from rest_framework import viewsets, status, permissions, decorators, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .services.deuda_service import DeudaService
+from .services.pago_service import PagoService
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
@@ -200,3 +202,62 @@ class ContraReciboViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(creado_por=self.request.user)
+class DeudasView(APIView):
+    """
+    Vista para obtener resumen de deudas CXC/CXP.
+    GET /api/tesoreria/deudas/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        empresa_id = request.user.empresa_id if hasattr(request.user, 'empresa_id') else 1
+        cxp = DeudaService.get_cuentas_por_pagar(empresa_id)
+        cxc = DeudaService.get_cuentas_por_cobrar(empresa_id)
+        
+        return Response({
+            'cxc': {
+                'total': cxc['total_cxc'],
+                'items': [{
+                    'id': v.id,
+                    'folio': v.folio,
+                    'cliente': v.cliente.nombre_completo if v.cliente else 'General',
+                    'total': v.total,
+                    'fecha': v.fecha
+                } for v in cxc['ventas']]
+            },
+            'cxp': {
+                'total': cxp['total_cxp'],
+                'items': [{
+                    'id': oc.id,
+                    'folio': oc.folio,
+                    'proveedor': str(oc.proveedor),
+                    'total': oc.total,
+                    'fecha': oc.fecha_solicitud
+                } for oc in cxp['ordenes_compra']]
+            }
+        })
+
+class RegistrarPagoView(APIView):
+    """
+    Vista para registrar pagos de clientes.
+    POST /api/tesoreria/registrar-pago/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        venta_id = request.data.get('venta_id')
+        monto = request.data.get('monto')
+        cuenta_id = request.data.get('cuenta_id')
+        referencia = request.data.get('referencia')
+        
+        if not all([venta_id, monto, cuenta_id]):
+            return Response({'detail': 'venta_id, monto y cuenta_id son requeridos'}, status=400)
+            
+        try:
+            mov = PagoService.registrar_pago_cliente(venta_id, monto, cuenta_id, referencia)
+            return Response({
+                'detail': 'Pago registrado exitosamente',
+                'movimiento_id': mov.id
+            })
+        except Exception as e:
+            return Response({'detail': str(e)}, status=400)
