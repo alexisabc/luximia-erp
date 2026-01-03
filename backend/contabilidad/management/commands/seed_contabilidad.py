@@ -1,17 +1,11 @@
-# backend/contabilidad/seed.py
+# backend/contabilidad/management/commands/seed_contabilidad.py
 
-import os
-import django
+from django.core.management.base import BaseCommand
+from django.db import transaction
+from django.contrib.auth import get_user_model
 from faker import Faker
 import random
 from datetime import date, timedelta
-from django.db import transaction
-from django.contrib.auth import get_user_model
-
-# Configura Django para que el script pueda acceder a los modelos
-# Esto es necesario si ejecutas el script fuera de la shell de Django
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-# django.setup()
 
 from contabilidad.models import (
     ModeloBaseActivo, Moneda, Banco, MetodoPago, Proyecto, Cliente,
@@ -22,6 +16,15 @@ from contabilidad.models import (
 from rrhh.models import (Departamento, Puesto, Empleado)
 
 fake = Faker('es_MX')
+
+
+class Command(BaseCommand):
+    help = 'Genera datos de prueba masivos para el módulo de contabilidad'
+    
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS('Iniciando generación de datos de prueba...'))
+        run_seed(self.stdout)
+        self.stdout.write(self.style.SUCCESS('✅ Generación de datos de prueba MASIVA finalizada. 🚀'))
 
 def clean_db():
     """Borra todos los datos de los modelos de forma segura."""
@@ -287,7 +290,7 @@ def create_document_embeddings():
     return embeddings
 
 
-def run():
+def run_seed(stdout):
     """Función principal para generar todos los datos de prueba."""
     with transaction.atomic():
         clean_db()
@@ -443,4 +446,3 @@ def run():
                 # Actualizar saldo final del contrato
                 Contrato.objects.filter(id=contrato.id).update(saldo=current_saldo, abonado=(precio_final - current_saldo))
 
-    print("Generación de datos de prueba MASIVA finalizada. 🚀")
