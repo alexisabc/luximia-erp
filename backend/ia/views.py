@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .rag import retrieve_relevant_context
-from .services import AIService
+from .services.ai_service import AIService
 from django.conf import settings
 from .models import DailyBriefing, AuditAlert
 from .services.auditor_service import AuditorService

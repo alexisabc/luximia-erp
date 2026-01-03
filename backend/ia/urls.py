@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AIAssistantView
+from .views import AIAssistantView, DailyBriefingView, AuditTriggerView
 
 urlpatterns = [
     path('chat/', AIAssistantView.as_view(), name='ai-chat'),

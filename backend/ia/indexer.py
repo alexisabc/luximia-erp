@@ -6,7 +6,7 @@ import logging
 from django.apps import apps
 from django.db import transaction
 from .models import KnowledgeBase
-from .services import AIService
+from .services.ai_service import AIService
 
 logger = logging.getLogger(__name__)
 
