@@ -7,6 +7,7 @@ from ..models import (
 )
 from compras.models import Insumo
 from compras.services.kardex_service import KardexService
+from core.services.config_service import ConfigService
 
 
 class VentaService:
@@ -53,6 +54,16 @@ class VentaService:
         for item in items:
             prod = get_object_or_404(Producto, pk=item['producto_id'])
             qty = Decimal(str(item['cantidad']))
+            
+            # V2.0: Validar stock negativo según configuración
+            allow_negative = ConfigService.get_value('POS_ALLOW_NEGATIVE_STOCK', False)
+            if not allow_negative and hasattr(prod, 'stock_actual'):
+                if prod.stock_actual < qty:
+                    raise ValueError(
+                        f"Stock insuficiente para {prod.nombre}. "
+                        f"Disponible: {prod.stock_actual}, Solicitado: {qty}"
+                    )
+            
             line_total = prod.precio_final * qty
             total_venta += line_total
             productos_map[prod.id] = {
