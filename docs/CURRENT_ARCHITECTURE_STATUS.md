@@ -30,3 +30,13 @@ Sistema híbrido (DB + Redis) para gestión centralizada de configuraciones y fe
 - **Backend:** `ConfigService` con estrategia Cache-First (TTL 15min) y modelos `SystemSetting`/`FeatureFlag`.
 - **Frontend:** `ConfigContext` con sincronización automática y Optimistic UI.
 - **Capacidades:** Activación modular (SaaS style), personalización de reglas de negocio sin deploy, y protección de rutas.
+
+### Expansión Enterprise (V2.0)
+- **Frontend Engine:** 
+  - **Offline Storage:** Implementación de Dexie.js (IndexedDB) para operación POS sin latencia y tolerancia a fallos de red.
+  - **PDF Engine:** Generación estricta de representaciones impresas fiscales usando WeasyPrint (CSS Paged Media).
+- **Motores de Datos:**
+  - **Jerarquía de Costos:** Motor de recursión para presupuestos de obra y explosión de insumos (Estilo Enkontrol).
+- **Capa Fiscal:**
+  - **Motor de Facturación:** Middleware de sellado digital XML 4.0 con soporte para múltiples PACs (Mock y SWSapien Skeleton).
+  - **Bóveda CSD:** Gestión segura de certificados, llaves privadas y contraseñas cifradas.
