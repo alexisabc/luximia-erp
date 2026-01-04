@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, permissions, decorators, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .services.deuda_service import DeudaService
-from .services.pago_service import PagoService
+from .services.pago_service import PaymentSchedulerService
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
