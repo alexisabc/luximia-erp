@@ -108,3 +108,93 @@ class Estimacion(SoftDeleteModel):
 
     def __str__(self):
         return f"{self.folio} - {self.total}"
+
+
+class ActividadProyecto(SoftDeleteModel):
+    """
+    Actividad o tarea dentro de un proyecto.
+    Permite planificación con método de ruta crítica (CPM).
+    """
+    ESTADO_CHOICES = [
+        ('PENDIENTE', 'Pendiente'),
+        ('EN_PROCESO', 'En Proceso'),
+        ('COMPLETADA', 'Completada'),
+        ('CANCELADA', 'Cancelada'),
+    ]
+    
+    obra = models.ForeignKey(Obra, on_delete=models.CASCADE, related_name='actividades')
+    codigo = models.CharField(max_length=20, help_text="Código WBS o identificador único")
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
+    
+    # Planificación
+    fecha_inicio_planeada = models.DateField()
+    fecha_fin_planeada = models.DateField()
+    duracion_dias = models.IntegerField(help_text="Duración estimada en días")
+    
+    # Ejecución Real
+    fecha_inicio_real = models.DateField(null=True, blank=True)
+    fecha_fin_real = models.DateField(null=True, blank=True)
+    porcentaje_avance = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    
+    # CPM Calculations (Calculated fields)
+    early_start = models.IntegerField(null=True, blank=True, help_text="Inicio más temprano (día)")
+    early_finish = models.IntegerField(null=True, blank=True, help_text="Fin más temprano (día)")
+    late_start = models.IntegerField(null=True, blank=True, help_text="Inicio más tardío (día)")
+    late_finish = models.IntegerField(null=True, blank=True, help_text="Fin más tardío (día)")
+    holgura = models.IntegerField(null=True, blank=True, help_text="Slack/Float en días")
+    es_critica = models.BooleanField(default=False, help_text="Actividad en ruta crítica")
+    
+    # Responsabilidad
+    responsable = models.ForeignKey(
+        'rrhh.Empleado',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='actividades_asignadas'
+    )
+    
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
+
+    class Meta:
+        verbose_name = "Actividad de Proyecto"
+        verbose_name_plural = "Actividades de Proyecto"
+        unique_together = ('obra', 'codigo')
+        ordering = ['obra', 'fecha_inicio_planeada']
+
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+
+
+class DependenciaActividad(SoftDeleteModel):
+    """
+    Define relaciones de precedencia entre actividades.
+    """
+    TIPO_CHOICES = [
+        ('FS', 'Finish-to-Start'),  # La más común: B empieza cuando A termina
+        ('SS', 'Start-to-Start'),    # B empieza cuando A empieza
+        ('FF', 'Finish-to-Finish'),  # B termina cuando A termina
+        ('SF', 'Start-to-Finish'),   # B termina cuando A empieza (raro)
+    ]
+    
+    actividad_predecesora = models.ForeignKey(
+        ActividadProyecto,
+        on_delete=models.CASCADE,
+        related_name='sucesoras'
+    )
+    actividad_sucesora = models.ForeignKey(
+        ActividadProyecto,
+        on_delete=models.CASCADE,
+        related_name='predecesoras'
+    )
+    tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default='FS')
+    lag_dias = models.IntegerField(default=0, help_text="Retraso o adelanto en días (+ o -)")
+
+    class Meta:
+        verbose_name = "Dependencia de Actividad"
+        verbose_name_plural = "Dependencias de Actividades"
+        unique_together = ('actividad_predecesora', 'actividad_sucesora')
+
+    def __str__(self):
+        return f"{self.actividad_predecesora.codigo} -> {self.actividad_sucesora.codigo} ({self.tipo})"
+
