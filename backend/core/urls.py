@@ -8,8 +8,10 @@ router.register(r'empresas', EmpresaViewSet, basename='empresa')
 
 from .views_pdf import PDFTestView
 from .views_dashboard import DashboardViewSet
+from .views_reportes import ReportesViewSet
 
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
+router.register(r'reportes', ReportesViewSet, basename='reportes')
 
 # V2.0: Configuración dinámica
 from .views_config import SystemSettingViewSet, FeatureFlagViewSet, PublicConfigView
