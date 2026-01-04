@@ -9,11 +9,22 @@ class Proveedor(SoftDeleteModel):
         ('FISICA', 'Persona Física'),
         ('MORAL', 'Persona Moral'),
     ]
+
+    CATEGORIA_CHOICES = [
+        ('ACERO', 'Acero'),
+        ('CONCRETO', 'Concreto'),
+        ('PAPELERIA', 'Papelería'),
+        ('MAQUINARIA', 'Maquinaria'),
+        ('FERRETERIA', 'Ferretería'),
+        ('SERVICIOS', 'Servicios'),
+        ('OTROS', 'Otros'),
+    ]
     
     razon_social = models.CharField(max_length=200, unique=True)
     nombre_comercial = models.CharField(max_length=200, blank=True, null=True)
     rfc = models.CharField(max_length=13, unique=True)
     tipo_persona = models.CharField(max_length=10, choices=TIPO_PERSONA_CHOICES, default='MORAL')
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='OTROS')
     
     # Datos de Contacto
     email_contacto = models.EmailField(blank=True, null=True)
