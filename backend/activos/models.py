@@ -97,6 +97,79 @@ class AsignacionActivo(SoftDeleteModel):
     def __str__(self):
         return f"{self.activo} -> {self.obra_destino or self.empleado_responsable}"
 
+class Mantenimiento(SoftDeleteModel):
+    """
+    Registro de mantenimientos preventivos y correctivos.
+    """
+    TIPO_CHOICES = [
+        ('PREVENTIVO', 'Mantenimiento Preventivo'),
+        ('CORRECTIVO', 'Mantenimiento Correctivo'),
+        ('EMERGENCIA', 'Reparación de Emergencia'),
+    ]
+    
+    ESTADO_CHOICES = [
+        ('PROGRAMADO', 'Programado'),
+        ('EN_PROCESO', 'En Proceso'),
+        ('COMPLETADO', 'Completado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+    
+    activo = models.ForeignKey(ActivoFijo, on_delete=models.CASCADE, related_name='mantenimientos')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='PREVENTIVO')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PROGRAMADO')
+    
+    # Programación
+    fecha_programada = models.DateField()
+    fecha_realizacion = models.DateField(null=True, blank=True)
+    
+    # Lecturas (Para vehículos/maquinaria)
+    kilometraje = models.IntegerField(null=True, blank=True, help_text="Km o Horas al momento del servicio")
+    
+    # Descripción
+    descripcion = models.TextField(help_text="Descripción del trabajo realizado o a realizar")
+    observaciones = models.TextField(blank=True, null=True)
+    
+    # Costos
+    costo_mano_obra = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    costo_refacciones = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    costo_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Proveedor de Servicio
+    proveedor = models.ForeignKey(
+        'compras.Proveedor', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        help_text="Taller o proveedor que realizó el servicio"
+    )
+    
+    # Auditoría
+    programado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT,
+        related_name='mantenimientos_programados'
+    )
+    realizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mantenimientos_realizados'
+    )
+
+    def save(self, *args, **kwargs):
+        self.costo_total = self.costo_mano_obra + self.costo_refacciones
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.activo.codigo} - {self.tipo} - {self.fecha_programada}"
+
+    class Meta:
+        verbose_name = "Mantenimiento"
+        verbose_name_plural = "Mantenimientos"
+        ordering = ['-fecha_programada']
+
+
 class HistorialDepreciacion(BaseModel):
     activo = models.ForeignKey(ActivoFijo, on_delete=models.CASCADE, related_name='depreciaciones')
     fecha = models.DateField(default=date.today)
@@ -118,4 +191,5 @@ class HistorialDepreciacion(BaseModel):
 
 register_audit(ActivoFijo)
 register_audit(AsignacionActivo)
+register_audit(Mantenimiento)
 register_audit(HistorialDepreciacion)
