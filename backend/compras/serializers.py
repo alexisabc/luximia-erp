@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen, Requisicion, DetalleRequisicion
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, Requisicion, DetalleRequisicion
+from inventarios.models import MovimientoInventario, Almacen
 
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:

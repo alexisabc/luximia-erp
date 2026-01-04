@@ -1,0 +1,1143 @@
+.
+├── .agent
+│   ├── rules
+│   │   └── best-practices-and-code-standardization.md
+│   └── workflows
+│       ├── assets-structure.md
+│       ├── atomic-design-mobile-first.md
+│       ├── dokploy_deployment_guide.md
+│       ├── empresa-selector-implementation.md
+│       ├── multiempresa-implementation.md
+│       ├── multiempresa-setup-commands.md
+│       └── plan_sistema_compras.md
+├── assets
+│   ├── icon-luximia-ia.png
+│   ├── icon-luximia.png
+│   ├── login-bg.png
+│   ├── login.jpg
+│   ├── logo-luximia.jpg
+│   └── logo-luximia.png
+├── backend
+│   ├── assets
+│   ├── auditoria
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── middleware.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── permissions.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── audit_service.py
+│   │   │   └── __init__.py
+│   │   ├── signals.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── celerybeat-schedule
+│   ├── celerybeat-schedule-shm
+│   ├── celerybeat-schedule-wal
+│   ├── certs
+│   │   ├── cert.pem
+│   │   └── key.pem
+│   ├── compras
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── management
+│   │   │   └── commands
+│   │   │       └── seed_compras.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_almacen_movimientoinventario_existencia.py
+│   │   │   ├── 0003_insumo_costo_promedio_insumo_ultimo_costo.py
+│   │   │   ├── 0004_requisicion_detallerequisicion.py
+│   │   │   ├── 0005_ordencompra_requisicion.py
+│   │   │   ├── 0006_detalleordencompra_cantidad_recibida_recepcioncompra_and_more.py
+│   │   │   ├── 0007_ordencompra_empresa_recepcioncompra_empresa.py
+│   │   │   ├── 0008_almacen_empresa_insumo_stock_minimo.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── compras.py
+│   │   │   ├── __init__.py
+│   │   │   ├── inventario.py
+│   │   │   ├── productos.py
+│   │   │   ├── proveedores.py
+│   │   │   ├── recepciones.py
+│   │   │   └── requisiciones.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── conversion_service.py
+│   │   │   ├── envio_service.py
+│   │   │   ├── __init__.py
+│   │   │   ├── kardex_service.py
+│   │   │   ├── recepcion_service.py
+│   │   │   └── requisicion_service.py
+│   │   ├── tests
+│   │   │   ├── test_kardex_service.py
+│   │   │   └── test_recepcion_service.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── config
+│   │   ├── apps.py
+│   │   ├── asgi.py
+│   │   ├── celery.py
+│   │   ├── emails.py
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── routers.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── settings.py
+│   │   ├── storage_backends.py
+│   │   ├── urls.py
+│   │   ├── views.py
+│   │   └── wsgi.py
+│   ├── conftest.py
+│   ├── contabilidad
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── fixtures
+│   │   │   └── cat_sat_initial.json
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   ├── commands
+│   │   │   │   ├── build_embeddings.py
+│   │   │   │   ├── demo_cfdi.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── obtener_tipo_cambio.py
+│   │   │   │   ├── seed_contabilidad.py
+│   │   │   │   └── test_upload_csd.py
+│   │   │   └── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_initial.py
+│   │   │   ├── 0003_delete_documentembedding.py
+│   │   │   ├── 0004_centrocostos_cuentacontable_poliza_detallepoliza.py
+│   │   │   ├── 0005_factura.py
+│   │   │   ├── 0006_vendedor_rfc_vendedor_tipo_operacion_and_more.py
+│   │   │   ├── 0007_alter_tipocambio_unique_together_and_more.py
+│   │   │   ├── 0008_alter_upe_options.py
+│   │   │   ├── 0009_alter_certificadodigital_archivo_cer_and_more.py
+│   │   │   ├── 0010_satformapago_satmetodopago_satregimenfiscal_and_more.py
+│   │   │   ├── 0011_factura_venta.py
+│   │   │   ├── 0012_factura_empresa.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── catalogos.py
+│   │   │   ├── contabilidad.py
+│   │   │   ├── fiscal.py
+│   │   │   ├── __init__.py
+│   │   │   ├── proyectos.py
+│   │   │   ├── sat_catalogs.py
+│   │   │   └── ventas.py
+│   │   ├── models_automation.py
+│   │   ├── repositories
+│   │   │   ├── __init__.py
+│   │   │   └── poliza_repository.py
+│   │   ├── sat_resources
+│   │   │   ├── cadenaoriginal_4_0.xslt
+│   │   │   └── utilerias.xslt
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── cfdi_stamping.py
+│   │   │   ├── diot_service.py
+│   │   │   ├── facturacion_service.py
+│   │   │   ├── factura_service.py
+│   │   │   ├── __init__.py
+│   │   │   ├── pac
+│   │   │   │   ├── base_provider.py
+│   │   │   │   ├── factory.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── mock_provider.py
+│   │   │   ├── pac_provider.py
+│   │   │   ├── pdf_service.py
+│   │   │   ├── provisioning.py
+│   │   │   ├── reportes.py
+│   │   │   ├── sat_integration.py
+│   │   │   ├── sat_xml.py
+│   │   │   ├── xml_generator.py
+│   │   │   ├── xml_parser.py
+│   │   │   └── xml_signer.py
+│   │   ├── templates
+│   │   │   └── factura_v40.html
+│   │   ├── tests
+│   │   │   ├── fixtures
+│   │   │   │   ├── 12345678-1234-1234-1234-123456789012_AImSWXs.xml
+│   │   │   │   ├── 12345678-1234-1234-1234-123456789012_AOm4BJB.xml
+│   │   │   │   ├── 12345678-1234-1234-1234-123456789012_RCZEEb5.xml
+│   │   │   │   └── 12345678-1234-1234-1234-123456789012.xml
+│   │   │   ├── test_currency.py
+│   │   │   ├── test_diot.py
+│   │   │   ├── test_diot_service.py
+│   │   │   ├── test_factura_service.py
+│   │   │   ├── test_pac_service.py
+│   │   │   ├── test_poliza_repository.py
+│   │   │   ├── test_provisioning.py
+│   │   │   ├── test_sat_xml.py
+│   │   │   └── test_xml_upload.py
+│   │   ├── urls.py
+│   │   ├── utils
+│   │   │   ├── __init__.py
+│   │   │   └── qr_generator.py
+│   │   └── views.py
+│   ├── core
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── certificates
+│   │   │   └── certs
+│   │   │       └── cert.pem
+│   │   ├── encryption.py
+│   │   ├── exceptions.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   ├── commands
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── init_sandbox.py
+│   │   │   │   ├── init_settings.py
+│   │   │   │   ├── refresh_collation.py
+│   │   │   │   ├── seed_all.py
+│   │   │   │   ├── seed_empresas.py
+│   │   │   │   └── update_permissions.py
+│   │   │   └── __init__.py
+│   │   ├── middleware.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_featureflag_systemsetting.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── base.py
+│   │   │   ├── config.py
+│   │   │   ├── empresa.py
+│   │   │   └── __init__.py
+│   │   ├── pagination.py
+│   │   ├── permissions_catalog.py
+│   │   ├── permissions.py
+│   │   ├── serializers_config.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── config_service.py
+│   │   │   ├── dashboard_service.py
+│   │   │   ├── email_service.py
+│   │   │   └── pdf_service.py
+│   │   ├── tasks.py
+│   │   ├── tests
+│   │   │   ├── __init__.py
+│   │   │   └── test_sanity.py
+│   │   ├── urls.py
+│   │   ├── utils.py
+│   │   ├── views_config.py
+│   │   ├── views_dashboard.py
+│   │   ├── views_pdf.py
+│   │   └── views.py
+│   ├── Dockerfile
+│   ├── Dockerfile.prod
+│   ├── .dockerignore
+│   ├── entrypoint.prod.sh
+│   ├── entrypoint.sh
+│   ├── ia
+│   │   ├── apps.py
+│   │   ├── indexer.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   ├── commands
+│   │   │   │   ├── index_models.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── reindex_db.py
+│   │   │   │   └── run_auditor.py
+│   │   │   └── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_initial.py
+│   │   │   ├── 0003_alter_knowledgebase_unique_together_and_more.py
+│   │   │   ├── 0004_auditalert_dailybriefing.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── rag.py
+│   │   ├── services
+│   │   │   ├── ai_service.py
+│   │   │   ├── auditor_service.py
+│   │   │   ├── briefing_service.py
+│   │   │   └── __init__.py
+│   │   ├── signals.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── juridico
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── firma_service.py
+│   │   │   └── __init__.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── manage.py
+│   ├── notifications
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_notificacion_delete_notification_and_more.py
+│   │   │   ├── 0003_webhookconfig.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── tasks.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── obras
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_obra_empresa.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── services.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── pos
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   ├── commands
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── seed_pos.py
+│   │   │   └── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_venta_metodo_pago_secundario_and_more.py
+│   │   │   ├── 0003_solicitudcancelacion.py
+│   │   │   ├── 0004_alter_movimientocaja_options_and_more.py
+│   │   │   ├── 0005_producto_clave_sat_producto_and_more.py
+│   │   │   ├── 0006_venta_empresa.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── auxiliares.py
+│   │   │   ├── __init__.py
+│   │   │   ├── productos.py
+│   │   │   ├── sesiones.py
+│   │   │   └── ventas.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── caja_service.py
+│   │   │   ├── cuenta_cliente_service.py
+│   │   │   ├── __init__.py
+│   │   │   └── venta_service.py
+│   │   ├── tests
+│   │   │   └── test_pos_services.py
+│   │   ├── urls.py
+│   │   ├── views_api.py
+│   │   └── views.py
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   ├── rrhh
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── engine.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   └── commands
+│   │   │       ├── import_pagadora.py
+│   │   │       ├── seed_nomina_2025.py
+│   │   │       ├── seed_nomina_concepts.py
+│   │   │       └── seed_rrhh.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_conceptonomina_configuracioneconomica_nomina_and_more.py
+│   │   │   ├── 0003_nominacentralizada.py
+│   │   │   ├── 0004_nominacentralizada_total_percepciones.py
+│   │   │   ├── 0005_nominacentralizada_neto.py
+│   │   │   ├── 0006_periodonomina.py
+│   │   │   ├── 0007_documentoexpediente_incapacidad_solicitudpermiso_and_more.py
+│   │   │   ├── 0008_remove_empleado_apellidos_empleado_apellido_materno_and_more.py
+│   │   │   ├── 0009_buzonimss.py
+│   │   │   ├── 0010_recibonomina_uuid_recibonomina_xml_timbrado.py
+│   │   │   ├── 0011_centrotrabajo_empresa_departamento_empresa_and_more.py
+│   │   │   ├── 0012_remove_conceptonomina_cuenta_contable_and_more.py
+│   │   │   ├── 0013_asistencia_distribucioncosto.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── asistencia.py
+│   │   │   ├── conceptos.py
+│   │   │   ├── empleado.py
+│   │   │   ├── __init__.py
+│   │   │   ├── nomina.py
+│   │   │   └── organizacion.py
+│   │   ├── models_nomina.py
+│   │   ├── models_periodos.py
+│   │   ├── models_portal.py
+│   │   ├── permissions.py
+│   │   ├── serializers_nomina.py
+│   │   ├── serializers_portal.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── calculo_nomina_service.py
+│   │   │   ├── calculo_ptu.py
+│   │   │   ├── impacto_costos.py
+│   │   │   ├── __init__.py
+│   │   │   ├── nomina_engine.py
+│   │   │   ├── nomina_importer.py
+│   │   │   ├── nomina_io.py
+│   │   │   ├── nomina_orchestrator.py
+│   │   │   ├── pdf_generator.py
+│   │   │   └── xml_generator.py
+│   │   ├── templates
+│   │   │   └── rrhh
+│   │   │       └── recibo_nomina.html
+│   │   ├── tests
+│   │   │   ├── test_calculo_nomina_service.py
+│   │   │   ├── test_nomina_orchestrator.py
+│   │   │   ├── test_nomina_pdf_generator.py
+│   │   │   ├── test_nomina_xml_generator.py
+│   │   │   └── test_timbrado_flow.py
+│   │   ├── urls.py
+│   │   ├── views
+│   │   │   ├── asistencia_views.py
+│   │   │   ├── general_views.py
+│   │   │   └── __init__.py
+│   │   ├── views_nomina.py
+│   │   ├── views_periodos.py
+│   │   └── views_portal.py
+│   ├── sistemas
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   └── commands
+│   │   │       └── seed_sistemas.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── templates
+│   │   ├── emails
+│   │   │   ├── base_email.html
+│   │   │   └── envio_oc.html
+│   │   └── reports
+│   │       ├── base_report.html
+│   │       ├── orden_compra.html
+│   │       └── test_pdf.html
+│   ├── tesoreria
+│   │   ├── apps.py
+│   │   ├── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_cajachica_cuentabancaria_egreso_movimientocaja.py
+│   │   │   ├── 0003_alter_cuentabancaria_options.py
+│   │   │   ├── 0004_alter_cajachica_options_alter_cuentabancaria_options_and_more.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── bancos.py
+│   │   │   ├── caja_chica.py
+│   │   │   ├── cxp.py
+│   │   │   ├── __init__.py
+│   │   │   └── movimientos.py
+│   │   ├── serializers.py
+│   │   ├── services
+│   │   │   ├── bancario_service.py
+│   │   │   ├── conciliacion_service.py
+│   │   │   ├── deuda_service.py
+│   │   │   ├── __init__.py
+│   │   │   ├── pago_service.py
+│   │   │   └── payment_service.py
+│   │   ├── tests
+│   │   │   ├── test_bancario_service.py
+│   │   │   ├── test_conciliacion_service.py
+│   │   │   └── test_payment_service.py
+│   │   ├── urls.py
+│   │   └── views.py
+│   ├── tests_integration_legacy
+│   │   ├── test_flujo_oc_noaudit.py
+│   │   ├── test_flujo_oc.py
+│   │   ├── test_obras_script.py
+│   │   └── test_requisicion.py
+│   ├── users
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── auth_backends.py
+│   │   ├── authentication.py
+│   │   ├── __init__.py
+│   │   ├── management
+│   │   │   ├── commands
+│   │   │   │   ├── create_and_invite_superuser.py
+│   │   │   │   ├── get_enrollment_link.py
+│   │   │   │   └── __init__.py
+│   │   │   └── __init__.py
+│   │   ├── migrations
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_alter_customuser_options.py
+│   │   │   ├── 0003_customuser_created_at_customuser_created_by_and_more.py
+│   │   │   ├── 0004_alter_customuser_options_and_more.py
+│   │   │   ├── 0005_customuser_ultima_empresa_activa.py
+│   │   │   ├── 0006_alter_customuser_options.py
+│   │   │   ├── 0007_alter_customuser_options.py
+│   │   │   ├── 0008_customuser_current_session_device_and_more.py
+│   │   │   ├── 0009_alter_customuser_password.py
+│   │   │   ├── 0010_alter_customuser_options.py
+│   │   │   ├── 0011_customuser_totp_authorization_configured_and_more.py
+│   │   │   ├── 0012_alter_customuser_options.py
+│   │   │   ├── 0013_alter_customuser_options_and_more.py
+│   │   │   ├── 0014_rename_empresas_acceso_customuser_empresas.py
+│   │   │   ├── 0015_auto_20260103_1549.py
+│   │   │   ├── 0016_alter_customuser_empresas.py
+│   │   │   └── __init__.py
+│   │   ├── models
+│   │   │   ├── __init__.py
+│   │   │   ├── role.py
+│   │   │   ├── token.py
+│   │   │   └── user.py
+│   │   ├── serializers
+│   │   │   ├── __init__.py
+│   │   │   ├── role_serializers.py
+│   │   │   └── user_serializers.py
+│   │   ├── services
+│   │   │   ├── __init__.py
+│   │   │   └── rbac_service.py
+│   │   ├── templates
+│   │   │   └── users
+│   │   │       ├── enrollment_email.html
+│   │   │       └── welcome_invitation.txt
+│   │   ├── tests
+│   │   │   └── test_rbac_service.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   ├── utils.py
+│   │   ├── views
+│   │   │   ├── auth_views.py
+│   │   │   ├── __init__.py
+│   │   │   ├── role_views.py
+│   │   │   └── user_views.py
+│   │   └── views_extension.py
+│   ├── verify_sprint_26.py
+│   └── verify_sprint_27.py
+├── caddy
+│   └── Caddyfile
+├── commitlint.config.js
+├── docker-compose.override.yml
+├── docker-compose.prod.yml
+├── docker-compose.yml
+├── .dockerignore
+├── docs
+│   ├── ARCHITECTURE.md
+│   ├── ARCHITECTURE_PRINCIPLES.md
+│   ├── archive
+│   ├── audit_logs
+│   │   ├── PASO_1_AUDITORIA_LIMPIEZA.md
+│   │   ├── PASO_2_AUDITORIA_ARQUITECTURA.md
+│   │   ├── PASO_3_AUDITORIA_NAVEGACION.md
+│   │   ├── README.md
+│   │   └── REPORTE_FINAL_JURIDICO_POS.md
+│   ├── AUDIT_REPORT.md
+│   ├── COCKPIT.md
+│   ├── CURRENT_ARCHITECTURE_STATUS.md
+│   ├── DEMO_SCRIPT.md
+│   ├── DEPLOYMENT.md
+│   ├── DEPLOYMENT_SUMMARY.md
+│   ├── FIX_BUILD_DOCKER.md
+│   ├── INSTRUCCIONES_MIGRACIONES.md
+│   ├── INVENTARIO_ACTUALIZACION_FINAL.md
+│   ├── INVENTARIO_Y_SALUD_V1.0.md
+│   ├── migration
+│   │   ├── CLEANUP_CHECKLIST.md
+│   │   ├── DOCKER_TO_PODMAN.md
+│   │   ├── MIGRATION_STATUS.md
+│   │   ├── MIGRATION_SUMMARY.md
+│   │   ├── PODMAN_COMPOSE_FIX.md
+│   │   └── PODMAN_FIXES_LOG.md
+│   ├── MIGRATION_LOG.md
+│   ├── NEUTRALIZACION_BRANDING.md
+│   ├── PRODUCTION_DEPLOYMENT.md
+│   ├── RESUMEN_SINCRONIZACION_V1.0.md
+│   ├── ROADMAP_REFACTOR.md
+│   ├── ROADMAP_REFACTOR_V2.md
+│   ├── SOLUCION_ERRORES_TYPESCRIPT.md
+│   ├── TESTING_GUIDE.md
+│   ├── V2.0_CONFIGURACION_DINAMICA.md
+│   └── V2.0_FRONTEND_COMPLETADO.md
+├── .env
+├── .env.example
+├── .env.prod.example
+├── ERP_Docs
+│   ├── 00_Indice_Maestro.md
+│   ├── 01_Arquitectura_General.md
+│   ├── 02_Backend_API.md
+│   ├── 03_Frontend_UI.md
+│   ├── 04_Base_Datos.md
+│   ├── 05_Deployment_DevOps.md
+│   ├── ACTUALIZACIONES_IA_NAVEGACION.md
+│   ├── archive
+│   │   ├── PROGRESO_60_COMPLETADO.md
+│   │   ├── PROGRESO_67_RECTA_FINAL.md
+│   │   ├── PROGRESO_73_ULTIMAS_8.md
+│   │   ├── PROGRESO_77_EXITO_INMINENTE.md
+│   │   ├── PROGRESO_ACTUALIZACION_FINAL.md
+│   │   ├── PROGRESO_ACTUALIZACION_UI.md
+│   │   ├── SESION_ACTUALIZACION_UI_COMPLETA.md
+│   │   └── SESION_COMPLETA_2025-12-27.md
+│   ├── AUDITORIA_UI_UX.md
+│   ├── CATALOGO_PERMISOS.md
+│   ├── CLEANUP_FINAL.md
+│   ├── CLEANUP_REPORT.md
+│   ├── CONSOLIDATION_REPORT.md
+│   ├── DISENO_SISTEMA_CANCELACIONES_POS.md
+│   ├── DOCUMENTACION_SESION_FINAL_2025-12-27.md
+│   ├── FINAL_CLEANUP_REPORT.md
+│   ├── FINAL_REPORT.md
+│   ├── GUIA_COMPONENTES.md
+│   ├── GUIA_CONVENTIONAL_COMMITS.md
+│   ├── GUIA_DESPLIEGUE.md
+│   ├── GUIA_SEEDS.md
+│   ├── HITO_50_COMPLETADO.md
+│   ├── IMPLEMENTATION_SUMMARY.md
+│   ├── INDEX.md
+│   ├── INDICE_SESION_2025-12-27.md
+│   ├── INFORME_EJECUTIVO_ACTUALIZACION_UI.md
+│   ├── INFORME_FINAL_PROYECTO_UI.md
+│   ├── LEGACY_ANALYSIS.md
+│   ├── MIGRATION_ADDITIONAL.md
+│   ├── MIGRATION_COMPLETE.md
+│   ├── MIGRATION_GUIDE.md
+│   ├── MIGRATION_STATUS.md
+│   ├── OPTIMIZACIONES_POS_IMPLEMENTADAS.md
+│   ├── OPTIMIZACIONES_TERMINAL_POS.md
+│   ├── OPTIMIZATION_EXECUTION_REPORT.md
+│   ├── OPTIMIZATION_PLAN.md
+│   ├── OPTIMIZATION_REPORT.md
+│   ├── ORGANIZATION_SUMMARY.md
+│   ├── PERMISOS_Y_ROLES.md
+│   ├── PROGRESS.md
+│   ├── PROYECTO_ACTUALIZACION_UI_COMPLETO.md
+│   ├── PROYECTO_UI_UX_100_COMPLETADO.md
+│   ├── PROYECTO_UI_UX_FINAL_CONSOLIDADO.md
+│   ├── README_DESIGN_SYSTEM.md
+│   ├── README_FRONTEND.md
+│   ├── README.md
+│   ├── README_ORGANIZATION.md
+│   ├── REFACTORING_EXAMPLES.md
+│   ├── RESUMEN_AUDITORIA_UI.md
+│   ├── RESUMEN_EJECUTIVO_FINAL.md
+│   ├── RESUMEN_EJECUTIVO_PROYECTO_COMPLETO.md
+│   ├── RESUMEN_FINAL_ACTUALIZACION.md
+│   ├── RESUMEN_SESION_2025-12-27.md
+│   ├── SECURITY_REPORT_CVE-2025-55182.md
+│   ├── SISTEMA_CANCELACIONES_IMPLEMENTADO.md
+│   ├── TESORERIA_API.md
+│   ├── TESORERIA_COMPLETO.md
+│   ├── TESORERIA_FRONTEND.md
+│   └── TESORERIA_MODELOS.md
+├── estructura_actual.txt
+├── estructura_actual_v2.txt
+├── fix-dependencies.sh
+├── frontend
+│   └── erp_ui
+│       ├── app
+│       │   ├── auditoria
+│       │   │   └── page.jsx
+│       │   ├── (auth)
+│       │   │   ├── enroll
+│       │   │   │   ├── setup
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── [token]
+│       │   │   │       └── page.jsx
+│       │   │   └── login
+│       │   │       └── page.jsx
+│       │   ├── compras
+│       │   │   ├── insumos
+│       │   │   │   └── page.jsx
+│       │   │   ├── inventario
+│       │   │   │   └── page.jsx
+│       │   │   ├── mesa-control
+│       │   │   │   └── page.jsx
+│       │   │   ├── nueva
+│       │   │   │   └── page.jsx
+│       │   │   ├── ordenes
+│       │   │   │   └── [id]
+│       │   │   │       └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── proveedores
+│       │   │   │   └── page.jsx
+│       │   │   └── recepcion
+│       │   │       └── page.jsx
+│       │   ├── configuracion
+│       │   │   ├── fiscal
+│       │   │   │   └── page.jsx
+│       │   │   ├── panel
+│       │   │   │   └── page.jsx
+│       │   │   └── sat
+│       │   │       └── page.jsx
+│       │   ├── construccion
+│       │   │   └── page.jsx
+│       │   ├── contabilidad
+│       │   │   ├── centros-costos
+│       │   │   │   └── page.jsx
+│       │   │   ├── clientes
+│       │   │   │   └── page.jsx
+│       │   │   ├── cuentas-contables
+│       │   │   │   └── page.jsx
+│       │   │   ├── facturacion
+│       │   │   │   ├── buzon
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── page.jsx
+│       │   │   │   └── polizas-automaticas
+│       │   │   │       └── page.jsx
+│       │   │   ├── fiscal
+│       │   │   │   ├── contabilidad-electronica
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── dashboard
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── diot
+│       │   │   │       └── page.jsx
+│       │   │   ├── layout.jsx
+│       │   │   ├── loading.jsx
+│       │   │   ├── monedas
+│       │   │   │   └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── polizas
+│       │   │   │   └── page.jsx
+│       │   │   ├── presupuestos
+│       │   │   │   └── page.jsx
+│       │   │   ├── proyectos
+│       │   │   │   └── page.jsx
+│       │   │   ├── reportes
+│       │   │   │   └── page.jsx
+│       │   │   ├── tc-banxico
+│       │   │   │   └── page.jsx
+│       │   │   ├── tc-manual
+│       │   │   │   ├── page.jsx
+│       │   │   │   └── tipos-cambio
+│       │   │   │       └── page.jsx
+│       │   │   └── upes
+│       │   │       └── page.jsx
+│       │   ├── dashboard
+│       │   │   └── layout.jsx
+│       │   ├── direccion
+│       │   │   ├── dashboard
+│       │   │   │   └── page.jsx
+│       │   │   └── page.jsx
+│       │   ├── error.jsx
+│       │   ├── favicon.ico
+│       │   ├── globals.css
+│       │   ├── juridico
+│       │   │   ├── contratos
+│       │   │   │   ├── [id]
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── page.jsx
+│       │   │   ├── expedientes
+│       │   │   │   └── page.jsx
+│       │   │   └── page.jsx
+│       │   ├── layout.jsx
+│       │   ├── not-found.jsx
+│       │   ├── obras
+│       │   │   ├── dashboard
+│       │   │   │   └── page.jsx
+│       │   │   ├── [id]
+│       │   │   │   ├── page.jsx
+│       │   │   │   └── requisiciones
+│       │   │   │       └── new
+│       │   │   │           └── page.jsx
+│       │   │   ├── layout.jsx
+│       │   │   └── page.jsx
+│       │   ├── page.jsx
+│       │   ├── perfil
+│       │   │   ├── page.jsx
+│       │   │   └── seguridad
+│       │   │       └── totp-autorizacion
+│       │   │           └── page.jsx
+│       │   ├── portal
+│       │   │   ├── components-example
+│       │   │   │   └── page.jsx
+│       │   │   └── page.jsx
+│       │   ├── pos
+│       │   │   ├── cancelaciones
+│       │   │   │   └── page.jsx
+│       │   │   ├── cuentas
+│       │   │   │   └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── productos
+│       │   │   │   └── page.jsx
+│       │   │   ├── terminal
+│       │   │   │   └── page.jsx
+│       │   │   ├── turnos
+│       │   │   │   └── page.jsx
+│       │   │   └── ventas
+│       │   │       └── page.jsx
+│       │   ├── rrhh
+│       │   │   ├── ausencias
+│       │   │   │   └── page.jsx
+│       │   │   ├── departamentos
+│       │   │   │   └── page.jsx
+│       │   │   ├── empleados
+│       │   │   │   └── page.jsx
+│       │   │   ├── esquemas-comision
+│       │   │   │   └── page.jsx
+│       │   │   ├── expedientes
+│       │   │   │   └── page.jsx
+│       │   │   ├── imss
+│       │   │   │   └── buzon
+│       │   │   │       └── page.jsx
+│       │   │   ├── layout.jsx
+│       │   │   ├── nomina
+│       │   │   │   ├── [id]
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── page.jsx
+│       │   │   ├── nominas
+│       │   │   │   ├── crear
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── historico
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── [id]
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── importar
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── page.jsx
+│       │   │   │   └── periodos
+│       │   │   │       └── page.jsx
+│       │   │   ├── organigrama
+│       │   │   │   └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── ptu
+│       │   │   │   └── page.jsx
+│       │   │   ├── puestos
+│       │   │   │   └── page.jsx
+│       │   │   └── vendedores
+│       │   │       └── page.jsx
+│       │   ├── sistemas
+│       │   │   ├── configuracion
+│       │   │   │   └── page.jsx
+│       │   │   ├── empresas
+│       │   │   │   └── page.jsx
+│       │   │   ├── exportar
+│       │   │   │   └── page.jsx
+│       │   │   ├── importar
+│       │   │   │   ├── bancos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── clientes
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── contratos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── departamentos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── empleados
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── esquemas-comision
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── formas-pago
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── monedas
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── page.jsx
+│       │   │   │   ├── pagos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── planes-pago
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── presupuestos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── proyectos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── puestos
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── tipos-cambio
+│       │   │   │   │   └── page.jsx
+│       │   │   │   ├── upes
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── vendedores
+│       │   │   │       └── page.jsx
+│       │   │   ├── inventario
+│       │   │   │   ├── editar
+│       │   │   │   │   └── [id]
+│       │   │   │   │       └── page.jsx
+│       │   │   │   ├── nuevo
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── page.jsx
+│       │   │   ├── licencias
+│       │   │   │   └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── responsivas
+│       │   │   │   ├── detalle
+│       │   │   │   │   └── [id]
+│       │   │   │   │       └── page.jsx
+│       │   │   │   ├── nuevo
+│       │   │   │   │   └── page.jsx
+│       │   │   │   └── page.jsx
+│       │   │   ├── roles
+│       │   │   │   └── page.jsx
+│       │   │   └── usuarios
+│       │   │       └── page.jsx
+│       │   ├── _templates
+│       │   │   └── page-template.jsx
+│       │   ├── tesoreria
+│       │   │   ├── bancos
+│       │   │   │   └── page.jsx
+│       │   │   ├── cajas
+│       │   │   │   └── page.jsx
+│       │   │   ├── cajas-chicas
+│       │   │   │   └── page.jsx
+│       │   │   ├── contrarecibos
+│       │   │   │   └── page.jsx
+│       │   │   ├── cuentas
+│       │   │   │   └── page.jsx
+│       │   │   ├── cuentas-bancarias
+│       │   │   │   └── page.jsx
+│       │   │   ├── egresos
+│       │   │   │   └── page.jsx
+│       │   │   ├── formas-pago
+│       │   │   │   └── page.jsx
+│       │   │   ├── page.jsx
+│       │   │   ├── pagos
+│       │   │   │   └── page.jsx
+│       │   │   ├── planes-pago
+│       │   │   │   └── page.jsx
+│       │   │   └── programaciones
+│       │   │       └── page.jsx
+│       │   └── unauthorized
+│       │       └── page.jsx
+│       ├── components
+│       │   ├── atoms
+│       │   │   ├── Avatar.jsx
+│       │   │   ├── BadgeCustom.jsx
+│       │   │   ├── Badge.jsx
+│       │   │   ├── Button.jsx
+│       │   │   ├── Checkbox.jsx
+│       │   │   ├── Divider.jsx
+│       │   │   ├── Heading.jsx
+│       │   │   ├── Icon.jsx
+│       │   │   ├── index.js
+│       │   │   ├── Input.jsx
+│       │   │   ├── Label.jsx
+│       │   │   ├── README.md
+│       │   │   ├── Select.jsx
+│       │   │   ├── Spinner.jsx
+│       │   │   ├── StatusBadge.jsx
+│       │   │   ├── __tests__
+│       │   │   │   └── Button.test.jsx
+│       │   │   ├── Textarea.jsx
+│       │   │   ├── Text.jsx
+│       │   │   └── Tooltip.jsx
+│       │   ├── charts
+│       │   │   ├── FlujoCobranza.jsx
+│       │   │   └── Ventas.jsx
+│       │   ├── common
+│       │   │   ├── SessionTimeout.jsx
+│       │   │   └── UnderConstruction.jsx
+│       │   ├── COMPONENTS_GUIDE.md
+│       │   ├── config
+│       │   │   ├── FeatureCard.jsx
+│       │   │   ├── FeatureGuard.jsx
+│       │   │   ├── SettingInput.jsx
+│       │   │   └── SettingSwitch.jsx
+│       │   ├── DailyBriefingWidget.jsx
+│       │   ├── features
+│       │   │   ├── auth
+│       │   │   │   └── LoginAnimation.jsx
+│       │   │   ├── ChatInteligente.jsx
+│       │   │   ├── data
+│       │   │   │   └── DataImporter.jsx
+│       │   │   └── finance
+│       │   │       └── MetodoPagoSelect.jsx
+│       │   ├── layout
+│       │   │   ├── AppContent.jsx
+│       │   │   ├── CompanySwitcher.jsx
+│       │   │   ├── EmpresaSelector.jsx
+│       │   │   ├── Navbar.jsx
+│       │   │   ├── navigationConfig.js
+│       │   │   ├── NotificationsBell.jsx
+│       │   │   ├── SandboxToggle.jsx
+│       │   │   ├── Sidebar.jsx
+│       │   │   ├── ThemeProvider.jsx
+│       │   │   └── ThemeSwitcher.jsx
+│       │   ├── loaders
+│       │   │   ├── index.jsx
+│       │   │   └── Overlay.jsx
+│       │   ├── modals
+│       │   │   ├── Export.jsx
+│       │   │   ├── Form.jsx
+│       │   │   ├── Import.jsx
+│       │   │   ├── index.jsx
+│       │   │   ├── NominaReciboModal.jsx
+│       │   │   ├── ProveedorModal.jsx
+│       │   │   ├── RolePermissionsModal.jsx
+│       │   │   └── UserModal.jsx
+│       │   ├── molecules
+│       │   │   ├── ActionButtonGroup.jsx
+│       │   │   ├── ActionCard.jsx
+│       │   │   ├── Alert.jsx
+│       │   │   ├── Breadcrumb.jsx
+│       │   │   ├── CardCustom.jsx
+│       │   │   ├── Card.jsx
+│       │   │   ├── DatePicker.jsx
+│       │   │   ├── EmptyState.jsx
+│       │   │   ├── FileUpload.jsx
+│       │   │   ├── FormField.jsx
+│       │   │   ├── index.js
+│       │   │   ├── KpiCard.jsx
+│       │   │   ├── NominaCard.jsx
+│       │   │   ├── README.md
+│       │   │   ├── SearchBar.jsx
+│       │   │   └── StatCard.jsx
+│       │   ├── obras
+│       │   │   └── CostCenterTree.jsx
+│       │   ├── organisms
+│       │   │   ├── DataTable.jsx
+│       │   │   ├── Header.jsx
+│       │   │   ├── index.js
+│       │   │   ├── Modal.jsx
+│       │   │   ├── NavigationSidebar.jsx
+│       │   │   ├── README.md
+│       │   │   └── Tabs.jsx
+│       │   ├── pos
+│       │   │   └── BackgroundSyncer.jsx
+│       │   ├── rrhh
+│       │   │   └── EmployeeDetailModal.jsx
+│       │   ├── templates
+│       │   │   ├── DashboardTemplate.jsx
+│       │   │   ├── DetailPageTemplate.jsx
+│       │   │   ├── FormPageTemplate.jsx
+│       │   │   ├── FormTemplate.jsx
+│       │   │   ├── index.js
+│       │   │   ├── ListPageTemplate.jsx
+│       │   │   ├── ListTemplate.jsx
+│       │   │   └── README.md
+│       │   └── ui
+│       │       ├── badge.jsx
+│       │       ├── button.jsx
+│       │       ├── Card.jsx
+│       │       ├── ConnectivityIndicator.jsx
+│       │       ├── dialog.jsx
+│       │       ├── dropdown-menu.jsx
+│       │       ├── input.jsx
+│       │       ├── label.jsx
+│       │       ├── navbar.jsx
+│       │       ├── Pagination.jsx
+│       │       ├── README_NAVIGATION.md
+│       │       ├── select.jsx
+│       │       ├── sidebar.jsx
+│       │       ├── table.jsx
+│       │       └── textarea.jsx
+│       ├── components.json
+│       ├── context
+│       │   ├── AuthContext.jsx
+│       │   ├── ConfigContext.js
+│       │   ├── EmpresaContext.jsx
+│       │   ├── NotificationContext.js
+│       │   ├── PosContext.js
+│       │   └── SidebarContext.jsx
+│       ├── contexts
+│       │   └── ConfigContext.jsx
+│       ├── db
+│       │   └── posDB.js
+│       ├── Dockerfile
+│       ├── Dockerfile.prod
+│       ├── .dockerignore
+│       ├── eslint.config.mjs
+│       ├── hooks
+│       │   ├── useCatalogSync.js
+│       │   ├── useDebounce.js
+│       │   ├── useInactivityTimer.js
+│       │   ├── usePOS.js
+│       │   ├── useResource.js
+│       │   ├── useResponsivePageSize.js
+│       │   └── useServerForm.js
+│       ├── jest.config.js
+│       ├── jest.setup.js
+│       ├── jsconfig.json
+│       ├── lib
+│       │   ├── branding.js
+│       │   ├── designTokens.js
+│       │   └── utils.js
+│       ├── next.config.mjs
+│       ├── nginx.conf
+│       ├── package.json
+│       ├── package-lock.json
+│       ├── postcss.config.mjs
+│       ├── public
+│       │   ├── icon-luximia-ia-new.png
+│       │   ├── icon-luximia.png
+│       │   ├── images
+│       │   │   ├── backgrounds
+│       │   │   │   └── login-bg.png
+│       │   │   ├── icons
+│       │   │   │   ├── icon-luximia-ia.png
+│       │   │   │   └── icon-luximia.png
+│       │   │   └── logos
+│       │   │       ├── logo-login.jpg
+│       │   │       ├── logo-luximia.jpg
+│       │   │       └── logo-luximia.png
+│       │   └── manifest.json
+│       ├── services
+│       │   ├── accounting.js
+│       │   ├── admin.service.js
+│       │   ├── api.js
+│       │   ├── audit.js
+│       │   ├── auth.js
+│       │   ├── auth.service.js
+│       │   ├── compras.js
+│       │   ├── config.service.js
+│       │   ├── contabilidad.js
+│       │   ├── core.js
+│       │   ├── core.service.js
+│       │   ├── db.js
+│       │   ├── direccion.js
+│       │   ├── ia.js
+│       │   ├── nomina.service.js
+│       │   ├── notifications.js
+│       │   ├── notifications.service.js
+│       │   ├── obras.service.js
+│       │   ├── pos.js
+│       │   ├── requisiciones.service.js
+│       │   ├── rrhh.js
+│       │   ├── sistemas.js
+│       │   ├── tesoreria.js
+│       │   ├── treasury.js
+│       │   └── users.js
+│       └── utils
+│           ├── formatters.js
+│           └── permissions.js
+├── .github
+│   └── workflows
+│       ├── ci.yml
+│       ├── deploy-podman.yml
+│       └── deploy.yml
+├── .gitignore
+├── .husky
+│   └── commit-msg
+├── package.json
+├── package-lock.json
+├── README.md
+├── RELEASE_NOTES_v1.0.0.md
+├── RELEASE_NOTES_v2.0.md
+└── scripts
+    ├── audit
+    │   └── run_security_audit.sh
+    ├── migration
+    │   ├── migrate_compose_to_podman.sh
+    │   └── podman_smoke_test.sh
+    ├── podman_start.sh
+    ├── prod
+    │   ├── generate_systemd.sh
+    │   ├── setup_podman.sh
+    │   ├── setup_vps.sh
+    │   └── ubuntu_hardening.sh
+    ├── seed_audit_data.py
+    ├── seed_demo_data.py
+    ├── seeds
+    │   ├── seed_audit_data.py
+    │   └── seed_rrhh_data.py
+    ├── sync_sandbox_docker.sh
+    └── sync_sandbox.sh
+
+276 directories, 865 files

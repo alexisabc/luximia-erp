@@ -9,13 +9,14 @@ from django.core.exceptions import ValidationError
 import openpyxl
 
 
-from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, MovimientoInventario, Almacen, RecepcionCompra, DetalleRecepcion
+from .models import Proveedor, Insumo, OrdenCompra, DetalleOrdenCompra, RecepcionCompra, DetalleRecepcion
+from inventarios.models import MovimientoInventario, Almacen
 from .serializers import (
     ProveedorSerializer, InsumoSerializer, 
     OrdenCompraSerializer, OrdenCompraCreateUpdateSerializer,
-    DetalleOrdenCompraSerializer, MovimientoInventarioSerializer,
-    AlmacenSerializer
+    DetalleOrdenCompraSerializer
 )
+from inventarios.serializers import MovimientoInventarioSerializer, AlmacenSerializer
 from .services.recepcion_service import RecepcionService
 
 
@@ -179,7 +180,6 @@ class OrdenCompraViewSet(viewsets.ModelViewSet):
         oc.save()
         return Response({"detail": "Orden rechazada"})
 
-    @decorators.action(detail=True, methods=['post'], url_path='recibir')
     @decorators.action(detail=True, methods=['post'], url_path='recibir')
     def recibir(self, request, pk=None):
         data = request.data

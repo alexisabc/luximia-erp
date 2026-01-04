@@ -4,8 +4,9 @@ from django.contrib.auth import get_user_model
 from pos.models import Caja, Turno, Venta, DetalleVenta
 from pos.services.caja_service import CajaService
 from pos.services.venta_service import VentaService
-from compras.models import Insumo, Almacen, Existencia
-from compras.services.kardex_service import KardexService
+from compras.models import Insumo
+from inventarios.models import Almacen, Existencia
+from inventarios.services.kardex_service import KardexService
 
 User = get_user_model()
 

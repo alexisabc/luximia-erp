@@ -6,7 +6,7 @@ from ..models import (
     CuentaCliente, MovimientoSaldoCliente
 )
 from compras.models import Insumo
-from compras.services.kardex_service import KardexService
+from inventarios.services.kardex_service import KardexService
 from core.services.config_service import ConfigService
 
 
