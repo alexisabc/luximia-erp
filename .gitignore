@@ -66,8 +66,9 @@ backend/media/
 backend/staticfiles/
 
 # Celery
-celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
+backend/certs/
 
 # Pytest / Coverage
 .pytest_cache/
