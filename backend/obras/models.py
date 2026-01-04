@@ -1,11 +1,23 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.conf import settings
+from django.utils import timezone
 from core.models import SoftDeleteModel, EmpresaOwnedModel, MultiTenantManager
 
 class Obra(SoftDeleteModel, EmpresaOwnedModel):
     # Manager combinando SoftDelete y Empresa
+    ESTADO_CHOICES = [
+        ('PLANEACION', 'En Planeación'),
+        ('EJECUCION', 'En Ejecución'),
+        ('SUSPENDIDA', 'Suspendida'),
+        ('LIQUIDACION', 'En Liquidación'),
+        ('CERRADA', 'Cerrada'),
+    ]
+
     objects = MultiTenantManager()
     nombre = models.CharField(max_length=200, verbose_name="Nombre de la Obra")
     codigo = models.SlugField(max_length=50, unique=True, verbose_name="Código")
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PLANEACION')
     fecha_inicio = models.DateField(verbose_name="Fecha de Inicio")
     fecha_fin = models.DateField(null=True, blank=True, verbose_name="Fecha de Fin")
     presupuesto_total = models.DecimalField(max_digits=14, decimal_places=2, default=0, verbose_name="Presupuesto Total")
@@ -198,3 +210,76 @@ class DependenciaActividad(SoftDeleteModel):
     def __str__(self):
         return f"{self.actividad_predecesora.codigo} -> {self.actividad_sucesora.codigo} ({self.tipo})"
 
+
+class AsignacionRecurso(SoftDeleteModel):
+    TIPO_RECURSO_CHOICES = [
+        ('LABOR', 'Mano de Obra'),
+        ('EQUIPO', 'Maquinaria y Equipo'),
+        ('MATERIAL', 'Insumos/Materiales'),
+    ]
+    
+    actividad = models.ForeignKey(ActividadProyecto, on_delete=models.CASCADE, related_name='recursos')
+    tipo_recurso = models.CharField(max_length=20, choices=TIPO_RECURSO_CHOICES)
+    
+    # Generic Relation
+    content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, null=True)
+    object_id = models.PositiveIntegerField(null=True)
+    recurso = GenericForeignKey('content_type', 'object_id')
+    
+    cantidad_asignada = models.DecimalField(max_digits=12, decimal_places=2)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    porcentaje_dedicacion = models.DecimalField(max_digits=5, decimal_places=2, default=100.0)
+
+    class Meta:
+        verbose_name = "Asignación de Recurso"
+        verbose_name_plural = "Asignaciones de Recursos"
+
+class OrdenCambio(SoftDeleteModel):
+    TIPO_CHOICES = [
+        ('ADITIVA', 'Aditiva (+ Presupuesto)'),
+        ('DEDUCTIVA', 'Deductiva (- Presupuesto)'),
+        ('REPROGRAMACION', 'Reprogramación (+/- Tiempo)'),
+    ]
+    ESTADO_CHOICES = [
+        ('SOLICITADA', 'Solicitada'),
+        ('REVISADA', 'Revisada'),
+        ('AUTORIZADA', 'Autorizada'),
+        ('RECHAZADA', 'Rechazada'),
+    ]
+    
+    obra = models.ForeignKey(Obra, on_delete=models.CASCADE, related_name='ordenes_cambio')
+    folio = models.CharField(max_length=20, unique=True, editable=False)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    justificacion = models.TextField()
+    
+    # Impacto Presupuestal
+    partida = models.ForeignKey(PartidaPresupuestal, on_delete=models.SET_NULL, null=True, blank=True)
+    monto_impacto = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    
+    # Impacto Cronograma
+    actividad = models.ForeignKey(ActividadProyecto, on_delete=models.SET_NULL, null=True, blank=True)
+    dias_impacto = models.IntegerField(default=0)
+    
+    # Auditoría
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='SOLICITADA')
+    solicitado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='ordenes_cambio_solicitadas')
+    autorizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='ordenes_cambio_autorizadas')
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    fecha_autorizacion = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.folio:
+            count = OrdenCambio.objects.filter(obra=self.obra).count() + 1
+            self.folio = f"{self.obra.codigo}-OC-{count:03d}"
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Orden de Cambio"
+        verbose_name_plural = "Ordenes de Cambio"
+
+from core.models import register_audit
+register_audit(Obra)
+register_audit(PartidaPresupuestal)
+register_audit(ActividadProyecto)
+register_audit(OrdenCambio)

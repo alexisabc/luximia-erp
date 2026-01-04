@@ -1,16 +1,13 @@
-from .models import Obra, CentroCosto, PartidaPresupuestal
+from ..models import Obra, CentroCosto, PartidaPresupuestal
 from django.db import transaction
 from decimal import Decimal
 
 class ObrasService:
-    
     @staticmethod
     @transaction.atomic
     def crear_arbol_costos(obra_id, estructura_json):
         """
         Crea o actualiza la estructura de centros de costos.
-        estructura_json: lista de nodos raíz.
-        Cada nodo: { 'codigo', 'nombre', 'es_hoja', 'children': [...], 'partidas': [{categoria, monto}] }
         """
         obra = Obra.objects.get(pk=obra_id)
         
@@ -26,7 +23,6 @@ class ObrasService:
                 }
             )
             
-            # Si es hoja, procesar partidas
             if cc.es_hoja and 'partidas' in nodo_data:
                 for part in nodo_data['partidas']:
                     PartidaPresupuestal.objects.update_or_create(
@@ -35,7 +31,6 @@ class ObrasService:
                         defaults={'monto_estimado': part.get('monto', 0)}
                     )
             
-            # Procesar hijos recursivamente
             children = nodo_data.get('children', [])
             for child in children:
                 procesar_nodo(child, padre=cc, nivel=nivel+1)
@@ -47,10 +42,6 @@ class ObrasService:
 
     @staticmethod
     def validar_suficiencia(centro_costo_id, categoria, monto):
-        """
-        Verifica si hay saldo suficiente en la partida presupuestal.
-        Retorna: (bool, mensaje)
-        """
         try:
             partida = PartidaPresupuestal.objects.get(
                 centro_costo_id=centro_costo_id,
@@ -67,17 +58,12 @@ class ObrasService:
 
     @staticmethod
     def comprometer_presupuesto(centro_costo_id, categoria, monto):
-        """
-        Aumenta el monto comprometido de una partida.
-        """
         try:
             partida = PartidaPresupuestal.objects.get(
                 centro_costo_id=centro_costo_id,
                 categoria=categoria
             )
             partida.monto_comprometido += Decimal(str(monto))
-            # Aseguramos que no quede negativo el disponible si validación falló antes, 
-            # pero aquí solo actualizamos.
             partida.save()
             return True
         except PartidaPresupuestal.DoesNotExist:
@@ -85,18 +71,13 @@ class ObrasService:
 
     @staticmethod
     def devengar_presupuesto(centro_costo_id, categoria, monto):
-        """
-        Mueve monto de comprometido a devengado (ejecutado).
-        """
         try:
             partida = PartidaPresupuestal.objects.get(
                 centro_costo_id=centro_costo_id,
                 categoria=categoria
             )
             monto_dec = Decimal(str(monto))
-            # Restamos de comprometido (liberamos la reserva)
             partida.monto_comprometido -= monto_dec
-            # Sumamos a devengado (gasto real)
             partida.monto_ejecutado += monto_dec
             partida.save()
             return True

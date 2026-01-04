@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import obrasService from '@/services/obras.service';
 import CostCenterTree from '@/components/obras/CostCenterTree';
-import { Calendar, DollarSign, MapPin } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, FileEdit, TrendingUp, Archive } from 'lucide-react';
 
 export default function ObraDashboard() {
     const params = useParams(); // useParams retorna un objeto, y en Next.js app router puede ser una promesa o objeto directo segun version. En 15 suele ser directo o `use` hook.
@@ -90,6 +90,45 @@ export default function ObraDashboard() {
                 </div>
             </div>
 
+            {/* Gestión Avanzada */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href={`/obras/${id}/cronograma`} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-blue-500 transition-all flex items-center justify-between group shadow-sm">
+                    <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">Cronograma (CPM)</div>
+                        <div className="text-sm text-gray-500">Ruta crítica</div>
+                    </div>
+                    <Calendar className="text-gray-400 group-hover:text-blue-500" />
+                </a>
+                <a href={`/obras/${id}/recursos`} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-emerald-500 transition-all flex items-center justify-between group shadow-sm">
+                    <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">Recursos</div>
+                        <div className="text-sm text-gray-500">Asignación</div>
+                    </div>
+                    <DollarSign className="text-gray-400 group-hover:text-emerald-500" />
+                </a>
+                <a href={`/obras/${id}/costos`} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-purple-500 transition-all flex items-center justify-between group shadow-sm">
+                    <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">Costos (EVM)</div>
+                        <div className="text-sm text-gray-500">Métricas y Curva S</div>
+                    </div>
+                    <TrendingUp className="text-gray-400 group-hover:text-purple-500" />
+                </a>
+                <a href={`/obras/${id}/cambios`} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-amber-500 transition-all flex items-center justify-between group shadow-sm">
+                    <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">Gestión de Cambios</div>
+                        <div className="text-sm text-gray-500">Aditivas y Reprogramaciones</div>
+                    </div>
+                    <FileEdit className="text-gray-400 group-hover:text-amber-500" />
+                </a>
+                <a href={`/obras/${id}/cierre`} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-emerald-500 transition-all flex items-center justify-between group shadow-sm">
+                    <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">Cierre de Proyecto</div>
+                        <div className="text-sm text-gray-500">Post-mortem y Liquidación</div>
+                    </div>
+                    <Archive className="text-gray-400 group-hover:text-emerald-500" />
+                </a>
+            </div>
+
             {/* Arbol de Costos */}
             <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -103,6 +142,6 @@ export default function ObraDashboard() {
                 </div>
                 <CostCenterTree nodes={centrosCostos} />
             </div>
-        </div>
+        </div >
     );
 }

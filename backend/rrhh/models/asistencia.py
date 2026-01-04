@@ -47,6 +47,7 @@ class DistribucionCosto(SoftDeleteModel, EmpresaOwnedModel):
 
     asistencia = models.ForeignKey(Asistencia, on_delete=models.CASCADE, related_name='distribuciones')
     obra = models.ForeignKey('obras.Obra', on_delete=models.SET_NULL, null=True, blank=True, related_name='costos_nomina')
+    actividad = models.ForeignKey('obras.ActividadProyecto', on_delete=models.SET_NULL, null=True, blank=True, related_name='costos_asistencia')
     centro_costo = models.ForeignKey('obras.CentroCosto', on_delete=models.SET_NULL, null=True, blank=True)
     porcentaje = models.IntegerField(default=100, help_text="Porcentaje del costo diario asignado a esta obra/CC")
 

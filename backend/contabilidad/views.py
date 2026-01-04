@@ -295,7 +295,7 @@ class DetallePolizaViewSet(ContabilidadBaseViewSet):
 
 
 class FacturaViewSet(ContabilidadBaseViewSet):
-    queryset = Factura.objects.all().order_by("-fecha_emision")
+    queryset = Factura.objects.all().order_by("-fecha")
     serializer_class = FacturaSerializer
 
     def get_queryset(self):
@@ -303,7 +303,12 @@ class FacturaViewSet(ContabilidadBaseViewSet):
         show_inactive = self.request.query_params.get('show_inactive', 'false') == 'true'
         
         if show_inactive and hasattr(Factura, 'all_objects'):
-            queryset = Factura.all_objects.all().order_by("-fecha_emision")
+            queryset = Factura.all_objects.all().order_by("-fecha")
+        
+        # Filtros
+        estado = self.request.query_params.get('estado', None)
+        if estado:
+            queryset = queryset.filter(estado=estado)
         
         search = self.request.query_params.get('search', None)
         if search:
@@ -311,35 +316,11 @@ class FacturaViewSet(ContabilidadBaseViewSet):
                 models.Q(uuid__icontains=search) | 
                 models.Q(serie__icontains=search) |
                 models.Q(folio__icontains=search) |
-                models.Q(receptor_nombre__icontains=search) |
-                models.Q(receptor_rfc__icontains=search)
+                models.Q(cliente__nombre_completo__icontains=search) |
+                models.Q(cliente__rfc__icontains=search)
             )
             
         return queryset
-
-    @action(detail=False, methods=['get'])
-    def exportar(self, request):
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename="facturas.xlsx"'
-        
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Facturas"
-        
-        headers = ['UUID', 'Serie', 'Folio', 'Fecha', 'Receptor', 'RFC Receptor', 'Total', 'Estado', 'Moneda']
-        ws.append(headers)
-        
-        facturas = self.filter_queryset(self.get_queryset())
-        
-        for f in facturas:
-            ws.append([
-                f.uuid, f.serie, f.folio, f.fecha_emision.strftime('%Y-%m-%d') if f.fecha_emision else '',
-                f.receptor_nombre, f.receptor_rfc, f.total, f.estado_sat, 
-                f.moneda.codigo if f.moneda else ''
-            ])
-            
-        wb.save(response)
-        return response
 
     @action(detail=False, methods=['post'], url_path='upload-xml')
     def upload_xml(self, request):
@@ -664,7 +645,7 @@ def strategic_dashboard(request):
 
 
 class CertificadoDigitalViewSet(ContabilidadBaseViewSet):
-    queryset = CertificadoDigital.objects.all().order_by("-fecha_fin_validez")
+    queryset = CertificadoDigital.objects.all().order_by("-fecha_fin")
     serializer_class = CertificadoDigitalSerializer
 
 
@@ -776,7 +757,7 @@ class EmpresaFiscalViewSet(ContabilidadBaseViewSet):
                 metadata = parse_certificate(cer_content)
             except Exception as e:
                 return Response({"error": "Error al leer el certificado (.cer)"}, status=status.HTTP_400_BAD_REQUEST)
-                
+            
             encrypted_key = encrypt_data(key_content)
             encrypted_pass = encrypt_text(password)
             
@@ -786,32 +767,29 @@ class EmpresaFiscalViewSet(ContabilidadBaseViewSet):
                 
             rfc = empresa_fiscal.empresa.rfc
             
-            # Create Cert
-            # Fix: CertificadoDigital import is available (line 18)
-            
+            # Create Cert with new CFDI 4.0 model fields
             cert = CertificadoDigital.objects.create(
-                nombre=f"CSD {rfc}",
-                rfc=rfc,
-                tipo='CSD',
-                archivo_key=encrypted_key,
+                empresa=empresa_fiscal.empresa,
+                numero_certificado=metadata.get('serial', 'UNKNOWN'),
+                rfc_titular=rfc,
+                razon_social_titular=empresa_fiscal.empresa.razon_social,
+                archivo_cer=ContentFile(cer_content, name=f"{rfc}.cer"),
+                archivo_key=ContentFile(encrypted_key, name=f"{rfc}.key"),
                 password_key=encrypted_pass,
-                fecha_inicio_validez=metadata['fecha_inicio'],
-                fecha_fin_validez=metadata['fecha_fin'],
-                numero_serie=metadata.get('serial'),
+                fecha_inicio=metadata['fecha_inicio'],
+                fecha_fin=metadata['fecha_fin'],
                 activo=True
             )
-            file_name = f"{rfc}_{metadata.get('serial', 'unknown')}.cer"
-            cert.archivo_cer.save(file_name, ContentFile(cer_content))
-            cert.save()
             
-            old_cert = empresa_fiscal.certificado_sello
-            if old_cert and old_cert != cert:
-                old_cert.activo = False
-                old_cert.save()
-                
+            # Link to EmpresaFiscal
             empresa_fiscal.certificado_sello = cert
             empresa_fiscal.save()
             
-            return Response({"status": "Certificado cargado y validado correctamente", "fecha_vencimiento": metadata['fecha_fin']})
+            return Response({
+                "mensaje": "Certificado cargado exitosamente",
+                "certificado_id": cert.id,
+                "numero_certificado": cert.numero_certificado,
+                "vigencia": f"{cert.fecha_inicio} a {cert.fecha_fin}"
+            })
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

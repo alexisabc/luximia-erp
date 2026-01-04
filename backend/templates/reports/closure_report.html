@@ -1,0 +1,71 @@
+{% extends "reports/base_report.html" %}
+
+{% block title %}Cierre de Proyecto - {{ profitability.obra }}{% endblock %}
+
+{% block content %}
+<h1 class="h1-title">Reporte de Cierre de Proyecto y Post-mortem</h1>
+
+<div style="margin-bottom: 20px;">
+    <strong>Proyecto:</strong> {{ profitability.obra }}<br>
+    <strong>Folio:</strong> {{ obra_codigo }}<br>
+    <strong>Fecha de Cierre:</strong> {% now "d/m/Y" %}<br>
+    <strong>Estado Final:</strong> {{ obra_estado }}
+</div>
+
+<h3>1. Resumen de Rentabilidad</h3>
+<table class="data-table">
+    <tr>
+        <th>Concepto</th>
+        <th>Monto</th>
+    </tr>
+    <tr>
+        <td>Presupuesto Original</td>
+        <td style="text-align: right;">${{ profitability.presupuesto_original|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr>
+        <td>Total Ingresos (Estimaciones)</td>
+        <td style="text-align: right; color: green;">${{ profitability.ingresos_totales|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr>
+        <td>Total Gastos (Egresos Pagados)</td>
+        <td style="text-align: right; color: red;">-${{ profitability.gastos_totales|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr>
+        <td>Costo de Mano de Obra (Nómina)</td>
+        <td style="text-align: right; color: red;">-${{ profitability.nomina_total|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr style="background-color: #f2f2f2; font-weight: bold;">
+        <td>Utilidad Neta Final</td>
+        <td style="text-align: right;">${{ profitability.utilidad_neta|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr style="font-weight: bold;">
+        <td>Margen Real</td>
+        <td style="text-align: right;">{{ profitability.margen_utilidad|default:"0" }}%</td>
+    </tr>
+</table>
+
+<h3>2. Fondo de Garantía</h3>
+<table class="data-table">
+    <tr>
+        <td>Total Retenido</td>
+        <td style="text-align: right;">${{ retentions.total_retenido|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr>
+        <td>Total Liberado</td>
+        <td style="text-align: right;">${{ retentions.liberado|floatformat:2|default:"0.00" }}</td>
+    </tr>
+    <tr style="font-weight: bold;">
+        <td>Saldo Pendiente</td>
+        <td style="text-align: right;">${{ retentions.pendiente|floatformat:2|default:"0.00" }}</td>
+    </tr>
+</table>
+
+<div style="margin-top: 40px; text-align: center;">
+    <div style="display: inline-block; width: 200px; border-top: 1px solid #000; margin: 0 50px; padding-top: 10px;">
+        Firma Director de Obra
+    </div>
+    <div style="display: inline-block; width: 200px; border-top: 1px solid #000; margin: 0 50px; padding-top: 10px;">
+        Firma Dirección Finanzas
+    </div>
+</div>
+{% endblock %}

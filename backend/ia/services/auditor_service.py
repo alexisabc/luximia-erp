@@ -7,7 +7,7 @@ from ia.models import AuditAlert
 from obras.models import PartidaPresupuestal
 from inventarios.models import Existencia
 from compras.models.productos import Insumo
-from contabilidad.models.fiscal import CertificadoDigital
+from contabilidad.models.cfdi import CertificadoDigital
 from django.db.models import Sum
 
 logger = logging.getLogger(__name__)

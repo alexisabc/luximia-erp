@@ -1,0 +1,380 @@
+{% extends "reports/base_report.html" %}
+
+{% block title %}Factura {{ factura.serie }}-{{ factura.folio }}{% endblock %}
+
+{% block content %}
+<div class="factura-container">
+    <!-- Header con Logo y Datos Fiscales -->
+    <div class="header-section">
+        <div class="logo-section">
+            {% if empresa.logo %}
+            <img src="{{ empresa.logo.url }}" alt="{{ empresa.razon_social }}" class="company-logo">
+            {% else %}
+            <div class="company-name">{{ empresa.razon_social }}</div>
+            {% endif %}
+        </div>
+
+        <div class="fiscal-data">
+            <h1>FACTURA ELECTRÓNICA</h1>
+            <p class="folio">{{ factura.serie }}-{{ factura.folio }}</p>
+            {% if factura.uuid %}
+            <p class="uuid">UUID: {{ factura.uuid }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Datos del Emisor -->
+    <div class="emisor-section">
+        <h2>EMISOR</h2>
+        <table class="info-table">
+            <tr>
+                <td class="label">Razón Social:</td>
+                <td>{{ empresa.razon_social }}</td>
+            </tr>
+            <tr>
+                <td class="label">RFC:</td>
+                <td>{{ empresa.rfc }}</td>
+            </tr>
+            <tr>
+                <td class="label">Régimen Fiscal:</td>
+                <td>{{ empresa.configuracion_fiscal.regimen_fiscal.clave }} - {{
+                    empresa.configuracion_fiscal.regimen_fiscal.descripcion }}</td>
+            </tr>
+            <tr>
+                <td class="label">Lugar de Expedición:</td>
+                <td>{{ factura.lugar_expedicion }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Datos del Receptor -->
+    <div class="receptor-section">
+        <h2>RECEPTOR</h2>
+        <table class="info-table">
+            <tr>
+                <td class="label">Nombre:</td>
+                <td>{{ factura.cliente.nombre_completo }}</td>
+            </tr>
+            <tr>
+                <td class="label">RFC:</td>
+                <td>{{ factura.cliente.rfc }}</td>
+            </tr>
+            <tr>
+                <td class="label">Domicilio Fiscal:</td>
+                <td>{{ factura.cliente.codigo_postal }}</td>
+            </tr>
+            <tr>
+                <td class="label">Uso CFDI:</td>
+                <td>G03 - Gastos en general</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Datos de la Factura -->
+    <div class="factura-info">
+        <table class="info-table">
+            <tr>
+                <td class="label">Fecha:</td>
+                <td>{{ factura.fecha|date:"d/m/Y H:i:s" }}</td>
+                <td class="label">Forma de Pago:</td>
+                <td>{{ factura.forma_pago.clave }} - {{ factura.forma_pago.descripcion }}</td>
+            </tr>
+            <tr>
+                <td class="label">Método de Pago:</td>
+                <td>{{ factura.metodo_pago.clave }}</td>
+                <td class="label">Moneda:</td>
+                <td>{{ factura.moneda }}</td>
+            </tr>
+            {% if factura.condiciones_pago %}
+            <tr>
+                <td class="label">Condiciones:</td>
+                <td colspan="3">{{ factura.condiciones_pago }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Conceptos -->
+    <div class="conceptos-section">
+        <h2>CONCEPTOS</h2>
+        <table class="conceptos-table">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>P. Unitario</th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for concepto in factura.conceptos.all %}
+                <tr>
+                    <td>{{ concepto.clave_prod_serv.clave }}</td>
+                    <td>{{ concepto.descripcion }}</td>
+                    <td class="text-right">{{ concepto.cantidad }}</td>
+                    <td>{{ concepto.clave_unidad.clave }}</td>
+                    <td class="text-right">${{ concepto.valor_unitario|floatformat:2 }}</td>
+                    <td class="text-right">${{ concepto.importe|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totales -->
+    <div class="totales-section">
+        <table class="totales-table">
+            <tr>
+                <td class="label">Subtotal:</td>
+                <td class="amount">${{ factura.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% if factura.descuento > 0 %}
+            <tr>
+                <td class="label">Descuento:</td>
+                <td class="amount">-${{ factura.descuento|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">IVA (16%):</td>
+                <td class="amount">${{ iva|floatformat:2 }}</td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">TOTAL:</td>
+                <td class="amount">${{ factura.total|floatformat:2 }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Sello Digital y QR -->
+    {% if factura.uuid %}
+    <div class="sello-section">
+        <div class="qr-code">
+            <img src="data:image/png;base64,{{ qr_code }}" alt="Código QR">
+            <p class="qr-label">Escanea para verificar</p>
+        </div>
+
+        <div class="sello-info">
+            <h3>SELLO DIGITAL DEL CFDI</h3>
+            <p class="sello-text">{{ factura.sello_digital|truncatechars:100 }}</p>
+
+            <h3>SELLO DEL SAT</h3>
+            <p class="sello-text">{{ factura.sello_sat|truncatechars:100 }}</p>
+
+            <p class="cert-info">
+                <strong>No. Certificado SAT:</strong> {{ factura.numero_certificado_sat }}<br>
+                <strong>Fecha de Certificación:</strong> {{ factura.fecha_timbrado|date:"d/m/Y H:i:s" }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Leyendas SAT -->
+    <div class="leyendas">
+        <p>Este documento es una representación impresa de un CFDI</p>
+        {% if factura.uuid %}
+        <p>Consulta y verifica tu factura en: https://verificacfdi.facturaelectronica.sat.gob.mx/</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .factura-container {
+        font-family: Arial, sans-serif;
+        font-size: 10pt;
+        color: #333;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #0066cc;
+    }
+
+    .company-logo {
+        max-width: 200px;
+        max-height: 80px;
+    }
+
+    .company-name {
+        font-size: 18pt;
+        font-weight: bold;
+        color: #0066cc;
+    }
+
+    .fiscal-data {
+        text-align: right;
+    }
+
+    .fiscal-data h1 {
+        font-size: 16pt;
+        color: #0066cc;
+        margin: 0;
+    }
+
+    .folio {
+        font-size: 14pt;
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .uuid {
+        font-size: 8pt;
+        color: #666;
+        font-family: monospace;
+    }
+
+    .emisor-section,
+    .receptor-section {
+        margin-bottom: 15px;
+    }
+
+    h2 {
+        font-size: 11pt;
+        color: #0066cc;
+        margin: 10px 0 5px 0;
+        padding: 3px 5px;
+        background-color: #f0f0f0;
+    }
+
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+
+    .info-table td {
+        padding: 3px 5px;
+        font-size: 9pt;
+    }
+
+    .info-table .label {
+        font-weight: bold;
+        width: 150px;
+    }
+
+    .conceptos-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+
+    .conceptos-table th {
+        background-color: #0066cc;
+        color: white;
+        padding: 5px;
+        font-size: 9pt;
+        text-align: left;
+    }
+
+    .conceptos-table td {
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+        font-size: 9pt;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .totales-section {
+        margin-top: 20px;
+        float: right;
+        width: 300px;
+    }
+
+    .totales-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .totales-table td {
+        padding: 5px 10px;
+        font-size: 10pt;
+    }
+
+    .totales-table .label {
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .totales-table .amount {
+        text-align: right;
+        width: 120px;
+    }
+
+    .total-row {
+        border-top: 2px solid #0066cc;
+        font-size: 12pt;
+        font-weight: bold;
+        color: #0066cc;
+    }
+
+    .sello-section {
+        clear: both;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        display: flex;
+        gap: 20px;
+    }
+
+    .qr-code {
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .qr-code img {
+        width: 120px;
+        height: 120px;
+    }
+
+    .qr-label {
+        font-size: 8pt;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .sello-info {
+        flex-grow: 1;
+    }
+
+    .sello-info h3 {
+        font-size: 9pt;
+        color: #0066cc;
+        margin: 10px 0 5px 0;
+    }
+
+    .sello-text {
+        font-size: 7pt;
+        font-family: monospace;
+        word-break: break-all;
+        color: #666;
+        margin: 0 0 10px 0;
+    }
+
+    .cert-info {
+        font-size: 8pt;
+        color: #666;
+        margin-top: 10px;
+    }
+
+    .leyendas {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        font-size: 8pt;
+        color: #666;
+        text-align: center;
+    }
+
+    .leyendas p {
+        margin: 3px 0;
+    }
+</style>
+{% endblock %}

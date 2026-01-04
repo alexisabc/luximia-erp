@@ -148,6 +148,22 @@ class Egreso(SoftDeleteModel):
         related_name='egresos'
     )
     
+    # Análisis de Costos por Proyecto
+    obra = models.ForeignKey(
+        'obras.Obra', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='egresos_financieros'
+    )
+    actividad = models.ForeignKey(
+        'obras.ActividadProyecto', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='egresos_actividad'
+    )
+    
     # Relación con MovimientoBancario (se crea al pagar)
     movimiento_bancario = models.OneToOneField(
         MovimientoBancario,
