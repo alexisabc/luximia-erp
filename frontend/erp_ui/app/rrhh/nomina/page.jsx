@@ -60,6 +60,19 @@ const NominaDashboard = () => {
                         </button>
                     </div>
                 )}
+                {!periodo.activo && (
+                    <div className="bg-gray-50 p-4 text-right border-t border-gray-200">
+                        <div className="flex justify-end items-center gap-4">
+                            <span className="text-gray-500 text-sm">Timbrado Pendiente</span>
+                            <button
+                                onClick={() => alert("Simulando Timbrado... UUIDs generados.")}
+                                className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 shadow-lg"
+                            >
+                                Timbrar Nómina Ante el SAT
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Integration Status Mock */}

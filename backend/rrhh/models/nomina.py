@@ -57,6 +57,11 @@ class NominaCentralizada(SoftDeleteModel):
     sub_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     iva = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_facturacion = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # Datos Fiscales (Timbrado)
+    uuid = models.CharField(max_length=36, blank=True, null=True, help_text="Folio Fiscal (UUID)")
+    xml_timbrado = models.TextField(blank=True, null=True)
+    fecha_timbrado = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.empresa} - {self.nombre} ({self.periodo})"

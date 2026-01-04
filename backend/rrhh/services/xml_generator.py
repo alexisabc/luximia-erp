@@ -155,3 +155,120 @@ class NominaXMLGenerator:
                 ded_node.set("Importe", f"{d.monto_total:.2f}")
 
         return ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
+    @staticmethod
+    def generar_xml_from_centralizada(row, periodo):
+        """
+        Genera XML Nómina 1.2 usando la estructura plana de NominaCentralizada.
+        """
+        CFDI_NS = "http://www.sat.gob.mx/cfd/4"
+        NOMINA_NS = "http://www.sat.gob.mx/nomina12"
+        XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
+        
+        ET.register_namespace('cfdi', CFDI_NS)
+        ET.register_namespace('nomina12', NOMINA_NS)
+        ET.register_namespace('xsi', XSI_NS)
+        
+        root = ET.Element(f"{{{CFDI_NS}}}Comprobante")
+        root.set("Version", "4.0")
+        root.set("Serie", "N")
+        root.set("Folio", str(row.id)) # Usar ID interno
+        root.set("Fecha", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        root.set("Sello", "")
+        root.set("NoCertificado", "")
+        root.set("Certificado", "")
+        root.set("SubTotal", f"{row.total_percepciones:.2f}")
+        root.set("Descuento", f"{row.total_deducciones:.2f}")
+        root.set("Moneda", "MXN")
+        root.set("Total", f"{row.neto:.2f}")
+        root.set("TipoDeComprobante", "N")
+        root.set("Exportacion", "01")
+        root.set("MetodoPago", "PUE")
+        root.set("LugarExpedicion", "20000") # Hardcoded
+        
+        root.set(f"{{{XSI_NS}}}schemaLocation", f"{CFDI_NS} http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd {NOMINA_NS} http://www.sat.gob.mx/sitio_internet/cfd/nomina/nomina12.xsd")
+
+        # Emisor
+        emisor = ET.SubElement(root, f"{{{CFDI_NS}}}Emisor")
+        emisor.set("Rfc", "AAA010101AAA")
+        emisor.set("Nombre", row.empresa)
+        emisor.set("RegimenFiscal", "601")
+
+        # Receptor
+        receptor = ET.SubElement(root, f"{{{CFDI_NS}}}Receptor")
+        receptor.set("Rfc", "XAXX010101000") # Debería venir de Empleado
+        receptor.set("Nombre", row.nombre)
+        receptor.set("DomicilioFiscalReceptor", "20000")
+        receptor.set("RegimenFiscalReceptor", "605")
+        receptor.set("UsoCFDI", "Cn01")
+
+        # Conceptos
+        conceptos = ET.SubElement(root, f"{{{CFDI_NS}}}Conceptos")
+        concepto = ET.SubElement(conceptos, f"{{{CFDI_NS}}}Concepto")
+        concepto.set("ClaveProdServ", "84111505")
+        concepto.set("Cantidad", "1")
+        concepto.set("ClaveUnidad", "ACT")
+        concepto.set("Descripcion", "Pago de nómina")
+        concepto.set("ValorUnitario", f"{row.total_percepciones:.2f}")
+        concepto.set("Importe", f"{row.total_percepciones:.2f}")
+        concepto.set("Descuento", f"{row.total_deducciones:.2f}")
+        concepto.set("ObjetoImp", "01")
+
+        # Complemento Nomina
+        complemento = ET.SubElement(root, f"{{{CFDI_NS}}}Complemento")
+        nomina = ET.SubElement(complemento, f"{{{NOMINA_NS}}}Nomina")
+        nomina.set("Version", "1.2")
+        nomina.set("TipoNomina", "O")
+        # Hardcoded dates based on PeriodoNomina object
+        nomina.set("FechaPago", datetime.now().strftime("%Y-%m-%d"))
+        if periodo:
+            nomina.set("FechaInicialPago", str(periodo.fecha_inicio))
+            nomina.set("FechaFinalPago", str(periodo.fecha_fin))
+            nomina.set("NumDiasPagados", "15.000") # Mock logic
+        
+        nomina.set("TotalPercepciones", f"{row.total_percepciones:.2f}")
+        nomina.set("TotalDeducciones", f"{row.total_deducciones:.2f}")
+
+        # Nodos hijos obligatorios (Emisor/Receptor Nomina) simplificados
+        ne = ET.SubElement(nomina, f"{{{NOMINA_NS}}}Emisor")
+        nr = ET.SubElement(nomina, f"{{{NOMINA_NS}}}Receptor")
+        nr.set("Curp", "AAAA010101AAAAAA01")
+        nr.set("TipoContrato", "01")
+        nr.set("TipoRegimen", "02")
+        nr.set("NumEmpleado", row.codigo or "0")
+        nr.set("Antiguedad", "P1W")
+        nr.set("PeriodicidadPago", "04")
+        nr.set("ClaveEntFed", "DIF")
+
+        # Percepciones (Sueldos)
+        np = ET.SubElement(nomina, f"{{{NOMINA_NS}}}Percepciones")
+        np.set("TotalSueldos", f"{row.total_percepciones:.2f}")
+        np.set("TotalGravado", f"{row.total_percepciones:.2f}")
+        np.set("TotalExento", "0.00")
+        
+        p = ET.SubElement(np, f"{{{NOMINA_NS}}}Percepcion")
+        p.set("TipoPercepcion", "001")
+        p.set("Clave", "P001")
+        p.set("Concepto", "Sueldos")
+        p.set("ImporteGravado", f"{row.total_percepciones:.2f}")
+        p.set("ImporteExento", "0.00")
+
+        # Deducciones (ISR + IMSS)
+        nd = ET.SubElement(nomina, f"{{{NOMINA_NS}}}Deducciones")
+        nd.set("TotalOtrasDeducciones", f"{row.imss:.2f}") 
+        nd.set("TotalImpuestosRetenidos", f"{row.isr:.2f}")
+        
+        if row.isr > 0:
+            d1 = ET.SubElement(nd, f"{{{NOMINA_NS}}}Deduccion")
+            d1.set("TipoDeduccion", "002") # ISR
+            d1.set("Clave", "D001")
+            d1.set("Concepto", "ISR")
+            d1.set("Importe", f"{row.isr:.2f}")
+
+        if row.imss > 0:
+            d2 = ET.SubElement(nd, f"{{{NOMINA_NS}}}Deduccion")
+            d2.set("TipoDeduccion", "001") # SS
+            d2.set("Clave", "D002")
+            d2.set("Concepto", "IMSS")
+            d2.set("Importe", f"{row.imss:.2f}")
+
+        return ET.tostring(root, encoding='utf-8', method='xml').decode('utf-8')
