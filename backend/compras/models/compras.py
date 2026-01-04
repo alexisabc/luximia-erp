@@ -8,6 +8,12 @@ from .productos import Insumo
 class OrdenCompra(SoftDeleteModel, EmpresaOwnedModel):
     # Manager combinando SoftDelete y Empresa
     objects = MultiTenantManager()
+    
+    class Meta:
+        permissions = [
+            ("aprobar_sobrecosto", "Puede aprobar ODC sin presupuesto"),
+        ]
+
     """
     Header de la Orden de Compra.
     Maneja el flujo de autorización de 2 niveles.
@@ -32,6 +38,7 @@ class OrdenCompra(SoftDeleteModel, EmpresaOwnedModel):
     departamento = models.CharField(max_length=100, blank=True, null=True) # O FK a rrhh.Departamento
     proyecto = models.ForeignKey('contabilidad.Proyecto', on_delete=models.SET_NULL, null=True, blank=True)
     requisicion = models.ForeignKey('compras.Requisicion', on_delete=models.SET_NULL, null=True, blank=True, related_name='ordenes_generadas')
+    xml_uuid = models.CharField(max_length=36, blank=True, null=True, help_text="UUID del XML de la factura SAT")
     
     motivo_compra = models.TextField()
     notas = models.TextField(blank=True, null=True)
