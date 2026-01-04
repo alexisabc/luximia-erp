@@ -11,7 +11,8 @@ from .serializers import (
 )
 from .services.caja_service import CajaService
 from .services.venta_service import VentaService
-from compras.models import Insumo, Existencia, Almacen
+from compras.models import Insumo
+from inventarios.models import Existencia, Almacen
 from compras.serializers import InsumoSerializer, AlmacenSerializer
 
 
