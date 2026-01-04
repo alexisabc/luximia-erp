@@ -82,3 +82,31 @@ class Command(BaseCommand):
                 plantilla=plantilla_nom, cuenta_base=cta_nomina_por_pagar, tipo_movimiento='ABONO', origen_dato='NETO', orden=3, creado_por=admin
             )
             self.stdout.write(self.style.SUCCESS("Plantilla PROVISION_NOMINA creada"))
+
+        # 4. Create Template: DEPRECIACION_MENSUAL
+        cta_dep_gasto, _ = CuentaContable.objects.get_or_create(
+             codigo="600-03-001", defaults={'nombre': "Gastos Depreciación", 'tipo': 'GASTOS', 'naturaleza': 'DEUDORA', 'creado_por': admin}
+        )
+        cta_dep_acum, _ = CuentaContable.objects.get_or_create(
+             codigo="105-01-001", defaults={'nombre': "Depreciación Acumulada", 'tipo': 'ACTIVO', 'naturaleza': 'ACREEDORA', 'creado_por': admin}
+        )
+        
+        plantilla_dep, created_dep = PlantillaAsiento.objects.get_or_create(
+            nombre="DEPRECIACION_MENSUAL",
+            defaults={
+                'tipo_poliza': 'DIARIO', 
+                'concepto_patron': "Depreciación Activos {referencia}",
+                'creado_por': admin
+            }
+        )
+        
+        if created_dep:
+            # Cargo Gasto
+            ReglaAsiento.objects.create(
+                plantilla=plantilla_dep, cuenta_base=cta_dep_gasto, tipo_movimiento='CARGO', origen_dato='TOTAL', orden=1, creado_por=admin
+            )
+            # Abono Acumulada
+            ReglaAsiento.objects.create(
+                plantilla=plantilla_dep, cuenta_base=cta_dep_acum, tipo_movimiento='ABONO', origen_dato='TOTAL', orden=2, creado_por=admin
+            )
+            self.stdout.write(self.style.SUCCESS("Plantilla DEPRECIACION_MENSUAL creada"))

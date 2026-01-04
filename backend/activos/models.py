@@ -97,5 +97,25 @@ class AsignacionActivo(SoftDeleteModel):
     def __str__(self):
         return f"{self.activo} -> {self.obra_destino or self.empleado_responsable}"
 
+class HistorialDepreciacion(BaseModel):
+    activo = models.ForeignKey(ActivoFijo, on_delete=models.CASCADE, related_name='depreciaciones')
+    fecha = models.DateField(default=date.today)
+    monto = models.DecimalField(max_digits=12, decimal_places=2, help_text="Monto depreciado este periodo")
+    
+    valor_libro_anterior = models.DecimalField(max_digits=14, decimal_places=2)
+    valor_libro_nuevo = models.DecimalField(max_digits=14, decimal_places=2)
+    
+    poliza_generada = models.CharField(max_length=50, blank=True, null=True, help_text="Folio de la póliza contable")
+
+    def __str__(self):
+        return f"{self.activo} - {self.fecha} - ${self.monto}"
+
+    class Meta:
+        verbose_name = "Historial de Depreciación"
+        verbose_name_plural = "Historial de Depreciaciones"
+        ordering = ['-fecha']
+
+
 register_audit(ActivoFijo)
 register_audit(AsignacionActivo)
+register_audit(HistorialDepreciacion)
