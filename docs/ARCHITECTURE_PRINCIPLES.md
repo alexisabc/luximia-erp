@@ -26,3 +26,13 @@
 ## 7. Entorno Sandbox (Físico)
 - **Implementación**: Ruteo dinámico de Base de Datos (`X-Environment` header).
 - **Aislamiento**: Uso de una instancia de PostgreSQL separada (`db_sandbox`) para garantizar que las pruebas no afecten datos de producción.
+
+## 8. Automatización Contable (Robot Contable)
+- **Implementación**: Patrón `Template Method` (Plantillas de Asientos + Reglas).
+- **Principio**: La contabilidad es un *efecto secundario* de la operación, no una captura manual.
+- **Ejemplo**: Al autorizar una estimación (`Obra`), el sistema dispara el hook que genera la póliza de Ingreso sin intervención humana.
+
+## 9. Integridad Financiera (3-Way Match)
+- **Implementación**: Validación cruzada entre Orden de Compra (Presupuesto), Recepción (Almacén) y Factura (Fiscal).
+- **Restricción**: No se puede programar un pago en Tesorería si no existe un `ContraRecibo` validado por el motor de Match.
+

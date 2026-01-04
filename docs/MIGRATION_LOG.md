@@ -40,3 +40,16 @@
 - **Validación**:
     - Pruebas de shell confirmaron ruteo a DB sandbox con header activo.
     - Pruebas de shell confirmaron aislamiento de datos entre empresas (Tenant Isolation).
+
+## 2026-01-03: Backbone Financiero Integral (Sprints 31-38)
+- **Módulos Afectados**: Compras, Inventarios, Obras, Tesorería, Contabilidad, RRHH, Core.
+- **Cambios Estructurales**:
+    - **Separate App `Inventarios`**: Desacoplamiento de `Compras`. Implementación de Costo Promedio Ponderado.
+    - **Portal Proveedores (Magic Links)**: Autenticación tokenizada para subida de XMLs externos.
+    - **Validación Fiscal (3-Way Match)**: Motor de comparación ODC vs XML vs Recepción.
+    - **Tesorería (Pagos y Cobros)**: Flujo completo de ContraRecibos, Programación de Pagos (Layouts Bancarios) y Aplicación de Cobranza.
+    - **Robot Contable**: Servicio `PolizaGenerator` que crea pólizas automáticas basándose en plantillas (`PlantillaAsiento`) y eventos de negocio (Signals/Hooks).
+    - **Ingresos por Obra (Estimaciones)**: Lógica de Amortización de Anticipo y Fondo de Garantía.
+    - **Integración Nómina**: Cierre de periodo RRHH -> Pasivo Tesorería + Provisión Contable.
+    - **Dashboard Ejecutivo**: Torre de control unificada con KPIs de flujo de efectivo y rentabilidad.
+- **Resultado**: ERP con ciclo financiero cerrado (End-to-End) y contabilidad automatizada.
