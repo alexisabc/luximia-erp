@@ -11,6 +11,10 @@ class Obra(SoftDeleteModel, EmpresaOwnedModel):
     presupuesto_total = models.DecimalField(max_digits=14, decimal_places=2, default=0, verbose_name="Presupuesto Total")
     direccion = models.TextField(blank=True, verbose_name="Dirección")
     cliente = models.CharField(max_length=200, blank=True, null=True, verbose_name="Cliente")
+    
+    # Configuración de Contrato
+    porcentaje_anticipo = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="% de Amortización por estimación")
+    porcentaje_fondo_garantia = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="% de Retención por garantía")
 
     class Meta:
         verbose_name = "Obra"
@@ -54,12 +58,13 @@ class PartidaPresupuestal(SoftDeleteModel):
     centro_costo = models.ForeignKey(CentroCosto, on_delete=models.CASCADE, related_name='partidas')
     categoria = models.CharField(max_length=20, choices=CATEGORIAS)
     monto_estimado = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    monto_aditivas = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="Aumentos autorizados al presupuesto")
     monto_comprometido = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     monto_ejecutado = models.DecimalField(max_digits=14, decimal_places=2, default=0)
 
     @property
     def disponible(self):
-        return self.monto_estimado - (self.monto_comprometido + self.monto_ejecutado)
+        return (self.monto_estimado + self.monto_aditivas) - (self.monto_comprometido + self.monto_ejecutado)
 
     class Meta:
         verbose_name = "Partida Presupuestal"
@@ -67,3 +72,39 @@ class PartidaPresupuestal(SoftDeleteModel):
 
     def __str__(self):
         return f"{self.centro_costo.codigo} - {self.categoria}"
+
+class Estimacion(SoftDeleteModel):
+    """
+    Cobro de Avance de Obra al Cliente.
+    """
+    ESTADO_CHOICES = [
+        ('BORRADOR', 'Borrador'),
+        ('AUTORIZADA', 'Autorizada'),
+        ('FACTURADA', 'Facturada'),
+        ('PAGADA', 'Pagada'),
+    ]
+    
+    obra = models.ForeignKey(Obra, on_delete=models.PROTECT, related_name='estimaciones')
+    folio = models.CharField(max_length=20, unique=True, editable=False)
+    fecha_corte = models.DateField()
+    
+    # Montos
+    monto_avance = models.DecimalField(max_digits=14, decimal_places=2, help_text="Monto bruto de trabajos ejecutados")
+    amortizacion_anticipo = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="Deducción por anticipo")
+    fondo_garantia = models.DecimalField(max_digits=14, decimal_places=2, default=0, help_text="Deducción por garantía")
+    
+    subtotal = models.DecimalField(max_digits=14, decimal_places=2, help_text="Avance - Deducciones")
+    iva = models.DecimalField(max_digits=14, decimal_places=2)
+    total = models.DecimalField(max_digits=14, decimal_places=2, help_text="Neto a cobrar")
+    
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='BORRADOR')
+    observaciones = models.TextField(blank=True, null=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.folio:
+            count = Estimacion.objects.filter(obra=self.obra).count() + 1
+            self.folio = f"{self.obra.codigo}-EST-{count:03d}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.folio} - {self.total}"
