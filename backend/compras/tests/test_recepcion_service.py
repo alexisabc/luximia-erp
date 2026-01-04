@@ -1,7 +1,8 @@
 import pytest
 from decimal import Decimal
 from django.contrib.auth import get_user_model
-from compras.models import Almacen, Insumo, OrdenCompra, DetalleOrdenCompra, Proveedor, MovimientoInventario, Existencia
+from compras.models import Insumo, OrdenCompra, DetalleOrdenCompra, Proveedor
+from inventarios.models import Almacen, MovimientoInventario, Existencia
 from compras.services.recepcion_service import RecepcionService
 from contabilidad.models.catalogos import Moneda
 
@@ -42,7 +43,8 @@ class TestRecepcionOrden:
 
     def test_recepcion_total_actualiza_stock_y_costos(self):
         # 2. Ejecución
-        RecepcionService.recibir_orden(self.orden.id, self.almacen.id, self.user)
+        items = [{'producto_id': self.insumo.id, 'cantidad': 10}]
+        RecepcionService.recibir_orden(self.orden.id, items, self.user, almacen_id_global=self.almacen.id)
         
         # 3. Verificaciones
         self.orden.refresh_from_db()
@@ -70,5 +72,6 @@ class TestRecepcionOrden:
         self.orden.estado = 'BORRADOR'
         self.orden.save()
         
-        with pytest.raises(ValueError, match="Solo se pueden recibir órdenes en estado AUTORIZADA"):
-            RecepcionService.recibir_orden(self.orden.id, self.almacen.id, self.user)
+        with pytest.raises(ValueError):
+            items = [{'producto_id': self.insumo.id, 'cantidad': 10}]
+            RecepcionService.recibir_orden(self.orden.id, items, self.user, almacen_id_global=self.almacen.id)

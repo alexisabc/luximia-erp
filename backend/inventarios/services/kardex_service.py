@@ -1,8 +1,8 @@
 from decimal import Decimal
 from django.db import transaction
 from django.db.models import Sum
-from ..models.inventario import MovimientoInventario, Existencia, Almacen
-from ..models.productos import Insumo
+from inventarios.models import MovimientoInventario, Existencia, Almacen
+from compras.models import Insumo
 
 class KardexService:
     """
@@ -68,6 +68,7 @@ class KardexService:
         CPP = (Valor Stock Anterior + Valor Entrada Nueva) / (Cantidad Stock Total)
         """
         # Calcular stock total en todos los almacenes
+        # Usamos filter(insumo=insumo) sobre Existencia (importada de inventarios.models)
         totales = Existencia.objects.filter(insumo=insumo).aggregate(total_stock=Sum('cantidad'))
         stock_actual = totales['total_stock'] or Decimal(0)
         

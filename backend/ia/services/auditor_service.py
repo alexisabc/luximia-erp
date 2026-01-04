@@ -5,7 +5,7 @@ from core.models import Empresa
 from core.middleware import set_current_company_id
 from ia.models import AuditAlert
 from obras.models import PartidaPresupuestal
-from compras.models.inventario import Existencia
+from inventarios.models import Existencia
 from compras.models.productos import Insumo
 from contabilidad.models.fiscal import CertificadoDigital
 from django.db.models import Sum

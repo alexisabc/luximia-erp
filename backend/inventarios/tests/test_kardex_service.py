@@ -1,8 +1,8 @@
 import pytest
 from decimal import Decimal
 from compras.models.productos import Insumo
-from compras.models.inventario import Almacen, Existencia, MovimientoInventario
-from compras.services.kardex_service import KardexService
+from inventarios.models import Almacen, Existencia, MovimientoInventario
+from inventarios.services.kardex_service import KardexService
 
 @pytest.mark.django_db
 class TestKardexMovimientos:

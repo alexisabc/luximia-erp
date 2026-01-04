@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "tesoreria.apps.TesoreriaConfig",
     "juridico.apps.JuridicoConfig",
     "compras.apps.ComprasConfig",
+    "inventarios.apps.InventariosConfig", # Nueva app
     "obras.apps.ObrasConfig",
     "users.apps.UsersConfig",
     "notifications.apps.NotificationsConfig",

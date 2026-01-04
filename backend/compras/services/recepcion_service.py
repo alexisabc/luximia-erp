@@ -1,8 +1,11 @@
 from decimal import Decimal
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from ..models import OrdenCompra, RecepcionCompra, DetalleRecepcion, DetalleOrdenCompra, Almacen
-from .kardex_service import KardexService
+from ..models import OrdenCompra, RecepcionCompra, DetalleRecepcion, DetalleOrdenCompra
+# from ..models.inventario import Almacen # Ya no existe alli, hay que cambiarlo
+
+from inventarios.models import Almacen # Traer Almacen de inventarios
+from inventarios.services.kardex_service import KardexService
 # Intentar importar ObrasService, manejando posible error circular o falta de modulo
 try:
     from obras.services import ObrasService

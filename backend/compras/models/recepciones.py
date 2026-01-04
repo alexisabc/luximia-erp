@@ -3,7 +3,7 @@ from django.conf import settings
 from core.models import SoftDeleteModel, register_audit, EmpresaOwnedModel, MultiTenantManager
 from .compras import OrdenCompra
 from .productos import Insumo
-from .inventario import Almacen
+# Almacen movido a inventarios
 
 class RecepcionCompra(SoftDeleteModel, EmpresaOwnedModel):
     # Manager combinando SoftDelete y Empresa
@@ -22,7 +22,7 @@ class DetalleRecepcion(SoftDeleteModel):
     recepcion = models.ForeignKey(RecepcionCompra, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey(Insumo, on_delete=models.PROTECT)
     cantidad_recibida = models.DecimalField(max_digits=12, decimal_places=4)
-    almacen_destino = models.ForeignKey(Almacen, on_delete=models.PROTECT)
+    almacen_destino = models.ForeignKey('inventarios.Almacen', on_delete=models.PROTECT)
     
     def __str__(self):
         desc = self.producto.descripcion if self.producto else 'Desconocido'
