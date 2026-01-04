@@ -32,10 +32,13 @@ if [ "$DEVELOPMENT_MODE" = "True" ]; then
     python manage.py makemigrations --noinput
 fi
 
-echo "🔄 Aplicando migraciones..."
-python manage.py migrate ia --noinput
-python manage.py migrate --noinput
-python manage.py init_sandbox
+# Solo ejecutar migraciones si NO somos un worker de Celery para evitar Race Conditions
+if [[ "$1" != "celery" ]]; then
+    echo "🔄 Aplicando migraciones..."
+    python manage.py migrate ia --noinput
+    python manage.py migrate --noinput || python manage.py migrate --fake-initial
+    python manage.py init_sandbox
+fi
 
 # 2. Tareas específicas de desarrollo
 if [ "$DEVELOPMENT_MODE" = "True" ]; then

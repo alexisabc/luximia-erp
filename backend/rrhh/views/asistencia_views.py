@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.utils import timezone
-from .views import RrhhBaseViewSet
+from .general_views import RrhhBaseViewSet
 from ..models import Asistencia, Empleado, TipoIncidencia, OrigenChecada
 from ..serializers import AsistenciaSerializer
 

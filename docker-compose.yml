@@ -41,6 +41,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+    image: sistema-erp-backend:latest
     restart: always
     depends_on:
       db:
@@ -54,9 +55,10 @@ services:
     # ==============================================================================
   frontend:
     build:
-      context: ./frontend/erp_ui
-      dockerfile: Dockerfile
-      target: runner # En producción usamos la imagen optimizada 'runner'
+      context: .
+      dockerfile: ./frontend/erp_ui/Dockerfile
+      target: builder 
+    image: sistema-erp-frontend:latest
     restart: always
     depends_on:
       - backend
@@ -80,6 +82,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+    image: sistema-erp-backend:latest
     command: celery -A config worker --loglevel=info
     volumes:
       - ./backend:/app:Z
@@ -95,6 +98,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+    image: sistema-erp-backend:latest
     command: celery -A config beat --loglevel=info
     volumes:
       - ./backend:/app:Z

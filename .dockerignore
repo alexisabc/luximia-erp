@@ -71,4 +71,5 @@ out/
 # --- DOCUMENTATION & MISC ---
 Luximia_Docs/
 README.md
-*.mdbackend/key.pem
+*.md
+backend/key.pem
