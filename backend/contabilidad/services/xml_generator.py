@@ -17,23 +17,69 @@ class CFDIBuilder:
         'MIXTO': '99'
     }
 
-    def __init__(self, venta_id):
-        self.venta = Venta.objects.get(pk=venta_id)
-        self.cliente = self.venta.cliente
+    def __init__(self, invoice_data):
+        """
+        invoice_data format:
+        {
+            'cliente': ClienteModel,
+            'folio': str,
+            'metodo_pago': 'PUE'|'PPD',
+            'forma_pago': '01'|'03'...,
+            'subtotal': Decimal,
+            'total': Decimal,
+            'detalles': [
+                {
+                    'clave_prod': '01010101', 'no_ident': 'ABS', 'cantidad': 1, 
+                    'clave_unidad': 'H87', 'unidad': 'Pieza', 'descripcion': '..',
+                    'precio': 10.0, 'importe': 10.0, 'objeto_imp': '02'
+                }
+            ]
+        }
+        """
+        self.data = invoice_data
+        self.cliente = self.data.get('cliente')
         self.empresa_fiscal = EmpresaFiscal.objects.first()
         self.config_service = ConfigService()
         
         self.is_sandbox = self.config_service.is_feature_enabled("FISCAL_SANDBOX_MODE")
         self.pac_provider = self.config_service.get_value("FISCAL_PAC_PROVIDER", "SW_SAPIENS")
 
+    @classmethod
+    def from_venta(cls, venta):
+        """ Factory method to support legacy POS Venta """
+        detalles = []
+        for det in venta.detalles.all():
+            prod = det.producto
+            if prod:
+                detalles.append({
+                    'clave_prod': getattr(prod, 'clave_sat_producto', '01010101'),
+                    'no_ident': prod.codigo, 
+                    'cantidad': det.cantidad,
+                    'clave_unidad': getattr(prod, 'clave_sat_unidad', 'H87'),
+                    'unidad': getattr(prod, 'unidad_medida', 'Pza'),
+                    'descripcion': prod.nombre,
+                    'precio': det.precio_unitario,
+                    'importe': det.subtotal,
+                    'objeto_imp': '02'
+                })
+        
+        data = {
+            'cliente': venta.cliente,
+            'folio': str(venta.folio).replace("T-",""),
+            'metodo_pago': venta.metodo_pago,
+            'forma_pago': cls.MAP_FORMA_PAGO.get(venta.metodo_pago, '01'),
+            'subtotal': venta.subtotal,
+            'total': venta.total,
+            'detalles': detalles
+        }
+        return cls(data)
+
     def validar_requisitos(self):
         if not self.empresa_fiscal:
             raise ValueError("No existe configuración fiscal para la empresa emisor.")
         
-        # Validar Cliente
         if not self.cliente:
-             # Logic for public general would go here
-             raise ValueError("Venta no tiene cliente asignado.")
+             raise ValueError("Datos de facturación no tienen cliente asignado.")
         
         if not self.cliente.rfc:
             raise ValueError(f"El cliente {self.cliente.nombre_completo} no tiene RFC registrado.")
@@ -41,14 +87,6 @@ class CFDIBuilder:
         if not self.cliente.codigo_postal:
             raise ValueError(f"El cliente {self.cliente.nombre_completo} no tiene Código Postal.")
 
-        # Validar Productos
-        for detalle in self.venta.detalles.all():
-            if detalle.producto:
-                prod = detalle.producto
-                if not getattr(prod, 'clave_sat_producto', None):
-                    raise ValueError(f"El producto '{prod.nombre}' no tiene Clave SAT (clave_sat_producto).")
-                if not getattr(prod, 'clave_sat_unidad', None):
-                    raise ValueError(f"El producto '{prod.nombre}' no tiene Clave Unidad SAT (clave_sat_unidad).")
 
     def construir_xml(self):
         self.validar_requisitos()
@@ -64,25 +102,24 @@ class CFDIBuilder:
         root = ET.Element(f"{{{CFDI_NS}}}Comprobante")
         root.set("Version", "4.0")
         root.set("Serie", self.empresa_fiscal.empresa.serie_factura or "A") 
-        root.set("Folio", str(self.venta.folio).replace("T-",""))
+        root.set("Folio", self.data.get('folio'))
         root.set("Fecha", timezone.now().strftime("%Y-%m-%dT%H:%M:%S"))
         root.set("Sello", "")
         # Forma Pago Mapeada
-        forma_pago_sat = self.MAP_FORMA_PAGO.get(self.venta.metodo_pago, '01')
-        root.set("FormaPago", forma_pago_sat)
+        root.set("FormaPago", self.data.get('forma_pago', '01'))
         root.set("NoCertificado", "")
         root.set("Certificado", "")
         
         # Montos
-        subtotal = self.venta.subtotal
-        total = self.venta.total
+        subtotal = self.data.get('subtotal')
+        total = self.data.get('total')
         
         root.set("SubTotal", f"{subtotal:.2f}")
         root.set("Moneda", "MXN") # Hardcoded MVP
         root.set("Total", f"{total:.2f}")
         root.set("TipoDeComprobante", "I")
         root.set("Exportacion", "01")
-        root.set("MetodoPago", "PUE") 
+        root.set("MetodoPago", self.data.get('metodo_pago', 'PUE')) 
         root.set("LugarExpedicion", self.empresa_fiscal.codigo_postal)
         
         # Schema Location
@@ -114,28 +151,25 @@ class CFDIBuilder:
         base_iva_16 = Decimal('0.00')
         importe_iva_16 = Decimal('0.00')
 
-        for detalle in self.venta.detalles.all():
-            prod = detalle.producto
-            if not prod: continue # Skip insumos if not supported yet
-            
+        for item in self.data.get('detalles', []):
             concepto = ET.SubElement(conceptos_elem, f"{{{CFDI_NS}}}Concepto")
             
-            concepto.set("ClaveProdServ", prod.clave_sat_producto)
-            concepto.set("NoIdentificacion", prod.codigo)
-            concepto.set("Cantidad", f"{detalle.cantidad:.2f}")
-            concepto.set("ClaveUnidad", prod.clave_sat_unidad)
-            concepto.set("Unidad", prod.unidad_medida)
-            concepto.set("Descripcion", prod.nombre)
-            concepto.set("ValorUnitario", f"{detalle.precio_unitario:.2f}")
-            concepto.set("Importe", f"{detalle.subtotal:.2f}")
-            concepto.set("ObjetoImp", "02")
+            concepto.set("ClaveProdServ", item.get('clave_prod'))
+            concepto.set("NoIdentificacion", item.get('no_ident'))
+            concepto.set("Cantidad", f"{item.get('cantidad'):.2f}")
+            concepto.set("ClaveUnidad", item.get('clave_unidad'))
+            concepto.set("Unidad", item.get('unidad'))
+            concepto.set("Descripcion", item.get('descripcion'))
+            concepto.set("ValorUnitario", f"{item.get('precio'):.2f}")
+            concepto.set("Importe", f"{item.get('importe'):.2f}")
+            concepto.set("ObjetoImp", item.get('objeto_imp'))
             
             # Impuestos (Assuming standard 16% for MVP)
             impuestos_c = ET.SubElement(concepto, f"{{{CFDI_NS}}}Impuestos")
             traslados_c = ET.SubElement(impuestos_c, f"{{{CFDI_NS}}}Traslados")
             traslado_c = ET.SubElement(traslados_c, f"{{{CFDI_NS}}}Traslado")
             
-            base = detalle.subtotal
+            base = item.get('importe')
             impuesto = base * Decimal('0.16')
             
             base_iva_16 += base

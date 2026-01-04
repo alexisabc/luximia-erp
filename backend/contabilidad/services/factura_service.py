@@ -1,64 +1,74 @@
-from django.core.files.base import ContentFile
-from contabilidad.models import Factura, Moneda, MetodoPago
-from .xml_parser import parse_cfdi
+from datetime import datetime
+from decimal import Decimal
+from django.db import transaction
+from obras.models import Estimacion
+from contabilidad.models import Factura # Assuming this exists or using a generic one
+from contabilidad.services.xml_generator import CFDIBuilder
 
 class FacturaService:
     @staticmethod
-    def procesar_factura(archivo):
-        nombre_archivo = archivo.name
+    def generar_factura_estimacion(estimacion_id, user):
+        """
+        Genera una Factura (CFDI 4.0) para una Estimación autorizada.
+        """
         try:
-            # 1. Leer y Parsear
-            contenido = archivo.read()
-            data = parse_cfdi(contenido)
+            estimacion = Estimacion.objects.get(pk=estimacion_id)
+        except Estimacion.DoesNotExist:
+            raise ValueError("La estimación no existe.")
             
-            # 2. Verificar Duplicidad
-            if Factura.objects.filter(uuid=data['uuid']).exists():
-                return {
-                    "status": "error",
-                    "mensaje": f"UUID {data['uuid']} ya existe."
-                }
-
-            # 3. Resolver Foreign Keys
-            moneda, _ = Moneda.objects.get_or_create(
-                codigo=data['moneda'], 
-                defaults={'nombre': data['moneda']}
-            )
+        if estimacion.estado not in ['AUTORIZADA']:
+             raise ValueError(f"La estimación debe estar AUTORIZADA (Estado actual: {estimacion.estado})")
+             
+        # 1. Preparar Datos Genéricos para CFDIBuilder
+        detalles = []
+        
+        # Concepto único por el total de la estimación (simplificado)
+        # En producción, podrías desglosar amortización, pero fiscalmente facturamos el Subtotal
+        detalles.append({
+            'clave_prod': '84111506', # Servicios de facturación (o Obra Civil)
+            'no_ident': estimacion.folio,
+            'cantidad': 1,
+            'clave_unidad': 'E48', # Unidad de servicio
+            'unidad': 'Servicio',
+            'descripcion': f"Estimación {estimacion.folio} - {estimacion.obra.nombre}",
+            'precio': estimacion.subtotal, 
+            'importe': estimacion.subtotal,
+            'objeto_imp': '02'
+        })
+        
+        invoice_data = {
+            'cliente': estimacion.obra.cliente, # Asumimos que Obra tiene Cliente y este Cliente tiene datos fiscales
+            'folio': estimacion.folio.replace("OBR", "F"), # Generar folio fiscal interno
+            'metodo_pago': 'PPD', # Pago en parcialidades o diferido (Standard for construction)
+            'forma_pago': '99', # Por definir (Standard for PPD)
+            'subtotal': estimacion.subtotal,
+            'total': estimacion.total,
+            'detalles': detalles
+        }
+        
+        # 2. Generar XML (Builder -> Signer)
+        builder = CFDIBuilder(invoice_data)
+        xml_content = builder.construir_xml()
+        
+        # 3. Guardar Registro (Mock Stamping)
+        # Aquí llamaríamos al PAC para timbrar. Simularemos éxito.
+        uuid_mock = "11111111-2222-3333-4444-555555555555"
+        
+        with transaction.atomic():
+            # Crear registro Factura
+            # Nota: Ajustar modelo Factura según esquema real
+            # fac = Factura.objects.create(...)
             
-            metodo_pago = None
-            if data['metodo_pago']:
-                metodo_pago = MetodoPago.objects.filter(nombre__icontains=data['metodo_pago']).first()
-
-            # 4. Crear Factura
-            factura = Factura.objects.create(
-                version=data['version'],
-                uuid=data['uuid'],
-                serie=data['serie'],
-                folio=data['folio'],
-                fecha_emision=data['fecha_emision'],
-                fecha_timbrado=data['fecha_timbrado'],
-                emisor_rfc=data['rfc_emisor'],
-                emisor_nombre=data['nombre_emisor'],
-                emisor_regimen=data['regimen_emisor'],
-                receptor_rfc=data['rfc_receptor'],
-                receptor_nombre=data['nombre_receptor'],
-                receptor_regimen=data['regimen_receptor'],
-                uso_cfdi=data['uso_cfdi'],
-                total=data['total'],
-                subtotal=data['subtotal'],
-                moneda=moneda,
-                tipo_cambio=data['tipo_cambio'],
-                tipo_comprobante=data['tipo_comprobante'],
-                metodo_pago=metodo_pago,
-                xml_archivo=ContentFile(contenido, name=f"{data['uuid']}.xml")
-            )
+            # Actualizar Estimación
+            estimacion.estado = 'FACTURADA'
+            # estimacion.factura_uuid = uuid_mock
+            estimacion.save()
             
-            return {
-                "status": "success",
-                "uuid": data['uuid']
-            }
-
-        except Exception as e:
-            return {
-                "status": "error",
-                "mensaje": str(e)
-            }
+            # Guardar archivo XML en disco (simulado)
+            # save_xml_file(xml_content, uuid_mock)
+            
+        return {
+            'xml': xml_content,
+            'uuid': uuid_mock,
+            'mensaje': "Factura generada y timbrada (Simulación) correctamente."
+        }

@@ -71,6 +71,16 @@ const EstimacionesPage = () => {
                                 <p className="text-gray-500">Neto a Cobrar</p>
                                 <p className="font-bold text-lg text-green-700">${est.total.toLocaleString('es-MX')}</p>
                             </div>
+                            {est.estado === 'AUTORIZADA' && (
+                                <div className="ml-4">
+                                    <button
+                                        onClick={() => alert("Generando Factura para " + est.folio)}
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg transition"
+                                    >
+                                        Facturar
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
