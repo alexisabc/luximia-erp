@@ -1,67 +1,78 @@
 from decimal import Decimal
+from django.db.models import Sum
+from tesoreria.models.movimientos import Egreso
 
-class DIOTService:
+class DiotService:
     @staticmethod
-    def generar_linea_proveedor(pago):
-        prov = pago.proveedor
-        monto = pago.monto
-        tasa = pago.tasa_iva
+    def generar_reporte(anio, mes):
+        """
+        Genera el reporte de operaciones con terceros (DIOT).
+        Retorna una lista de diccionarios agrupados por Proveedor.
+        """
+        egresos = Egreso.objects.filter(
+            fecha__year=anio,
+            fecha__month=mes,
+            estado='PAGADO',
+            contra_recibo__isnull=False
+        ).select_related('contra_recibo', 'contra_recibo__proveedor')
         
-        # Calcular Base (Asumiendo monto incluye IVA)
-        if tasa > 0:
-            base = monto / (1 + tasa)
-        else:
-            base = monto
+        reporte = {}
+        
+        for egreso in egresos:
+            cr = egreso.contra_recibo
+            prov = cr.proveedor
+            rfc = prov.rfc
             
-        base_int = int(round(base, 0))
-        
-        # Columnas
-        c1_tipo_tercero = prov.tipo_tercero
-        c2_tipo_oper = prov.tipo_operacion
-        c3_rfc = prov.rfc
-        c4_id_fiscal = getattr(prov, 'id_fiscal', '')
-        # Nombre solo para Extranjeros (05)
-        c5_nombre = getattr(prov, 'nombre_completo', '') if c1_tipo_tercero == '05' else ''
-        c6_pais = getattr(prov, 'pais', '') if c1_tipo_tercero == '05' else ''
-        c7_nacionalidad = getattr(prov, 'nacionalidad', '') if c1_tipo_tercero == '05' else ''
-        
-        # Asignación de columnas de montos
-        # Indices A-29 (0-based en array):
-        # 7: Valor 15/16%
-        # 8: Valor 15/16% Imp
-        # 9: Valor 10/8% 
-        # 10: Valor 10/8% Imp
-        # 11: Valor 0%
-        # 12: Exento
-        
-        c8_base16 = ''
-        c11_base0 = ''
-        
-        if tasa == Decimal('0.16'):
-            c8_base16 = str(base_int)
-        elif tasa == 0:
-            c11_base0 = str(base_int)
+            if not rfc:
+                continue # Skip providers without RFC (Should alert user)
+                
+            if rfc not in reporte:
+                reporte[rfc] = {
+                    'tipo_tercero': '04', # 04: Nacional, 05: Extranjero
+                    'tipo_operacion': '85', # 85: Otros (Default)
+                    'rfc': rfc,
+                    'monto_base_16': Decimal('0.00'),
+                    'monto_iva': Decimal('0.00')
+                }
             
-        cols = [
-            c1_tipo_tercero, c2_tipo_oper, c3_rfc, c4_id_fiscal, c5_nombre, c6_pais, c7_nacionalidad,
-            c8_base16, # 7 (Base 16%)
-            '',        # 8
-            '',        # 9
-            '',        # 10
-            c11_base0, # 11 (Base 0%)
-        ]
-        
-        # Rrellenar hasta 54 columnas (Layout 2025)
-        # Se asume que los campos adicionales están vacíos por defecto dado que el modelo actual
-        # no soporta desglose de 8% Frontera o Importaciones detalladas aún.
-        TARGET_LEN = 54
-        cols.extend([''] * (TARGET_LEN - len(cols)))
-        
-        return "|".join(cols)
+            # Proporcionamiento (Cash Basis)
+            # Si el pago es parcial, el IVA acreditable es proporcional
+            total_cr = cr.total
+            if total_cr == 0: continue
+            
+            proporcion = egreso.monto / total_cr
+            
+            # Asumimos Tasa 16% por defecto si hay IVA
+            # En un sistema complejo, ContraRecibo debería tener desglose de tasas
+            iva_pagado = cr.iva * proporcion
+            base_pagada = egreso.monto - iva_pagado
+            
+            reporte[rfc]['monto_base_16'] += base_pagada
+            reporte[rfc]['monto_iva'] += iva_pagado
+            
+        return list(reporte.values())
 
     @staticmethod
-    def generar_reporte(pagos):
+    def generar_txt(anio, mes):
+        data = DiotService.generar_reporte(anio, mes)
         lines = []
-        for pago in pagos:
-            lines.append(DIOTService.generar_linea_proveedor(pago))
-        return "\r\n".join(lines)
+        
+        for item in data:
+            # Formato A-29 (Simplificado)
+            # |TipoTercero|TipoOperacion|RFC|IDFiscal|NombreExt|Pais|Nacionalidad|Base15|Base10|Base16|...
+            
+            base_16 = int(round(item['monto_base_16'])) # DIOT usa enteros redondeados
+            
+            # Campos vacíos representan tasas no usadas (0%, 8%, Exento, etc)
+            line = (
+                f"{item['tipo_tercero']}|"
+                f"{item['tipo_operacion']}|"
+                f"{item['rfc']}|"
+                f"|||" # ID Fiscal, Nombre, Pais, Nacionalidad (Para extranjeros)
+                f"|||" # Zonas fronterizas viejas
+                f"{base_16}|" # Valor de los actos o actividades pagados a la tasa del 16% de IVA
+                f"||||||||||||" # Resto de columnas (0%, exento, retenciones, etc)
+            )
+            lines.append(line)
+            
+        return "\n".join(lines)
