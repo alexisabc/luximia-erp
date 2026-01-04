@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Any
 
+from core.services.cache_service import cache_report, cache_kpis
+
 
 class ReportesService:
     """
@@ -14,6 +16,7 @@ class ReportesService:
     """
     
     @staticmethod
+    @cache_report(timeout=900)  # 15 minutos
     def get_financial_summary(fecha_inicio: datetime, fecha_fin: datetime, empresa_id: int = None) -> Dict[str, Any]:
         """
         Resumen financiero con ingresos, egresos y utilidad
@@ -74,6 +77,7 @@ class ReportesService:
         }
     
     @staticmethod
+    @cache_report(timeout=900)  # 15 minutos
     def get_ventas_por_periodo(
         fecha_inicio: datetime,
         fecha_fin: datetime,
@@ -128,6 +132,7 @@ class ReportesService:
         ]
     
     @staticmethod
+    @cache_report(timeout=1800)  # 30 minutos
     def get_top_clientes(
         fecha_inicio: datetime,
         fecha_fin: datetime,
@@ -179,6 +184,7 @@ class ReportesService:
         ]
     
     @staticmethod
+    @cache_report(timeout=1800)  # 30 minutos
     def get_obras_rentabilidad(empresa_id: int = None) -> List[Dict[str, Any]]:
         """
         Rentabilidad por obra
@@ -230,6 +236,7 @@ class ReportesService:
         return sorted(resultados, key=lambda x: x['margen'], reverse=True)
     
     @staticmethod
+    @cache_kpis(timeout=300)  # 5 minutos
     def get_kpis_principales(empresa_id: int = None) -> Dict[str, Any]:
         """
         KPIs principales del sistema
